@@ -1,0 +1,160 @@
+import { COLLECTIONS } from "@/server/firestore/collections";
+import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
+import { asNumber, asString } from "@/lib/firestore/coerce";
+import { millisFromFirestore } from "@/lib/firestore/timestamp";
+import { parseProposalDocument } from "@/lib/schemas/proposal-document";
+import type {
+  ProposalBlock,
+  ProposalBranding,
+  ProposalPublicSelections,
+  ProposalRecord,
+  ProposalStatus,
+} from "@/types/proposal";
+
+export function parseProposalBlocks(raw: unknown): ProposalBlock[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const doc = parseProposalDocument({ title: "x", blocks: raw });
+  return doc.blocks;
+}
+
+function parseStatus(raw: unknown): ProposalStatus {
+  const s = typeof raw === "string" ? raw : "";
+  if (
+    s === "draft" ||
+    s === "published" ||
+    s === "viewed" ||
+    s === "accepted" ||
+    s === "declined" ||
+    s === "expired"
+  ) {
+    return s;
+  }
+  return "draft";
+}
+
+/**
+ * Parse a `ProposalBranding` object (logo / colour / font). Returns `undefined`
+ * when none of the supported fields are populated. Exported for re-use by the
+ * proposal-template parser, which stores the same shape under `branding`.
+ */
+export function parseBranding(raw: unknown): ProposalBranding | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const b = raw as Record<string, unknown>;
+  const logoUrl = asString(b.logoUrl);
+  const primaryColor = asString(b.primaryColor);
+  const fontFamily = asString(b.fontFamily);
+  if (!logoUrl && !primaryColor && !fontFamily) return undefined;
+  return { logoUrl, primaryColor, fontFamily };
+}
+
+function parsePackagesTerm(o: Record<string, unknown>): "12_months" | "24_months" | undefined {
+  const term = o.term;
+  if (term === "12_months" || term === "24_months") return term;
+  const billing = o.billing;
+  if (billing === "monthly") return "12_months";
+  if (billing === "yearly") return "24_months";
+  return undefined;
+}
+
+function parsePublicSelections(raw: unknown): ProposalPublicSelections | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const out: ProposalPublicSelections = {};
+  for (const [key, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!v || typeof v !== "object") continue;
+    const o = v as Record<string, unknown>;
+    if (o.kind !== "packages") continue;
+    const tierId = asString(o.tierId);
+    const term = parsePackagesTerm(o);
+    if (!tierId || !term) continue;
+    const addonQuantities: Record<string, number> = {};
+    const aq = o.addonQuantities;
+    if (aq && typeof aq === "object" && !Array.isArray(aq)) {
+      for (const [lid, raw] of Object.entries(aq as Record<string, unknown>)) {
+        if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0) {
+          addonQuantities[lid] = Math.floor(raw);
+        }
+      }
+    }
+    const addonOptionalOff: Record<string, boolean> = {};
+    const ao = o.addonOptionalOff;
+    if (ao && typeof ao === "object" && !Array.isArray(ao)) {
+      for (const [lid, raw] of Object.entries(ao as Record<string, unknown>)) {
+        if (raw === true) addonOptionalOff[lid] = true;
+      }
+    }
+    out[key] = {
+      kind: "packages",
+      tierId,
+      term,
+      updatedAt: asNumber(o.updatedAt) ?? Date.now(),
+      ...(Object.keys(addonQuantities).length > 0 ? { addonQuantities } : {}),
+      ...(Object.keys(addonOptionalOff).length > 0 ? { addonOptionalOff } : {}),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/**
+ * Parse a Firestore `proposals/{id}` document into a typed record (Admin SDK reads).
+ */
+export function parseProposalRecord(id: string, data: Record<string, unknown>): ProposalRecord {
+  const documentRaw = data.document && typeof data.document === "object" ? data.document : {};
+  const document = parseProposalDocument({
+    ...(documentRaw as object),
+    title: asString(data.title) ?? (documentRaw as { title?: string }).title ?? "Untitled proposal",
+  });
+
+  return {
+    id,
+    organizationId: asString(data.organizationId) ?? "",
+    createdByUid: asString(data.createdByUid) ?? "",
+    title: asString(data.title) ?? document.title ?? "Untitled proposal",
+    customerId: asString(data.customerId),
+    opportunityId: asString(data.opportunityId),
+    recipientEmail: asString(data.recipientEmail) ?? asString(data.customerEmail),
+    status: parseStatus(data.status),
+    shareToken: asString(data.shareToken) ?? "",
+    document,
+    branding: parseBranding(data.branding),
+    documentVersion: asNumber(data.documentVersion),
+    sharePasswordHash: asString(data.sharePasswordHash),
+    sentAt: asNumber(data.sentAt),
+    viewCount: asNumber(data.viewCount),
+    totalEngagementSeconds: asNumber(data.totalEngagementSeconds),
+    lastViewedAt: asNumber(data.lastViewedAt),
+    acceptedAt: asNumber(data.acceptedAt),
+    acceptedByName: asString(data.acceptedByName),
+    acceptedSignatureDataUrl: asString(data.acceptedSignatureDataUrl),
+    acceptedSignatureMethod:
+      data.acceptedSignatureMethod === "draw" ||
+      data.acceptedSignatureMethod === "type" ||
+      data.acceptedSignatureMethod === "upload"
+        ? data.acceptedSignatureMethod
+        : undefined,
+    acceptedClientSignedAt: asNumber(data.acceptedClientSignedAt),
+    stripePaymentIntentId: asString(data.stripePaymentIntentId),
+    publicSelections: parsePublicSelections(data.publicSelections),
+    sourceTemplateId: asString(data.sourceTemplateId),
+    createdAt: millisFromFirestore(data, "createdAt"),
+    updatedAt: millisFromFirestore(data, "updatedAt"),
+  };
+}
+
+export async function getProposalRecordByShareToken(shareToken: string): Promise<ProposalRecord | null> {
+  const token = shareToken?.trim();
+  if (!token || token.length < 8) return null;
+
+  const db = getFirebaseAdminFirestore();
+  if (!db) return null;
+
+  try {
+    const snap = await db.collection(COLLECTIONS.proposals).where("shareToken", "==", token).limit(1).get();
+    if (snap.empty) return null;
+    const doc = snap.docs[0];
+    return parseProposalRecord(doc.id, doc.data() as Record<string, unknown>);
+  } catch {
+    return null;
+  }
+}

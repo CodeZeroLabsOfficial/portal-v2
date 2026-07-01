@@ -1,0 +1,43 @@
+"use client";
+
+import React from "react";
+
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
+import { SiteHeader } from "@/components/layout/header";
+import type { PortalShellProps } from "@/components/layout/nav-types";
+
+export function PortalShell({
+  user,
+  items,
+  footerItems,
+  brand,
+  defaultOpen,
+  children,
+}: PortalShellProps & { defaultOpen: boolean; children: React.ReactNode }) {
+  return (
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 64)",
+          "--header-height": "calc(var(--spacing) * 14)",
+          "--content-padding": "calc(var(--spacing) * 4)",
+          "--content-margin": "calc(var(--spacing) * 1.5)",
+          "--content-full-height":
+            "calc(100vh - var(--header-height) - (var(--content-padding) * 2) - (var(--content-margin) * 2))",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" user={user} items={items} footerItems={footerItems} brand={brand} />
+      <SidebarInset>
+        <SiteHeader user={user} />
+        <div className="bg-muted/40 flex flex-1 flex-col">
+          <div className="@container/main p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
+            {children}
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}

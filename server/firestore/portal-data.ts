@@ -1,0 +1,498 @@
+import { unstable_noStore as noStore } from "next/cache";
+import { isStaff } from "@/lib/auth/server-session";
+import { asBoolean, asNumber, asString } from "@/lib/firestore/coerce";
+import { millisFromFirestore } from "@/lib/firestore/timestamp";
+import { COLLECTIONS } from "@/server/firestore/collections";
+import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
+import type { InvoiceRecord } from "@/types/invoice";
+import type { PaymentRecord } from "@/types/payment";
+import type { ProposalHubListRow, ProposalRecord } from "@/types/proposal";
+import { parseProposalRecord } from "@/server/firestore/parse-proposal";
+import type { SubscriptionRecord } from "@/types/subscription";
+import type { SupportTicketRecord, SupportTicketUrgency } from "@/types/support-ticket";
+import { parseTaskRecord } from "@/server/firestore/parse-task";
+import type { TaskRecord } from "@/types/task";
+import type { PortalUser } from "@/types/user";
+import type { CustomerRecord } from "@/types/customer";
+import type { CustomerListRow } from "@/lib/customer-list";
+import {
+  getAccountDetailForKey,
+  getAdminAccountListRows as loadCrmAccountListRows,
+  getAdminCustomerListRows as loadCrmCustomerListRows,
+  batchGetCustomerRecordsForStaff,
+  listAllSubscriptionsForStaff,
+  listCrmCustomerRecordsForStaff,
+} from "@/server/firestore/crm-customers";
+
+export interface ActivityItem {
+  id: string;
+  type: "subscription" | "invoice" | "proposal";
+  title: string;
+  detail: string;
+  timestampMs: number;
+}
+
+export interface DashboardData {
+  activeSubscriptions: number;
+  mrrMinorUnits: number;
+  openProposals: number;
+  conversionRatePercent: number;
+  recentActivity: ActivityItem[];
+}
+
+export interface CustomerPortalData {
+  subscriptions: SubscriptionRecord[];
+  invoices: InvoiceRecord[];
+  payments: PaymentRecord[];
+  proposals: ProposalRecord[];
+}
+
+export interface AdminPortalData {
+  crmCustomers: CustomerRecord[];
+  subscriptions: SubscriptionRecord[];
+  proposals: ProposalRecord[];
+  invoices: InvoiceRecord[];
+  payments: PaymentRecord[];
+  tasks: TaskRecord[];
+  supportTickets: SupportTicketRecord[];
+}
+
+function getTimestampMs(record: Record<string, unknown>, ...keys: string[]): number {
+  for (const key of keys) {
+    const raw = record[key];
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      return raw;
+    }
+  }
+  return 0;
+}
+
+function parseSubscription(id: string, data: Record<string, unknown>): SubscriptionRecord {
+  return {
+    id,
+    customerId: asString(data.customerId) ?? "",
+    organizationId: asString(data.organizationId),
+    status:
+      data.status === "scheduled" ||
+      data.status === "trialing" ||
+      data.status === "past_due" ||
+      data.status === "canceled" ||
+      data.status === "incomplete" ||
+      data.status === "incomplete_expired" ||
+      data.status === "unpaid" ||
+      data.status === "paused" ||
+      data.status === "active"
+        ? data.status
+        : "active",
+    priceId: asString(data.priceId),
+    productName: asString(data.productName),
+    currency: asString(data.currency) ?? "aud",
+    interval: data.interval === "year" ? "year" : data.interval === "month" ? "month" : undefined,
+    subscriptionStart: asNumber(data.subscriptionStart),
+    subscriptionEnd: asNumber(data.subscriptionEnd),
+    currentPeriodEnd: asNumber(data.currentPeriodEnd),
+    cancelAtPeriodEnd: asBoolean(data.cancelAtPeriodEnd),
+    paymentCollectionPaused: asBoolean(data.paymentCollectionPaused),
+    monthlyAmountMinor: asNumber(data.monthlyAmountMinor),
+    ...(millisFromFirestore(data, "createdAt") > 0
+      ? { createdAt: millisFromFirestore(data, "createdAt") }
+      : {}),
+    collectionMethod:
+      data.collectionMethod === "charge_automatically" || data.collectionMethod === "send_invoice"
+        ? data.collectionMethod
+        : undefined,
+    defaultPaymentMethodType: asString(data.defaultPaymentMethodType),
+    mrrAmount: asNumber(data.mrrAmount),
+    updatedAt: millisFromFirestore(data, "updatedAt") || Date.now(),
+  };
+}
+
+function parsePayment(id: string, data: Record<string, unknown>): PaymentRecord {
+  return {
+    id,
+    stripePaymentIntentId: asString(data.stripePaymentIntentId) ?? id,
+    customerId: asString(data.customerId) ?? "",
+    organizationId: asString(data.organizationId),
+    currency: asString(data.currency) ?? "aud",
+    amount: asNumber(data.amount) ?? 0,
+    status: asString(data.status) ?? "processing",
+    description: asString(data.description),
+    createdAt: millisFromFirestore(data, "createdAt"),
+    updatedAt: millisFromFirestore(data, "updatedAt") || Date.now(),
+  };
+}
+
+function parseInvoice(id: string, data: Record<string, unknown>): InvoiceRecord {
+  return {
+    id,
+    stripeInvoiceId: asString(data.stripeInvoiceId) ?? id,
+    customerId: asString(data.customerId) ?? "",
+    subscriptionId: asString(data.subscriptionId),
+    organizationId: asString(data.organizationId),
+    status:
+      data.status === "draft" ||
+      data.status === "open" ||
+      data.status === "paid" ||
+      data.status === "void" ||
+      data.status === "uncollectible"
+        ? data.status
+        : "open",
+    currency: asString(data.currency) ?? "aud",
+    amountDue: asNumber(data.amountDue) ?? 0,
+    hostedInvoiceUrl: asString(data.hostedInvoiceUrl),
+    invoicePdf: asString(data.invoicePdf),
+    issuedAt: millisFromFirestore(data, "issuedAt"),
+    paidAt: asNumber(data.paidAt),
+  };
+}
+
+/** CRM table rows from `customers` (single-tenant; all admin/team can list). */
+export async function getAdminCustomerListRows(user: PortalUser): Promise<CustomerListRow[]> {
+  /** Always read fresh Firestore data — avoids stale RSC / router cache after create or edits. */
+  noStore();
+  return loadCrmCustomerListRows(user);
+}
+
+/** Distinct company names from CRM customers (see `lib/account-list`). */
+export async function getAdminAccountListRows(user: PortalUser) {
+  noStore();
+  return loadCrmAccountListRows(user);
+}
+
+export async function getAdminAccountDetail(user: PortalUser, accountKey: string) {
+  noStore();
+  return getAccountDetailForKey(user, accountKey);
+}
+
+async function listSubscriptionsForStaffAdmin(user: PortalUser): Promise<SubscriptionRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user)) {
+    return [];
+  }
+  /** Match `/admin/subscriptions` — org metadata on Stripe objects is optional in single-tenant CRM. */
+  return listAllSubscriptionsForStaff(db);
+}
+
+async function listSubscriptionsForUser(user: PortalUser): Promise<SubscriptionRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db) {
+    return [];
+  }
+
+  if (isStaff(user)) {
+    return listSubscriptionsForStaffAdmin(user);
+  }
+
+  const uidScoped = await db
+    .collection(COLLECTIONS.users)
+    .doc(user.uid)
+    .collection("subscriptions")
+    .limit(100)
+    .get();
+  if (!uidScoped.empty) {
+    return uidScoped.docs.map((doc) => parseSubscription(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  if (user.stripeCustomerId) {
+    const col = db.collection(COLLECTIONS.subscriptions);
+    const snap = await col.where("customerId", "==", user.stripeCustomerId).limit(100).get();
+    return snap.docs.map((doc) => parseSubscription(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  return [];
+}
+
+async function listInvoicesForStaffAdmin(user: PortalUser): Promise<InvoiceRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user)) {
+    return [];
+  }
+  const snap = await db.collection(COLLECTIONS.invoices).limit(500).get();
+  return snap.docs.map((doc) => parseInvoice(doc.id, doc.data() as Record<string, unknown>));
+}
+
+async function listInvoicesForUser(user: PortalUser): Promise<InvoiceRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db) {
+    return [];
+  }
+
+  if (isStaff(user)) {
+    return listInvoicesForStaffAdmin(user);
+  }
+
+  const uidScoped = await db.collection(COLLECTIONS.users).doc(user.uid).collection("invoices").limit(100).get();
+  if (!uidScoped.empty) {
+    return uidScoped.docs.map((doc) => parseInvoice(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  if (user.stripeCustomerId) {
+    const col = db.collection(COLLECTIONS.invoices);
+    const snap = await col.where("customerId", "==", user.stripeCustomerId).limit(100).get();
+    return snap.docs.map((doc) => parseInvoice(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  return [];
+}
+
+async function listPaymentsForStaffAdmin(user: PortalUser): Promise<PaymentRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user)) {
+    return [];
+  }
+  const snap = await db.collection(COLLECTIONS.payments).limit(500).get();
+  return snap.docs.map((doc) => parsePayment(doc.id, doc.data() as Record<string, unknown>));
+}
+
+async function listPaymentsForUser(user: PortalUser): Promise<PaymentRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db) {
+    return [];
+  }
+
+  if (isStaff(user)) {
+    return listPaymentsForStaffAdmin(user);
+  }
+
+  const uidScoped = await db.collection(COLLECTIONS.users).doc(user.uid).collection("payments").limit(100).get();
+  if (!uidScoped.empty) {
+    return uidScoped.docs.map((doc) => parsePayment(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  if (user.stripeCustomerId) {
+    const col = db.collection(COLLECTIONS.payments);
+    const snap = await col.where("customerId", "==", user.stripeCustomerId).limit(100).get();
+    return snap.docs.map((doc) => parsePayment(doc.id, doc.data() as Record<string, unknown>));
+  }
+
+  return [];
+}
+
+async function listProposalsForUser(user: PortalUser): Promise<ProposalRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db) {
+    return [];
+  }
+
+  const col = db.collection(COLLECTIONS.proposals);
+  let snap;
+  if (isStaff(user) && user.organizationId) {
+    snap = await col.where("organizationId", "==", user.organizationId).limit(100).get();
+  } else {
+    snap = await col.where("createdByUid", "==", user.uid).limit(100).get();
+  }
+
+  return snap.docs.map((doc) => parseProposalRecord(doc.id, doc.data() as Record<string, unknown>));
+}
+
+/** Proposals visible to the current staff user (org-scoped, or author-scoped when no org id). */
+export async function listProposalsForStaffOrg(user: PortalUser): Promise<ProposalRecord[]> {
+  return listProposalsForUser(user);
+}
+
+function accountCompanyNameFromCustomer(customer: CustomerRecord | undefined): string {
+  if (!customer) return "—";
+  const company = customer.company?.trim();
+  const person = customer.name?.trim() ?? "";
+  return company || person || "—";
+}
+
+function contactNameFromCustomer(customer: CustomerRecord | undefined): string {
+  if (!customer) return "—";
+  const name = customer.name?.trim();
+  return name || "—";
+}
+
+/** Same proposals as {@link listProposalsForStaffOrg}, with CRM account label for hub tables. */
+export async function listProposalsHubRowsForStaffOrg(user: PortalUser): Promise<ProposalHubListRow[]> {
+  const proposals = await listProposalsForStaffOrg(user);
+  const customerIds = proposals
+    .map((p) => p.customerId)
+    .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
+  const customers = await batchGetCustomerRecordsForStaff(user, customerIds);
+  return proposals.map((p) => {
+    const customer = p.customerId?.trim() ? customers.get(p.customerId.trim()) : undefined;
+    return {
+      ...p,
+      accountCompanyName: customer ? accountCompanyNameFromCustomer(customer) : "—",
+      contactName: customer ? contactNameFromCustomer(customer) : "—",
+    };
+  });
+}
+
+function parseSupportTicket(id: string, data: Record<string, unknown>): SupportTicketRecord {
+  const raw = (asString(data.urgency) ?? asString(data.priority) ?? "medium").toLowerCase();
+  let urgency: SupportTicketUrgency = "medium";
+  if (raw.includes("crit") || raw === "p0" || raw === "critical") {
+    urgency = "critical";
+  } else if (raw.includes("high") || raw === "p1" || raw === "high") {
+    urgency = "high";
+  } else if (raw.includes("low") || raw === "p3" || raw === "low") {
+    urgency = "low";
+  }
+
+  return {
+    id,
+    organizationId: asString(data.organizationId),
+    status: asString(data.status) ?? "open",
+    urgency,
+    updatedAt: millisFromFirestore(data, "updatedAt") || Date.now(),
+  };
+}
+
+async function listTasksForUser(user: PortalUser): Promise<TaskRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user) || !user.organizationId) {
+    return [];
+  }
+  try {
+    const snap = await db
+      .collection(COLLECTIONS.tasks)
+      .where("organizationId", "==", user.organizationId)
+      .limit(200)
+      .get();
+    return snap.docs.map((doc) => parseTaskRecord(doc.id, doc.data() as Record<string, unknown>));
+  } catch {
+    return [];
+  }
+}
+
+async function listSupportTicketsForUser(user: PortalUser): Promise<SupportTicketRecord[]> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user) || !user.organizationId) {
+    return [];
+  }
+  try {
+    const snap = await db
+      .collection(COLLECTIONS.supportTickets)
+      .where("organizationId", "==", user.organizationId)
+      .limit(200)
+      .get();
+    return snap.docs.map((doc) => parseSupportTicket(doc.id, doc.data() as Record<string, unknown>));
+  } catch {
+    return [];
+  }
+}
+
+export async function getDashboardData(user: PortalUser): Promise<DashboardData> {
+  const [subscriptions, invoices, proposals] = await Promise.all([
+    listSubscriptionsForUser(user),
+    listInvoicesForUser(user),
+    listProposalsForUser(user),
+  ]);
+
+  const activeSubscriptions = subscriptions.filter(
+    (item) => item.status === "active" || item.status === "trialing",
+  ).length;
+  const openProposals = proposals.filter(
+    (item) => item.status === "draft" || item.status === "published" || item.status === "viewed",
+  ).length;
+  const acceptedCount = proposals.filter((item) => item.status === "accepted").length;
+  const closedCount = proposals.filter(
+    (item) => item.status === "accepted" || item.status === "declined" || item.status === "expired",
+  ).length;
+  const conversionRatePercent = closedCount > 0 ? Math.round((acceptedCount / closedCount) * 100) : 0;
+
+  const mrrMinorUnits = subscriptions.reduce((sum, item) => {
+    const record = item as SubscriptionRecord & { mrrAmount?: number; amount?: number };
+    return sum + (record.mrrAmount ?? record.amount ?? 0);
+  }, 0);
+
+  const activity: ActivityItem[] = [
+    ...subscriptions.map((item) => ({
+      id: `subscription-${item.id}`,
+      type: "subscription" as const,
+      title: item.productName ? `Subscription: ${item.productName}` : "Subscription updated",
+      detail: `${item.status} · ${item.currency.toUpperCase()}`,
+      timestampMs: item.updatedAt,
+    })),
+    ...invoices.map((item) => ({
+      id: `invoice-${item.id}`,
+      type: "invoice" as const,
+      title: `Invoice ${item.status}`,
+      detail: `${item.currency.toUpperCase()} ${Math.round(item.amountDue / 100)}`,
+      timestampMs: item.paidAt ?? item.issuedAt,
+    })),
+    ...proposals.map((item) => ({
+      id: `proposal-${item.id}`,
+      type: "proposal" as const,
+      title: item.title,
+      detail: `Status: ${item.status}`,
+      timestampMs: getTimestampMs(item as unknown as Record<string, unknown>, "updatedAt", "createdAt"),
+    })),
+  ]
+    .sort((a, b) => b.timestampMs - a.timestampMs)
+    .slice(0, 8);
+
+  return {
+    activeSubscriptions,
+    mrrMinorUnits,
+    openProposals,
+    conversionRatePercent,
+    recentActivity: activity,
+  };
+}
+
+export async function getCustomerPortalData(user: PortalUser): Promise<CustomerPortalData> {
+  const [subscriptions, invoices, payments, proposals] = await Promise.all([
+    listSubscriptionsForUser(user),
+    listInvoicesForUser(user),
+    listPaymentsForUser(user),
+    listProposalsForUser(user),
+  ]);
+
+  return { subscriptions, invoices, payments, proposals };
+}
+
+export async function getAdminPortalData(user: PortalUser): Promise<AdminPortalData> {
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user)) {
+    return {
+      crmCustomers: [],
+      subscriptions: [],
+      proposals: [],
+      invoices: [],
+      payments: [],
+      tasks: [],
+      supportTickets: [],
+    };
+  }
+
+  const [crmCustomers, subscriptions, proposals, invoices, payments, tasks, supportTickets] =
+    await Promise.all([
+      listCrmCustomerRecordsForStaff(user),
+      listSubscriptionsForStaffAdmin(user),
+      listProposalsForUser(user),
+      listInvoicesForStaffAdmin(user),
+      listPaymentsForStaffAdmin(user),
+      listTasksForUser(user),
+      listSupportTicketsForUser(user),
+    ]);
+
+  return {
+    crmCustomers,
+    subscriptions,
+    proposals,
+    invoices,
+    payments,
+    tasks,
+    supportTickets,
+  };
+}
+
+/** Single proposal for admin proposal detail — uses full `document.blocks` parsing. */
+export async function getAdminProposalRecord(
+  user: PortalUser,
+  proposalId: string,
+): Promise<ProposalRecord | null> {
+  noStore();
+  const db = getFirebaseAdminFirestore();
+  if (!db || !isStaff(user)) return null;
+  try {
+    const snap = await db.collection(COLLECTIONS.proposals).doc(proposalId).get();
+    if (!snap.exists) return null;
+    return parseProposalRecord(snap.id, snap.data() as Record<string, unknown>);
+  } catch {
+    return null;
+  }
+}
