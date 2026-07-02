@@ -12,10 +12,10 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
+import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -54,7 +54,6 @@ export interface SubscriptionListPanelProps {
 
 interface SubscriptionListTableRow extends SubscriptionListRow {
   id: string;
-  searchLabel: string;
   statusFilter: string;
   productLabel: string;
   monthlyMinor?: number;
@@ -139,7 +138,6 @@ function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[]
   return rows.map((row) => {
     const s = row.subscription;
     const statusFilter = subscriptionFilterStatus(s);
-    const statusLabel = subscriptionStatusDisplay(s).label;
     const productLabel = s.productName?.trim() || "—";
     return {
       ...row,
@@ -149,18 +147,7 @@ function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[]
       monthlyMinor: resolvedMonthlyMinor(s),
       collectionMethodLabel: collectionMethodDisplay(s),
       createdAt: s.createdAt,
-      endAt: s.subscriptionEnd ?? s.currentPeriodEnd,
-      searchLabel: [
-        row.accountName,
-        productLabel,
-        s.priceId,
-        s.status,
-        statusLabel,
-        collectionMethodDisplay(s),
-        s.customerId
-      ]
-        .filter(Boolean)
-        .join(" ")
+      endAt: s.subscriptionEnd ?? s.currentPeriodEnd
     };
   });
 }
@@ -180,13 +167,13 @@ function SubscriptionListToolbar({
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
-    <div className="flex min-w-0 w-full flex-wrap items-center justify-between gap-2 py-2">
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-1 flex-wrap items-center gap-2">
         <Input
-          placeholder="Search status, customer, product, collection method…"
-          value={(table.getColumn("searchLabel")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("searchLabel")?.setFilterValue(event.target.value)}
-          className="h-8 min-w-0 flex-1 sm:max-w-xs"
+          placeholder="Search account, product, status, collection method…"
+          value={(table.getColumn("accountName")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("accountName")?.setFilterValue(event.target.value)}
+          className="h-8 w-full sm:max-w-xs"
         />
         {table.getColumn("statusFilter") ? (
           <DataTableFacetedFilter
@@ -203,18 +190,21 @@ function SubscriptionListToolbar({
           />
         ) : null}
         {isFiltered ? (
-          <Button variant="ghost" size="sm" className="h-8" onClick={() => table.resetColumnFilters()}>
+          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
-            <X className="size-4" aria-hidden />
+            <X />
           </Button>
         ) : null}
       </div>
-      {selectedCount > 0 ? (
-        <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-          <Trash2 className="size-4" aria-hidden />
-          Delete ({selectedCount})
-        </Button>
-      ) : null}
+      <div className="flex items-center gap-2">
+        {selectedCount > 0 ? (
+          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
+            <Trash2 />
+            Delete ({selectedCount})
+          </Button>
+        ) : null}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   );
 }
@@ -410,13 +400,6 @@ export function SubscriptionListPanel({
         enableHiding: false
       },
       {
-        id: "searchLabel",
-        accessorKey: "searchLabel",
-        header: () => null,
-        cell: () => null,
-        enableHiding: true
-      },
-      {
         id: "accountName",
         accessorKey: "accountName",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Account name" />,
@@ -432,12 +415,31 @@ export function SubscriptionListPanel({
             );
           }
           return <span className="text-muted-foreground">{accountName}</span>;
+        },
+        filterFn: (row, _id, value) => {
+          const q = String(value).toLowerCase();
+          if (!q) return true;
+          const { accountName, productLabel, subscription, collectionMethodLabel } = row.original;
+          const statusLabel = subscriptionStatusDisplay(subscription).label;
+          const hay = [
+            accountName,
+            productLabel,
+            subscription.priceId,
+            subscription.status,
+            statusLabel,
+            collectionMethodLabel,
+            subscription.customerId
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return hay.includes(q);
         }
       },
       {
         id: "statusFilter",
         accessorKey: "statusFilter",
-        header: "Status",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
           const display = subscriptionStatusDisplay(row.original.subscription);
@@ -455,7 +457,6 @@ export function SubscriptionListPanel({
       },
       {
         id: "monthlyMinor",
-        meta: { className: "w-32 text-right" },
         header: () => <span className="block text-right">Monthly amount</span>,
         accessorFn: (row) => row.monthlyMinor ?? 0,
         cell: ({ row }) => {
@@ -500,7 +501,6 @@ export function SubscriptionListPanel({
       },
       {
         id: "actions",
-        meta: { className: "w-12" },
         header: () => null,
         enableSorting: false,
         enableHiding: false,
@@ -583,30 +583,24 @@ export function SubscriptionListPanel({
         }}
       />
 
-      <Card className="min-w-0 py-0">
-        <CardContent className="space-y-2 px-6 pb-4 pt-4">
-          <DataTable
-            columns={columns}
-            data={tableRows}
-            tableClassName="table-fixed min-w-[1080px]"
-            initialPageSize={25}
-            initialSorting={[{ id: "createdAt", desc: true }]}
-            initialColumnVisibility={{ searchLabel: false }}
-            emptyMessage={rows.length === 0 ? "No subscriptions yet." : "No subscriptions match your filters."}
-            toolbar={(table) => {
-              tableRef.current = table;
-              return (
-                <SubscriptionListToolbar
-                  table={table}
-                  productOptions={productOptions}
-                  onBulkDelete={handleBulkDelete}
-                  bulkDeleteDisabled={bulkBusy}
-                />
-              );
-            }}
-          />
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={tableRows}
+        initialPageSize={25}
+        initialSorting={[{ id: "createdAt", desc: true }]}
+        emptyMessage={rows.length === 0 ? "No subscriptions yet." : "No subscriptions match your filters."}
+        toolbar={(table) => {
+          tableRef.current = table;
+          return (
+            <SubscriptionListToolbar
+              table={table}
+              productOptions={productOptions}
+              onBulkDelete={handleBulkDelete}
+              bulkDeleteDisabled={bulkBusy}
+            />
+          );
+        }}
+      />
     </div>
   );
 }

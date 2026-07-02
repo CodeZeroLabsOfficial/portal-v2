@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -43,10 +41,11 @@ export function AddProposalDialog({
   const [pending, setPending] = React.useState(false);
 
   const hasTemplates = templates.length > 0;
+  const canSubmit = hasTemplates && proposalTemplateId.trim().length > 0 && !pending;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!hasTemplates) return;
+    if (!canSubmit) return;
 
     setPending(true);
     try {
@@ -76,42 +75,40 @@ export function AddProposalDialog({
         <DialogHeader>
           <DialogTitle>Add proposal</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          {hasTemplates ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="proposal-template">Template</Label>
-              <Select
-                value={proposalTemplateId}
-                onValueChange={setProposalTemplateId}
-                disabled={pending}>
-                <SelectTrigger id="proposal-template" className="w-full">
-                  <SelectValue placeholder="Select template" />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              No proposal templates available. Create one in Templates first.
-            </p>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
-              Cancel
+        {hasTemplates ? (
+          <form onSubmit={onSubmit} className="mt-4 flex gap-2">
+            <Select
+              value={proposalTemplateId}
+              onValueChange={setProposalTemplateId}
+              disabled={pending}>
+              <SelectTrigger id="proposal-template" className="min-w-0 flex-1">
+                <SelectValue placeholder="Select template" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!canSubmit}
+              aria-label="Create proposal">
+              {pending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Check className="size-4" aria-hidden />
+              )}
             </Button>
-            <Button type="submit" disabled={pending || !hasTemplates}>
-              {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-              Create proposal
-            </Button>
-          </DialogFooter>
-        </form>
+          </form>
+        ) : (
+          <p className="text-muted-foreground mt-4 text-sm">
+            No proposal templates available. Create one in Templates first.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );
