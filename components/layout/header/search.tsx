@@ -17,11 +17,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import type { PortalSearchGroup } from "@/components/layout/nav-types";
+import type { PortalSearchScope } from "@/components/layout/nav-types";
+import {
+  buildAdminSearchNav,
+  buildCustomerSearchNav,
+} from "@/lib/layout/search-nav";
 
-export default function Search({ groups }: { groups: PortalSearchGroup[] }) {
+export default function Search({ scope }: { scope: PortalSearchScope }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const groups = scope === "admin" ? buildAdminSearchNav() : buildCustomerSearchNav();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

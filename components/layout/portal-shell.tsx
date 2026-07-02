@@ -12,7 +12,7 @@ export function PortalShell({
   items,
   footerItems,
   brand,
-  searchGroups,
+  searchScope,
   defaultOpen,
   children,
 }: PortalShellProps & { defaultOpen: boolean; children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export function PortalShell({
     >
       <AppSidebar variant="inset" items={items} footerItems={footerItems} brand={brand} />
       <SidebarInset>
-        <SiteHeader user={user} searchGroups={searchGroups} />
+        <SiteHeader user={user} searchScope={searchScope} />
         <div className="bg-muted/40 flex flex-1 flex-col">
           <div className="@container/main p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}

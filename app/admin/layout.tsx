@@ -5,7 +5,6 @@ import { getCurrentSessionUser, isStaff } from "@/lib/auth/server-session";
 import { toSessionUserView } from "@/lib/auth/session-user-view";
 import { PortalShell } from "@/components/layout/portal-shell";
 import { ADMIN_PORTAL_NAV, ADMIN_PORTAL_NAV_FOOTER } from "@/config/admin-portal-routes";
-import { buildAdminSearchNav } from "@/lib/layout/search-nav";
 import type { PortalNavItemView } from "@/components/layout/nav-types";
 
 const ADMIN_NAV_ITEMS: PortalNavItemView[] = ADMIN_PORTAL_NAV.map((item) => ({
@@ -38,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       items={ADMIN_NAV_ITEMS}
       footerItems={ADMIN_FOOTER_ITEMS}
       brand={{ label: "Code Zero Labs", href: "/admin" }}
-      searchGroups={buildAdminSearchNav()}
+      searchScope="admin"
       defaultOpen={defaultOpen}
     >
       {children}

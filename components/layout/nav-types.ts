@@ -19,6 +19,8 @@ export interface PortalSearchGroup {
   items: PortalSearchItem[];
 }
 
+export type PortalSearchScope = "admin" | "customer";
+
 export interface PortalShellNav {
   items: PortalNavItemView[];
   footerItems: PortalNavItemView[];
@@ -32,5 +34,5 @@ export interface PortalShellBrand {
 export interface PortalShellProps extends PortalShellNav {
   user: SessionUserView;
   brand: PortalShellBrand;
-  searchGroups: PortalSearchGroup[];
+  searchScope: PortalSearchScope;
 }

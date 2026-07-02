@@ -10,15 +10,15 @@ import UserMenu from "@/components/layout/header/user-menu";
 import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import type { PortalSearchGroup } from "@/components/layout/nav-types";
+import type { PortalSearchScope } from "@/components/layout/nav-types";
 import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export function SiteHeader({
   user,
-  searchGroups,
+  searchScope,
 }: {
   user: SessionUserView;
-  searchGroups: PortalSearchGroup[];
+  searchScope: PortalSearchScope;
 }) {
   const { toggleSidebar, open } = useSidebar();
 
@@ -29,7 +29,7 @@ export function SiteHeader({
           {open ? <PanelLeftClose /> : <PanelLeftOpen />}
         </Button>
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-        <Search groups={searchGroups} />
+        <Search scope={searchScope} />
 
         <div className="ml-auto flex items-center gap-2">
           <Notifications />

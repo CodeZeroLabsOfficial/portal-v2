@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ADMIN_PORTAL_NAV,
   ADMIN_PORTAL_NAV_FOOTER,
