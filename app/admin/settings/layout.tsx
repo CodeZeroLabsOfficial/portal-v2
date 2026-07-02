@@ -15,7 +15,7 @@ export default async function AdminSettingsLayout({ children }: { children: Reac
     <div className="mx-auto max-w-5xl space-y-4 lg:space-y-6">
       <PageHeader
         title="Settings"
-        description="Manage your company, profile, regional preferences, and integrations."
+        description="Manage your company, profile, appearance, regional preferences, and integrations."
       />
       <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4">
         <aside className="lg:w-64">

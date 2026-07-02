@@ -4,6 +4,7 @@ import { getFirebaseAdminApp, getFirebaseStorageBucketName } from "@/lib/firebas
 import { logError } from "@/lib/common/logging";
 
 const MAX_SIGNATURE_BYTES = 2_400_000;
+const MAX_BRANDING_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
  * Uploads a PNG signature to the default Firebase Storage bucket (best-effort).
@@ -59,6 +60,40 @@ export async function uploadSignedAgreementSignaturePng(params: {
 }
 
 /**
+ * Upload the portal branding logo via the Admin SDK.
+ * Returns a Firebase download URL with a storage token.
+ */
+export async function uploadBrandingLogoAdmin(
+  buffer: Buffer,
+  contentType: string,
+  originalName: string,
+): Promise<string> {
+  if (buffer.length > MAX_BRANDING_IMAGE_BYTES) {
+    throw new Error("Image must be 5 MB or smaller.");
+  }
+
+  const ext = originalName.split(".").pop()?.toLowerCase() || "png";
+  return savePublicStorageImage(`branding/logo.${ext}`, buffer, contentType);
+}
+
+/**
+ * Upload the portal favicon via the Admin SDK.
+ * Returns a Firebase download URL with a storage token.
+ */
+export async function uploadBrandingFaviconAdmin(
+  buffer: Buffer,
+  contentType: string,
+  originalName: string,
+): Promise<string> {
+  if (buffer.length > MAX_BRANDING_IMAGE_BYTES) {
+    throw new Error("Image must be 5 MB or smaller.");
+  }
+
+  const ext = originalName.split(".").pop()?.toLowerCase() || "png";
+  return savePublicStorageImage(`branding/favicon.${ext}`, buffer, contentType);
+}
+
+/**
  * Short-lived HTTPS URL for a private Storage object (e.g. signature PNG in staff document viewer).
  */
 export async function getStorageFileSignedReadUrl(
@@ -88,4 +123,41 @@ export async function getStorageFileSignedReadUrl(
     });
     return null;
   }
+}
+
+async function savePublicStorageImage(
+  path: string,
+  buffer: Buffer,
+  contentType: string,
+): Promise<string> {
+  const app = getFirebaseAdminApp();
+  if (!app) {
+    throw new Error("Storage is not configured.");
+  }
+
+  const projectIdFromApp =
+    typeof app.options.projectId === "string" && app.options.projectId.length > 0
+      ? app.options.projectId
+      : undefined;
+  const bucketName = getFirebaseStorageBucketName(projectIdFromApp);
+  if (!bucketName) {
+    throw new Error("Storage bucket is not configured.");
+  }
+
+  const bucket = getStorage(app).bucket(bucketName);
+  const file = bucket.file(path);
+  const token = randomUUID();
+
+  await file.save(buffer, {
+    contentType: contentType || "image/jpeg",
+    resumable: false,
+    metadata: {
+      metadata: {
+        firebaseStorageDownloadTokens: token,
+      },
+    },
+  });
+
+  const encoded = encodeURIComponent(path);
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encoded}?alt=media&token=${token}`;
 }

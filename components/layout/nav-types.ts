@@ -29,6 +29,7 @@ export interface PortalShellNav {
 export interface PortalShellBrand {
   label: string;
   href: string;
+  logoUrl?: string | null;
 }
 
 export interface PortalShellProps extends PortalShellNav {

@@ -45,6 +45,8 @@ export const COLLECTIONS = {
   supportTickets: "support_tickets",
   /** Workspace company profile — one doc per org (`organizations/{orgId}`). */
   organizations: "organizations",
+  /** Global portal configuration — e.g. `branding` for appearance settings. */
+  appSettings: "app_settings",
   /**
    * Portal service catalogue — synced to Stripe Products/Prices on activate.
    * (Renamed from `catalog_services`; migrate existing docs in Firebase if needed.)

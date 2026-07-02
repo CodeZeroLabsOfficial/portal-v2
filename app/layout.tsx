@@ -9,19 +9,29 @@ import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 import { ActiveThemeProvider } from "@/components/active-theme";
+import { DEFAULT_BRANDING_FONT, isBrandingFontId } from "@/lib/fonts-config";
 import { DEFAULT_THEME } from "@/lib/themes";
+import { getPortalAppearanceSettings } from "@/server/firestore/appearance-settings";
 import { Toaster } from "@/components/ui/sonner";
 
-export const metadata: Metadata = {
-  title: "Code Zero Labs Portal",
-  description: "CRM, billing, and proposals for Code Zero Labs.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const appearance = await getPortalAppearanceSettings();
+  const portalName = appearance?.portalName?.trim() || "Code Zero Labs";
+  const iconUrl = appearance?.faviconUrl || appearance?.logoUrl;
+
+  return {
+    title: `${portalName} Portal`,
+    description: "CRM, billing, and proposals for Code Zero Labs.",
+    ...(iconUrl ? { icons: { icon: iconUrl } } : {}),
+  };
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appearance = await getPortalAppearanceSettings();
   const cookieStore = await cookies();
   const themeSettings = {
     preset: (cookieStore.get("theme_preset")?.value ?? DEFAULT_THEME.preset) as never,
@@ -37,11 +47,24 @@ export default async function RootLayout({
       .map(([key, value]) => [`data-theme-${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`, value]),
   );
 
+  const fontFamily =
+    appearance?.fontFamily && isBrandingFontId(appearance.fontFamily)
+      ? appearance.fontFamily
+      : DEFAULT_BRANDING_FONT;
+
+  const portalPrimary = appearance?.primaryColorHex?.trim();
+  const portalStyle = portalPrimary
+    ? ({ "--portal-primary": portalPrimary } as React.CSSProperties)
+    : undefined;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={cn("bg-background group/layout font-sans", fontVariables)}
+        data-theme-font={fontFamily}
+        {...(portalPrimary ? { "data-has-portal-primary": "" } : {})}
+        style={portalStyle}
         {...bodyAttributes}
       >
         <ThemeProvider

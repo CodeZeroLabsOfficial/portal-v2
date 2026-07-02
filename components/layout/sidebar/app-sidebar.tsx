@@ -4,9 +4,9 @@ import * as React from "react";
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SquareTerminalIcon } from "lucide-react";
 
 import { useIsTablet } from "@/hooks/use-mobile";
+import { Logo } from "@/components/layout/logo";
 import {
   Sidebar,
   SidebarContent,
@@ -46,10 +46,11 @@ export function AppSidebar({ items, footerItems, brand, ...props }: AppSidebarPr
               className="hover:text-foreground h-10 group-data-[collapsible=icon]:px-0!"
             >
               <Link href={brand.href}>
-                <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <SquareTerminalIcon className="size-4" />
-                </div>
-                <span className="text-foreground font-semibold">{brand.label}</span>
+                <Logo
+                  logoUrl={brand.logoUrl}
+                  portalName={brand.label}
+                  className="group-data-[collapsible=icon]:[&>span]:hidden"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
