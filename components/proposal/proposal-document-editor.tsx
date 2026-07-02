@@ -123,7 +123,6 @@ import {
   PricingInlineEditor,
 } from "@/components/proposal/proposal-block-inline-editors";
 import { BlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import { DeleteProposalTemplateButton } from "@/components/proposal/delete-proposal-template-button";
 import { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
 import {
   AGREEMENT_SUBSCRIPTION_START_DATE_MODE_OPTIONS,
@@ -159,7 +158,7 @@ import {
 } from "@/server/actions/proposal-templates";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 import { saveContractTemplateAction } from "@/server/actions/contract-templates";
-import { DeleteContractTemplateButton } from "@/components/features/templates/delete-contract-template-button";
+import { TemplateEditorActionsMenu } from "@/components/features/templates/template-editor-actions-menu";
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1710,7 +1709,7 @@ function SectionBlockFields({
                     }
                     return (
                       <BlockToolbar
-                        appearance="surface"
+                        appearance="elevated"
                         blockType={
                           child.type === "pricing"
                             ? "pricing"
@@ -2782,7 +2781,7 @@ function AgreementBlockFields({
                     }
                     return (
                       <BlockToolbar
-                        appearance="surface"
+                        appearance="elevated"
                         blockType={
                           child.type === "pricing"
                             ? "pricing"
@@ -3723,7 +3722,6 @@ export function ProposalDocumentEditor({
   contractTemplateId,
   initialTemplateName = "",
   initialTemplateDescription = "",
-  initialTemplateStage = "draft",
   initialAgreementTitle = "",
   initialDocument,
   initialStatus = "draft",
@@ -4193,51 +4191,23 @@ export function ProposalDocumentEditor({
               )}
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              {isContractTemplate ? (
-                <DeleteContractTemplateButton
-                  contractTemplateId={contractTemplateId!}
-                  templateName={templateName.trim() || initialTemplateName || "Untitled contract"}
-                />
-              ) : (
-                <DeleteProposalTemplateButton
-                  templateId={templateId!}
-                  templateName={templateName.trim() || initialTemplateName || "Untitled template"}
-                />
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
-                asChild
-              >
-                <Link
-                  href={
-                    isContractTemplate
-                      ? `/admin/templates/contracts/${contractTemplateId}/preview`
-                      : `/admin/templates/${templateId}/preview`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-4 w-4" aria-hidden />
-                  Preview
-                </Link>
-              </Button>
-              {isTemplate ? (
-                <SavePublishActions
-                  saving={saving}
-                  sending={sending}
-                  saveJustSucceeded={saveJustSucceeded}
-                  publishJustSucceeded={publishJustSucceeded}
-                  onSave={() => void save()}
-                  onPublish={() => void publishTemplate()}
-                />
-              ) : (
-                <Button type="button" size="sm" disabled={saving} onClick={() => void save()} className="gap-2">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Save
-                </Button>
-              )}
+              <TemplateEditorActionsMenu
+                variant={isContractTemplate ? "contract-template" : "template"}
+                templateId={templateId}
+                contractTemplateId={contractTemplateId}
+                templateName={templateName.trim() || initialTemplateName || ""}
+                previewHref={
+                  isContractTemplate
+                    ? `/admin/templates/contracts/${contractTemplateId}/preview`
+                    : `/admin/templates/${templateId}/preview`
+                }
+                saving={saving}
+                sending={sending}
+                saveJustSucceeded={saveJustSucceeded}
+                publishJustSucceeded={publishJustSucceeded}
+                onSave={() => void save()}
+                onPublish={isTemplate ? () => void publishTemplate() : undefined}
+              />
             </div>
           </div>
           {isContractTemplate ? (
@@ -4254,11 +4224,6 @@ export function ProposalDocumentEditor({
             </div>
           ) : null}
           {message ? <span className="block text-sm text-muted-foreground">{message}</span> : null}
-          {isTemplate && initialTemplateStage === "draft" ? (
-            <p className="text-xs text-muted-foreground">
-              Publish marks the template as ready to use when creating proposals from CRM.
-            </p>
-          ) : null}
         </>
       ) : proposalEditShellToolbar ? (
         <>
@@ -4447,7 +4412,7 @@ export function ProposalDocumentEditor({
                             }
                             return (
                             <BlockToolbar
-                              appearance="surface"
+                              appearance="elevated"
                               blockType={
                                 block.type === "pricing"
                                   ? "pricing"
