@@ -775,6 +775,7 @@ function parseInvoice(id: string, data: Record<string, unknown>): InvoiceRecord 
     amountDue: asNumber(data.amountDue) ?? 0,
     hostedInvoiceUrl: asString(data.hostedInvoiceUrl),
     invoicePdf: asString(data.invoicePdf),
+    invoiceNumber: asString(data.invoiceNumber),
     issuedAt: millisFromFirestore(data, "issuedAt"),
     paidAt: asNumber(data.paidAt),
   };

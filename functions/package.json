@@ -6,7 +6,9 @@
   },
   "main": "lib/index.js",
   "scripts": {
+    "prebuild": "rm -rf src/_shared && cp -r ../shared/stripe src/_shared",
     "build": "tsc",
+    "postbuild": "rm -rf src/_shared",
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },

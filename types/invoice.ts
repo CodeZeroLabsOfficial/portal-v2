@@ -12,6 +12,8 @@ export interface InvoiceRecord {
   amountDue: number;
   hostedInvoiceUrl?: string;
   invoicePdf?: string;
+  /** Stripe `invoice.number` (e.g. INV-0042) when finalized. */
+  invoiceNumber?: string;
   /** Epoch millis — Firestore `issuedAt`. */
   issuedAt: number;
   /** Epoch millis — Firestore `paidAt`. */

@@ -46,3 +46,12 @@ export function formatStripeInvoiceLabel(stripeInvoiceId: string): string {
   if (trimmed.length <= 16) return trimmed;
   return `…${trimmed.slice(-12)}`;
 }
+
+/** Human-readable invoice number when synced; otherwise truncated Stripe id. */
+export function formatInvoiceDisplayLabel(
+  invoice: Pick<InvoiceRecord, "invoiceNumber" | "stripeInvoiceId">,
+): string {
+  const number = invoice.invoiceNumber?.trim();
+  if (number) return number;
+  return formatStripeInvoiceLabel(invoice.stripeInvoiceId);
+}

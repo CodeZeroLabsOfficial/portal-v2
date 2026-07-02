@@ -6,9 +6,11 @@ This portal syncs Stripe **Customers**, **Subscriptions**, **Invoices**, and **P
 
 1. Create or open your [Stripe Dashboard](https://dashboard.stripe.com) account (test mode while integrating).
 2. Under **Developers → API keys**, copy the **Secret key** (`sk_live_…` / `sk_test_…`).
-3. Under **Developers → Webhooks → Add endpoint**, point to your deployed app:
+3. Under **Developers → Webhooks → Add endpoint**, point to the deployed Firebase function:
 
-   `https://<your-domain>/api/webhooks/stripe`
+   `https://australia-southeast1-<firebase-project-id>.cloudfunctions.net/stripeWebhook`
+
+   (Gen2 URLs may use `https://stripewebhook-<hash>-<region>.a.run.app` — copy the URL from `firebase deploy` output or the Firebase console.)
 
 4. Select events (minimum set used by this codebase):
 
@@ -17,19 +19,45 @@ This portal syncs Stripe **Customers**, **Subscriptions**, **Invoices**, and **P
    - `invoice.created`, `invoice.updated`, `invoice.finalized`, `invoice.paid`, `invoice.payment_failed`, `invoice.voided`
    - `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`
 
-5. After saving the endpoint, reveal the **Signing secret** (`whsec_…`).
+5. After saving the endpoint, reveal the **Signing secret** (`whsec_…`) and store it as a Firebase secret (see below).
 
-## 2. Environment variables
+6. **Disable** any legacy endpoint that pointed at `https://<your-domain>/api/webhooks/stripe` — only one webhook URL should be active.
 
-Set these on your hosting provider (e.g. Vercel) or in `.env.local` for development:
+## 2. Environment variables and secrets
+
+### Firebase Cloud Functions (webhook — required)
+
+Set via [Firebase secret manager](https://firebase.google.com/docs/functions/config-env):
+
+| Secret | Purpose |
+|--------|---------|
+| `STRIPE_SECRET_KEY` | Stripe SDK inside `stripeWebhook` |
+| `STRIPE_WEBHOOK_SECRET` | Verifies `Stripe-Signature` on the function |
+
+Deploy:
+
+```bash
+cd functions && npm run build && firebase deploy --only functions:stripeWebhook
+```
+
+Local forwarding (replace URL with your function endpoint):
+
+```bash
+stripe listen --forward-to https://australia-southeast1-<project>.cloudfunctions.net/stripeWebhook
+```
+
+### Next.js app (staff/customer routes — not the webhook)
+
+Set on your hosting provider (e.g. Vercel) or in `.env.local` for development:
 
 | Variable | Purpose |
 |----------|---------|
 | `STRIPE_SECRET_KEY` | Server-side Stripe SDK — invoices, Checkout, Billing Portal |
-| `STRIPE_WEBHOOK_SECRET` | Verifies `Stripe-Signature` on `/api/webhooks/stripe` |
 | `STRIPE_DEFAULT_SUBSCRIPTION_PRICE_ID` | Optional `price_…` id for proposal “Checkout (subscription)” without prompting |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS` | Firebase Admin — required for Firestore writes |
 | `NEXT_PUBLIC_APP_URL` | Optional fallback origin if reverse-proxy headers are missing |
+
+`STRIPE_WEBHOOK_SECRET` is **not** required on the Next.js host after migrating to Firebase.
 
 Never expose secret keys to the browser; only `NEXT_PUBLIC_*` belongs in client bundles.
 
@@ -41,11 +69,13 @@ Webhook handlers write to:
 |------------|-------------|----------|
 | `stripe_customers` | Stripe Customer id `cus_…` | Email, name, metadata mirror |
 | `subscriptions` | Stripe Subscription id `sub_…` | Status, price, period end, optional `mrrAmount` |
-| `invoices` | Stripe Invoice id `in_…` | Amount due, hosted/PDF URLs, status |
+| `invoices` | Stripe Invoice id `in_…` | Amount due, hosted/PDF URLs, `invoiceNumber`, status |
 | `payments` | Stripe PaymentIntent id `pi_…` | Amount, status |
 | `stripe_webhook_events` | Stripe Event id `evt_…` | Idempotency marker |
 
 Rows include `customerId` (Stripe `cus_…`) and optional `organizationId` from Stripe metadata (`organization_id`).
+
+Matched portal users also receive mirrors under `users/{uid}/invoices`, `users/{uid}/subscriptions`, and `users/{uid}/payments`.
 
 ### Linking CRM contacts
 
@@ -59,24 +89,23 @@ Webhook endpoints write with **Admin SDK** only. Client reads must go through ru
 
 | Route | Role | Behavior |
 |-------|------|----------|
-| `POST /api/webhooks/stripe` | Stripe servers | Validates signature, applies `applyStripeWebhookEvent` |
+| `POST /api/webhooks/stripe` | Deprecated | Returns **410 Gone** — use Firebase `stripeWebhook` instead |
 | `POST /api/stripe/billing-portal` | Signed-in customer | Creates Billing Portal session; requires `users/{uid}.stripeCustomerId` |
 | `POST /api/stripe/proposal-invoice` | Admin / team | Builds totals from proposal pricing + accepted packages; creates & finalizes a Stripe Invoice |
 | `POST /api/stripe/proposal-checkout` | Admin / team | Creates Checkout Session — `mode: "payment"` uses computed totals; `mode: "subscription"` requires a `price_…` |
 
 Staff UX lives on `/admin/proposals/[proposalId]` (Stripe billing card). Customers use `/customer` for portal entry, invoices list, and **Manage billing & invoices**.
 
-## 5. Cloud Functions (optional)
+## 5. Shared sync implementation
 
-The canonical webhook implementation ships with the Next.js app so Vercel (or any Node host) can verify signatures and write to Firestore in one deploy.
+Firestore mirror logic lives in `shared/stripe/stripe-sync.ts` (`applyStripeWebhookEvent`). It is used by:
 
-If you **must** terminate webhooks on Firebase Cloud Functions instead:
+- Firebase **`stripeWebhook`** (canonical writer for Stripe events)
+- Next.js server actions that upsert subscription rows after staff creates schedules
 
-1. Add the same env vars as secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`).
-2. Deploy an HTTPS function that reads the **raw body**, verifies with `stripe.webhooks.constructEvent`, then runs the same Firestore mirror logic as `server/stripe/stripe-sync.ts` (`applyStripeWebhookEvent`).
-3. Point Stripe’s webhook URL at the function URL.
+The `functions/` build copies `shared/stripe` into `src/_shared` before `tsc` so deployed bundles are self-contained.
 
-Keeping **one** implementation (either Next.js **or** Cloud Functions) avoids drift. If both are reachable, disable one endpoint to prevent duplicate processing.
+Keeping **one** Stripe webhook endpoint (Firebase only) avoids duplicate processing. Idempotency is enforced via `stripe_webhook_events`.
 
 ### Official Firebase Extensions
 
@@ -84,8 +113,10 @@ Stripe maintains Firebase Extensions for specific workflows (e.g. catalog or pay
 
 ## 6. Operational checklist
 
-- [ ] Stripe webhook URL reachable over HTTPS from Stripe’s IPs.
-- [ ] Same webhook signing secret as `STRIPE_WEBHOOK_SECRET`.
-- [ ] Firebase Admin credentials present on the server.
+- [ ] Firebase `stripeWebhook` deployed and reachable over HTTPS from Stripe.
+- [ ] `STRIPE_WEBHOOK_SECRET` set as a Firebase secret matching the active Stripe endpoint.
+- [ ] Legacy Next.js webhook URL disabled in Stripe Dashboard.
+- [ ] `STRIPE_SECRET_KEY` on Firebase (functions) and Next.js (create routes).
+- [ ] Firebase Admin credentials present on the Next.js server.
 - [ ] Customer Portal branding configured under Stripe **Settings → Billing → Customer portal**.
-- [ ] Test mode end-to-end: invoice from proposal → webhook rows appear → customer sees mirrors on `/customer`.
+- [ ] Test mode end-to-end: invoice from proposal → webhook rows appear → staff/customer views show mirrors.

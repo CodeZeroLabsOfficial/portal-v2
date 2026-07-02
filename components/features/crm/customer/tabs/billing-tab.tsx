@@ -46,37 +46,52 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
         enableHiding: true
       },
       {
+        id: "issued",
+        header: "Issued",
+        accessorFn: (row) => row.issuedSort,
+        sortingFn: "basic",
+        cell: ({ row }) => {
+          const issuedAt = row.original.issuedAt;
+          return (
+            <span className="text-muted-foreground text-sm">
+              {issuedAt ? new Date(issuedAt).toLocaleDateString() : "—"}
+            </span>
+          );
+        }
+      },
+      {
         id: "invoice",
-        header: "Invoice",
+        header: "Invoice Number",
         accessorKey: "invoiceLabel",
         cell: ({ row }) => {
           const invoice = row.original;
           const label = invoice.invoiceLabel;
           const primaryUrl = invoice.hostedInvoiceUrl ?? invoice.invoicePdf;
 
+          if (primaryUrl) {
+            return (
+              <Link
+                href={primaryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium hover:underline">
+                {label}
+              </Link>
+            );
+          }
+
+          return <span className="font-medium">{label}</span>;
+        }
+      },
+      {
+        id: "amount",
+        header: () => <span className="block text-right">Amount</span>,
+        accessorKey: "amountDue",
+        cell: ({ row }) => {
+          const invoice = row.original;
           return (
-            <div className="space-y-1">
-              {primaryUrl ? (
-                <Link
-                  href={primaryUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium hover:underline">
-                  {label}
-                </Link>
-              ) : (
-                <span className="font-medium">{label}</span>
-              )}
-              {invoice.hostedInvoiceUrl && invoice.invoicePdf ? (
-                <Link
-                  href={invoice.invoicePdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary inline-flex items-center gap-1 text-xs font-medium hover:underline">
-                  <Download className="size-3.5 shrink-0" aria-hidden />
-                  PDF
-                </Link>
-              ) : null}
+            <div className="text-right tabular-nums">
+              {formatCurrencyAmount(invoice.amountDue, invoice.currency)}
             </div>
           );
         }
@@ -92,28 +107,26 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
         }
       },
       {
-        id: "issued",
-        header: "Issued",
-        accessorFn: (row) => row.issuedSort,
-        sortingFn: "basic",
-        cell: ({ row }) => {
-          const issuedAt = row.original.issuedAt;
-          return (
-            <span className="text-muted-foreground text-sm">
-              {issuedAt ? new Date(issuedAt).toLocaleDateString() : "—"}
-            </span>
-          );
-        }
-      },
-      {
-        id: "amount",
-        header: () => <span className="block text-right">Amount</span>,
-        accessorKey: "amountDue",
+        id: "pdf",
+        header: () => null,
+        enableSorting: false,
         cell: ({ row }) => {
           const invoice = row.original;
+          if (!invoice.hostedInvoiceUrl || !invoice.invoicePdf) {
+            return null;
+          }
+
           return (
-            <div className="text-right tabular-nums">
-              {formatCurrencyAmount(invoice.amountDue, invoice.currency)}
+            <div className="text-right">
+              <Link
+                href={invoice.invoicePdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Download PDF for ${invoice.invoiceLabel}`}
+                className="text-primary inline-flex items-center gap-1 text-xs font-medium hover:underline">
+                <Download className="size-3.5 shrink-0" aria-hidden />
+                PDF
+              </Link>
             </div>
           );
         }

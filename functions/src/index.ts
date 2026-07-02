@@ -332,3 +332,5 @@ export const deletePaymentMethod = functions.region("australia-southeast1").http
 export const portalFunctionsHealth = functions.region("australia-southeast1").https.onRequest((_req, res) => {
   res.status(200).send("Portal Cloud Functions bundle loaded.");
 });
+
+export { stripeWebhook } from "./stripe/webhook";

@@ -2,7 +2,7 @@ import type { DateRange } from "react-day-picker";
 import { endOfDay, startOfDay } from "date-fns";
 
 import type { FacetedFilterOption } from "@/components/shared/data-table/data-table-faceted-filter";
-import { formatStripeInvoiceLabel } from "@/lib/crm/customer-billing-metrics";
+import { formatInvoiceDisplayLabel } from "@/lib/crm/customer-billing-metrics";
 import { invoiceStatusBadgeDisplay } from "@/lib/crm/invoice-status-badge";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import type { InvoiceRecord, InvoiceStatus } from "@/types/invoice";
@@ -44,9 +44,9 @@ export function mapInvoicesToTableRows(invoices: InvoiceRecord[]): InvoiceTableR
     const statusLabel = invoiceStatusBadgeDisplay(invoice.status).label;
     return {
       ...invoice,
-      invoiceLabel: formatStripeInvoiceLabel(invoice.stripeInvoiceId),
+      invoiceLabel: formatInvoiceDisplayLabel(invoice),
       issuedSort: invoice.issuedAt ?? 0,
-      searchLabel: [invoice.stripeInvoiceId, statusLabel].filter(Boolean).join(" ")
+      searchLabel: [invoice.invoiceNumber, invoice.stripeInvoiceId, statusLabel].filter(Boolean).join(" "),
     };
   });
 }
