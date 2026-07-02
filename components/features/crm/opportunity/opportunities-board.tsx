@@ -1,54 +1,27 @@
 "use client";
 
 import * as React from "react";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent
-} from "@dnd-kit/core";
+import { GripVertical } from "lucide-react";
 
-import { OpportunityCard, formatOpportunityCardDate } from "@/components/features/crm/opportunity/opportunity-card";
+import { OpportunityKanbanCard } from "@/components/features/crm/opportunity/opportunity-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import * as Kanban from "@/components/ui/kanban";
 import {
   OPPORTUNITY_STAGES,
-  isOpportunityStage,
   opportunityStageLabel
 } from "@/lib/crm/opportunity-stages";
-import { cn } from "@/lib/utils";
+import { buildKanbanColumns, detectCrossColumnMove } from "@/lib/kanban/column-state";
 import { useOpportunityStageMutation } from "@/hooks/use-opportunity-stage-mutation";
 import type { OpportunityBoardCard, OpportunityStage } from "@/types/opportunity";
 
-function StageColumn({
-  stage,
-  children,
-  count
-}: {
-  stage: OpportunityStage;
-  children: React.ReactNode;
-  count: number;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "flex min-h-[420px] min-w-[260px] flex-1 flex-col rounded-xl border bg-muted/20",
-        isOver ? "border-primary/60 ring-1 ring-primary/30" : "border-border/70"
-      )}>
-      <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
-        <span className="text-[13px] font-semibold text-foreground">{opportunityStageLabel(stage)}</span>
-        <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium tabular-nums text-primary-foreground">
-          {count}
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col gap-2 p-2">{children}</div>
-    </div>
-  );
+function groupOpportunitiesByStage(
+  opportunities: OpportunityBoardCard[]
+): Record<OpportunityStage, OpportunityBoardCard[]> {
+  return buildKanbanColumns(OPPORTUNITY_STAGES, opportunities, (o) => o.stage) as Record<
+    OpportunityStage,
+    OpportunityBoardCard[]
+  >;
 }
 
 export interface OpportunitiesBoardProps {
@@ -57,79 +30,80 @@ export interface OpportunitiesBoardProps {
 
 export function OpportunitiesBoard({ opportunities }: OpportunitiesBoardProps) {
   const { moveStage, pendingId } = useOpportunityStageMutation();
-  const [activeId, setActiveId] = React.useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 }
-    })
+
+  const serverColumns = React.useMemo(() => groupOpportunitiesByStage(opportunities), [opportunities]);
+  const [columns, setColumns] = React.useState(serverColumns);
+  const dragPersistedRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    setColumns(serverColumns);
+  }, [serverColumns]);
+
+  const handleValueChange = React.useCallback(
+    (next: Record<OpportunityStage, OpportunityBoardCard[]>) => {
+      const moved = detectCrossColumnMove(columns, next, (o) => o.id);
+      setColumns(next as Record<OpportunityStage, OpportunityBoardCard[]>);
+      if (moved && dragPersistedRef.current !== moved.id) {
+        dragPersistedRef.current = moved.id;
+        void moveStage(moved.id, moved.newColumn as OpportunityStage);
+      }
+    },
+    [columns, moveStage]
   );
 
-  const byStage = React.useMemo(() => {
-    const map = new Map<OpportunityStage, OpportunityBoardCard[]>();
-    for (const s of OPPORTUNITY_STAGES) {
-      map.set(s, []);
-    }
-    for (const o of opportunities) {
-      const list = map.get(o.stage);
-      if (list) list.push(o);
-      else map.get("lead_in")!.push(o);
-    }
-    return map;
-  }, [opportunities]);
-
-  const activeOpp = activeId ? opportunities.find((o) => o.id === activeId) : undefined;
-
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(String(event.active.id));
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    const oid = String(event.active.id);
-    setActiveId(null);
-    const overId = event.over?.id;
-    if (!overId) return;
-    const opp = opportunities.find((o) => o.id === oid);
-    if (!opp) return;
-    const nextStage = String(overId);
-    if (!isOpportunityStage(nextStage)) return;
-    if (nextStage === opp.stage) return;
-    void moveStage(oid, nextStage);
+  function handleDragStart() {
+    dragPersistedRef.current = null;
   }
 
   function handleDragCancel() {
-    setActiveId(null);
+    dragPersistedRef.current = null;
   }
 
   return (
-    <DndContext
-      sensors={sensors}
+    <Kanban.Root
+      value={columns}
+      onValueChange={handleValueChange}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      onDragCancel={handleDragCancel}
+      getItemValue={(item) => item.id}>
+      <Kanban.Board className="flex w-full gap-4 overflow-x-auto pb-4">
         {OPPORTUNITY_STAGES.map((stage) => {
-          const list = byStage.get(stage) ?? [];
+          const stageDeals = columns[stage] ?? [];
           return (
-            <StageColumn key={stage} stage={stage} count={list.length}>
-              {list.map((opp) => (
-                <OpportunityCard key={opp.id} opp={opp} disabled={pendingId === opp.id} />
-              ))}
-            </StageColumn>
+            <Kanban.Column key={stage} value={stage} className="w-[340px] min-w-[340px]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">{opportunityStageLabel(stage)}</span>
+                  <Badge variant="outline">{stageDeals.length}</Badge>
+                </div>
+                <Kanban.ColumnHandle asChild>
+                  <Button variant="ghost" size="icon" aria-label={`Reorder ${opportunityStageLabel(stage)} column`}>
+                    <GripVertical className="h-4 w-4" />
+                  </Button>
+                </Kanban.ColumnHandle>
+              </div>
+              {stageDeals.length > 0 ? (
+                <div className="flex flex-col gap-2 p-0.5">
+                  {stageDeals.map((opp) => (
+                    <OpportunityKanbanCard
+                      key={opp.id}
+                      opp={opp}
+                      disabled={pendingId === opp.id}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-muted-foreground pt-4 text-sm">No deals in this stage.</div>
+              )}
+            </Kanban.Column>
           );
         })}
-      </div>
-      <DragOverlay dropAnimation={null}>
-        {activeOpp ? (
-          <div className="pointer-events-none min-w-[240px] max-w-[280px] rounded-xl border border-border bg-card p-3 shadow-lg">
-            <p className="text-[13px] font-semibold text-foreground">{activeOpp.name}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{activeOpp.leadContactName}</p>
-            <div className="mt-1.5 space-y-0.5 text-[11px] leading-snug text-muted-foreground">
-              <p>Created: {formatOpportunityCardDate(activeOpp.createdAt)}</p>
-              <p>Last update: {formatOpportunityCardDate(activeOpp.updatedAt)}</p>
-            </div>
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      </Kanban.Board>
+      <Kanban.Overlay>
+        <div className="bg-primary/10 size-full rounded-md" />
+      </Kanban.Overlay>
+    </Kanban.Root>
   );
 }
+
+export { groupOpportunitiesByStage };

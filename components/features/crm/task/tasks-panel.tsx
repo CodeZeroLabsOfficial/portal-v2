@@ -1,14 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { LayoutGrid, List, ListTodo, Plus } from "lucide-react";
+import { ListTodo, Plus } from "lucide-react";
 
 import { AddTaskDialog } from "@/components/features/crm/task/add-task-dialog";
 import { EditTaskDialog } from "@/components/features/crm/task/edit-task-dialog";
 import { TasksBoard } from "@/components/features/crm/task/tasks-board";
 import { TasksListTable } from "@/components/features/crm/task/tasks-list-table";
+import { KanbanBoardToolbar } from "@/components/shared/kanban-board-toolbar";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandSeparator
+} from "@/components/ui/command";
 import {
   Empty,
   EmptyDescription,
@@ -16,21 +25,24 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coerceTaskPriority } from "@/lib/tasks/task-priority";
 import { statusToBoardColumn, type TaskBoardColumnId } from "@/lib/tasks/task-board-columns";
-import { cn } from "@/lib/utils";
 import type { TaskRecord } from "@/types/task";
 
 export type TaskHubFilterTab = "all" | "my" | "high_priority" | "closing_soon";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const TAB_LABELS: { id: TaskHubFilterTab; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "my", label: "My" },
+const FILTER_TABS: { id: TaskHubFilterTab; label: string }[] = [
+  { id: "all", label: "All tasks" },
+  { id: "my", label: "My tasks" },
   { id: "high_priority", label: "High priority" },
   { id: "closing_soon", label: "Closing soon" }
 ];
+
+const PRIORITY_FILTERS = ["high", "medium", "low"] as const;
+type TaskPriorityFilter = (typeof PRIORITY_FILTERS)[number];
 
 function filterTasksForTab(tasks: TaskRecord[], tab: TaskHubFilterTab, viewerUid: string): TaskRecord[] {
   const now = Date.now();
@@ -55,16 +67,32 @@ function filterTasksForTab(tasks: TaskRecord[], tab: TaskHubFilterTab, viewerUid
   }
 }
 
+function filterTasksBySearch(tasks: TaskRecord[], query: string): TaskRecord[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return tasks;
+  return tasks.filter((t) => {
+    const title = t.title.toLowerCase();
+    const description = (t.description ?? "").toLowerCase();
+    const category = (t.category ?? "").toLowerCase();
+    return title.includes(q) || description.includes(q) || category.includes(q);
+  });
+}
+
+function filterTasksByPriority(tasks: TaskRecord[], priority: TaskPriorityFilter | null): TaskRecord[] {
+  if (!priority) return tasks;
+  return tasks.filter((t) => coerceTaskPriority(t.priority) === priority);
+}
+
 export interface TasksPanelProps {
   tasks: TaskRecord[];
   viewerUid: string;
-  /** Required to create tasks (Firestore `organizationId` on new rows). */
   organizationId?: string;
 }
 
 export function TasksPanel({ tasks, viewerUid, organizationId }: TasksPanelProps) {
-  const [mode, setMode] = React.useState<"board" | "list">("board");
   const [filterTab, setFilterTab] = React.useState<TaskHubFilterTab>("all");
+  const [priorityFilter, setPriorityFilter] = React.useState<TaskPriorityFilter | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [addOpen, setAddOpen] = React.useState(false);
   const [addDefaultColumn, setAddDefaultColumn] = React.useState<TaskBoardColumnId>("todo");
   const [editingTask, setEditingTask] = React.useState<TaskRecord | null>(null);
@@ -76,18 +104,56 @@ export function TasksPanel({ tasks, viewerUid, organizationId }: TasksPanelProps
     setAddOpen(true);
   }
 
-  const filtered = React.useMemo(
-    () => filterTasksForTab(tasks, filterTab, viewerUid),
-    [tasks, filterTab, viewerUid]
+  const filtered = React.useMemo(() => {
+    let result = filterTasksForTab(tasks, filterTab, viewerUid);
+    result = filterTasksByPriority(result, priorityFilter);
+    result = filterTasksBySearch(result, searchQuery);
+    return result;
+  }, [tasks, filterTab, viewerUid, priorityFilter, searchQuery]);
+
+  const activeFilterCount =
+    (filterTab !== "all" ? 1 : 0) + (priorityFilter ? 1 : 0);
+
+  function clearFilters() {
+    setFilterTab("all");
+    setPriorityFilter(null);
+  }
+
+  const filterContent = (
+    <Command>
+      <CommandList>
+        <CommandEmpty>No filters found.</CommandEmpty>
+        <CommandGroup heading="View">
+          {FILTER_TABS.map((tab) => (
+            <CommandItem
+              key={tab.id}
+              onSelect={() => setFilterTab(tab.id)}>
+              <span>{tab.label}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        <CommandSeparator />
+        <CommandGroup heading="Priority">
+          {PRIORITY_FILTERS.map((p) => (
+            <CommandItem key={p} onSelect={() => setPriorityFilter(p)}>
+              <span className="capitalize">{p}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        <CommandSeparator />
+        <CommandGroup>
+          <CommandItem onSelect={clearFilters} className="justify-center text-center">
+            Clear filters
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
   );
 
   if (!organizationId) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Tasks"
-          description="Stay on top of assignments and deadlines."
-        />
+      <div className="space-y-4">
+        <PageHeader title="Tasks" description="Stay on top of assignments and deadlines." />
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -105,79 +171,54 @@ export function TasksPanel({ tasks, viewerUid, organizationId }: TasksPanelProps
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Tasks"
-        description="Drag cards between columns or switch to list view to change status from the dropdown."
+        description="Drag cards between columns or switch to list view."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              disabled={!canCreateTasks}
-              title={
-                !canCreateTasks
-                  ? "Your user profile must include an organization id to create tasks."
-                  : undefined
-              }
-              onClick={() => openAddDialog("todo")}>
-              <Plus />
-              Add task
-            </Button>
-            <div className="flex rounded-lg border border-border/80 bg-muted/30 p-0.5">
-              <Button
-                type="button"
-                variant={mode === "board" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn("gap-1.5", mode === "board" && "shadow-sm")}
-                onClick={() => setMode("board")}>
-                <LayoutGrid className="h-4 w-4" aria-hidden />
-                Board
-              </Button>
-              <Button
-                type="button"
-                variant={mode === "list" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn("gap-1.5", mode === "list" && "shadow-sm")}
-                onClick={() => setMode("list")}>
-                <List className="h-4 w-4" aria-hidden />
-                List
-              </Button>
-            </div>
-          </div>
+          <Button
+            type="button"
+            disabled={!canCreateTasks}
+            title={
+              !canCreateTasks
+                ? "Your user profile must include an organization id to create tasks."
+                : undefined
+            }
+            onClick={() => openAddDialog("todo")}>
+            <Plus />
+            <span className="hidden lg:inline">Add task</span>
+          </Button>
         }
       />
 
-      <div className="flex flex-wrap gap-1 border-b border-border/60">
-        {TAB_LABELS.map((tab) => {
-          const active = filterTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilterTab(tab.id)}
-              className={cn(
-                "-mb-px px-3 pb-2 pt-1 text-sm transition-colors",
-                active
-                  ? "border-b-2 border-foreground font-semibold text-foreground"
-                  : "border-b-2 border-transparent font-medium text-muted-foreground hover:text-foreground"
-              )}>
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs defaultValue="board" className="w-full">
+        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:justify-between">
+          <TabsList>
+            <TabsTrigger value="board">Board</TabsTrigger>
+            <TabsTrigger value="list">List</TabsTrigger>
+          </TabsList>
 
-      {mode === "board" ? (
-        <TasksBoard
-          tasks={filtered}
-          onRequestAddToColumn={openAddDialog}
-          addDisabled={!canCreateTasks}
-          onRequestEditTask={(t) => setEditingTask(t)}
-        />
-      ) : (
-        <TasksListTable tasks={filtered} onRequestEditTask={(t) => setEditingTask(t)} />
-      )}
+          <KanbanBoardToolbar
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            searchPlaceholder="Search tasks…"
+            activeFilterCount={activeFilterCount}
+            filterContent={filterContent}
+          />
+        </div>
+
+        <TabsContent value="board">
+          <TasksBoard
+            tasks={filtered}
+            onRequestAddToColumn={openAddDialog}
+            addDisabled={!canCreateTasks}
+            onRequestEditTask={(t) => setEditingTask(t)}
+          />
+        </TabsContent>
+        <TabsContent value="list">
+          <TasksListTable tasks={filtered} onRequestEditTask={(t) => setEditingTask(t)} />
+        </TabsContent>
+      </Tabs>
 
       <AddTaskDialog
         open={addOpen}
