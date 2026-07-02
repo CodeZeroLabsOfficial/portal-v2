@@ -43,14 +43,14 @@ export function CustomerNotesPanel({ customerId, notes }: CustomerNotesPanelProp
         <AddCustomerNoteDialog customerId={customerId} />
       </div>
 
-      <div className="space-y-4 border-b border-border px-4 py-4 sm:px-5">
-        <div className="relative max-w-md">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-4 sm:px-5">
+        <div className="relative min-w-[10rem] flex-1 sm:max-w-[14rem]">
           <Search
             className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
             aria-hidden
           />
           <Input
-            className="pl-9"
+            className="h-9 pl-9"
             placeholder="Search notes"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -61,6 +61,7 @@ export function CustomerNotesPanel({ customerId, notes }: CustomerNotesPanelProp
           options={CUSTOMER_NOTE_FILTERS.map(({ value, label }) => ({ value, label }))}
           value={filter}
           onChange={setFilter}
+          className="min-w-0 sm:ms-auto"
         />
       </div>
 

@@ -92,7 +92,6 @@ export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps
         </VisuallyHidden>
         <form onSubmit={submit} className="p-6">
           <FilterPillGroup
-            label="Entry type"
             options={NOTE_KIND_OPTIONS}
             value={kind}
             onChange={setKind}
