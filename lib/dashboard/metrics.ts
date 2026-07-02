@@ -20,7 +20,7 @@ export function isCrmDirectoryCustomer(c: CustomerRecord): boolean {
   return !c.accountOnly;
 }
 
-/** Contacts carry the sky “Contact” badge in the CRM UI (`crmType === "contact"`). */
+/** Contacts use the sky CRM type badge (`crmType === "contact"`). */
 export function isCrmContact(c: CustomerRecord): boolean {
   return isCrmDirectoryCustomer(c) && c.crmType === "contact";
 }

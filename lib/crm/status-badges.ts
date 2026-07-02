@@ -24,9 +24,9 @@ export function customerStatusBadgeDisplay(status: "active" | "archived"): Statu
 
 export function customerCrmTypeBadgeDisplay(crmType: CustomerCrmType): StatusBadgeDisplay {
   if (crmType === "lead") {
-    return { label: "Lead", variant: "info" };
+    return { label: "Lead", variant: "amber" };
   }
-  return { label: "Contact", variant: "secondary" };
+  return { label: "Contact", variant: "sky" };
 }
 
 export function subscriptionRollupBadgeDisplay(
