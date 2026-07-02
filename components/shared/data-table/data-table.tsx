@@ -35,6 +35,8 @@ interface DataTableProps<TData, TValue> {
   toolbar?: (table: TanStackTable<TData>) => React.ReactNode;
   emptyMessage?: string;
   initialPageSize?: number;
+  initialSorting?: SortingState;
+  initialColumnVisibility?: VisibilityState;
 }
 
 export function DataTable<TData, TValue>({
@@ -42,12 +44,15 @@ export function DataTable<TData, TValue>({
   data,
   toolbar,
   emptyMessage = "No results.",
-  initialPageSize = 25
+  initialPageSize = 25,
+  initialSorting = [],
+  initialColumnVisibility = {}
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>(initialColumnVisibility);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
 
   const table = useReactTable({
     data,

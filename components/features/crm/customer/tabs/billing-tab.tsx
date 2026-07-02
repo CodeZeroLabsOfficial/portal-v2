@@ -3,25 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, Receipt } from "lucide-react";
+import type { DateRange } from "react-day-picker";
+import { Download } from "lucide-react";
 
+import { CustomerInvoiceTableToolbar } from "@/components/features/crm/customer/customer-invoice-table-toolbar";
 import { DataTable } from "@/components/shared/data-table/data-table";
-import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from "@/components/ui/empty";
 import { formatCurrencyAmount } from "@/lib/common/format";
-import {
-  customerBillingMetrics,
-  formatStripeInvoiceLabel
-} from "@/lib/crm/customer-billing-metrics";
+import { customerBillingMetrics } from "@/lib/crm/customer-billing-metrics";
 import { invoiceStatusBadgeDisplay } from "@/lib/crm/invoice-status-badge";
+import {
+  invoiceInDateRange,
+  mapInvoicesToTableRows,
+  multiSelectColumnFilter,
+  type InvoiceTableRow
+} from "@/lib/crm/invoice-table";
 import type { CustomerRecord } from "@/types/customer";
 import type { InvoiceRecord } from "@/types/invoice";
 
@@ -31,84 +28,46 @@ export interface CustomerBillingTabProps {
 }
 
 export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabProps) {
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
   const metrics = React.useMemo(() => customerBillingMetrics(invoices), [invoices]);
 
-  const columns = React.useMemo<ColumnDef<InvoiceRecord>[]>(
+  const tableRows = React.useMemo(() => {
+    const rows = mapInvoicesToTableRows(invoices);
+    return rows.filter((row) => invoiceInDateRange(row, dateRange));
+  }, [invoices, dateRange]);
+
+  const columns = React.useMemo<ColumnDef<InvoiceTableRow>[]>(
     () => [
       {
-        accessorKey: "stripeInvoiceId",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Invoice" />,
+        id: "searchLabel",
+        accessorKey: "searchLabel",
+        header: () => null,
+        cell: () => null,
+        enableHiding: true
+      },
+      {
+        id: "invoice",
+        header: "Invoice",
+        accessorKey: "invoiceLabel",
         cell: ({ row }) => {
           const invoice = row.original;
-          const label = formatStripeInvoiceLabel(invoice.stripeInvoiceId);
-          if (invoice.hostedInvoiceUrl) {
-            return (
-              <Link
-                href={invoice.hostedInvoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium hover:underline">
-                {label}
-              </Link>
-            );
-          }
-          return <span className="font-medium">{label}</span>;
-        }
-      },
-      {
-        accessorKey: "status",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-        cell: ({ row }) => {
-          const display = invoiceStatusBadgeDisplay(row.original.status);
-          return <StatusBadge label={display.label} variant={display.variant} />;
-        }
-      },
-      {
-        accessorKey: "issuedAt",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Issued" />,
-        cell: ({ row }) => {
-          const issuedAt = row.original.issuedAt;
+          const label = invoice.invoiceLabel;
+          const primaryUrl = invoice.hostedInvoiceUrl ?? invoice.invoicePdf;
+
           return (
-            <span className="text-muted-foreground text-sm">
-              {issuedAt ? new Date(issuedAt).toLocaleDateString() : "—"}
-            </span>
-          );
-        }
-      },
-      {
-        accessorKey: "amountDue",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Amount" className="justify-end" />
-        ),
-        cell: ({ row }) => {
-          const invoice = row.original;
-          return (
-            <div className="text-right tabular-nums">
-              {formatCurrencyAmount(invoice.amountDue, invoice.currency)}
-            </div>
-          );
-        }
-      },
-      {
-        id: "actions",
-        header: () => <span className="sr-only">Actions</span>,
-        cell: ({ row }) => {
-          const invoice = row.original;
-          if (!invoice.hostedInvoiceUrl && !invoice.invoicePdf) {
-            return <span className="text-muted-foreground text-sm">—</span>;
-          }
-          return (
-            <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-              {invoice.hostedInvoiceUrl ? (
+            <div className="space-y-1">
+              {primaryUrl ? (
                 <Link
-                  href={invoice.hostedInvoiceUrl}
+                  href={primaryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary text-xs font-medium hover:underline">
-                  View
+                  className="font-medium hover:underline">
+                  {label}
                 </Link>
-              ) : null}
-              {invoice.invoicePdf ? (
+              ) : (
+                <span className="font-medium">{label}</span>
+              )}
+              {invoice.hostedInvoiceUrl && invoice.invoicePdf ? (
                 <Link
                   href={invoice.invoicePdf}
                   target="_blank"
@@ -121,14 +80,46 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
             </div>
           );
         }
+      },
+      {
+        id: "status",
+        header: "Status",
+        accessorKey: "status",
+        filterFn: multiSelectColumnFilter,
+        cell: ({ row }) => {
+          const display = invoiceStatusBadgeDisplay(row.original.status);
+          return <StatusBadge label={display.label} variant={display.variant} />;
+        }
+      },
+      {
+        id: "issued",
+        header: "Issued",
+        accessorFn: (row) => row.issuedSort,
+        sortingFn: "basic",
+        cell: ({ row }) => {
+          const issuedAt = row.original.issuedAt;
+          return (
+            <span className="text-muted-foreground text-sm">
+              {issuedAt ? new Date(issuedAt).toLocaleDateString() : "—"}
+            </span>
+          );
+        }
+      },
+      {
+        id: "amount",
+        header: () => <span className="block text-right">Amount</span>,
+        accessorKey: "amountDue",
+        cell: ({ row }) => {
+          const invoice = row.original;
+          return (
+            <div className="text-right tabular-nums">
+              {formatCurrencyAmount(invoice.amountDue, invoice.currency)}
+            </div>
+          );
+        }
       }
     ],
     []
-  );
-
-  const sortedInvoices = React.useMemo(
-    () => [...invoices].sort((a, b) => (b.issuedAt ?? 0) - (a.issuedAt ?? 0)),
-    [invoices]
   );
 
   return (
@@ -165,23 +156,23 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
         </Card>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {sortedInvoices.length === 0 ? (
-            <Empty className="border-0 py-12 md:py-16">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Receipt />
-                </EmptyMedia>
-                <EmptyTitle className="text-xl">No billing yet</EmptyTitle>
-                <EmptyDescription>
-                  This customer doesn&apos;t have any invoices yet.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <DataTable columns={columns} data={sortedInvoices} emptyMessage="No invoices." />
-          )}
+      <Card className="min-w-0 py-0">
+        <CardContent className="space-y-2 px-6 pb-4 pt-4">
+          <DataTable
+            columns={columns}
+            data={tableRows}
+            initialPageSize={10}
+            initialSorting={[{ id: "issued", desc: true }]}
+            initialColumnVisibility={{ searchLabel: false }}
+            emptyMessage="No invoices for this customer."
+            toolbar={(table) => (
+              <CustomerInvoiceTableToolbar
+                table={table}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
+            )}
+          />
         </CardContent>
       </Card>
     </div>

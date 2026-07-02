@@ -30,7 +30,10 @@ import {
 } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+const ALL_TIME_PRESET = "allTime";
+
 const dateFilterPresets = [
+  { name: "All time", value: ALL_TIME_PRESET },
   { name: "Today", value: "today" },
   { name: "Yesterday", value: "yesterday" },
   { name: "This Week", value: "thisWeek" },
@@ -41,62 +44,114 @@ const dateFilterPresets = [
   { name: "This Year", value: "thisYear" }
 ];
 
-export default function CalendarDateRangePicker({
-  className
-}: React.HTMLAttributes<HTMLDivElement>) {
-  const isMobile = useIsMobile();
+function defaultUncontrolledRange(): DateRange {
   const today = new Date();
   const twentyEightDaysAgo = startOfDay(subDays(today, 27));
+  return { from: twentyEightDaysAgo, to: endOfDay(today) };
+}
 
-  // Initialize with "Last 28 days" as default
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: twentyEightDaysAgo,
-    to: endOfDay(today)
-  });
+export interface CalendarDateRangePickerProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  value?: DateRange;
+  onChange?: (range: DateRange | undefined) => void;
+}
+
+export default function CalendarDateRangePicker({
+  className,
+  value: controlledValue,
+  onChange
+}: CalendarDateRangePickerProps) {
+  const isMobile = useIsMobile();
+  const isControlled = onChange !== undefined;
+  const [uncontrolledDate, setUncontrolledDate] = React.useState<DateRange | undefined>(() =>
+    defaultUncontrolledRange()
+  );
+  const date = isControlled ? controlledValue : uncontrolledDate;
+
   const [open, setOpen] = React.useState(false);
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
+  const [activePreset, setActivePreset] = React.useState(
+    isControlled ? ALL_TIME_PRESET : "last28Days"
+  );
 
-  const handleQuickSelect = (from: Date, to: Date) => {
-    setDate({ from, to });
+  React.useEffect(() => {
+    if (!isControlled) return;
+    setActivePreset(controlledValue?.from ? "" : ALL_TIME_PRESET);
+  }, [isControlled, controlledValue]);
+
+  function applyRange(next: DateRange | undefined, preset: string) {
+    setActivePreset(preset);
+    if (isControlled) {
+      onChange(next);
+    } else {
+      setUncontrolledDate(next);
+    }
+  }
+
+  const handleQuickSelect = (from: Date, to: Date, preset: string) => {
+    applyRange({ from, to }, preset);
     setCurrentMonth(from);
   };
 
   const changeHandle = (type: string) => {
+    if (type === ALL_TIME_PRESET) {
+      applyRange(undefined, ALL_TIME_PRESET);
+      return;
+    }
+
     const today = new Date();
 
     switch (type) {
       case "today":
-        handleQuickSelect(startOfDay(today), endOfDay(today));
+        handleQuickSelect(startOfDay(today), endOfDay(today), type);
         break;
-      case "yesterday":
+      case "yesterday": {
         const yesterday = subDays(today, 1);
-        handleQuickSelect(startOfDay(yesterday), endOfDay(yesterday));
+        handleQuickSelect(startOfDay(yesterday), endOfDay(yesterday), type);
         break;
-      case "thisWeek":
+      }
+      case "thisWeek": {
         const startOfCurrentWeek = startOfWeek(today);
-        handleQuickSelect(startOfDay(startOfCurrentWeek), endOfDay(today));
+        handleQuickSelect(startOfDay(startOfCurrentWeek), endOfDay(today), type);
         break;
-      case "last7Days":
+      }
+      case "last7Days": {
         const sevenDaysAgo = subDays(today, 6);
-        handleQuickSelect(startOfDay(sevenDaysAgo), endOfDay(today));
+        handleQuickSelect(startOfDay(sevenDaysAgo), endOfDay(today), type);
         break;
-      case "last28Days":
-        const twentyEightDaysAgo = subDays(today, 27); // 27 days ago + today = 28 days
-        handleQuickSelect(startOfDay(twentyEightDaysAgo), endOfDay(today));
+      }
+      case "last28Days": {
+        const twentyEightDaysAgo = subDays(today, 27);
+        handleQuickSelect(startOfDay(twentyEightDaysAgo), endOfDay(today), type);
         break;
+      }
       case "thisMonth":
-        handleQuickSelect(startOfMonth(today), endOfDay(today));
+        handleQuickSelect(startOfMonth(today), endOfDay(today), type);
         break;
-      case "lastMonth":
+      case "lastMonth": {
         const lastMonth = subMonths(today, 1);
-        handleQuickSelect(startOfMonth(lastMonth), endOfMonth(lastMonth));
+        handleQuickSelect(startOfMonth(lastMonth), endOfMonth(lastMonth), type);
         break;
-      case "thisYear":
+      }
+      case "thisYear": {
         const startOfCurrentYear = startOfYear(today);
-        handleQuickSelect(startOfDay(startOfCurrentYear), endOfDay(today));
+        handleQuickSelect(startOfDay(startOfCurrentYear), endOfDay(today), type);
         break;
+      }
     }
   };
+
+  const triggerLabel = date?.from ? (
+    date.to ? (
+      <>
+        {format(date.from, "dd MMM yyyy")} - {format(date.to, "dd MMM yyyy")}
+      </>
+    ) : (
+      format(date.from, "dd MMM yyyy")
+    )
+  ) : (
+    <span>All time</span>
+  );
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -109,50 +164,28 @@ export default function CalendarDateRangePicker({
                   <TooltipTrigger asChild>
                     <Button
                       id="date"
-                      variant={"outline"}
+                      variant="outline"
                       className={cn(
                         "justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
+                        !date?.from && "text-muted-foreground"
                       )}>
                       <CalendarIcon />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {date?.from ? (
-                      date.to ? (
-                        <>
-                          {format(date.from, "dd MMM yyyy")} - {format(date.to, "dd MMM yyyy")}
-                        </>
-                      ) : (
-                        format(date.from, "dd MMM yyyy")
-                      )
-                    ) : (
-                      <span>Select date range</span>
-                    )}
-                  </TooltipContent>
+                  <TooltipContent>{triggerLabel}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           ) : (
             <Button
               id="date"
-              variant={"outline"}
+              variant="outline"
               className={cn(
                 "justify-start text-left font-normal",
-                !date && "text-muted-foreground"
+                !date?.from && "text-muted-foreground"
               )}>
               <CalendarIcon />
-              {date?.from ? (
-                date.to ? (
-                  <>
-                    {format(date.from, "dd MMM yyyy")} - {format(date.to, "dd MMM yyyy")}
-                  </>
-                ) : (
-                  format(date.from, "dd MMM yyyy")
-                )
-              ) : (
-                <span>Select date range</span>
-              )}
+              {triggerLabel}
             </Button>
           )}
         </PopoverTrigger>
@@ -161,11 +194,11 @@ export default function CalendarDateRangePicker({
             <div className="me-0 lg:me-4">
               <ToggleGroup
                 type="single"
-                defaultValue="last28Days"
+                value={activePreset}
                 className="hidden w-28 flex-col lg:block">
-                {dateFilterPresets.map((item, key) => (
+                {dateFilterPresets.map((item) => (
                   <ToggleGroupItem
-                    key={key}
+                    key={item.value}
                     className="text-muted-foreground w-full"
                     value={item.value}
                     onClick={() => changeHandle(item.value)}
@@ -174,16 +207,16 @@ export default function CalendarDateRangePicker({
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <Select defaultValue="last28Days" onValueChange={(value) => changeHandle(value)}>
+              <Select value={activePreset} onValueChange={(value) => changeHandle(value)}>
                 <SelectTrigger
                   className="mb-4 flex w-full lg:hidden"
                   size="sm"
                   aria-label="Select a value">
-                  <SelectValue placeholder="Last 28 Days" />
+                  <SelectValue placeholder="All time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {dateFilterPresets.map((item, key) => (
-                    <SelectItem key={key} value={item.value}>
+                  {dateFilterPresets.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
                       {item.name}
                     </SelectItem>
                   ))}
@@ -196,7 +229,12 @@ export default function CalendarDateRangePicker({
               month={currentMonth}
               selected={date}
               onSelect={(newDate) => {
-                setDate(newDate);
+                if (isControlled) {
+                  onChange(newDate);
+                } else {
+                  setUncontrolledDate(newDate);
+                }
+                setActivePreset("");
                 if (newDate?.from) {
                   setCurrentMonth(newDate.from);
                 }
