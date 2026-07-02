@@ -25,6 +25,7 @@ import {
   PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
   PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
   PROPOSAL_DOCUMENT_ROOT_STACK_GAP_CLASSES,
+  PROPOSAL_EDITOR_SECTION_INNER_PAD_BOTTOM_CLASSES,
   PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
 } from "@/lib/proposal/public/public-layout";
 import { firstRootSplashBlockId, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
@@ -62,6 +63,8 @@ export interface ProposalDocumentViewProps {
   customerSignerPrefill?: ProposalCustomerSignerPrefill | null;
   /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
   catalogServices?: readonly CatalogServicePickerOption[];
+  /** In-editor live preview — first section band sits flush under the preview frame. */
+  flushTop?: boolean;
 }
 
 function BlockView({
@@ -71,6 +74,7 @@ function BlockView({
   viewportSectionBleed,
   splashPublicPresentation,
   proposalContext,
+  sectionInnerPadClasses,
 }: {
   block: ProposalBlock | ProposalContentBlock;
   shareToken?: string;
@@ -78,6 +82,7 @@ function BlockView({
   viewportSectionBleed?: boolean;
   splashPublicPresentation?: "editor" | "nestedColumn" | "rootFullWidth";
   proposalContext?: ProposalRenderContext;
+  sectionInnerPadClasses?: string;
 }) {
   const renderBlock = (child: ProposalBlock | ProposalContentBlock) => (
     <BlockView
@@ -90,6 +95,7 @@ function BlockView({
         viewportSectionBleed && child.type === "splash" ? "nestedColumn" : splashPublicPresentation
       }
       proposalContext={proposalContext}
+      sectionInnerPadClasses={sectionInnerPadClasses}
     />
   );
 
@@ -111,7 +117,12 @@ function BlockView({
       const sb = block as SectionBlock;
       const stack = sb.children.map((c) => renderBlock(c));
       const body = (
-        <div className={cn(PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES, PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES)}>
+        <div
+          className={cn(
+            PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
+            sectionInnerPadClasses ?? PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
+          )}
+        >
           <div className="flex flex-col">{stack}</div>
         </div>
       );
@@ -174,6 +185,7 @@ export function ProposalDocumentView({
   publicSubscriptionUi = null,
   customerSignerPrefill = null,
   catalogServices = [],
+  flushTop = false,
 }: ProposalDocumentViewProps) {
   const style = React.useMemo(() => {
     if (!branding?.primaryColor && !branding?.fontFamily) return undefined;
@@ -240,7 +252,12 @@ export function ProposalDocumentView({
       ) : null}
       {viewportSectionBleed ? (
         <div className={cn("w-full", rootStackClasses)}>
-          {document.blocks.map((block) => {
+          {document.blocks.map((block, blockIndex) => {
+            const flushFirstSectionTop =
+              flushTop && blockIndex === 0 && block.type === "section";
+            const sectionInnerPadClasses = flushFirstSectionTop
+              ? PROPOSAL_EDITOR_SECTION_INNER_PAD_BOTTOM_CLASSES
+              : undefined;
             const splashRootBand = Boolean(viewportSectionBleed && block.type === "splash");
             const packagesRootBand = Boolean(
               viewportSectionBleed &&
@@ -266,6 +283,7 @@ export function ProposalDocumentView({
                     : undefined
                 }
                 proposalContext={proposalContext}
+                sectionInnerPadClasses={sectionInnerPadClasses}
               />
             );
             if (block.type === "section" || splashRootBand || packagesRootBand || agreementRootBand) {
