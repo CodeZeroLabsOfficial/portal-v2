@@ -2,20 +2,17 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
+import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
+import { CUSTOMER_NOTE_KINDS, customerNoteKindMeta } from "@/lib/crm/customer-note-display";
 import { cn } from "@/lib/utils";
 import { addCustomerNoteAction } from "@/server/actions/customers-crm";
 import type { CustomerNoteKind } from "@/types/customer";
@@ -23,7 +20,7 @@ import type { CustomerNoteKind } from "@/types/customer";
 const ADD_NEW_BUTTON_CLASS =
   "shrink-0 gap-1.5 border-primary/40 bg-primary/5 text-primary shadow-none hover:bg-primary/10 hover:text-primary";
 
-const NOTE_KINDS: CustomerNoteKind[] = ["note", "call", "email"];
+const EMPTY_EDITOR_VALUE = "<p></p>";
 
 export interface AddCustomerNoteDialogProps {
   customerId: string;
@@ -32,24 +29,34 @@ export interface AddCustomerNoteDialogProps {
 export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
-  const [body, setBody] = React.useState("");
+  const [title, setTitle] = React.useState("");
+  const [body, setBody] = React.useState(EMPTY_EDITOR_VALUE);
   const [kind, setKind] = React.useState<CustomerNoteKind>("note");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const canSubmit = !isNoteBodyEmpty(body, "html");
+
   function resetForm() {
-    setBody("");
+    setTitle("");
+    setBody(EMPTY_EDITOR_VALUE);
     setKind("note");
     setError(null);
   }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!body.trim()) return;
+    if (!canSubmit) return;
     setBusy(true);
     setError(null);
     try {
-      const result = await addCustomerNoteAction({ customerId, body, kind });
+      const result = await addCustomerNoteAction({
+        customerId,
+        title: title.trim() || undefined,
+        body,
+        bodyFormat: "html",
+        kind
+      });
       if (!result.ok) {
         setError(result.message);
         return;
@@ -75,52 +82,52 @@ export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps
           <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Log entry</DialogTitle>
-          <DialogDescription>
-            Internal notes, calls, or email logs — visible to your organisation.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
-          <FormServerError message={error} />
-          <div className="flex flex-wrap gap-2">
-            {NOTE_KINDS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setKind(value)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  kind === value
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border/60 text-muted-foreground hover:bg-muted/50"
-                )}>
-                {value}
-              </button>
-            ))}
-          </div>
-          <Textarea
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            placeholder="What happened?"
-            rows={5}
-            className="resize-y"
+      <DialogContent className="max-h-[90vh] max-w-lg gap-0 overflow-y-auto p-0 sm:max-w-lg">
+        <VisuallyHidden>
+          <DialogTitle>Add note</DialogTitle>
+        </VisuallyHidden>
+        <form onSubmit={submit} className="flex flex-col p-6">
+          <ButtonGroup className="mb-6 w-full sm:w-fit">
+            {CUSTOMER_NOTE_KINDS.map((value) => {
+              const { label, icon: Icon } = customerNoteKindMeta(value);
+              const isActive = kind === value;
+              return (
+                <Button
+                  key={value}
+                  type="button"
+                  variant="outline"
+                  aria-pressed={isActive}
+                  className={cn(
+                    "flex-1 gap-1.5 sm:flex-none",
+                    isActive && "z-10 border-primary bg-primary/10 text-foreground"
+                  )}
+                  disabled={busy}
+                  onClick={() => setKind(value)}>
+                  <Icon className="size-3.5" aria-hidden />
+                  {label}
+                </Button>
+              );
+            })}
+          </ButtonGroup>
+
+          <FormServerError message={error} className="mb-4" />
+
+          <Input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Title"
             disabled={busy}
+            maxLength={200}
+            className="mb-4 rounded-none border-0 bg-transparent px-0 text-2xl shadow-none focus-visible:ring-0"
           />
-          <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => setOpen(false)}>
-              Cancel
+
+          <CrmNoteEditor value={body} onChange={setBody} disabled={busy} />
+
+          <div className="mt-6 flex justify-end">
+            <Button type="submit" disabled={busy || !canSubmit} className="min-w-28">
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Add note"}
             </Button>
-            <Button type="submit" disabled={busy || !body.trim()} className="gap-1.5">
-              {busy ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              ) : (
-                <Plus className="h-3.5 w-3.5" aria-hidden />
-              )}
-              Save
-            </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

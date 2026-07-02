@@ -60,12 +60,17 @@ export interface CustomerRecord {
 
 export type CustomerNoteKind = "note" | "call" | "email";
 
+export type CustomerNoteBodyFormat = "plain" | "html";
+
 export interface CustomerNoteRecord {
   id: string;
   customerId: string;
   organizationId?: string;
   authorUid: string;
+  title?: string;
   body: string;
+  /** Omitted on legacy rows — treat as `"plain"`. */
+  bodyFormat?: CustomerNoteBodyFormat;
   kind: CustomerNoteKind;
   /** Epoch millis — Firestore `createdAt`. */
   createdAt: number;

@@ -4,6 +4,8 @@ import { Mail, Phone, StickyNote } from "lucide-react";
 import type { StatusBadgeDisplay } from "@/lib/crm/status-badges";
 import type { CustomerNoteKind } from "@/types/customer";
 
+export const CUSTOMER_NOTE_KINDS = ["note", "call", "email"] as const satisfies readonly CustomerNoteKind[];
+
 const NOTE_KIND_META: Record<
   CustomerNoteKind,
   { label: string; icon: LucideIcon; badge: StatusBadgeDisplay }

@@ -6,6 +6,8 @@ import { CustomerTabEmptyState } from "@/components/features/crm/customer/custom
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { customerNoteKindMeta } from "@/lib/crm/customer-note-display";
+import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+import { cn } from "@/lib/utils";
 import type { CustomerNoteRecord } from "@/types/customer";
 
 export interface CustomerNotesListProps {
@@ -53,6 +55,7 @@ export function CustomerNotesList({
     <ul className="space-y-3">
       {notes.map((note) => {
         const { icon: Icon, badge } = customerNoteKindMeta(note.kind);
+        const isHtml = note.bodyFormat === "html";
 
         return (
           <li key={note.id} className="rounded-lg border border-border/70 bg-muted/10 p-4">
@@ -71,7 +74,20 @@ export function CustomerNotesList({
                 })}
               </time>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{note.body}</p>
+            {note.title ? (
+              <p className="mt-2 text-sm font-medium text-foreground">{note.title}</p>
+            ) : null}
+            {isHtml ? (
+              <div
+                className={cn(
+                  "crm-note-rich-text mt-2 max-w-none text-sm text-foreground",
+                  "[&_a]:text-primary [&_a]:underline [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:ps-5 [&_p]:my-1 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:ps-5"
+                )}
+                dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(note.body) }}
+              />
+            ) : (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{note.body}</p>
+            )}
           </li>
         );
       })}

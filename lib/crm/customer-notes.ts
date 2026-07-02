@@ -1,3 +1,4 @@
+import { noteBodyPlainText } from "@/lib/crm/customer-note-body";
 import type { CustomerNoteKind, CustomerNoteRecord } from "@/types/customer";
 
 export type CustomerNoteFilter = "all" | CustomerNoteKind;
@@ -20,7 +21,10 @@ export function filterCustomerNotes(
     if (!normalizedQuery) {
       return true;
     }
-    return note.body.toLowerCase().includes(normalizedQuery);
+    const haystack = [note.title ?? "", noteBodyPlainText(note.body, note.bodyFormat)]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(normalizedQuery);
   });
 }
 

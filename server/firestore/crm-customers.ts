@@ -1,4 +1,6 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+
+import { noteBodyPlainText } from "@/lib/crm/customer-note-body";
 import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
 import { logError } from "@/lib/common/logging";
@@ -9,6 +11,7 @@ import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-cre
 import { getStripe } from "@/lib/stripe/server";
 import { accountKeyToNormalizedCompany, companyNameToAccountKey } from "@/lib/account/key";
 import { normalizeAddressFields } from "@/lib/common/format";
+import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import type { AccountListRow } from "@/lib/account/list";
 import type { CustomerListRow } from "@/lib/customer/list";
 import type { CreateAccountFormInput, UpdateAccountFormInput } from "@/lib/schemas/account";
@@ -670,12 +673,16 @@ function parseNote(id: string, data: Record<string, unknown>): CustomerNoteRecor
   if (!customerId) return null;
   const organizationId = asString(data.organizationId);
   const kind = data.kind === "call" || data.kind === "email" ? data.kind : "note";
+  const title = asString(data.title);
+  const bodyFormat = data.bodyFormat === "html" ? "html" : data.bodyFormat === "plain" ? "plain" : undefined;
   return {
     id,
     customerId,
     ...(organizationId ? { organizationId } : {}),
     authorUid: asString(data.authorUid) ?? "",
+    ...(title ? { title } : {}),
     body: asString(data.body) ?? "",
+    ...(bodyFormat ? { bodyFormat } : {}),
     kind,
     createdAt: coerceTimestampToMillis(data.createdAt),
   };
@@ -1233,11 +1240,17 @@ export async function enableCustomerPortalAccess(
   return { ok: true };
 }
 
+export interface AppendCustomerNoteInput {
+  title?: string;
+  body: string;
+  bodyFormat: CustomerNoteRecord["bodyFormat"];
+  kind: CustomerNoteRecord["kind"];
+}
+
 export async function appendCustomerNote(
   user: PortalUser,
   customerId: string,
-  body: string,
-  kind: CustomerNoteRecord["kind"],
+  input: AppendCustomerNoteInput,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) {
@@ -1245,19 +1258,36 @@ export async function appendCustomerNote(
   }
   const customer = await getCustomerRecordForOrg(user, customerId);
   if (!customer) return { ok: false, message: "Customer not found." };
+
+  const bodyFormat = input.bodyFormat === "html" ? "html" : "plain";
+  const body =
+    bodyFormat === "html"
+      ? sanitizeProposalHtmlServer(input.body.trim())
+      : input.body.trim();
+  const plainExcerpt = noteBodyPlainText(body, bodyFormat);
+
   const noteAt = Timestamp.now();
-  await db.collection(COLLECTIONS.customerNotes).add({
+  const notePayload: Record<string, unknown> = {
     customerId,
     authorUid: user.uid,
-    body: body.trim(),
-    kind,
+    body,
+    kind: input.kind,
     createdAt: noteAt,
-  });
+  };
+  if (input.title) {
+    notePayload.title = input.title;
+  }
+  if (bodyFormat === "html") {
+    notePayload.bodyFormat = "html";
+  }
+
+  await db.collection(COLLECTIONS.customerNotes).add(notePayload);
   await db.collection(COLLECTIONS.customerActivities).add({
     customerId,
     type: "note",
-    title: kind === "call" ? "Call logged" : kind === "email" ? "Email logged" : "Note added",
-    detail: body.trim().slice(0, 280),
+    title:
+      input.kind === "call" ? "Call logged" : input.kind === "email" ? "Email logged" : "Note added",
+    detail: plainExcerpt.slice(0, 280),
     actorUid: user.uid,
     createdAt: Timestamp.fromMillis(noteAt.toMillis() + 1),
   });

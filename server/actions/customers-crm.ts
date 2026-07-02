@@ -142,8 +142,13 @@ export async function addCustomerNoteAction(
   if (!parsed.success) {
     return { ok: false, message: zodErrorToMessage(parsed.error) };
   }
-  const { customerId, body, kind } = parsed.data;
-  const result = await appendCustomerNote(user, customerId, body, kind);
+  const { customerId, title, body, bodyFormat, kind } = parsed.data;
+  const result = await appendCustomerNote(user, customerId, {
+    title,
+    body,
+    bodyFormat,
+    kind,
+  });
   if (!result.ok) {
     return { ok: false, message: result.message };
   }
