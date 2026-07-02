@@ -417,8 +417,8 @@ export async function upsertInvoiceMirror(db: Firestore, invoice: Stripe.Invoice
     status: mapInvoiceStatus(invoice.status),
     currency: (invoice.currency ?? "aud").toLowerCase(),
     amountDue: typeof invoice.amount_due === "number" ? invoice.amount_due : 0,
-    hostedInvoiceUrl: invoice.hosted_invoice_url ?? undefined,
-    invoicePdf: invoice.invoice_pdf ?? undefined,
+    ...(invoice.hosted_invoice_url ? { hostedInvoiceUrl: invoice.hosted_invoice_url } : {}),
+    ...(invoice.invoice_pdf ? { invoicePdf: invoice.invoice_pdf } : {}),
     issuedAt: issued,
     ...(paidAt ? { paidAt } : {}),
     updatedAt: FieldValue.serverTimestamp(),
@@ -441,15 +441,17 @@ export async function upsertPaymentIntentMirror(db: Firestore, pi: Stripe.Paymen
         ? pi.customer.id
         : "";
 
+  const orgId = metadataOrganizationId(pi);
+
   const paymentRecord = {
     id: pi.id,
     stripePaymentIntentId: pi.id,
     customerId,
-    organizationId: metadataOrganizationId(pi),
+    ...(orgId ? { organizationId: orgId } : {}),
     currency: (pi.currency ?? "aud").toLowerCase(),
     amount: typeof pi.amount_received === "number" ? pi.amount_received : pi.amount,
     status: pi.status,
-    description: pi.description ?? undefined,
+    ...(pi.description ? { description: pi.description } : {}),
     createdAt: typeof pi.created === "number" ? pi.created * 1000 : Date.now(),
     updatedAt: FieldValue.serverTimestamp(),
   };

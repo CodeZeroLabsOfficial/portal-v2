@@ -4,6 +4,24 @@ import { onRequest } from "firebase-functions/v2/https";
 import { applyStripeWebhookEvent } from "../_shared/stripe-sync";
 import { getStripe, getStripeWebhookSecret, stripeSecretKey, stripeWebhookSecret } from "./client";
 
+let firestoreUndefinedPropertiesConfigured = false;
+
+function getWebhookFirestore() {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  const db = admin.firestore();
+  if (!firestoreUndefinedPropertiesConfigured) {
+    try {
+      db.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      /* settings() may only be called once per Firestore instance */
+    }
+    firestoreUndefinedPropertiesConfigured = true;
+  }
+  return db;
+}
+
 interface StripeWebhookRequest {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
@@ -49,10 +67,7 @@ export const stripeWebhook = onRequest(
       return;
     }
 
-    if (!admin.apps.length) {
-      admin.initializeApp();
-    }
-    const db = admin.firestore();
+    const db = getWebhookFirestore();
 
     try {
       await applyStripeWebhookEvent(db, event);

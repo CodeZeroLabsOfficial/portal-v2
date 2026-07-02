@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+/functions/node_modules
+
+# firebase functions build output
+/functions/lib
 /.pnp
 .pnp.js
 .yarn/install-state.gz
