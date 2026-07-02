@@ -9,21 +9,9 @@ import {
   type ResolvedSectionBackground,
 } from "@/lib/proposal/section-background";
 import type { SectionBackground } from "@/types/proposal";
+import { PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES } from "@/lib/proposal/public/public-layout";
-
-/** Set by `ProposalSectionShell` in the editor so nested controls match the section fill. */
-const ProposalSectionEditorChromeContext = React.createContext<{
-  seamless: boolean;
-  prefersLight: boolean;
-} | null>(null);
-
-/**
- * Re-map shadcn semantic tokens for a bright section surface. Parent routes (e.g. `portal-ui`)
- * often assume a dark canvas; without this, `text-foreground` stays light-on-light when the
- * section fill is white or mist.
- */
-const LIGHT_SECTION_SURFACE =
-  "[color-scheme:light] [--background:0_0%_100%] [--foreground:220_18%_13%] [--card:0_0%_100%] [--card-foreground:220_18%_13%] [--popover:0_0%_100%] [--popover-foreground:220_18%_13%] [--muted:220_20%_95%] [--muted-foreground:220_10%_44%] [--border:220_16%_88%] [--input:220_16%_88%] [--secondary:220_20%_95%] [--secondary-foreground:220_15%_18%] [--accent:220_20%_94%] [--accent-foreground:220_15%_18%] [--primary:262_52%_47%] [--primary-foreground:0_0%_100%] [--ring:262_52%_47%] [--destructive:0_72%_50%] [--destructive-foreground:210_40%_98%]";
+import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
 
 /** Backdrop visuals shared by proposal preview and proposal editor canvases. */
 export function ProposalSectionShell({
@@ -78,7 +66,7 @@ export function ProposalSectionShell({
         editorCanvas ? "min-h-0 overflow-visible" : "min-h-[220px] overflow-hidden",
         surfaceChrome,
         shellRadius,
-        !prefersLight && LIGHT_SECTION_SURFACE,
+        !prefersLight && PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
         prefersLight &&
           cn(
             "text-white [&_h2]:!text-white",

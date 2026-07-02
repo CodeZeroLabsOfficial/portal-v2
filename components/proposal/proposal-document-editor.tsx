@@ -90,6 +90,10 @@ import type { CatalogServicePickerOption } from "@/types/catalog-service";
 import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
 import { ProposalDocumentView } from "@/components/proposal/proposal-document-view";
 import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
+import {
+  PROPOSAL_DOCUMENT_EDITOR_CANVAS_CLASS,
+  PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
+} from "@/lib/proposal/editor-surface-tokens";
 import { ProposalEditorLibraryScope } from "@/components/proposal/proposal-editor-library-scope";
 import { ProposalMediaLibraryProvider } from "@/components/proposal/proposal-media-library";
 import {
@@ -4356,6 +4360,12 @@ export function ProposalDocumentEditor({
           className="mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
         >
           {editorTab === "edit" ? (
+          <div
+            className={cn(
+              PROPOSAL_DOCUMENT_EDITOR_CANVAS_CLASS,
+              PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
+            )}
+          >
           <TooltipProvider delayDuration={280}>
           {blocks.length === 0 ? (
             <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
@@ -4579,6 +4589,7 @@ export function ProposalDocumentEditor({
             </div>
           )}
           </TooltipProvider>
+          </div>
           ) : null}
         </TabsContent>
         <TabsContent

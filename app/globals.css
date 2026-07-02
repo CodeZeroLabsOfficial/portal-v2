@@ -182,6 +182,24 @@
     font-weight: var(--display-weight);
   }
 
+  /*
+   * Proposal section editor: nested TipTap surfaces stay flush with the section backdrop.
+   * The editable element is `.ProseMirror` only (no `tiptap` class).
+   */
+  [data-proposal-section-editor] .ProseMirror,
+  [data-proposal-section-editor] .proposal-rich-text {
+    background-color: transparent !important;
+  }
+  [data-proposal-section-editor] .ProseMirror:hover,
+  [data-proposal-section-editor] .ProseMirror:focus,
+  [data-proposal-section-editor] .ProseMirror:focus-visible,
+  [data-proposal-section-editor] .ProseMirror:focus-within,
+  [data-proposal-section-editor] .proposal-rich-text:hover,
+  [data-proposal-section-editor] .proposal-rich-text:focus,
+  [data-proposal-section-editor] .proposal-rich-text:focus-within {
+    background-color: transparent !important;
+  }
+
   [data-slot="button"],
   [data-slot="dialog-trigger"],
   [data-slot="dropdown-menu-item"],
