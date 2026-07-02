@@ -30,11 +30,11 @@ export function AppSidebar({ items, footerItems, brand, ...props }: AppSidebarPr
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
-  }, [pathname, isMobile, setOpenMobile]);
+  }, [pathname]);
 
   useEffect(() => {
     setOpen(!isTablet);
-  }, [isTablet, setOpen]);
+  }, [isTablet]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
