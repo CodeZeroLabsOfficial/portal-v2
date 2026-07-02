@@ -8,13 +8,16 @@ import { CustomerContactDetailsCard } from "@/components/features/crm/customer/c
 import { CustomerDetailShell } from "@/components/features/crm/customer/customer-detail-shell";
 import { CustomerIntegrationsCard } from "@/components/features/crm/customer/customer-integrations-card";
 import { CustomerPortalAccessCard } from "@/components/features/crm/customer/customer-portal-access-card";
+import { CustomerProfileCard } from "@/components/features/crm/customer/customer-profile-card";
 import { CustomerBillingTab } from "@/components/features/crm/customer/tabs/billing-tab";
 import { CustomerDocumentsTab } from "@/components/features/crm/customer/tabs/documents-tab";
 import { CustomerNotesTab } from "@/components/features/crm/customer/tabs/notes-tab";
 import { CustomerOverviewTab } from "@/components/features/crm/customer/tabs/overview-tab";
 import { CustomerProposalsTab } from "@/components/features/crm/customer/tabs/proposals-tab";
+import { CustomerSubscriptionsTab } from "@/components/features/crm/customer/tabs/subscriptions-tab";
 import { CustomerTasksTab } from "@/components/features/crm/customer/tabs/tasks-tab";
 import { CustomerVaultTab } from "@/components/features/crm/customer/tabs/vault-tab";
+import { openInvoiceCount } from "@/lib/crm/customer-billing-metrics";
 import { convertLeadToContactAction } from "@/server/actions/opportunities-crm";
 import type { CustomerActivityRecord, CustomerNoteRecord, CustomerRecord } from "@/types/customer";
 import type { InvoiceRecord } from "@/types/invoice";
@@ -71,24 +74,31 @@ export function CustomerDetailView({
 
   return (
     <CustomerDetailShell
-      customer={customer}
+      customerId={customer.id}
       initialTab={initialTab}
-      panels={{
-        overview: (
-          <CustomerOverviewTab
-            subscriptions={subscriptions}
-            invoices={invoices}
-            proposalsMatched={proposalsMatched}
-            opportunities={opportunities}
-            activities={activities}
-          />
-        ),
-        billing: (
-          <CustomerBillingTab
+      sidebar={
+        <div className="space-y-4">
+          <CustomerProfileCard
             customer={customer}
-            subscriptions={subscriptions}
-            invoices={invoices}
+            subscriptionCount={subscriptions.length}
+            openInvoiceCount={openInvoiceCount(invoices)}
+            proposalCount={proposalsMatched.length}
+            opportunityCount={opportunities.length}
           />
+          <CustomerContactDetailsCard
+            customer={customer}
+            convertLeadBusy={convertLeadBusy}
+            onConvertLead={() => void convertLead()}
+          />
+          <CustomerIntegrationsCard customer={customer} activities={activities} />
+          <CustomerPortalAccessCard customer={customer} />
+        </div>
+      }
+      panels={{
+        overview: <CustomerOverviewTab customerId={customer.id} activities={activities} />,
+        billing: <CustomerBillingTab customer={customer} invoices={invoices} />,
+        subscriptions: (
+          <CustomerSubscriptionsTab customer={customer} subscriptions={subscriptions} />
         ),
         proposals: (
           <CustomerProposalsTab
@@ -104,19 +114,6 @@ export function CustomerDetailView({
         tasks: <CustomerTasksTab tasks={tasks} />,
         vault: <CustomerVaultTab />
       }}
-      sidebar={
-        <div className="grid gap-6 lg:grid-cols-3">
-          <CustomerContactDetailsCard
-            customer={customer}
-            convertLeadBusy={convertLeadBusy}
-            onConvertLead={() => void convertLead()}
-          />
-          <div className="flex flex-col gap-4">
-            <CustomerIntegrationsCard customer={customer} activities={activities} />
-            <CustomerPortalAccessCard customer={customer} />
-          </div>
-        </div>
-      }
     />
   );
 }

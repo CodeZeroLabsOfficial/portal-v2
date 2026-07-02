@@ -68,7 +68,7 @@ export function CustomerContactDetailsCard({
   const phoneDisplay = customer.phone?.trim() || customer.companyPhone?.trim() || "";
 
   return (
-    <Card className="border-border/80 bg-card/80 shadow-sm lg:col-span-2">
+    <Card className="border-border/80 bg-card/80 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 border-b border-border/60 bg-muted/20">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="text-muted-foreground size-5" aria-hidden />

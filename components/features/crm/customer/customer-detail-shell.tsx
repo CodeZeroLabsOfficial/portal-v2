@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CreditCard,
@@ -11,26 +11,19 @@ import {
   KeyRound,
   ListChecks,
   MessageSquare,
+  Repeat,
   Sparkles
 } from "lucide-react";
 
-import { PageHeader } from "@/components/shared/page-header";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { initialsFromName } from "@/lib/common/format";
-import {
-  CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS,
-  type CustomerDetailTab,
-  isCustomerDetailTab
-} from "@/lib/crm/customer-detail-tabs";
-import { customerCrmTypeBadgeDisplay, customerStatusBadgeDisplay } from "@/lib/crm/status-badges";
+import { type CustomerDetailTab, isCustomerDetailTab } from "@/lib/crm/customer-detail-tabs";
 import { cn } from "@/lib/utils";
-import type { CustomerRecord } from "@/types/customer";
 
 export interface CustomerDetailTabPanels {
   overview: React.ReactNode;
   billing: React.ReactNode;
+  subscriptions: React.ReactNode;
   proposals: React.ReactNode;
   notes: React.ReactNode;
   documents: React.ReactNode;
@@ -39,26 +32,43 @@ export interface CustomerDetailTabPanels {
 }
 
 export interface CustomerDetailShellProps {
-  customer: CustomerRecord;
+  customerId: string;
   initialTab?: string;
   sidebar: React.ReactNode;
   panels: CustomerDetailTabPanels;
 }
 
-export function CustomerDetailShell({ customer, initialTab, sidebar, panels }: CustomerDetailShellProps) {
+const TAB_CONTENT_CLASS = "mt-0 space-y-4";
+
+export function CustomerDetailShell({
+  customerId,
+  initialTab,
+  sidebar,
+  panels
+}: CustomerDetailShellProps) {
+  const router = useRouter();
   const [tab, setTab] = React.useState<CustomerDetailTab>(() =>
     isCustomerDetailTab(initialTab) ? initialTab : "overview"
   );
 
-  const url = customer.avatarUrl?.trim();
-  const canImg =
-    url &&
-    (url.includes("googleusercontent.com") || url.includes("firebasestorage.googleapis.com"));
-  const statusBadge = customerStatusBadgeDisplay(customer.status === "archived" ? "archived" : "active");
-  const crmTypeBadge = customerCrmTypeBadgeDisplay(customer.crmType);
+  React.useEffect(() => {
+    if (isCustomerDetailTab(initialTab)) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
+
+  function handleTabChange(value: string) {
+    const nextTab = isCustomerDetailTab(value) ? value : "overview";
+    setTab(nextTab);
+    const path =
+      nextTab === "overview"
+        ? `/admin/customers/${customerId}`
+        : `/admin/customers/${customerId}?tab=${nextTab}`;
+    router.replace(path, { scroll: false });
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Button variant="ghost" size="sm" className="-ml-2 gap-1.5" asChild>
         <Link href="/admin/customers">
           <ArrowLeft className="size-4" aria-hidden />
@@ -66,32 +76,8 @@ export function CustomerDetailShell({ customer, initialTab, sidebar, panels }: C
         </Link>
       </Button>
 
-      <div className="border-border/80 flex min-w-0 items-start gap-4 border-b pb-6">
-        <div className="border-border/60 bg-muted ring-border relative size-16 shrink-0 overflow-hidden rounded-xl border ring-1">
-          {canImg && url ? (
-            <Image src={url} alt="" width={64} height={64} className="size-full object-cover" />
-          ) : (
-            <span className="text-muted-foreground flex size-full items-center justify-center text-xl font-semibold">
-              {initialsFromName(customer.name)}
-            </span>
-          )}
-        </div>
-        <div className="min-w-0 flex-1 space-y-2">
-          <PageHeader className="items-start" title={customer.name || customer.email} />
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
-            <StatusBadge label={crmTypeBadge.label} variant={crmTypeBadge.variant} />
-          </div>
-        </div>
-      </div>
-
-      {sidebar}
-
-      <Tabs
-        value={tab}
-        onValueChange={(value) => setTab(isCustomerDetailTab(value) ? value : "overview")}
-        className="w-full">
-        <TabsList className="no-scrollbar h-auto w-full flex-wrap justify-start gap-1 overflow-x-auto bg-muted/30 p-1">
+      <Tabs value={tab} onValueChange={handleTabChange} className="gap-4">
+        <TabsList className="[&_[data-slot=tabs-trigger]]:flex-none">
           <TabsTrigger value="overview" className="gap-1.5">
             <Sparkles className="size-3.5" aria-hidden />
             Overview
@@ -99,6 +85,10 @@ export function CustomerDetailShell({ customer, initialTab, sidebar, panels }: C
           <TabsTrigger value="billing" className="gap-1.5">
             <CreditCard className="size-3.5" aria-hidden />
             Billing
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="gap-1.5">
+            <Repeat className="size-3.5" aria-hidden />
+            Subscriptions
           </TabsTrigger>
           <TabsTrigger value="proposals" className="gap-1.5">
             <FileText className="size-3.5" aria-hidden />
@@ -122,27 +112,36 @@ export function CustomerDetailShell({ customer, initialTab, sidebar, panels }: C
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className={cn(CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS, "space-y-6")}>
-          {panels.overview}
-        </TabsContent>
-        <TabsContent value="billing" className={cn(CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS, "space-y-6")}>
-          {panels.billing}
-        </TabsContent>
-        <TabsContent value="proposals" className={cn(CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS, "space-y-4")}>
-          {panels.proposals}
-        </TabsContent>
-        <TabsContent value="notes" className={cn(CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS, "space-y-6")}>
-          {panels.notes}
-        </TabsContent>
-        <TabsContent value="documents" className={cn(CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS, "space-y-4")}>
-          {panels.documents}
-        </TabsContent>
-        <TabsContent value="tasks" className={CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS}>
-          {panels.tasks}
-        </TabsContent>
-        <TabsContent value="vault" className={CUSTOMER_DETAIL_TAB_MIN_HEIGHT_CLASS}>
-          {panels.vault}
-        </TabsContent>
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="space-y-4 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">{sidebar}</div>
+
+          <div className="space-y-4 xl:col-span-2">
+            <TabsContent value="overview" className={TAB_CONTENT_CLASS}>
+              {panels.overview}
+            </TabsContent>
+            <TabsContent value="billing" className={TAB_CONTENT_CLASS}>
+              {panels.billing}
+            </TabsContent>
+            <TabsContent value="subscriptions" className={TAB_CONTENT_CLASS}>
+              {panels.subscriptions}
+            </TabsContent>
+            <TabsContent value="proposals" className={TAB_CONTENT_CLASS}>
+              {panels.proposals}
+            </TabsContent>
+            <TabsContent value="notes" className={cn(TAB_CONTENT_CLASS, "space-y-6")}>
+              {panels.notes}
+            </TabsContent>
+            <TabsContent value="documents" className={TAB_CONTENT_CLASS}>
+              {panels.documents}
+            </TabsContent>
+            <TabsContent value="tasks" className={TAB_CONTENT_CLASS}>
+              {panels.tasks}
+            </TabsContent>
+            <TabsContent value="vault" className={TAB_CONTENT_CLASS}>
+              {panels.vault}
+            </TabsContent>
+          </div>
+        </div>
       </Tabs>
     </div>
   );
