@@ -2,45 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BadgeDollarSignIcon,
-  Building2Icon,
-  ChartBarDecreasingIcon,
-  ChartPieIcon,
-  FileTextIcon,
-  GaugeIcon,
-  LayoutTemplateIcon,
-  PackageIcon,
-  SettingsIcon,
-  SquareCheckIcon,
-  UsersIcon,
-  WalletMinimalIcon,
-  type LucideIcon,
-} from "lucide-react";
 
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import type { PortalNavItemView } from "@/components/layout/nav-types";
+import { navIconForId } from "@/lib/layout/nav-icons";
 
-const NAV_ICONS: Record<string, LucideIcon> = {
-  dashboard: GaugeIcon,
-  accounts: Building2Icon,
-  customers: UsersIcon,
-  opportunities: ChartPieIcon,
-  proposals: FileTextIcon,
-  subscriptions: WalletMinimalIcon,
-  services: PackageIcon,
-  tasks: SquareCheckIcon,
-  templates: LayoutTemplateIcon,
-  reports: ChartBarDecreasingIcon,
-  settings: SettingsIcon,
-  customer: BadgeDollarSignIcon,
-};
+const navButtonClassName =
+  "hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10 active:bg-[var(--primary)]/10";
 
 function isNavActive(href: string, pathname: string): boolean {
   const normalized = pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
@@ -51,11 +26,16 @@ function isNavActive(href: string, pathname: string): boolean {
 }
 
 function NavRow({ item, pathname }: { item: PortalNavItemView; pathname: string }) {
-  const Icon = NAV_ICONS[item.id] ?? GaugeIcon;
+  const Icon = navIconForId(item.id);
   const active = isNavActive(item.href, pathname);
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+      <SidebarMenuButton
+        asChild
+        isActive={active}
+        tooltip={item.label}
+        className={navButtonClassName}
+      >
         <Link href={item.href}>
           <Icon />
           <span>{item.label}</span>
@@ -77,7 +57,8 @@ export function NavMain({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupContent>
+        <SidebarGroupLabel>Operations</SidebarGroupLabel>
+        <SidebarGroupContent className="flex flex-col gap-2">
           <SidebarMenu>
             {items.map((item) => (
               <NavRow key={item.id} item={item} pathname={pathname} />
@@ -87,7 +68,8 @@ export function NavMain({
       </SidebarGroup>
       {footerItems.length > 0 ? (
         <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <SidebarGroupContent className="flex flex-col gap-2">
             <SidebarMenu>
               {footerItems.map((item) => (
                 <NavRow key={item.id} item={item} pathname={pathname} />

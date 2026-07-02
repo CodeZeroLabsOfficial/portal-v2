@@ -10,7 +10,6 @@ import { useIsTablet } from "@/hooks/use-mobile";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -19,13 +18,12 @@ import {
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavMain } from "@/components/layout/sidebar/nav-main";
-import { NavUser } from "@/components/layout/sidebar/nav-user";
 import type { PortalShellProps } from "@/components/layout/nav-types";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> &
-  Pick<PortalShellProps, "user" | "items" | "footerItems" | "brand">;
+  Pick<PortalShellProps, "items" | "footerItems" | "brand">;
 
-export function AppSidebar({ user, items, footerItems, brand, ...props }: AppSidebarProps) {
+export function AppSidebar({ items, footerItems, brand, ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
@@ -62,9 +60,6 @@ export function AppSidebar({ user, items, footerItems, brand, ...props }: AppSid
           <NavMain items={items} footerItems={footerItems} />
         </ScrollArea>
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
     </Sidebar>
   );
 }

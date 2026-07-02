@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { toSessionUserView } from "@/lib/auth/session-user-view";
 
@@ -40,7 +41,7 @@ export default async function AdminDashboardPage() {
           <Card key={metric.label}>
             <CardHeader className="pb-2">
               <CardDescription>{metric.label}</CardDescription>
-              <CardTitle className="text-3xl">{metric.value}</CardTitle>
+              <Typography variant="display-lg">{metric.value}</Typography>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-xs">{metric.hint}</p>

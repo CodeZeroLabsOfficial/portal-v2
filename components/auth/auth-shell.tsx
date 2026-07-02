@@ -26,7 +26,7 @@ export function AuthShell({
       <main className="flex flex-1 items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl">{title}</CardTitle>
+            <CardTitle className="text-2xl">{title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {children}

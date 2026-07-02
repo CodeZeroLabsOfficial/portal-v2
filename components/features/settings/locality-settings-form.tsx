@@ -8,9 +8,15 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { FormServerError } from "@/components/shared/form-server-error";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   DATE_FORMAT_OPTIONS,
@@ -126,21 +132,27 @@ export function LocalitySettingsForm({ user, timeZones, currencyCodes }: Localit
   const busy = form.formState.isSubmitting;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Locality"
-        description="Time zone, language, formats, region, and currency used across your workspace."
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Regional preferences</CardTitle>
-          <CardDescription>
-            Stored on your user profile and applied when dates, times, and money are shown in the portal.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <Card>
+      <CardHeader>
+        <CardTitle>Regional preferences</CardTitle>
+        <CardDescription>
+          Time zone, language, formats, region, and currency used across your workspace.
+        </CardDescription>
+        <CardAction>
+          <Button type="submit" form="locality-preferences-form" disabled={busy}>
+            {busy ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                Saving…
+              </>
+            ) : (
+              "Save preferences"
+            )}
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <form id="locality-preferences-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
             <FormServerError message={serverError} />
 
             <div className="grid gap-6 sm:grid-cols-2">
@@ -219,22 +231,8 @@ export function LocalitySettingsForm({ user, timeZones, currencyCodes }: Localit
                 <p className="text-xs text-muted-foreground">ISO 4217 code (e.g. AUD for Australian dollar).</p>
               </div>
             </div>
-
-            <div className="flex flex-wrap items-center gap-3 border-t pt-6">
-              <Button type="submit" disabled={busy}>
-                {busy ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                    Saving…
-                  </>
-                ) : (
-                  "Save preferences"
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

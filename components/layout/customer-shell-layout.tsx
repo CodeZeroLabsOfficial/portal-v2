@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { toSessionUserView } from "@/lib/auth/session-user-view";
 import { toCustomerPortalNavViews } from "@/config/customer-portal-routes";
+import { buildCustomerSearchNav } from "@/lib/layout/search-nav";
 import { PortalShell } from "@/components/layout/portal-shell";
 import type { PortalNavItemView } from "@/components/layout/nav-types";
 
@@ -31,6 +32,7 @@ export async function CustomerShellLayout({
       items={navItems}
       footerItems={[]}
       brand={{ label: "Code Zero Labs", href: "/dashboard" }}
+      searchGroups={buildCustomerSearchNav()}
       defaultOpen={defaultOpen}
     >
       {children}

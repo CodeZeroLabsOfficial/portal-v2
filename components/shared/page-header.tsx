@@ -10,20 +10,15 @@ interface PageHeaderProps {
   className?: string;
 }
 
-/** Standard page title block. Use instead of ad-hoc `<h1 className="text-2xl …">`. */
+/** Standard page title block — matches UI kit dashboard page headers. */
 function PageHeader({ title, description, actions, className }: PageHeaderProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between",
-        className,
-      )}
-    >
-      <div className="flex flex-col gap-1">
+    <div className={cn("flex flex-row items-center justify-between", className)}>
+      <div className="space-y-1">
         <Typography variant="h1">{title}</Typography>
         {description ? <Typography variant="muted">{description}</Typography> : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </div>
   );
 }

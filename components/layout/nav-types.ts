@@ -1,9 +1,22 @@
+import type { LucideIcon } from "lucide-react";
+
 import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export interface PortalNavItemView {
   id: string;
   href: string;
   label: string;
+}
+
+export interface PortalSearchItem {
+  title: string;
+  href: string;
+  icon?: LucideIcon;
+}
+
+export interface PortalSearchGroup {
+  title: string;
+  items: PortalSearchItem[];
 }
 
 export interface PortalShellNav {
@@ -19,4 +32,5 @@ export interface PortalShellBrand {
 export interface PortalShellProps extends PortalShellNav {
   user: SessionUserView;
   brand: PortalShellBrand;
+  searchGroups: PortalSearchGroup[];
 }
