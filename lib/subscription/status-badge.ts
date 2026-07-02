@@ -16,7 +16,7 @@ export function getSubscriptionStatusBadgeDisplay(
   status: SubscriptionStatus | CustomerSubscriptionRollup,
 ): SubscriptionStatusBadgeDisplay {
   if (status === "none") {
-    return { label: "No subscription", variant: "secondary" };
+    return { label: "No subscription", variant: "info" };
   }
   if (status === "active" || status === "trialing") {
     return {
@@ -25,7 +25,7 @@ export function getSubscriptionStatusBadgeDisplay(
     };
   }
   if (status === "scheduled") {
-    return { label: "Scheduled", variant: "info" };
+    return { label: "Scheduled", variant: "orange" };
   }
   if (status === "past_due" || status === "unpaid") {
     return {
