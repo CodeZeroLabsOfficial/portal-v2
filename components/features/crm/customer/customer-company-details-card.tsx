@@ -1,6 +1,5 @@
 import { Building2, FileText, Globe, Mail, MapPin, Phone } from "lucide-react";
 
-import { CrmDetailLabel, CrmDetailValue } from "@/components/shared/crm-detail-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAddressLines, websiteHref } from "@/lib/common/format";
 import type { CustomerRecord } from "@/types/customer";
@@ -29,80 +28,84 @@ export function CustomerCompanyDetailsCard({ customer }: CustomerCompanyDetailsC
     country: customer.companyCountry
   });
   const websiteUrl = companyWebsite ? websiteHref(companyWebsite) : "";
+  const addressText = addressLines.length > 0 ? addressLines.join("\n") : "";
 
   return (
-    <Card className="border-border/80 bg-card/80 shadow-sm">
-      <CardHeader className="border-b border-border/60 bg-muted/20">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Building2 className="text-muted-foreground size-5" aria-hidden />
-          Company details
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>Company details</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5 p-6 text-sm">
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1 sm:col-span-2">
-            <CrmDetailLabel icon={Building2}>Company name</CrmDetailLabel>
-            <CrmDetailValue empty={!companyName}>{companyName || <EmptyValue />}</CrmDetailValue>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 text-sm">
+            <Building2 className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            <span>{companyName || <EmptyValue />}</span>
           </div>
-          <div className="space-y-1">
-            <CrmDetailLabel icon={Phone}>Company phone</CrmDetailLabel>
-            <CrmDetailValue empty={!companyPhone}>
-              {companyPhone ? (
-                <a href={`tel:${companyPhone}`} className="hover:text-primary hover:underline">
-                  {companyPhone}
-                </a>
+          <div className="flex items-center gap-3 text-sm">
+            <Phone className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            {companyPhone ? (
+              <a href={`tel:${companyPhone}`} className="hover:text-primary hover:underline">
+                {companyPhone}
+              </a>
+            ) : (
+              <EmptyValue />
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Mail className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            {companyEmail ? (
+              <a href={`mailto:${companyEmail}`} className="hover:text-primary hover:underline">
+                {companyEmail}
+              </a>
+            ) : (
+              <EmptyValue />
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Globe className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            {companyWebsite && websiteUrl ? (
+              <a
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline">
+                {companyWebsite}
+              </a>
+            ) : (
+              <EmptyValue />
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <FileText className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            <span>
+              ABN{" "}
+              {companyAbn ? (
+                companyAbn
               ) : (
-                <EmptyValue />
+                <span className="text-muted-foreground">—</span>
               )}
-            </CrmDetailValue>
+            </span>
           </div>
-          <div className="space-y-1">
-            <CrmDetailLabel icon={Mail}>Company email</CrmDetailLabel>
-            <CrmDetailValue empty={!companyEmail}>
-              {companyEmail ? (
-                <a href={`mailto:${companyEmail}`} className="hover:text-primary hover:underline">
-                  {companyEmail}
-                </a>
+          <div className="flex items-center gap-3 text-sm">
+            <FileText className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            <span>
+              ACN{" "}
+              {companyAcn ? (
+                companyAcn
               ) : (
-                <EmptyValue />
+                <span className="text-muted-foreground">—</span>
               )}
-            </CrmDetailValue>
+            </span>
           </div>
-          <div className="space-y-1 sm:col-span-2">
-            <CrmDetailLabel icon={Globe}>Website</CrmDetailLabel>
-            <CrmDetailValue empty={!companyWebsite}>
-              {companyWebsite && websiteUrl ? (
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary hover:underline">
-                  {companyWebsite}
-                </a>
-              ) : (
-                <EmptyValue />
-              )}
-            </CrmDetailValue>
+          <div className="flex items-start gap-3 text-sm">
+            <MapPin className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+            {addressText ? (
+              <span className="whitespace-pre-line">{addressText}</span>
+            ) : (
+              <EmptyValue />
+            )}
           </div>
-          <div className="space-y-1">
-            <CrmDetailLabel icon={FileText}>ABN</CrmDetailLabel>
-            <CrmDetailValue empty={!companyAbn}>{companyAbn || <EmptyValue />}</CrmDetailValue>
-          </div>
-          <div className="space-y-1">
-            <CrmDetailLabel icon={FileText}>ACN</CrmDetailLabel>
-            <CrmDetailValue empty={!companyAcn}>{companyAcn || <EmptyValue />}</CrmDetailValue>
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <CrmDetailLabel icon={MapPin}>Company address</CrmDetailLabel>
-            <CrmDetailValue empty={addressLines.length === 0}>
-              {addressLines.length > 0 ? (
-                <span className="whitespace-pre-line">{addressLines.join("\n")}</span>
-              ) : (
-                <EmptyValue />
-              )}
-            </CrmDetailValue>
-          </div>
-        </dl>
+        </div>
       </CardContent>
     </Card>
   );

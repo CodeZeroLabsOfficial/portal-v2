@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 import { DataTablePagination } from "./data-table-pagination";
 
@@ -37,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   initialPageSize?: number;
   initialSorting?: SortingState;
   initialColumnVisibility?: VisibilityState;
+  tableClassName?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,7 +48,8 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results.",
   initialPageSize = 25,
   initialSorting = [],
-  initialColumnVisibility = {}
+  initialColumnVisibility = {},
+  tableClassName
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -85,13 +88,16 @@ export function DataTable<TData, TValue>({
     <div className="flex flex-col gap-4">
       {toolbar ? toolbar(table) : null}
       <div className="rounded-md border">
-        <Table>
+        <Table className={tableClassName}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className={cn(header.column.columnDef.meta?.className)}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -106,7 +112,7 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className={cn(cell.column.columnDef.meta?.className)}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

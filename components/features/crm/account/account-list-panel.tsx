@@ -26,13 +26,7 @@ interface AccountListPanelProps {
   rows: AccountListRow[];
 }
 
-function AccountToolbar({
-  table,
-  onAdd
-}: {
-  table: Table<AccountListRow>;
-  onAdd: () => void;
-}) {
+function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
@@ -53,10 +47,6 @@ function AccountToolbar({
       </div>
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
-        <Button size="sm" onClick={onAdd}>
-          <Plus />
-          Add account
-        </Button>
       </div>
     </div>
   );
@@ -208,7 +198,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No accounts yet. Add a company name on a customer profile to see it listed here."
-        toolbar={(table) => <AccountToolbar table={table} onAdd={() => setAddOpen(true)} />}
+        toolbar={(table) => <AccountToolbar table={table} />}
       />
     </div>
   );

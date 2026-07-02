@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Loader2, LogIn } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 
 import { FormServerError } from "@/components/shared/form-server-error";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -81,14 +81,11 @@ export function CustomerPortalAccessCard({ customer }: CustomerPortalAccessCardP
 
   return (
     <>
-      <Card className="border-border/80 bg-card/80 shadow-sm">
-        <CardHeader className="border-b border-border/60 bg-muted/20">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <LogIn className="text-muted-foreground size-5" aria-hidden />
-            Portal access
-          </CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>Portal access</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label>User access</Label>
             {isLinked ? (

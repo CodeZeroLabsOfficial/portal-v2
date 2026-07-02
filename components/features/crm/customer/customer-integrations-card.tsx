@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, ExternalLink, Loader2, RefreshCw } from "lucide-react";
+import { ExternalLink, Loader2, RefreshCw } from "lucide-react";
 
 import { FormServerError } from "@/components/shared/form-server-error";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -89,14 +89,11 @@ export function CustomerIntegrationsCard({ customer, activities }: CustomerInteg
   }
 
   return (
-    <Card className="border-border/80 bg-card/80 shadow-sm">
-      <CardHeader className="border-b border-border/60 bg-muted/20">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CreditCard className="text-muted-foreground size-5" aria-hidden />
-          Integrations
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>Integrations</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-6">
+      <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label>Stripe</Label>

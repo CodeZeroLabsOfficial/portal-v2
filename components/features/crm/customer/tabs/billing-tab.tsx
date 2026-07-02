@@ -47,6 +47,7 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
       },
       {
         id: "issued",
+        meta: { className: "w-28" },
         header: "Issued",
         accessorFn: (row) => row.issuedSort,
         sortingFn: "basic",
@@ -61,6 +62,7 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
       },
       {
         id: "invoice",
+        meta: { className: "max-w-0" },
         header: "Invoice Number",
         accessorKey: "invoiceLabel",
         cell: ({ row }) => {
@@ -74,17 +76,18 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
                 href={primaryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium hover:underline">
+                className="block truncate font-medium hover:underline">
                 {label}
               </Link>
             );
           }
 
-          return <span className="font-medium">{label}</span>;
+          return <span className="block truncate font-medium">{label}</span>;
         }
       },
       {
         id: "amount",
+        meta: { className: "w-28 text-right" },
         header: () => <span className="block text-right">Amount</span>,
         accessorKey: "amountDue",
         cell: ({ row }) => {
@@ -98,16 +101,22 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
       },
       {
         id: "status",
-        header: "Status",
+        meta: { className: "w-32 text-center" },
+        header: () => <span className="block text-center">Status</span>,
         accessorKey: "status",
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
           const display = invoiceStatusBadgeDisplay(row.original.status);
-          return <StatusBadge label={display.label} variant={display.variant} />;
+          return (
+            <div className="flex justify-center">
+              <StatusBadge label={display.label} variant={display.variant} />
+            </div>
+          );
         }
       },
       {
         id: "pdf",
+        meta: { className: "w-20 text-right" },
         header: () => null,
         enableSorting: false,
         cell: ({ row }) => {
@@ -174,6 +183,7 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
           <DataTable
             columns={columns}
             data={tableRows}
+            tableClassName="table-fixed"
             initialPageSize={10}
             initialSorting={[{ id: "issued", desc: true }]}
             initialColumnVisibility={{ searchLabel: false }}

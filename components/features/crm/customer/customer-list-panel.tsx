@@ -65,12 +65,10 @@ const defaultValues: CustomerProfileFormValues = {
 
 function CustomerToolbar({
   table,
-  onAdd,
   onBulkDelete,
   bulkDeleteDisabled
 }: {
   table: Table<CustomerListRow>;
-  onAdd: () => void;
   onBulkDelete: () => void;
   bulkDeleteDisabled: boolean;
 }) {
@@ -121,10 +119,6 @@ function CustomerToolbar({
           </Button>
         )}
         <DataTableViewOptions table={table} />
-        <Button size="sm" onClick={onAdd}>
-          <Plus />
-          Add customer
-        </Button>
       </div>
     </div>
   );
@@ -469,7 +463,6 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           return (
             <CustomerToolbar
               table={table}
-              onAdd={() => setAddOpen(true)}
               onBulkDelete={() => void handleBulkDelete()}
               bulkDeleteDisabled={bulkBusy}
             />
