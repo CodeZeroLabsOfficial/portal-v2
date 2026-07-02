@@ -9,7 +9,10 @@ import {
   type ResolvedSectionBackground,
 } from "@/lib/proposal/section-background";
 import type { SectionBackground } from "@/types/proposal";
-import { PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
+import {
+  PROPOSAL_DARK_EDITOR_SURFACE_CLASSES,
+  PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
+} from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES } from "@/lib/proposal/public/public-layout";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
 
@@ -69,9 +72,14 @@ export function ProposalSectionShell({
         !prefersLight && PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
         prefersLight &&
           cn(
+            PROPOSAL_DARK_EDITOR_SURFACE_CLASSES,
             "text-white [&_h2]:!text-white",
             "[&_.proposal-rich-text]:!text-white/[0.9] [&_.proposal-rich-text_a]:text-sky-200 [&_.proposal-rich-text_a]:underline-offset-4",
             "[&_.text-muted-foreground]:text-white/72",
+            // Tier/add-on cards stay white; restore dark copy inside each card only.
+            "[&_.bg-card]:[--foreground:var(--base-800)]",
+            "[&_.bg-card]:[--muted-foreground:var(--color-neutral-500)]",
+            "[&_.bg-card]:[--border:var(--base-200)]",
           ),
       )}
     >

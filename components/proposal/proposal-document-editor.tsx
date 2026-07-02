@@ -685,6 +685,8 @@ function SortableShell({
   suppressToolbar = false,
   /** Drag notch: select row without clearing nested column cell focus (columns blocks). */
   onSelectFromNotch,
+  /** Root-level block outside a section — remap tokens for dark admin chrome over a light canvas. */
+  rootLightSurface = false,
 }: {
   id: string;
   children: React.ReactNode;
@@ -699,6 +701,7 @@ function SortableShell({
   flush?: boolean;
   layout?: "default" | "section-child";
   suppressToolbar?: boolean;
+  rootLightSurface?: boolean;
 }) {
   const [hovered, setHovered] = React.useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -818,6 +821,7 @@ function SortableShell({
             !sectionChild && "px-0",
             !sectionChild && (flushEdges ? "py-0" : "py-1.5"),
             sectionChild && "py-0.5",
+            rootLightSurface && PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
             ringClasses,
           )}
         >
@@ -4325,12 +4329,7 @@ export function ProposalDocumentEditor({
           className="mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
         >
           {editorTab === "edit" ? (
-          <div
-            className={cn(
-              PROPOSAL_DOCUMENT_EDITOR_CANVAS_CLASS,
-              PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
-            )}
-          >
+          <div className={PROPOSAL_DOCUMENT_EDITOR_CANVAS_CLASS}>
           <TooltipProvider delayDuration={280}>
           {blocks.length === 0 ? (
             <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
@@ -4354,6 +4353,7 @@ export function ProposalDocumentEditor({
                           id={block.id}
                           selected={isSelected}
                           flush={flushBand}
+                          rootLightSurface={block.type !== "section"}
                           toolbarShowOnHover={block.type !== "image" && block.type !== "icon"}
                           suppressToolbar={
                             block.type === "columns" && rootColumnsChrome.isInnerCellActive(block.id)

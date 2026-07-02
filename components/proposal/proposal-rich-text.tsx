@@ -1051,7 +1051,7 @@ export function ProposalRichText({
           resolvedMinHeightPx == null ? autoMinHeightClass : null,
           prefersLight
             ? "text-white/[0.92] [&_a]:text-sky-200 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-white/25 [&_blockquote]:pl-4 [&_blockquote]:italic"
-            : "text-zinc-900 text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic",
+            : "text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic",
         )
       : cn(
           "proposal-rich-text max-w-none rounded-lg border-0 bg-background px-2.5 py-1.5 text-sm leading-relaxed text-foreground focus-within:outline-none",
