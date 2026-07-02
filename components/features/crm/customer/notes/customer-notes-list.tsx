@@ -3,7 +3,7 @@
 import { Clock, FileSearchIcon, MessageSquare } from "lucide-react";
 
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { customerNoteKindMeta } from "@/lib/crm/customer-note-display";
 import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
@@ -54,16 +54,16 @@ export function CustomerNotesList({
   return (
     <ul className="space-y-3">
       {notes.map((note) => {
-        const { icon: Icon, badge } = customerNoteKindMeta(note.kind);
+        const { label, icon: Icon } = customerNoteKindMeta(note.kind);
         const isHtml = note.bodyFormat === "html";
 
         return (
           <li key={note.id} className="rounded-lg border border-border/70 bg-muted/10 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-                <Icon className="text-muted-foreground h-3.5 w-3.5 shrink-0" aria-hidden />
-                <StatusBadge label={badge.label} variant={badge.variant} />
-              </span>
+              <Badge variant="outline" className="gap-1.5 font-normal">
+                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {label}
+              </Badge>
               <time
                 dateTime={new Date(note.createdAt).toISOString()}
                 className="text-muted-foreground flex items-center gap-1.5 text-xs">
