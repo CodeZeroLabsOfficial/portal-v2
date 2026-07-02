@@ -32,8 +32,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  CustomerProfileFormFields
+} from "@/components/features/crm/customer/customer-profile-form-fields";
+import { combineCustomerName } from "@/lib/customer/name-split";
+import {
+  EMPTY_CUSTOMER_PROFILE_FORM_VALUES,
+  type CustomerProfileFormValues
+} from "@/lib/customer/profile-form-values";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   customerCrmTypeBadgeDisplay,
   customerStatusBadgeDisplay,
@@ -42,7 +49,6 @@ import {
 import type { CustomerListRow } from "@/lib/customer/list";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { createCustomerSchema } from "@/lib/schemas/customer";
-import type { z } from "zod";
 import {
   archiveCustomerAction,
   createCustomerAction,
@@ -53,32 +59,8 @@ interface CustomerListPanelProps {
   rows: CustomerListRow[];
 }
 
-type CreateCustomerFormValues = z.input<typeof createCustomerSchema>;
-
-const defaultValues: CreateCustomerFormValues = {
-  name: "",
-  email: "",
-  company: "",
-  companyPhone: "",
-  companyEmail: "",
-  companyWebsite: "",
-  companyAbn: "",
-  companyAcn: "",
-  companyAddressLine1: "",
-  companyAddressLine2: "",
-  companyCity: "",
-  companyRegion: "",
-  companyPostalCode: "",
-  companyCountry: "",
-  phone: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  region: "",
-  postalCode: "",
-  country: "",
-  tags: [],
-  saveAsLead: false
+const defaultValues: CustomerProfileFormValues = {
+  ...EMPTY_CUSTOMER_PROFILE_FORM_VALUES
 };
 
 function CustomerToolbar({
@@ -161,7 +143,7 @@ function AddCustomerDialog({
   const [lastName, setLastName] = React.useState("");
   const [tagInput, setTagInput] = React.useState("");
 
-  const form = useForm<CreateCustomerFormValues>({
+  const form = useForm<CustomerProfileFormValues>({
     resolver: zodResolver(createCustomerSchema),
     defaultValues
   });
@@ -177,15 +159,13 @@ function AddCustomerDialog({
   }, [open, form]);
 
   React.useEffect(() => {
-    const combined = [firstName, lastName]
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    form.setValue("name", combined, { shouldValidate: true, shouldDirty: false });
+    form.setValue("name", combineCustomerName(firstName, lastName), {
+      shouldValidate: true,
+      shouldDirty: false
+    });
   }, [firstName, lastName, form]);
 
-  async function onSubmit(values: CreateCustomerFormValues) {
+  async function onSubmit(values: CustomerProfileFormValues) {
     setServerError(null);
     const tags = tagInput
       .split(/[,;]/)
@@ -200,7 +180,8 @@ function AddCustomerDialog({
       postalCode: values.postalCode,
       country: values.country
     });
-    const result = await createCustomerAction({ ...values, ...contactAddress, tags });
+    const { id: _id, ...createPayload } = values;
+    const result = await createCustomerAction({ ...createPayload, ...contactAddress, tags });
     if (!result.ok) {
       setServerError(result.message);
       return;
@@ -211,17 +192,7 @@ function AddCustomerDialog({
   }
 
   const busy = form.formState.isSubmitting;
-
-  function copyCompanyAddressToContact() {
-    const v = form.getValues();
-    const opts = { shouldDirty: true, shouldTouch: true };
-    form.setValue("addressLine1", v.companyAddressLine1 ?? "", opts);
-    form.setValue("addressLine2", v.companyAddressLine2 ?? "", opts);
-    form.setValue("city", v.companyCity ?? "", opts);
-    form.setValue("region", v.companyRegion ?? "", opts);
-    form.setValue("postalCode", v.companyPostalCode ?? "", opts);
-    form.setValue("country", v.companyCountry ?? "", opts);
-  }
+  const profileForm = form;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -232,101 +203,17 @@ function AddCustomerDialog({
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <FormServerError message={serverError} />
-            <input type="hidden" {...form.register("name")} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-first-name">First name</Label>
-                <div className="flex overflow-hidden rounded-md border">
-                  <select
-                    id="crm-record-type"
-                    className="h-9 appearance-none border-r bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none"
-                    value={form.watch("saveAsLead") ? "lead" : "contact"}
-                    disabled={busy}
-                    aria-label="Record type"
-                    onChange={(e) =>
-                      form.setValue("saveAsLead", e.target.value === "lead", { shouldDirty: true })
-                    }>
-                    <option value="contact">Contact</option>
-                    <option value="lead">Lead</option>
-                  </select>
-                  <Input
-                    id="crm-first-name"
-                    autoComplete="given-name"
-                    className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-                    placeholder="John"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-last-name">Last name</Label>
-                <Input
-                  id="crm-last-name"
-                  autoComplete="family-name"
-                  placeholder="Smith"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-email">Email *</Label>
-                <Input id="crm-email" type="email" autoComplete="email" {...form.register("email")} />
-                {form.formState.errors.email ? (
-                  <p className="text-destructive text-xs">{form.formState.errors.email.message}</p>
-                ) : null}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-phone">Phone</Label>
-                <Input id="crm-phone" type="tel" autoComplete="tel" {...form.register("phone")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-company">Company name</Label>
-                <Input id="crm-company" autoComplete="organization" {...form.register("company")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="crm-company-email">Company email</Label>
-                <Input id="crm-company-email" type="email" {...form.register("companyEmail")} />
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Company address</Label>
-                <Input placeholder="Line 1" {...form.register("companyAddressLine1")} />
-                <Input placeholder="Line 2" {...form.register("companyAddressLine2")} />
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Input placeholder="City" {...form.register("companyCity")} />
-                  <Input placeholder="State / region" {...form.register("companyRegion")} />
-                  <Input placeholder="Postal code" {...form.register("companyPostalCode")} />
-                  <Input placeholder="Country" {...form.register("companyCountry")} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label>Contact address</Label>
-                  <Button type="button" variant="ghost" size="sm" onClick={copyCompanyAddressToContact} disabled={busy}>
-                    Copy from company
-                  </Button>
-                </div>
-                <Input placeholder="Line 1" autoComplete="address-line1" {...form.register("addressLine1")} />
-                <Input placeholder="Line 2" autoComplete="address-line2" {...form.register("addressLine2")} />
-                <div className="grid grid-cols-2 gap-1.5">
-                  <Input placeholder="City" autoComplete="address-level2" {...form.register("city")} />
-                  <Input placeholder="State / region" autoComplete="address-level1" {...form.register("region")} />
-                  <Input placeholder="Postal code" autoComplete="postal-code" {...form.register("postalCode")} />
-                  <Input placeholder="Country" autoComplete="country-name" {...form.register("country")} />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="crm-tags">Tags</Label>
-              <Input
-                id="crm-tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                placeholder="vip, priority — comma separated"
-              />
-            </div>
+            <CustomerProfileFormFields
+              form={profileForm}
+              mode="create"
+              disabled={busy}
+              firstName={firstName}
+              lastName={lastName}
+              onFirstNameChange={setFirstName}
+              onLastNameChange={setLastName}
+              tagInput={tagInput}
+              onTagInputChange={setTagInput}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>

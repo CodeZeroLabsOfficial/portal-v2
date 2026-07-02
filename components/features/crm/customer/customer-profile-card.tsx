@@ -1,4 +1,9 @@
+"use client";
+
+import { PencilIcon } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { initialsFromName } from "@/lib/common/format";
@@ -12,6 +17,7 @@ export interface CustomerProfileCardProps {
   openInvoiceCount: number;
   proposalCount: number;
   opportunityCount: number;
+  onEditClick?: () => void;
 }
 
 export function CustomerProfileCard({
@@ -19,7 +25,8 @@ export function CustomerProfileCard({
   subscriptionCount,
   openInvoiceCount,
   proposalCount,
-  opportunityCount
+  opportunityCount,
+  onEditClick
 }: CustomerProfileCardProps) {
   const avatarUrl = customerAvatarUrl(customer.avatarUrl);
   const displayName = customer.name?.trim() || customer.email;
@@ -29,6 +36,17 @@ export function CustomerProfileCard({
 
   return (
     <Card className="relative">
+      {onEditClick ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 z-10"
+          onClick={onEditClick}
+          aria-label="Edit customer">
+          <PencilIcon />
+        </Button>
+      ) : null}
       <CardContent>
         <div className="space-y-6">
           <div className="flex flex-col items-center space-y-3">

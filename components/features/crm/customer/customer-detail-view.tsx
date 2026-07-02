@@ -4,8 +4,10 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { CustomerCompanyDetailsCard } from "@/components/features/crm/customer/customer-company-details-card";
 import { CustomerContactDetailsCard } from "@/components/features/crm/customer/customer-contact-details-card";
 import { CustomerDetailShell } from "@/components/features/crm/customer/customer-detail-shell";
+import { CustomerEditSheet } from "@/components/features/crm/customer/customer-edit-sheet";
 import { CustomerIntegrationsCard } from "@/components/features/crm/customer/customer-integrations-card";
 import { CustomerPortalAccessCard } from "@/components/features/crm/customer/customer-portal-access-card";
 import { CustomerProfileCard } from "@/components/features/crm/customer/customer-profile-card";
@@ -57,6 +59,7 @@ export function CustomerDetailView({
 }: CustomerDetailViewProps) {
   const router = useRouter();
   const [convertLeadBusy, setConvertLeadBusy] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
 
   async function convertLead() {
     setConvertLeadBusy(true);
@@ -73,27 +76,30 @@ export function CustomerDetailView({
   }
 
   return (
-    <CustomerDetailShell
-      customerId={customer.id}
-      initialTab={initialTab}
-      sidebar={
-        <div className="space-y-4">
-          <CustomerProfileCard
-            customer={customer}
-            subscriptionCount={subscriptions.length}
-            openInvoiceCount={openInvoiceCount(invoices)}
-            proposalCount={proposalsMatched.length}
-            opportunityCount={opportunities.length}
-          />
-          <CustomerContactDetailsCard
-            customer={customer}
-            convertLeadBusy={convertLeadBusy}
-            onConvertLead={() => void convertLead()}
-          />
-          <CustomerIntegrationsCard customer={customer} activities={activities} />
-          <CustomerPortalAccessCard customer={customer} />
-        </div>
-      }
+    <>
+      <CustomerDetailShell
+        customerId={customer.id}
+        initialTab={initialTab}
+        sidebar={
+          <div className="space-y-4">
+            <CustomerProfileCard
+              customer={customer}
+              subscriptionCount={subscriptions.length}
+              openInvoiceCount={openInvoiceCount(invoices)}
+              proposalCount={proposalsMatched.length}
+              opportunityCount={opportunities.length}
+              onEditClick={() => setEditOpen(true)}
+            />
+            <CustomerContactDetailsCard
+              customer={customer}
+              convertLeadBusy={convertLeadBusy}
+              onConvertLead={() => void convertLead()}
+            />
+            <CustomerCompanyDetailsCard customer={customer} />
+            <CustomerIntegrationsCard customer={customer} activities={activities} />
+            <CustomerPortalAccessCard customer={customer} />
+          </div>
+        }
       panels={{
         overview: <CustomerOverviewTab customerId={customer.id} activities={activities} />,
         billing: <CustomerBillingTab customer={customer} invoices={invoices} />,
@@ -114,6 +120,8 @@ export function CustomerDetailView({
         tasks: <CustomerTasksTab tasks={tasks} />,
         vault: <CustomerVaultTab />
       }}
-    />
+      />
+      <CustomerEditSheet customer={customer} open={editOpen} onOpenChange={setEditOpen} />
+    </>
   );
 }

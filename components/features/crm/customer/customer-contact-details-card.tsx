@@ -1,36 +1,10 @@
-"use client";
+import { Loader2, Mail, MapPin, Phone, Sparkles, Tag, Users } from "lucide-react";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import {
-  Building2,
-  FileText,
-  Loader2,
-  Mail,
-  MapPin,
-  Phone,
-  Sparkles,
-  Tag,
-  Users
-} from "lucide-react";
-import { z } from "zod";
-
-import { InlineEditableAddressFields } from "@/components/shared/inline-editable-address-fields";
-import { InlineEditableField } from "@/components/shared/inline-editable-field";
+import { CrmDetailLabel, CrmDetailValue } from "@/components/shared/crm-detail-label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  buildCustomerUpdatePayload,
-  type CustomerInlineFieldOverrides
-} from "@/lib/customer/form-defaults";
-import { normalizeAddressFields, type AddressFields } from "@/lib/common/format";
-import { updateCustomerAction } from "@/server/actions/customers-crm";
+import { formatAddressLines } from "@/lib/common/format";
 import type { CustomerRecord } from "@/types/customer";
-
-const detailLabelClass =
-  "flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground";
-
-const detailLabelIconClass = "size-3.5 shrink-0 opacity-80";
 
 export interface CustomerContactDetailsCardProps {
   customer: CustomerRecord;
@@ -38,15 +12,19 @@ export interface CustomerContactDetailsCardProps {
   onConvertLead?: () => void;
 }
 
+function EmptyValue() {
+  return <span className="text-muted-foreground">—</span>;
+}
+
 export function CustomerContactDetailsCard({
   customer,
   convertLeadBusy = false,
   onConvertLead
 }: CustomerContactDetailsCardProps) {
-  const router = useRouter();
-  const [activeFieldId, setActiveFieldId] = React.useState<string | null>(null);
-  const fieldsDisabled = customer.status === "archived";
-  const contactAddress: AddressFields = normalizeAddressFields({
+  const name = customer.name?.trim();
+  const email = customer.email?.trim();
+  const phone = customer.phone?.trim();
+  const addressLines = formatAddressLines({
     addressLine1: customer.addressLine1,
     addressLine2: customer.addressLine2,
     city: customer.city,
@@ -54,18 +32,6 @@ export function CustomerContactDetailsCard({
     postalCode: customer.postalCode,
     country: customer.country
   });
-
-  async function persistField(
-    overrides: CustomerInlineFieldOverrides
-  ): Promise<{ ok: boolean; message?: string }> {
-    const res = await updateCustomerAction(buildCustomerUpdatePayload(customer, overrides));
-    if (res.ok) {
-      router.refresh();
-    }
-    return res;
-  }
-
-  const phoneDisplay = customer.phone?.trim() || customer.companyPhone?.trim() || "";
 
   return (
     <Card className="border-border/80 bg-card/80 shadow-sm">
@@ -94,160 +60,42 @@ export function CustomerContactDetailsCard({
       <CardContent className="space-y-5 p-6 text-sm">
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <Tag className={detailLabelIconClass} aria-hidden />
-              Name
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="name"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={customer.name}
-                editLabel="name"
-                placeholder="Contact name"
-                disabled={fieldsDisabled}
-                onSave={async (next) => {
-                  const trimmed = next.trim();
-                  if (!trimmed) {
-                    return { ok: false, message: "Name is required." };
-                  }
-                  if (trimmed.length > 200) {
-                    return { ok: false, message: "Name must be 200 characters or fewer." };
-                  }
-                  return persistField({ name: trimmed });
-                }}
-              />
-            </dd>
+            <CrmDetailLabel icon={Tag}>Name</CrmDetailLabel>
+            <CrmDetailValue empty={!name}>{name || <EmptyValue />}</CrmDetailValue>
           </div>
           <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <Mail className={detailLabelIconClass} aria-hidden />
-              Email
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="email"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={customer.email}
-                editLabel="email"
-                placeholder="email@example.com"
-                disabled={fieldsDisabled}
-                onSave={async (next) => {
-                  const trimmed = next.trim();
-                  if (!trimmed) {
-                    return { ok: false, message: "Email is required." };
-                  }
-                  if (!z.string().email().safeParse(trimmed).success) {
-                    return { ok: false, message: "Enter a valid email address." };
-                  }
-                  if (trimmed.length > 320) {
-                    return { ok: false, message: "Email must be 320 characters or fewer." };
-                  }
-                  return persistField({ email: trimmed });
-                }}
-              />
-            </dd>
+            <CrmDetailLabel icon={Mail}>Email</CrmDetailLabel>
+            <CrmDetailValue empty={!email}>
+              {email ? (
+                <a href={`mailto:${email}`} className="hover:text-primary hover:underline">
+                  {email}
+                </a>
+              ) : (
+                <EmptyValue />
+              )}
+            </CrmDetailValue>
           </div>
           <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <Phone className={detailLabelIconClass} aria-hidden />
-              Phone
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="phone"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={phoneDisplay}
-                editLabel="phone"
-                placeholder="Phone number"
-                disabled={fieldsDisabled}
-                onSave={async (next) => persistField({ phone: next.trim() })}
-              />
-            </dd>
-          </div>
-          <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <Building2 className={detailLabelIconClass} aria-hidden />
-              Company
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="company"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={customer.company ?? ""}
-                editLabel="company"
-                placeholder="Company name"
-                disabled={fieldsDisabled}
-                onSave={async (next) => persistField({ company: next.trim() })}
-              />
-            </dd>
-          </div>
-          <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <FileText className={detailLabelIconClass} aria-hidden />
-              ABN
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="companyAbn"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={customer.companyAbn ?? ""}
-                editLabel="ABN"
-                placeholder="ABN"
-                disabled={fieldsDisabled}
-                onSave={async (next) => persistField({ companyAbn: next.trim() })}
-              />
-            </dd>
-          </div>
-          <div className="space-y-1">
-            <dt className={detailLabelClass}>
-              <FileText className={detailLabelIconClass} aria-hidden />
-              ACN
-            </dt>
-            <dd>
-              <InlineEditableField
-                fieldId="companyAcn"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={customer.companyAcn ?? ""}
-                editLabel="ACN"
-                placeholder="ACN"
-                disabled={fieldsDisabled}
-                onSave={async (next) => persistField({ companyAcn: next.trim() })}
-              />
-            </dd>
+            <CrmDetailLabel icon={Phone}>Phone</CrmDetailLabel>
+            <CrmDetailValue empty={!phone}>
+              {phone ? (
+                <a href={`tel:${phone}`} className="hover:text-primary hover:underline">
+                  {phone}
+                </a>
+              ) : (
+                <EmptyValue />
+              )}
+            </CrmDetailValue>
           </div>
           <div className="space-y-1 sm:col-span-2">
-            <dt className={detailLabelClass}>
-              <MapPin className={detailLabelIconClass} aria-hidden />
-              Address
-            </dt>
-            <dd>
-              <InlineEditableAddressFields
-                fieldId="address"
-                activeFieldId={activeFieldId}
-                onActiveFieldIdChange={setActiveFieldId}
-                value={contactAddress}
-                editLabel="address"
-                disabled={fieldsDisabled}
-                onSave={async (next) => {
-                  const normalized = normalizeAddressFields(next);
-                  return persistField({
-                    addressLine1: normalized.addressLine1 ?? "",
-                    addressLine2: normalized.addressLine2 ?? "",
-                    city: normalized.city ?? "",
-                    region: normalized.region ?? "",
-                    postalCode: normalized.postalCode ?? "",
-                    country: normalized.country ?? ""
-                  });
-                }}
-              />
-            </dd>
+            <CrmDetailLabel icon={MapPin}>Address</CrmDetailLabel>
+            <CrmDetailValue empty={addressLines.length === 0}>
+              {addressLines.length > 0 ? (
+                <span className="whitespace-pre-line">{addressLines.join("\n")}</span>
+              ) : (
+                <EmptyValue />
+              )}
+            </CrmDetailValue>
           </div>
         </dl>
         {customer.tags.length > 0 ? (
