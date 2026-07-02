@@ -17,7 +17,7 @@ import {
   resolvePackagesTotalSectionLabel,
 } from "@/lib/proposal/commerce/packages-totals";
 import { cn } from "@/lib/utils";
-import { readableForeground, resolveBlockStyle, withAlpha } from "@/lib/proposal/block-style";
+import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
 import { saveProposalPackageSelectionAction } from "@/server/actions/proposal-builder";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -100,6 +100,7 @@ export function PackagesBlockPublic({
     recommendedFg === "#ffffff" ? "rgba(255,255,255,0.32)" : "rgba(15,23,42,0.22)";
   const activeTermFg = readableForeground(style.primaryColor);
   const totalBarFg = readableForeground(style.primaryColor);
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
   const addonsTitle = block.addonsTitle ?? "Add-ons";
   const totalSectionLabel = resolvePackagesTotalSectionLabel(block.totalSectionLabel);
   const allowAddonEdit = block.allowAddonQuantityEdit !== false;
@@ -273,13 +274,21 @@ export function PackagesBlockPublic({
           const isRecommended = Boolean(tier.recommended);
           const busy = pendingTierId === tier.id;
 
-          const cardStyle: React.CSSProperties | undefined = isRecommended
+          const cardStyle: React.CSSProperties = isRecommended
             ? {
                 backgroundColor: style.highlightColor,
                 color: recommendedFg,
                 borderColor: style.highlightColor,
               }
-            : undefined;
+            : {
+                backgroundColor: tableSurface.background,
+                color: tableSurface.foreground,
+                borderColor: tableSurface.borderColor,
+              };
+          const standardMutedStyle = { color: tableSurface.mutedForeground };
+          const dashedBorderStyle = {
+            borderColor: isRecommended ? recommendedFaintBorder : tableSurface.borderColor,
+          };
           const selectedRingStyle: React.CSSProperties | undefined = isSelected
             ? {
                 boxShadow: `0 0 0 2px ${style.highlightColor}, 0 0 0 4px ${withAlpha(
@@ -294,7 +303,7 @@ export function PackagesBlockPublic({
               <div
                 className={cn(
                   "relative flex min-h-0 flex-col rounded-xl border p-3.5 shadow-sm transition-colors sm:p-4",
-                  isRecommended ? "pt-5 sm:pt-5" : "border-border/70 bg-card text-foreground",
+                  isRecommended ? "pt-5 sm:pt-5" : "",
                 )}
                 style={cardStyle}
               >
@@ -312,8 +321,8 @@ export function PackagesBlockPublic({
                 </h3>
 
                 <ul
-                  className={cn("mt-2 space-y-1 text-[13px] leading-snug", isRecommended ? "" : "text-muted-foreground")}
-                  style={isRecommended ? { color: recommendedFg } : undefined}
+                  className="mt-2 space-y-1 text-[13px] leading-snug"
+                  style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
                 >
                   <li>
                     <span className="font-medium">Included users</span>:{" "}
@@ -329,21 +338,13 @@ export function PackagesBlockPublic({
                   </li>
                 </ul>
 
-                <div
-                  className="mt-3 border-t border-dashed pt-3"
-                  style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
-                >
-                  <p
-                    className={cn(
-                      "text-xl font-semibold tabular-nums sm:text-2xl",
-                      isRecommended ? "" : "text-foreground",
-                    )}
-                  >
+                <div className="mt-3 border-t border-dashed pt-3" style={dashedBorderStyle}>
+                  <p className="text-xl font-semibold tabular-nums sm:text-2xl">
                     {formatCurrencyAmount(mm, currency)}
                   </p>
                   <p
-                    className={cn("text-xs", isRecommended ? "" : "text-muted-foreground")}
-                    style={isRecommended ? { color: dimRecommendedFg } : undefined}
+                    className="text-xs"
+                    style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
                   >
                     / month
                   </p>
@@ -351,30 +352,22 @@ export function PackagesBlockPublic({
                   {term === "12_months" ? (
                     <div
                       className="mt-2.5 rounded-md border border-dashed px-2.5 py-2 text-left"
-                      style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
+                      style={dashedBorderStyle}
                     >
                       <p
-                        className={cn(
-                          "text-[11px] font-semibold uppercase tracking-wide",
-                          isRecommended ? "" : "text-muted-foreground",
-                        )}
-                        style={isRecommended ? { color: dimRecommendedFg } : undefined}
+                        className="text-[11px] font-semibold uppercase tracking-wide"
+                        style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
                       >
                         12-month plan
                       </p>
                       {upfront !== undefined ? (
-                        <p
-                          className={cn(
-                            "mt-0.5 text-xs tabular-nums",
-                            isRecommended ? "" : "text-foreground",
-                          )}
-                        >
+                        <p className="mt-0.5 text-xs tabular-nums">
                           Upfront: {formatCurrencyAmount(upfront, currency)}
                         </p>
                       ) : (
                         <p
-                          className={cn("mt-0.5 text-xs", isRecommended ? "" : "text-muted-foreground")}
-                          style={isRecommended ? { color: dimRecommendedFg } : undefined}
+                          className="mt-0.5 text-xs"
+                          style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
                         >
                           No upfront charge
                         </p>
@@ -382,8 +375,8 @@ export function PackagesBlockPublic({
                     </div>
                   ) : (
                     <p
-                      className={cn("mt-2 text-[11px]", isRecommended ? "" : "text-muted-foreground")}
-                      style={isRecommended ? { color: dimRecommendedFg } : undefined}
+                      className="mt-2 text-[11px]"
+                      style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
                     >
                       24-month term · billed monthly
                     </p>
@@ -494,18 +487,25 @@ export function PackagesBlockPublic({
                 open={addonsTableOpen}
                 motionKey="packages-addons-table"
                 id="packages-addons-table"
-                className="overflow-x-auto bg-card text-left"
+                className="overflow-x-auto text-left"
+                style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}
               >
                 <table className="w-full min-w-[320px] text-left text-sm [&_thead_th:first-child]:!text-left [&_tbody_td:first-child]:!text-left">
                   <thead>
-                    <tr className="border-b border-dashed border-border/50 bg-card text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <tr
+                      className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
+                      style={{ borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }}
+                    >
                       <th className="px-4 py-2.5 !text-left">Description</th>
                       <th className="px-4 py-2.5 text-center">Item</th>
                       {allowAddonEdit ? <th className="px-4 py-2.5 text-center">Quantity</th> : null}
                       <th className="px-4 py-2.5 text-right">Price</th>
                     </tr>
                   </thead>
-                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed [&_tr]:border-border/40">
+                  <tbody
+                    className="[&_tr]:border-b [&_tr]:border-dashed"
+                    style={{ borderColor: tableSurface.borderColor }}
+                  >
                     {addonLines.map((li) => {
                       const qRaw = addonQty[li.id] ?? effectivePricingLineQuantity(li);
                       const unitMinor = effectiveCatalogAddonUnitAmount(li, term);
@@ -513,9 +513,12 @@ export function PackagesBlockPublic({
                       return (
                         <tr key={li.id}>
                           <td className="px-4 py-3 !text-left align-middle">
-                            <span className="block w-full text-left font-medium text-foreground">{li.label}</span>
+                            <span className="block w-full text-left font-medium">{li.label}</span>
                           </td>
-                          <td className="px-4 py-3 text-center align-middle tabular-nums text-muted-foreground">
+                          <td
+                            className="px-4 py-3 text-center align-middle tabular-nums"
+                            style={{ color: tableSurface.mutedForeground }}
+                          >
                             {formatCurrencyAmount(unitMinor, currency)}
                           </td>
                           {allowAddonEdit ? (
@@ -583,7 +586,7 @@ export function PackagesBlockPublic({
                               </div>
                             </td>
                           ) : null}
-                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium text-foreground">
+                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
                             {formatCurrencyAmount(lineTotal, currency)}
                           </td>
                         </tr>

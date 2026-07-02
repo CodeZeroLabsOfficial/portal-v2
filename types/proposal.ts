@@ -27,15 +27,17 @@ export interface ProposalBlockBase {
 
 /**
  * Per-block visual style overrides. Consumed by Quote (pricing) and Plans (packages) on the
- * public page; only Plans exposes the editor “Style” picker on the block toolbar.
+ * public page; both expose the editor Style picker on the block toolbar.
  */
 export interface BlockStyle {
   /** Layout density / chrome. `visual` adds a hero container, `simple` is flat. */
   variant?: "visual" | "simple";
-  /** Backdrop / hero accent (CSS colour, e.g. `#4543F7`). */
+  /** Accent chrome: term tabs, add-ons header/footer bars, quote simple title bar. */
   primaryColor?: string;
-  /** Highlight tone for the recommended tier / total row. */
+  /** Highlight tone for the recommended tier / quote total row. */
   highlightColor?: string;
+  /** Tier cards (Plans), add-ons table body (Plans), and quote line-item table fill. */
+  tableBackground?: string;
 }
 
 /** Full-bleed section backdrop (editable per section block). */

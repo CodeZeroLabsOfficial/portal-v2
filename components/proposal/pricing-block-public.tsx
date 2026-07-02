@@ -4,7 +4,7 @@ import * as React from "react";
 import type { PricingBlock } from "@/types/proposal";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import { cn } from "@/lib/utils";
-import { readableForeground, resolveBlockStyle, withAlpha } from "@/lib/proposal/block-style";
+import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
 import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
 
 type LineState = Record<string, number>;
@@ -46,6 +46,7 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
   const isSimpleTable = !isVisual;
 
   const headerBarFg = readableForeground(style.primaryColor);
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
 
   const headerSimpleStyle: React.CSSProperties = {
     backgroundColor: style.primaryColor,
@@ -112,16 +113,24 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
         </div>
       ) : null}
 
-      <div className="overflow-x-auto bg-card">
+      <div
+        className="overflow-x-auto"
+        style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}
+      >
         <table className="w-full min-w-[320px] text-sm">
           <thead>
             <tr
               className={cn(
                 "border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide",
                 isSimpleTable
-                  ? "border-border/50 bg-card text-muted-foreground"
+                  ? ""
                   : "border-border/60 bg-muted/20 text-muted-foreground",
               )}
+              style={
+                isSimpleTable
+                  ? { borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }
+                  : undefined
+              }
             >
               <th className="px-4 py-2.5">{isSimpleTable ? "Description" : "Item"}</th>
               <th className="px-4 py-2.5 text-right">{isSimpleTable ? "Item" : "Unit"}</th>
@@ -133,9 +142,10 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
           </thead>
           <tbody
             className={cn(
-              "[&_tr]:border-b [&_tr]:border-border/40",
-              isSimpleTable && "[&_tr]:border-dashed",
+              "[&_tr]:border-b",
+              isSimpleTable ? "[&_tr]:border-dashed" : "[&_tr]:border-border/40",
             )}
+            style={isSimpleTable ? { borderColor: tableSurface.borderColor } : undefined}
           >
             {lineItems.map((li) => {
               const qRaw = qty[li.id] ?? effectivePricingLineQuantity(li);
@@ -145,13 +155,11 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
                 <tr key={li.id} className={cn("transition-opacity", hidden && "opacity-40")}>
                   <td className="px-4 py-3 align-middle">
                     <div className="flex flex-col gap-1">
-                      <span className="font-medium text-foreground">{li.label}</span>
+                      <span className="font-medium">{li.label}</span>
                       {li.optional ? (
                         <label
-                          className={cn(
-                            "flex cursor-pointer items-center gap-2 text-[12px]",
-                            "text-muted-foreground",
-                          )}
+                          className="flex cursor-pointer items-center gap-2 text-[12px]"
+                          style={isSimpleTable ? { color: tableSurface.mutedForeground } : undefined}
                         >
                           <input
                             type="checkbox"
@@ -166,7 +174,10 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
                       ) : null}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right align-middle tabular-nums text-muted-foreground">
+                  <td
+                    className="px-4 py-3 text-right align-middle tabular-nums"
+                    style={isSimpleTable ? { color: tableSurface.mutedForeground } : undefined}
+                  >
                     {formatCurrencyAmount(li.unitAmountMinor, currency)}
                   </td>
                   {editable ? (
@@ -185,11 +196,16 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
                             setQty((prev) => ({ ...prev, [li.id]: Math.floor(n) }));
                           }}
                         />
-                        <span className="text-xs text-muted-foreground">{qtyUnit}</span>
+                        <span
+                          className="text-xs"
+                          style={isSimpleTable ? { color: tableSurface.mutedForeground } : undefined}
+                        >
+                          {qtyUnit}
+                        </span>
                       </span>
                     </td>
                   ) : null}
-                  <td className="px-4 py-3 text-right align-middle tabular-nums font-medium text-foreground">
+                  <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
                     {hidden ? "—" : formatCurrencyAmount(lineTotal, currency)}
                   </td>
                 </tr>

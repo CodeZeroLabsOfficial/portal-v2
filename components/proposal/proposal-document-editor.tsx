@@ -1644,7 +1644,7 @@ function SectionBlockFields({
           >
           {children.map((child, idx) => {
             const isSelected = selectedBlockId === child.id;
-            const supportsStyle = child.type === "packages";
+            const supportsStyle = child.type === "packages" || child.type === "pricing";
             const isLastChild = idx === children.length - 1;
             return (
               <div key={child.id} className="relative isolate min-w-0">
@@ -2716,7 +2716,7 @@ function AgreementBlockFields({
           >
           {children.map((child, idx) => {
             const isSelected = selectedBlockId === child.id;
-            const supportsStyle = child.type === "packages";
+            const supportsStyle = child.type === "packages" || child.type === "pricing";
             const isLastChild = idx === children.length - 1;
             return (
               <div key={child.id} className="relative isolate min-w-0">
@@ -4345,7 +4345,7 @@ export function ProposalDocumentEditor({
                   <InsertBlockSlot onAdd={(b) => addBlockAt(b, 0)} />
                   {blocks.map((block, idx) => {
                     const isSelected = selectedBlockId === block.id;
-                    const supportsStyle = block.type === "packages";
+                    const supportsStyle = block.type === "packages" || block.type === "pricing";
                     const flushBand = proposalBlockRendersFlushEditorBand(block);
                     return (
                       <div key={block.id}>

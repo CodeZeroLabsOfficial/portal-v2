@@ -12,7 +12,7 @@ import type {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/common/format";
-import { readableForeground, resolveBlockStyle, withAlpha } from "@/lib/proposal/block-style";
+import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
 import {
   DEFAULT_PACKAGES_UPFRONT_COST_12_MINOR,
   formatPackageTierIncluded,
@@ -419,6 +419,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
   const label12 = block.plan12Label ?? "12 months";
   const label24 = block.plan24Label ?? "24 months";
   const headerBarFg = readableForeground(style.primaryColor);
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
   const headerSimpleDividerColor =
     headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
   const headerSimpleSolid: React.CSSProperties = {
@@ -515,6 +516,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
             term={term}
             currency={currency}
             highlightColor={style.highlightColor}
+            tableBackground={style.tableBackground}
             catalogServices={orderedCatalogServices}
             onChange={(next) => patchTier(tier.id, next)}
             onRemove={() => removeTier(tier.id)}
@@ -630,10 +632,13 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
               id="packages-inline-addons-table"
               className="w-full"
             >
-              <div className="overflow-x-auto bg-card text-left">
+              <div className="overflow-x-auto text-left" style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}>
                 <table className="w-full min-w-[480px] text-left text-sm">
                   <thead>
-                    <tr className="border-b border-dashed border-border/50 bg-card text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <tr
+                      className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
+                      style={{ borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }}
+                    >
                       <th className="px-4 py-2.5 text-left">Description</th>
                       <th className="px-4 py-2.5 text-right">Item</th>
                       {editableAddonQty ? <th className="px-4 py-2.5 text-right">Quantity</th> : null}
@@ -641,7 +646,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                       <th className="w-8 px-2 py-2.5" />
                     </tr>
                   </thead>
-                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed [&_tr]:border-border/40">
+                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed" style={{ borderColor: tableSurface.borderColor }}>
                     {addonLineItems.map((li) => {
                       const q = effectivePricingLineQuantity(li);
                       const linkedService = li.serviceId
@@ -892,6 +897,7 @@ function TierCard({
   term,
   currency,
   highlightColor,
+  tableBackground,
   catalogServices,
   onChange,
   onRemove,
@@ -901,6 +907,7 @@ function TierCard({
   term: "12_months" | "24_months";
   currency: string;
   highlightColor: string;
+  tableBackground: string;
   catalogServices: readonly CatalogServicePickerOption[];
   onChange: (next: Partial<PackageTier>) => void;
   onRemove: () => void;
@@ -911,6 +918,7 @@ function TierCard({
   const otherMonthlyMinor = term === "12_months" ? tier.monthlyCost24Minor ?? 0 : tier.monthlyCost12Minor ?? 0;
   const otherTermLabel = term === "12_months" ? "24-month monthly" : "12-month monthly";
   const features = tier.features ?? [];
+  const standardSurface = resolveTableSurfaceColors(tableBackground);
 
   /** Recommended cards adopt the highlight colour as a solid background. */
   const recommendedFg = readableForeground(highlightColor);
@@ -920,16 +928,24 @@ function TierCard({
   const recommendedFaintBorder =
     recommendedFg === "#ffffff" ? "rgba(255,255,255,0.32)" : "rgba(15,23,42,0.22)";
 
-  const cardStyle: React.CSSProperties | undefined = isRecommended
+  const cardStyle: React.CSSProperties = isRecommended
     ? { backgroundColor: highlightColor, color: recommendedFg, borderColor: highlightColor }
-    : undefined;
+    : {
+        backgroundColor: standardSurface.background,
+        color: standardSurface.foreground,
+        borderColor: standardSurface.borderColor,
+      };
+  const standardMutedStyle = { color: standardSurface.mutedForeground };
+  const dashedBorderStyle = {
+    borderColor: isRecommended ? recommendedFaintBorder : standardSurface.borderColor,
+  };
 
   return (
     <div className="group/tier flex flex-col">
       <div
         className={cn(
           "relative flex min-h-0 flex-col rounded-xl border p-3.5 shadow-sm transition-colors sm:p-4",
-          isRecommended ? "pt-5 sm:pt-5" : "border-border/70 bg-card text-foreground",
+          isRecommended ? "pt-5 sm:pt-5" : "",
         )}
         style={cardStyle}
       >
@@ -958,9 +974,8 @@ function TierCard({
           aria-label="Remove tier"
           className={cn(
             "absolute right-2 top-2 rounded-md p-1.5 opacity-0 transition-opacity hover:text-red-500 group-hover/tier:opacity-100",
-            isRecommended ? "" : "text-muted-foreground",
           )}
-          style={isRecommended ? { color: recommendedDimText } : undefined}
+          style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -979,11 +994,8 @@ function TierCard({
         />
 
         <ul
-          className={cn(
-            "mt-2 space-y-1 text-[13px] leading-snug",
-            isRecommended ? "" : "text-muted-foreground",
-          )}
-          style={isRecommended ? { color: recommendedFg } : undefined}
+          className="mt-2 space-y-1 text-[13px] leading-snug"
+          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
         >
           <li>
             <span className="font-medium">Included users</span>:{" "}
@@ -1001,7 +1013,7 @@ function TierCard({
 
         <div
           className="mt-3 border-t border-dashed pt-3"
-          style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
+          style={dashedBorderStyle}
         >
           <div className="flex items-baseline gap-1">
             <InlinePrice
@@ -1021,15 +1033,15 @@ function TierCard({
             />
           </div>
           <p
-            className={cn("text-xs", isRecommended ? "" : "text-muted-foreground")}
-            style={isRecommended ? { color: recommendedDimText } : undefined}
+            className="text-xs"
+            style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
           >
             / month — {term === "12_months" ? "12-month plan" : "24-month plan"}
           </p>
 
           <p
-            className={cn("mt-2 text-[11px]", isRecommended ? "" : "text-muted-foreground")}
-            style={isRecommended ? { color: recommendedDimText } : undefined}
+            className="mt-2 text-[11px]"
+            style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
           >
             {otherTermLabel}:{" "}
             <InlinePrice
@@ -1049,14 +1061,11 @@ function TierCard({
           {term === "12_months" ? (
             <div
               className="mt-2.5 rounded-md border border-dashed px-2.5 py-2 text-left"
-              style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
+              style={dashedBorderStyle}
             >
               <p
-                className={cn(
-                  "text-[11px] font-semibold uppercase tracking-wide",
-                  isRecommended ? "" : "text-muted-foreground",
-                )}
-                style={isRecommended ? { color: recommendedDimText } : undefined}
+                className="text-[11px] font-semibold uppercase tracking-wide"
+                style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
               >
                 Upfront (12-month)
               </p>
@@ -1081,8 +1090,8 @@ function TierCard({
             style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
           >
             <label
-              className={cn("mb-1 block text-[11px] font-medium", isRecommended ? "" : "text-muted-foreground")}
-              style={isRecommended ? { color: recommendedDimText } : undefined}
+              className="mb-1 block text-[11px] font-medium"
+              style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
             >
               Catalogue service
             </label>
@@ -1091,9 +1100,21 @@ function TierCard({
                 "mt-0.5 w-full rounded-md border px-2 py-1.5 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
                 isRecommended
                   ? "border-white/35 bg-white text-slate-900 [color-scheme:light]"
-                  : "border-border bg-background text-foreground",
+                  : "[color-scheme:light]",
               )}
-              style={isRecommended ? { color: "#0f172a" } : undefined}
+              style={
+                isRecommended
+                  ? { color: "#0f172a" }
+                  : {
+                      borderColor: standardSurface.borderColor,
+                      backgroundColor:
+                        standardSurface.foreground === "#ffffff"
+                          ? "rgba(255,255,255,0.12)"
+                          : "#ffffff",
+                      color:
+                        standardSurface.foreground === "#ffffff" ? "#ffffff" : "#0f172a",
+                    }
+              }
               value={tier.serviceId ?? ""}
               onChange={(e) => {
                 const v = e.target.value.trim();
@@ -1265,6 +1286,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
   };
   const headerSimpleDividerColor =
     headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
 
   return (
     <div
@@ -1372,16 +1394,22 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
         </>
       )}
 
-      <div className="overflow-x-auto bg-card">
+      <div
+        className="overflow-x-auto"
+        style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}
+      >
         <table className="w-full min-w-[480px] text-sm">
           <thead>
             <tr
               className={cn(
                 "border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide",
-                isVisual
-                  ? "border-border/60 bg-muted/20 text-muted-foreground"
-                  : "border-border/50 bg-card text-muted-foreground",
+                isVisual && "border-border/60 bg-muted/20 text-muted-foreground",
               )}
+              style={
+                isVisual
+                  ? undefined
+                  : { borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }
+              }
             >
               <th className="px-4 py-2.5">{isVisual ? "Item" : "Description"}</th>
               <th className="px-4 py-2.5 text-right">{isVisual ? "Unit" : "Item"}</th>
@@ -1392,9 +1420,10 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
           </thead>
           <tbody
             className={cn(
-              "[&_tr]:border-b [&_tr]:border-border/40",
-              !isVisual && "[&_tr]:border-dashed",
+              "[&_tr]:border-b",
+              isVisual ? "[&_tr]:border-border/40" : "[&_tr]:border-dashed",
             )}
+            style={isVisual ? undefined : { borderColor: tableSurface.borderColor }}
           >
             {lineItems.map((li) => {
               const q = effectivePricingLineQuantity(li);
@@ -1424,7 +1453,10 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                         className="font-medium text-foreground"
                         inputClassName="w-full font-medium text-foreground"
                       />
-                      <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+                      <label
+                        className="flex cursor-pointer items-center gap-2 text-[11px]"
+                        style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                      >
                         <input
                           type="checkbox"
                           checked={Boolean(li.optional)}
@@ -1438,8 +1470,9 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                   <td
                     className={cn(
                       "px-4 py-3 text-right align-middle tabular-nums",
-                      isVisual ? "text-foreground" : "text-muted-foreground",
+                      isVisual && "text-foreground",
                     )}
+                    style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
                   >
                     <InlinePrice
                       tone="light"
@@ -1447,7 +1480,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                       currency={currency}
                       onChange={(v) => patchLine(li.id, { unitAmountMinor: v })}
                       ariaLabel="Unit price"
-                      className={isVisual ? "text-foreground" : "text-muted-foreground"}
+                      className={isVisual ? "text-foreground" : undefined}
                     />
                   </td>
                   {qtyProps ? (
@@ -1455,7 +1488,12 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                       {!isVisual ? (
                         <span className="inline-flex items-center justify-end gap-1.5 tabular-nums">
                           <InlineNumber {...qtyProps} />
-                          <span className="text-xs text-muted-foreground">{qtyUnitDraft}</span>
+                          <span
+                            className="text-xs"
+                            style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                          >
+                            {qtyUnitDraft}
+                          </span>
                         </span>
                       ) : (
                         <InlineNumber {...qtyProps} />

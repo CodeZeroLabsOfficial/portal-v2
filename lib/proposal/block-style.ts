@@ -4,6 +4,8 @@ import type { BlockStyle } from "@/types/proposal";
 export const DEFAULT_PRIMARY_COLOR = "#673AB7";
 /** Default Plans / Quote highlight tone — used for the recommended tier and totals row. */
 export const DEFAULT_HIGHLIGHT_COLOR = "#673AB7";
+/** Default table / tier card fill when `tableBackground` is unset. */
+export const DEFAULT_TABLE_BACKGROUND = "#FFFFFF";
 /** Default tone for the Accept (agreement) block CTA + sign button — aligned with the brand primary. */
 export const DEFAULT_AGREEMENT_BUTTON_COLOR = DEFAULT_PRIMARY_COLOR;
 
@@ -23,6 +25,7 @@ export interface ResolvedBlockStyle {
   variant: "visual" | "simple";
   primaryColor: string;
   highlightColor: string;
+  tableBackground: string;
 }
 
 export function resolveBlockStyle(style?: BlockStyle): ResolvedBlockStyle {
@@ -30,6 +33,26 @@ export function resolveBlockStyle(style?: BlockStyle): ResolvedBlockStyle {
     variant: style?.variant ?? "visual",
     primaryColor: style?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
     highlightColor: style?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
+    tableBackground: style?.tableBackground?.trim() || DEFAULT_TABLE_BACKGROUND,
+  };
+}
+
+export interface TableSurfaceColors {
+  background: string;
+  foreground: string;
+  mutedForeground: string;
+  borderColor: string;
+}
+
+/** Foreground + border tokens for copy sitting on a custom `tableBackground` fill. */
+export function resolveTableSurfaceColors(background: string): TableSurfaceColors {
+  const foreground = readableForeground(background);
+  const onLight = foreground === "#0f172a";
+  return {
+    background,
+    foreground,
+    mutedForeground: onLight ? "#64748b" : "rgba(255,255,255,0.72)",
+    borderColor: onLight ? "rgba(15,23,42,0.18)" : "rgba(255,255,255,0.28)",
   };
 }
 
@@ -78,5 +101,7 @@ export function withAlpha(color: string, alpha: number): string {
 /** True when the user clicked through to set a non-default style. */
 export function hasCustomStyle(style?: BlockStyle): boolean {
   if (!style) return false;
-  return Boolean(style.variant || style.primaryColor || style.highlightColor);
+  return Boolean(
+    style.variant || style.primaryColor || style.highlightColor || style.tableBackground,
+  );
 }

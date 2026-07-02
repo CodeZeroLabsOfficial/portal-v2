@@ -95,7 +95,7 @@ export function BlockToolbar({
   compactPrimarySlot,
 }: BlockToolbarProps) {
   const supportsStyle =
-    (blockType === "packages" || blockType === "agreement") &&
+    (blockType === "packages" || blockType === "pricing" || blockType === "agreement") &&
     typeof onStyleChange === "function";
   const stylePickerMode: StylePickerMode = blockType === "agreement" ? "agreement" : "packages";
 
@@ -444,6 +444,7 @@ function StylePickerPanel({
       variant: resolved.variant,
       primaryColor: resolved.primaryColor,
       highlightColor: resolved.highlightColor,
+      tableBackground: resolved.tableBackground,
       ...style,
       ...next,
     };
@@ -482,6 +483,13 @@ function StylePickerPanel({
         label="Highlight color"
         value={resolved.highlightColor}
         onChange={(v) => patch({ highlightColor: v })}
+      />
+
+      <ColorRow
+        elevated={elevated}
+        label="Table background"
+        value={resolved.tableBackground}
+        onChange={(v) => patch({ tableBackground: v })}
       />
 
       {resetButton}
