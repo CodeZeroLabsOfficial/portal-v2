@@ -41,11 +41,11 @@ function CrmNoteEditorToolbarButton({
     <Button
       type="button"
       variant="ghost"
-      size="icon-sm"
+      size="icon"
       aria-label={label}
       aria-pressed={active}
       disabled={disabled}
-      className={cn(active && "bg-muted text-foreground")}
+      className={cn("size-8", active && "bg-muted text-foreground")}
       onClick={onClick}>
       {children}
     </Button>
@@ -85,11 +85,11 @@ export function CrmNoteEditor({
     ],
     content: value,
     editable: !disabled,
+    autofocus: false,
     onUpdate: ({ editor: instance }) => onChange(instance.getHTML()),
     editorProps: {
       attributes: {
-        class:
-          "crm-note-editor-content min-h-40 px-4 py-3 text-sm focus:outline-none [&_p]:my-1 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:ps-5"
+        class: "crm-note-editor-content max-w-full px-4 py-4 text-sm focus:outline-none"
       }
     }
   });
@@ -120,64 +120,77 @@ export function CrmNoteEditor({
   }
 
   if (!editor) {
-    return <div className={cn("min-h-40 rounded-md border bg-muted/20", className)} />;
+    return (
+      <div
+        className={cn(
+          "bg-card min-h-60 w-full border bg-muted/20",
+          className
+        )}
+      />
+    );
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-md border border-border bg-background", className)}>
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-1 py-1">
-        <CrmNoteEditorToolbarButton
-          label="Bold"
-          active={editor.isActive("bold")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleBold().run()}>
-          <Bold className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <CrmNoteEditorToolbarButton
-          label="Italic"
-          active={editor.isActive("italic")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <Italic className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <CrmNoteEditorToolbarButton
-          label="Underline"
-          active={editor.isActive("underline")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}>
-          <UnderlineIcon className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <CrmNoteEditorToolbarButton
-          label="Strikethrough"
-          active={editor.isActive("strike")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleStrike().run()}>
-          <Strikethrough className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <CrmNoteEditorToolbarButton
-          label="Link"
-          active={editor.isActive("link")}
-          disabled={disabled}
-          onClick={handleSetLink}>
-          <LinkIcon className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <Separator orientation="vertical" className="mx-1 h-7" />
-        <CrmNoteEditorToolbarButton
-          label="Bullet list"
-          active={editor.isActive("bulletList")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}>
-          <List className="size-4" />
-        </CrmNoteEditorToolbarButton>
-        <CrmNoteEditorToolbarButton
-          label="Ordered list"
-          active={editor.isActive("orderedList")}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-          <ListOrdered className="size-4" />
-        </CrmNoteEditorToolbarButton>
+    <div
+      className={cn(
+        "bg-card relative w-full overflow-hidden border",
+        className
+      )}>
+      <div className="bg-background sticky top-0 z-20 w-full border-b">
+        <div className="flex flex-wrap items-center gap-1 px-2 py-0.5">
+          <CrmNoteEditorToolbarButton
+            label="Bold"
+            active={editor.isActive("bold")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleBold().run()}>
+            <Bold className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <CrmNoteEditorToolbarButton
+            label="Italic"
+            active={editor.isActive("italic")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <Italic className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <CrmNoteEditorToolbarButton
+            label="Underline"
+            active={editor.isActive("underline")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}>
+            <UnderlineIcon className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <CrmNoteEditorToolbarButton
+            label="Strikethrough"
+            active={editor.isActive("strike")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleStrike().run()}>
+            <Strikethrough className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <CrmNoteEditorToolbarButton
+            label="Link"
+            active={editor.isActive("link")}
+            disabled={disabled}
+            onClick={handleSetLink}>
+            <LinkIcon className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <Separator orientation="vertical" className="mx-1 h-7" />
+          <CrmNoteEditorToolbarButton
+            label="Bullet list"
+            active={editor.isActive("bulletList")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <List className="size-4" />
+          </CrmNoteEditorToolbarButton>
+          <CrmNoteEditorToolbarButton
+            label="Ordered list"
+            active={editor.isActive("orderedList")}
+            disabled={disabled}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered className="size-4" />
+          </CrmNoteEditorToolbarButton>
+        </div>
       </div>
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className="min-h-60 w-full min-w-full" />
     </div>
   );
 }

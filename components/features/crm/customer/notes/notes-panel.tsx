@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 
 import { AddCustomerNoteDialog } from "@/components/features/crm/customer/notes/add-customer-note-dialog";
 import { CustomerNotesList } from "@/components/features/crm/customer/notes/customer-notes-list";
+import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -12,7 +13,6 @@ import {
   filterCustomerNotes,
   type CustomerNoteFilter
 } from "@/lib/crm/customer-notes";
-import { cn } from "@/lib/utils";
 import type { CustomerNoteRecord } from "@/types/customer";
 
 export interface CustomerNotesPanelProps {
@@ -57,22 +57,11 @@ export function CustomerNotesPanel({ customerId, notes }: CustomerNotesPanelProp
             aria-label="Search notes"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
-          {CUSTOMER_NOTE_FILTERS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setFilter(value)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                filter === value
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border/60 text-muted-foreground hover:bg-muted/50"
-              )}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <FilterPillGroup
+          options={CUSTOMER_NOTE_FILTERS.map(({ value, label }) => ({ value, label }))}
+          value={filter}
+          onChange={setFilter}
+        />
       </div>
 
       <div className="bg-card px-4 py-5 sm:px-5">

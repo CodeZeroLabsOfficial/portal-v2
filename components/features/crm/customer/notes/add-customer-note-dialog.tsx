@@ -6,14 +6,13 @@ import { ChevronDown, Loader2 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
+import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
 import { CUSTOMER_NOTE_KINDS, customerNoteKindMeta } from "@/lib/crm/customer-note-display";
-import { cn } from "@/lib/utils";
 import { addCustomerNoteAction } from "@/server/actions/customers-crm";
 import type { CustomerNoteKind } from "@/types/customer";
 
@@ -21,6 +20,11 @@ const ADD_NEW_BUTTON_CLASS =
   "shrink-0 gap-1.5 border-primary/40 bg-primary/5 text-primary shadow-none hover:bg-primary/10 hover:text-primary";
 
 const EMPTY_EDITOR_VALUE = "<p></p>";
+
+const NOTE_KIND_OPTIONS = CUSTOMER_NOTE_KINDS.map((value) => {
+  const meta = customerNoteKindMeta(value);
+  return { value, label: meta.label, icon: meta.icon };
+});
 
 export interface AddCustomerNoteDialogProps {
   customerId: string;
@@ -82,50 +86,38 @@ export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps
           <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-lg gap-0 overflow-y-auto p-0 sm:max-w-lg">
+      <DialogContent className="max-h-screen max-w-(--breakpoint-sm) gap-0 overflow-y-auto p-0 lg:overflow-y-auto">
         <VisuallyHidden>
-          <DialogTitle>Add note</DialogTitle>
+          <DialogTitle>Add Note</DialogTitle>
         </VisuallyHidden>
-        <form onSubmit={submit} className="flex flex-col p-6">
-          <ButtonGroup className="mb-6 w-full sm:w-fit">
-            {CUSTOMER_NOTE_KINDS.map((value) => {
-              const { label, icon: Icon } = customerNoteKindMeta(value);
-              const isActive = kind === value;
-              return (
-                <Button
-                  key={value}
-                  type="button"
-                  variant="outline"
-                  aria-pressed={isActive}
-                  className={cn(
-                    "flex-1 gap-1.5 sm:flex-none",
-                    isActive && "z-10 border-primary bg-primary/10 text-foreground"
-                  )}
-                  disabled={busy}
-                  onClick={() => setKind(value)}>
-                  <Icon className="size-3.5" aria-hidden />
-                  {label}
-                </Button>
-              );
-            })}
-          </ButtonGroup>
+        <form onSubmit={submit} className="p-6">
+          <FilterPillGroup
+            label="Entry type"
+            options={NOTE_KIND_OPTIONS}
+            value={kind}
+            onChange={setKind}
+            disabled={busy}
+            className="mb-6"
+          />
 
           <FormServerError message={error} className="mb-4" />
 
-          <Input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="Title"
-            disabled={busy}
-            maxLength={200}
-            className="mb-4 rounded-none border-0 bg-transparent px-0 text-2xl shadow-none focus-visible:ring-0"
-          />
+          <div className="space-y-6">
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Title"
+              disabled={busy}
+              maxLength={200}
+              className="h-auto min-h-0 rounded-none border-0 bg-transparent! px-0 py-0 text-2xl! font-normal leading-tight shadow-none placeholder:text-muted-foreground focus-visible:border-0 focus-visible:ring-0"
+            />
 
-          <CrmNoteEditor value={body} onChange={setBody} disabled={busy} />
+            <CrmNoteEditor value={body} onChange={setBody} disabled={busy} className="w-full" />
+          </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button type="submit" disabled={busy || !canSubmit} className="min-w-28">
-              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Add note"}
+          <div className="mt-4 flex items-center justify-end">
+            <Button type="submit" disabled={busy || !canSubmit}>
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Add Note"}
             </Button>
           </div>
         </form>
