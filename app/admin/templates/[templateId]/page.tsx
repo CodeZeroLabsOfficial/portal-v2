@@ -1,14 +1,19 @@
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getProposalTemplateForStaff } from "@/server/firestore/proposal-templates";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ templateId: string }>;
 }
 
 export default async function EditProposalTemplatePage({ params }: PageProps) {
+  await connection();
   const { templateId } = await params;
   const user = await getCurrentSessionUser();
   if (!user) {
@@ -20,11 +25,19 @@ export default async function EditProposalTemplatePage({ params }: PageProps) {
     notFound();
   }
 
+  const catalogServiceOptions = await listCatalogServicePickerOptionsForOrg(user);
+
   return (
-    <ComingSoonPage
-      title={template.name}
-      phase="Phase 4 — Proposals"
-      description="Proposal template editor — blocks apply when creating a proposal from CRM."
+    <ProposalDocumentEditorLazy
+      variant="template"
+      templateId={template.id}
+      initialTemplateName={template.name}
+      initialTemplateDescription={template.description ?? ""}
+      initialTemplateStage={template.stage}
+      initialDocument={template.document}
+      initialBranding={template.branding}
+      localityTimeZone={user.timeZone?.trim() || undefined}
+      catalogServiceOptions={catalogServiceOptions}
     />
   );
 }

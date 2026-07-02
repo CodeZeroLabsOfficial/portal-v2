@@ -18,6 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { proposalSentLabel } from "@/lib/crm/customer-tab-labels";
+import {
+  canOpenPublicProposal,
+  canSendProposal,
+  proposalEditHref,
+  proposalPublicUrl
+} from "@/lib/proposal/row-actions";
 import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
 import { cloneProposalAction, sendProposalAction } from "@/server/actions/proposal-builder";
 import type { ProposalRecord } from "@/types/proposal";
@@ -32,9 +38,10 @@ export function CustomerProposalCard({ proposal, customerId, onDelete }: Custome
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
   const stage = getProposalStageBadgeDisplay(proposal);
-  const editHref = `/admin/proposals/${proposal.id}?customer=${encodeURIComponent(customerId)}`;
-  const canOpenPublic = Boolean(proposal.shareToken?.trim()) && proposal.status !== "draft";
-  const canSend = proposal.status === "draft";
+  const editHref = proposalEditHref(proposal, customerId);
+  const publicUrl = proposalPublicUrl(proposal);
+  const canOpenPublic = canOpenPublicProposal(proposal);
+  const canSend = canSendProposal(proposal);
 
   async function handleSend() {
     setBusy(true);
@@ -94,9 +101,9 @@ export function CustomerProposalCard({ proposal, customerId, onDelete }: Custome
             <DropdownMenuItem asChild>
               <Link href={editHref}>Open in editor</Link>
             </DropdownMenuItem>
-            {canOpenPublic ? (
+            {canOpenPublic && publicUrl ? (
               <DropdownMenuItem asChild>
-                <Link href={`/p/${proposal.shareToken}`} target="_blank" rel="noopener noreferrer">
+                <Link href={publicUrl} target="_blank" rel="noopener noreferrer">
                   Open public link
                 </Link>
               </DropdownMenuItem>

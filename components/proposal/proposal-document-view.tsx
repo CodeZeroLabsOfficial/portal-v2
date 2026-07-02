@@ -1,0 +1,316 @@
+"use client";
+
+import * as React from "react";
+import type { CatalogServicePickerOption } from "@/types/catalog-service";
+import type {
+  AgreementBlock,
+  PackagesBlock,
+  ProposalBlock,
+  ProposalBranding,
+  ProposalContentBlock,
+  ProposalCustomerSignerPrefill,
+  ProposalDocument,
+  ProposalPublicSelections,
+  ProposalStatus,
+  SectionBlock,
+} from "@/types/proposal";
+import {
+  PROPOSAL_COLUMNS_GRID_CLASS,
+  columnFlexToGridTemplate,
+  coerceColumnFlex,
+  columnsBlockMdGapX,
+  columnsBlockMdItemsClass,
+} from "@/lib/proposal/columns";
+import {
+  PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
+  PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
+  PROPOSAL_DOCUMENT_ROOT_STACK_GAP_CLASSES,
+  PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
+} from "@/lib/proposal/public/public-layout";
+import { firstRootSplashBlockId, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
+import {
+  type ProposalRenderContext,
+  renderProposalBlockFromRegistry,
+} from "@/lib/proposal/block-registry";
+import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
+import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
+import { cn } from "@/lib/utils";
+
+export type { ProposalRenderContext };
+
+export interface ProposalDocumentViewProps {
+  document: ProposalDocument;
+  branding?: ProposalBranding;
+  className?: string;
+  /** Public share link only — enables saving package selection. */
+  shareToken?: string;
+  publicSelections?: ProposalPublicSelections;
+  /** When true, root `section` bands span the full width of `<main>`; copy stays in the inner column */
+  viewportSectionBleed?: boolean;
+  /** Proposal lifecycle status, surfaced to the agreement block so it can render an accepted state. */
+  proposalStatus?: ProposalStatus;
+  /** Name of the buyer that already signed the agreement (when status is `accepted`). */
+  acceptedByName?: string;
+  /** E-signature image (data URL) stored on the proposal when accepted. */
+  acceptedSignatureDataUrl?: string;
+  acceptedAt?: number;
+  /** IANA zone from Settings → Locality — agreement dates and previews use this when set. */
+  localityTimeZone?: string;
+  /** Prefilled subscription summary for the agreement success flow (public page only). */
+  publicSubscriptionUi?: import("@/server/proposal/public-proposal-subscription-ui").ProposalPublicSubscriptionUi | null;
+  /** CRM customer name / email / company for agreement field prefill (public page when `customerId` is set). */
+  customerSignerPrefill?: ProposalCustomerSignerPrefill | null;
+  /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
+  catalogServices?: readonly CatalogServicePickerOption[];
+}
+
+function BlockView({
+  block,
+  shareToken,
+  publicSelections,
+  viewportSectionBleed,
+  splashPublicPresentation,
+  proposalContext,
+}: {
+  block: ProposalBlock | ProposalContentBlock;
+  shareToken?: string;
+  publicSelections?: ProposalPublicSelections;
+  viewportSectionBleed?: boolean;
+  splashPublicPresentation?: "editor" | "nestedColumn" | "rootFullWidth";
+  proposalContext?: ProposalRenderContext;
+}) {
+  const renderBlock = (child: ProposalBlock | ProposalContentBlock) => (
+    <BlockView
+      key={child.id}
+      block={child}
+      shareToken={shareToken}
+      publicSelections={publicSelections}
+      viewportSectionBleed={viewportSectionBleed}
+      splashPublicPresentation={
+        viewportSectionBleed && child.type === "splash" ? "nestedColumn" : splashPublicPresentation
+      }
+      proposalContext={proposalContext}
+    />
+  );
+
+  const registryNode = renderProposalBlockFromRegistry({
+    block,
+    shareToken,
+    publicSelections,
+    viewportSectionBleed,
+    splashPublicPresentation,
+    proposalContext,
+    renderBlock,
+  });
+  if (registryNode !== undefined) {
+    return registryNode;
+  }
+
+  switch (block.type) {
+    case "section": {
+      const sb = block as SectionBlock;
+      const stack = sb.children.map((c) => renderBlock(c));
+      const body = (
+        <div className={cn(PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES, PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES)}>
+          <div className="flex flex-col">{stack}</div>
+        </div>
+      );
+      return (
+        <ProposalSectionShell background={sb.background} variant="viewer" viewportBleed={Boolean(viewportSectionBleed)}>
+          {body}
+        </ProposalSectionShell>
+      );
+    }
+    case "columns": {
+      const stacks = block.stacks?.length ? block.stacks : [[], []];
+      const colCount = stacks.length;
+      const flexRow = coerceColumnFlex(colCount, block.columnFlex);
+      const gapX = columnsBlockMdGapX(block.columnGap, colCount);
+      const itemsClass = columnsBlockMdItemsClass(block.rowAlign);
+      const pad =
+        typeof block.insetPaddingPx === "number" && Number.isFinite(block.insetPaddingPx)
+          ? Math.min(64, Math.max(0, Math.round(block.insetPaddingPx)))
+          : 0;
+      const grid = (
+        <div
+          className={cn(PROPOSAL_COLUMNS_GRID_CLASS, PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES, gapX, itemsClass)}
+          style={
+            {
+              ["--proposal-cols" as string]: columnFlexToGridTemplate(flexRow),
+            } as React.CSSProperties
+          }
+        >
+          {stacks.map((stack, colIdx) => (
+            <div key={colIdx} className="flex min-w-0 flex-col">
+              {stack.map((c) => renderBlock(c))}
+            </div>
+          ))}
+        </div>
+      );
+      if (pad <= 0) return grid;
+      return (
+        <div className="rounded-lg" style={{ padding: pad }}>
+          {grid}
+        </div>
+      );
+    }
+    default:
+      return null;
+  }
+}
+
+export function ProposalDocumentView({
+  document,
+  branding,
+  className,
+  shareToken,
+  publicSelections,
+  viewportSectionBleed = true,
+  proposalStatus,
+  acceptedByName,
+  acceptedSignatureDataUrl,
+  acceptedAt,
+  localityTimeZone,
+  publicSubscriptionUi = null,
+  customerSignerPrefill = null,
+  catalogServices = [],
+}: ProposalDocumentViewProps) {
+  const style = React.useMemo(() => {
+    if (!branding?.primaryColor && !branding?.fontFamily) return undefined;
+    return {
+      ...(branding?.primaryColor
+        ? ({ ["--proposal-primary" as string]: branding.primaryColor } as React.CSSProperties)
+        : {}),
+      fontFamily: branding?.fontFamily,
+    } as React.CSSProperties;
+  }, [branding]);
+
+  const splashLogoBlockId = React.useMemo(
+    () => (branding?.logoUrl?.trim() && viewportSectionBleed ? firstRootSplashBlockId(document.blocks) : null),
+    [branding?.logoUrl, document.blocks, viewportSectionBleed],
+  );
+
+  const showDocumentLevelLogo = Boolean(branding?.logoUrl?.trim() && !splashLogoBlockId);
+
+  const proposalContext = React.useMemo<ProposalRenderContext>(
+    () => ({
+      allBlocks: document.blocks,
+      brandingLogoUrl: branding?.logoUrl?.trim() || undefined,
+      firstRootSplashBlockId: splashLogoBlockId,
+      proposalTitle: document.title,
+      proposalStatus,
+      acceptedByName,
+      acceptedSignatureDataUrl,
+      acceptedAt,
+      localityTimeZone,
+      publicSubscriptionUi,
+      customerSignerPrefill,
+      catalogServices,
+    }),
+    [
+      document.blocks,
+      branding?.logoUrl,
+      splashLogoBlockId,
+      document.title,
+      proposalStatus,
+      acceptedByName,
+      acceptedSignatureDataUrl,
+      acceptedAt,
+      localityTimeZone,
+      publicSubscriptionUi,
+      customerSignerPrefill,
+      catalogServices,
+    ],
+  );
+
+  const flushBottom = proposalEndsInFullBleedBand(document.blocks);
+  const rootStackClasses = flushBottom
+    ? "flex flex-col gap-0"
+    : PROPOSAL_DOCUMENT_ROOT_STACK_GAP_CLASSES;
+
+  return (
+    <article style={style} className={cn("w-full space-y-0", className)}>
+      {showDocumentLevelLogo ? (
+        <div className={PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES}>
+          <div className="flex justify-center pb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={branding!.logoUrl} alt="" className="h-10 max-w-[200px] object-contain" />
+          </div>
+        </div>
+      ) : null}
+      {viewportSectionBleed ? (
+        <div className={cn("w-full", rootStackClasses)}>
+          {document.blocks.map((block) => {
+            const splashRootBand = Boolean(viewportSectionBleed && block.type === "splash");
+            const packagesRootBand = Boolean(
+              viewportSectionBleed &&
+                block.type === "packages" &&
+                isSectionBackgroundActive((block as PackagesBlock).background),
+            );
+            const agreementRootBand = Boolean(
+              viewportSectionBleed &&
+                block.type === "agreement" &&
+                isSectionBackgroundActive((block as AgreementBlock).background),
+            );
+            const child = (
+              <BlockView
+                block={block}
+                shareToken={shareToken}
+                publicSelections={publicSelections}
+                viewportSectionBleed={viewportSectionBleed}
+                splashPublicPresentation={
+                  block.type === "splash"
+                    ? viewportSectionBleed
+                      ? "rootFullWidth"
+                      : "nestedColumn"
+                    : undefined
+                }
+                proposalContext={proposalContext}
+              />
+            );
+            if (block.type === "section" || splashRootBand || packagesRootBand || agreementRootBand) {
+              return (
+                <section key={block.id} className="w-full shrink-0">
+                  {child}
+                </section>
+              );
+            }
+            return (
+              <section
+                key={block.id}
+                className={cn(
+                  PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
+                  PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
+                  "shrink-0",
+                )}
+              >
+                {child}
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        <div className={cn(PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES, rootStackClasses)}>
+          {document.blocks.map((block) => (
+            <section
+              key={block.id}
+              className={cn(
+                "space-y-0",
+                block.type !== "section" && PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
+              )}
+            >
+              <BlockView
+                block={block}
+                shareToken={shareToken}
+                publicSelections={publicSelections}
+                viewportSectionBleed={false}
+                splashPublicPresentation={block.type === "splash" ? "nestedColumn" : undefined}
+                proposalContext={proposalContext}
+              />
+            </section>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}

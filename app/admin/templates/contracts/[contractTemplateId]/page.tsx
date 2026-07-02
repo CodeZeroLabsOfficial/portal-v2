@@ -1,9 +1,12 @@
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { contractTemplateRecordToDocument } from "@/lib/contract-template/document";
 import { getContractTemplateForStaff } from "@/server/firestore/contract-templates";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ contractTemplateId: string }>;
@@ -19,16 +22,22 @@ export default async function EditContractTemplatePage({ params }: PageProps) {
     );
   }
 
-  const template = await getContractTemplateForStaff(user, contractTemplateId);
-  if (!template) {
+  const row = await getContractTemplateForStaff(user, contractTemplateId);
+  if (!row) {
     notFound();
   }
 
+  const document = contractTemplateRecordToDocument(row);
+
   return (
-    <ComingSoonPage
-      title={template.name}
-      phase="Phase 4 — Proposals"
-      description="Contract template editor — attach from Accept blocks in the proposal editor."
+    <ProposalDocumentEditorLazy
+      variant="contract-template"
+      contractTemplateId={row.id}
+      initialTemplateName={row.name}
+      initialTemplateDescription={row.description ?? ""}
+      initialAgreementTitle={row.agreementTitle}
+      initialDocument={document}
+      localityTimeZone={user.timeZone?.trim() || undefined}
     />
   );
 }
