@@ -128,8 +128,12 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
               )}
               style={
                 isSimpleTable
-                  ? { borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }
-                  : undefined
+                  ? { borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }
+                  : {
+                      borderColor: tableSurface.dividerColor,
+                      color: tableSurface.mutedForeground,
+                      backgroundColor: withAlpha(tableSurface.foreground, 0.04),
+                    }
               }
             >
               <th className="px-4 py-2.5">{isSimpleTable ? "Description" : "Item"}</th>
@@ -145,7 +149,7 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
               "[&_tr]:border-b",
               isSimpleTable ? "[&_tr]:border-dashed" : "[&_tr]:border-border/40",
             )}
-            style={isSimpleTable ? { borderColor: tableSurface.borderColor } : undefined}
+            style={isSimpleTable ? { borderColor: tableSurface.dividerColor } : undefined}
           >
             {lineItems.map((li) => {
               const qRaw = qty[li.id] ?? effectivePricingLineQuantity(li);

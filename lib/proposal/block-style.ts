@@ -3,7 +3,7 @@ import type { BlockStyle } from "@/types/proposal";
 /** Default Plans / Quote primary tone — matches the inline editor "select a colour" swatches. */
 export const DEFAULT_PRIMARY_COLOR = "#673AB7";
 /** Default Plans / Quote highlight tone — used for the recommended tier and totals row. */
-export const DEFAULT_HIGHLIGHT_COLOR = "#673AB7";
+export const DEFAULT_HIGHLIGHT_COLOR = DEFAULT_PRIMARY_COLOR;
 /** Default table / tier card fill when `tableBackground` is unset. */
 export const DEFAULT_TABLE_BACKGROUND = "#FFFFFF";
 /** Default tone for the Accept (agreement) block CTA + sign button — aligned with the brand primary. */
@@ -29,10 +29,12 @@ export interface ResolvedBlockStyle {
 }
 
 export function resolveBlockStyle(style?: BlockStyle): ResolvedBlockStyle {
+  const primaryColor = style?.primaryColor ?? DEFAULT_PRIMARY_COLOR;
   return {
     variant: style?.variant ?? "visual",
-    primaryColor: style?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-    highlightColor: style?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
+    primaryColor,
+    /** Highlight follows primary; legacy `highlightColor` is kept only when explicitly set on old docs. */
+    highlightColor: style?.highlightColor?.trim() || primaryColor,
     tableBackground: style?.tableBackground?.trim() || DEFAULT_TABLE_BACKGROUND,
   };
 }
@@ -42,6 +44,7 @@ export interface TableSurfaceColors {
   foreground: string;
   mutedForeground: string;
   borderColor: string;
+  dividerColor: string;
 }
 
 /** Foreground + border tokens for copy sitting on a custom `tableBackground` fill. */
@@ -52,7 +55,8 @@ export function resolveTableSurfaceColors(background: string): TableSurfaceColor
     background,
     foreground,
     mutedForeground: onLight ? "#64748b" : "rgba(255,255,255,0.72)",
-    borderColor: onLight ? "rgba(15,23,42,0.18)" : "rgba(255,255,255,0.28)",
+    borderColor: onLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)",
+    dividerColor: onLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.08)",
   };
 }
 

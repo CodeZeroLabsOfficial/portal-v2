@@ -205,7 +205,7 @@ import {
 } from "@/components/proposal/proposal-branding-context";
 import type { ProposalBranding } from "@/types/proposal";
 import { AccordionBlockEditor } from "@/components/proposal/accordion-block-editor";
-import { EditorCatalogServicesContext } from "@/components/proposal/editor-catalog-services-context";
+import { EditorCatalogServicesContext, EditorTemplatePricingReadOnlyContext } from "@/components/proposal/editor-catalog-services-context";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
 
 function newId(): string {
@@ -4056,7 +4056,7 @@ export function ProposalDocumentEditor({
   function applyBlockStyle(id: string, style: BlockStyle | undefined) {
     /** True when this block participates in the toolbar style picker (Plans only; Accept uses the sign-button inspector). */
     function blockTypeSupportsStyle(type: ProposalBlock["type"]): boolean {
-      return type === "packages";
+      return type === "packages" || type === "pricing";
     }
 
     function applyStyleToStacks(stacks: ProposalColumnChildBlock[]): ProposalColumnChildBlock[] {
@@ -4127,7 +4127,7 @@ export function ProposalDocumentEditor({
   }
 
   function getBlockStyle(block: ProposalBlock): BlockStyle | undefined {
-    if (block.type === "packages") {
+    if (block.type === "packages" || block.type === "pricing") {
       return block.style;
     }
     return undefined;
@@ -4135,6 +4135,7 @@ export function ProposalDocumentEditor({
 
   return (
     <EditorCatalogServicesContext.Provider value={catalogServiceOptions}>
+    <EditorTemplatePricingReadOnlyContext.Provider value={isTemplate}>
     <ProposalEditorLibraryScope>
     <ProposalMediaLibraryProvider>
     <ProposalBrandingProvider value={brandingContextValue}>
@@ -4583,6 +4584,7 @@ export function ProposalDocumentEditor({
     </ProposalBrandingProvider>
     </ProposalMediaLibraryProvider>
     </ProposalEditorLibraryScope>
+    </EditorTemplatePricingReadOnlyContext.Provider>
     </EditorCatalogServicesContext.Provider>
   );
 }

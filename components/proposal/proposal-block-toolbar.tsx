@@ -443,7 +443,6 @@ function StylePickerPanel({
     const merged: BlockStyle = {
       variant: resolved.variant,
       primaryColor: resolved.primaryColor,
-      highlightColor: resolved.highlightColor,
       tableBackground: resolved.tableBackground,
       ...style,
       ...next,
@@ -476,13 +475,6 @@ function StylePickerPanel({
         label="Primary color"
         value={resolved.primaryColor}
         onChange={(v) => patch({ primaryColor: v })}
-      />
-
-      <ColorRow
-        elevated={elevated}
-        label="Highlight color"
-        value={resolved.highlightColor}
-        onChange={(v) => patch({ highlightColor: v })}
       />
 
       <ColorRow

@@ -287,7 +287,7 @@ export function PackagesBlockPublic({
               };
           const standardMutedStyle = { color: tableSurface.mutedForeground };
           const dashedBorderStyle = {
-            borderColor: isRecommended ? recommendedFaintBorder : tableSurface.borderColor,
+            borderColor: isRecommended ? recommendedFaintBorder : tableSurface.dividerColor,
           };
           const selectedRingStyle: React.CSSProperties | undefined = isSelected
             ? {
@@ -316,9 +316,7 @@ export function PackagesBlockPublic({
                   </div>
                 ) : null}
 
-                <h3 className={cn("text-base font-semibold", isRecommended ? "" : "text-foreground")}>
-                  {tier.name}
-                </h3>
+                <h3 className="text-base font-semibold">{tier.name}</h3>
 
                 <ul
                   className="mt-2 space-y-1 text-[13px] leading-snug"
@@ -394,7 +392,11 @@ export function PackagesBlockPublic({
                     style={{
                       ...(isRecommended
                         ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
-                        : {}),
+                        : {
+                            borderColor: tableSurface.borderColor,
+                            color: tableSurface.foreground,
+                            backgroundColor: withAlpha(tableSurface.foreground, 0.06),
+                          }),
                       ...(selectedRingStyle ?? {}),
                     }}
                   >
@@ -494,7 +496,7 @@ export function PackagesBlockPublic({
                   <thead>
                     <tr
                       className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
-                      style={{ borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }}
+                      style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
                     >
                       <th className="px-4 py-2.5 !text-left">Description</th>
                       <th className="px-4 py-2.5 text-center">Item</th>
@@ -504,7 +506,7 @@ export function PackagesBlockPublic({
                   </thead>
                   <tbody
                     className="[&_tr]:border-b [&_tr]:border-dashed"
-                    style={{ borderColor: tableSurface.borderColor }}
+                    style={{ borderColor: tableSurface.dividerColor }}
                   >
                     {addonLines.map((li) => {
                       const qRaw = addonQty[li.id] ?? effectivePricingLineQuantity(li);

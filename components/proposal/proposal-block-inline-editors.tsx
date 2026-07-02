@@ -28,7 +28,7 @@ import {
 } from "@/lib/proposal/commerce/packages-totals";
 import { Input } from "@/components/ui/input";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
-import { useEditorCatalogServices } from "@/components/proposal/editor-catalog-services-context";
+import { useEditorCatalogServices, useEditorTemplatePricingReadOnly } from "@/components/proposal/editor-catalog-services-context";
 import {
   catalogAddonUnitAmountForTerm,
   effectiveCatalogAddonUnitAmount,
@@ -299,6 +299,7 @@ function defaultTier(): PackageTier {
 }
 
 export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorProps) {
+  const pricingReadOnly = useEditorTemplatePricingReadOnly();
   const tiers = block.tiers ?? [];
   const currency = (block.currency ?? "aud").toUpperCase();
   const catalogServices = useEditorCatalogServices();
@@ -515,7 +516,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
             tier={tier}
             term={term}
             currency={currency}
-            highlightColor={style.highlightColor}
+            highlightColor={style.primaryColor}
             tableBackground={style.tableBackground}
             catalogServices={orderedCatalogServices}
             onChange={(next) => patchTier(tier.id, next)}
@@ -637,7 +638,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                   <thead>
                     <tr
                       className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
-                      style={{ borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }}
+                      style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
                     >
                       <th className="px-4 py-2.5 text-left">Description</th>
                       <th className="px-4 py-2.5 text-right">Item</th>
@@ -646,7 +647,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                       <th className="w-8 px-2 py-2.5" />
                     </tr>
                   </thead>
-                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed" style={{ borderColor: tableSurface.borderColor }}>
+                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed" style={{ borderColor: tableSurface.dividerColor }}>
                     {addonLineItems.map((li) => {
                       const q = effectivePricingLineQuantity(li);
                       const linkedService = li.serviceId
@@ -687,8 +688,11 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right align-middle tabular-nums text-muted-foreground">
-                            {linkedService ? (
+                          <td
+                            className="px-4 py-3 text-right align-middle tabular-nums"
+                            style={{ color: tableSurface.mutedForeground }}
+                          >
+                            {linkedService || pricingReadOnly ? (
                               <span className="tabular-nums">
                                 {formatCurrencyAmount(unitMinor, currency)}
                               </span>
@@ -699,7 +703,6 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                                 currency={currency}
                                 onChange={(v) => patchAddonLine(li.id, { unitAmountMinor: v })}
                                 ariaLabel="Unit price"
-                                className="text-muted-foreground"
                               />
                             )}
                           </td>
@@ -892,6 +895,20 @@ function TermPill({
   );
 }
 
+function TierPriceAmount({
+  minor,
+  currency,
+  className,
+}: {
+  minor: number;
+  currency: string;
+  className?: string;
+}) {
+  return (
+    <span className={cn("tabular-nums", className)}>{formatCurrencyAmount(minor ?? 0, currency)}</span>
+  );
+}
+
 function TierCard({
   tier,
   term,
@@ -906,6 +923,7 @@ function TierCard({
   tier: PackageTier;
   term: "12_months" | "24_months";
   currency: string;
+  /** Primary accent — recommended tier fill and badges. */
   highlightColor: string;
   tableBackground: string;
   catalogServices: readonly CatalogServicePickerOption[];
@@ -913,20 +931,29 @@ function TierCard({
   onRemove: () => void;
   onToggleRecommended: () => void;
 }) {
+  const pricingReadOnly = useEditorTemplatePricingReadOnly();
   const isRecommended = Boolean(tier.recommended);
   const monthlyMinor = term === "12_months" ? tier.monthlyCost12Minor ?? 0 : tier.monthlyCost24Minor ?? 0;
   const otherMonthlyMinor = term === "12_months" ? tier.monthlyCost24Minor ?? 0 : tier.monthlyCost12Minor ?? 0;
   const otherTermLabel = term === "12_months" ? "24-month monthly" : "12-month monthly";
   const features = tier.features ?? [];
   const standardSurface = resolveTableSurfaceColors(tableBackground);
+  const tierNameReadOnly = pricingReadOnly && Boolean(tier.serviceId?.trim());
 
-  /** Recommended cards adopt the highlight colour as a solid background. */
   const recommendedFg = readableForeground(highlightColor);
   const recommendedTone = recommendedFg === "#ffffff" ? "dark" : "light";
   const recommendedDimText =
     recommendedFg === "#ffffff" ? "rgba(255,255,255,0.78)" : "rgba(15,23,42,0.62)";
   const recommendedFaintBorder =
     recommendedFg === "#ffffff" ? "rgba(255,255,255,0.32)" : "rgba(15,23,42,0.22)";
+
+  const markRecommendedBadgeStyle: React.CSSProperties = isRecommended
+    ? { backgroundColor: highlightColor, color: recommendedFg }
+    : {
+        backgroundColor: "#ffffff",
+        color: "#0f172a",
+        borderColor: standardSurface.borderColor,
+      };
 
   const cardStyle: React.CSSProperties = isRecommended
     ? { backgroundColor: highlightColor, color: recommendedFg, borderColor: highlightColor }
@@ -937,7 +964,7 @@ function TierCard({
       };
   const standardMutedStyle = { color: standardSurface.mutedForeground };
   const dashedBorderStyle = {
-    borderColor: isRecommended ? recommendedFaintBorder : standardSurface.borderColor,
+    borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
   };
 
   return (
@@ -954,15 +981,8 @@ function TierCard({
           onClick={onToggleRecommended}
           aria-pressed={isRecommended}
           aria-label={isRecommended ? "Unmark as recommended" : "Mark as recommended"}
-          className={cn(
-            "absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow transition-all",
-            isRecommended
-              ? ""
-              : "border border-dashed border-border bg-background text-muted-foreground opacity-0 group-hover/tier:opacity-100",
-          )}
-          style={
-            isRecommended ? { backgroundColor: highlightColor, color: recommendedFg } : undefined
-          }
+          className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow transition-all"
+          style={markRecommendedBadgeStyle}
         >
           <Sparkles className="h-3 w-3" />
           {isRecommended ? "Recommended" : "Mark recommended"}
@@ -980,18 +1000,19 @@ function TierCard({
           <X className="h-3.5 w-3.5" />
         </button>
 
-        <InlineText
-          tone={recommendedTone}
-          value={tier.name}
-          placeholder="Tier name"
-          onChange={(v) => onChange({ name: v })}
-          ariaLabel="Tier name"
-          className={cn("text-base font-semibold", isRecommended ? "" : "text-foreground")}
-          inputClassName={cn(
-            "w-full text-base font-semibold",
-            isRecommended ? "" : "text-foreground",
-          )}
-        />
+        {tierNameReadOnly ? (
+          <p className="text-base font-semibold">{tier.name}</p>
+        ) : (
+          <InlineText
+            tone={recommendedTone}
+            value={tier.name}
+            placeholder="Tier name"
+            onChange={(v) => onChange({ name: v })}
+            ariaLabel="Tier name"
+            className="text-base font-semibold"
+            inputClassName="w-full text-base font-semibold"
+          />
+        )}
 
         <ul
           className="mt-2 space-y-1 text-[13px] leading-snug"
@@ -1011,26 +1032,28 @@ function TierCard({
           </li>
         </ul>
 
-        <div
-          className="mt-3 border-t border-dashed pt-3"
-          style={dashedBorderStyle}
-        >
+        <div className="mt-3 border-t border-dashed pt-3" style={dashedBorderStyle}>
           <div className="flex items-baseline gap-1">
-            <InlinePrice
-              tone={recommendedTone}
-              minor={monthlyMinor}
-              currency={currency}
-              onChange={(v) =>
-                onChange(
-                  term === "12_months" ? { monthlyCost12Minor: v } : { monthlyCost24Minor: v },
-                )
-              }
-              ariaLabel="Monthly price"
-              className={cn(
-                "text-xl font-semibold tabular-nums sm:text-2xl",
-                isRecommended ? "" : "text-foreground",
-              )}
-            />
+            {pricingReadOnly ? (
+              <TierPriceAmount
+                minor={monthlyMinor}
+                currency={currency}
+                className="text-xl font-semibold sm:text-2xl"
+              />
+            ) : (
+              <InlinePrice
+                tone={recommendedTone}
+                minor={monthlyMinor}
+                currency={currency}
+                onChange={(v) =>
+                  onChange(
+                    term === "12_months" ? { monthlyCost12Minor: v } : { monthlyCost24Minor: v },
+                  )
+                }
+                ariaLabel="Monthly price"
+                className="text-xl font-semibold sm:text-2xl"
+              />
+            )}
           </div>
           <p
             className="text-xs"
@@ -1044,18 +1067,22 @@ function TierCard({
             style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
           >
             {otherTermLabel}:{" "}
-            <InlinePrice
-              tone={recommendedTone}
-              minor={otherMonthlyMinor}
-              currency={currency}
-              onChange={(v) =>
-                onChange(
-                  term === "12_months" ? { monthlyCost24Minor: v } : { monthlyCost12Minor: v },
-                )
-              }
-              ariaLabel="Other-term monthly price"
-              className={cn("text-[11px] tabular-nums", isRecommended ? "" : "text-foreground")}
-            />
+            {pricingReadOnly ? (
+              <TierPriceAmount minor={otherMonthlyMinor} currency={currency} className="text-[11px]" />
+            ) : (
+              <InlinePrice
+                tone={recommendedTone}
+                minor={otherMonthlyMinor}
+                currency={currency}
+                onChange={(v) =>
+                  onChange(
+                    term === "12_months" ? { monthlyCost24Minor: v } : { monthlyCost12Minor: v },
+                  )
+                }
+                ariaLabel="Other-term monthly price"
+                className="text-[11px]"
+              />
+            )}
           </p>
 
           {term === "12_months" ? (
@@ -1069,25 +1096,38 @@ function TierCard({
               >
                 Upfront (12-month)
               </p>
-              <InlinePrice
-                tone={recommendedTone}
-                minor={tier.upfrontCost12Minor ?? 0}
-                currency={currency}
-                onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
-                ariaLabel="Upfront cost (12-month)"
-                className={cn(
-                  "mt-0.5 text-xs tabular-nums",
-                  isRecommended ? "" : "text-foreground",
-                )}
-              />
+              {pricingReadOnly ? (
+                <TierPriceAmount
+                  minor={tier.upfrontCost12Minor ?? 0}
+                  currency={currency}
+                  className="mt-0.5 text-xs"
+                />
+              ) : (
+                <InlinePrice
+                  tone={recommendedTone}
+                  minor={tier.upfrontCost12Minor ?? 0}
+                  currency={currency}
+                  onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
+                  ariaLabel="Upfront cost (12-month)"
+                  className="mt-0.5 text-xs"
+                />
+              )}
             </div>
+          ) : null}
+
+          {pricingReadOnly && !tier.serviceId?.trim() ? (
+            <p className="mt-2 text-[10px]" style={standardMutedStyle}>
+              Link a catalogue service to load pricing from Admin → Services.
+            </p>
           ) : null}
         </div>
 
         {catalogServices.length > 0 ? (
           <div
             className="mt-3 border-t border-dashed pt-3"
-            style={{ borderColor: isRecommended ? recommendedFaintBorder : undefined }}
+            style={{
+              borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
+            }}
           >
             <label
               className="mb-1 block text-[11px] font-medium"
@@ -1104,15 +1144,14 @@ function TierCard({
               )}
               style={
                 isRecommended
-                  ? { color: "#0f172a" }
+                  ? { color: "#0f172a", backgroundColor: "#ffffff" }
                   : {
                       borderColor: standardSurface.borderColor,
                       backgroundColor:
                         standardSurface.foreground === "#ffffff"
                           ? "rgba(255,255,255,0.12)"
                           : "#ffffff",
-                      color:
-                        standardSurface.foreground === "#ffffff" ? "#ffffff" : "#0f172a",
+                      color: "#0f172a",
                     }
               }
               value={tier.serviceId ?? ""}
@@ -1151,7 +1190,11 @@ function TierCard({
             style={
               isRecommended
                 ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
-                : undefined
+                : {
+                    borderColor: standardSurface.borderColor,
+                    color: standardSurface.foreground,
+                    backgroundColor: withAlpha(standardSurface.foreground, 0.06),
+                  }
             }
           >
             Select
@@ -1275,7 +1318,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
       }
     : undefined;
   const totalRowStyle: React.CSSProperties = {
-    background: withAlpha(style.highlightColor, isVisual ? 0.15 : 0.08),
+    background: withAlpha(style.primaryColor, isVisual ? 0.15 : 0.08),
   };
 
   const headerBarFg = readableForeground(style.primaryColor);
@@ -1408,7 +1451,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               style={
                 isVisual
                   ? undefined
-                  : { borderColor: tableSurface.borderColor, color: tableSurface.mutedForeground }
+                  : { borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }
               }
             >
               <th className="px-4 py-2.5">{isVisual ? "Item" : "Description"}</th>
@@ -1423,7 +1466,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               "[&_tr]:border-b",
               isVisual ? "[&_tr]:border-border/40" : "[&_tr]:border-dashed",
             )}
-            style={isVisual ? undefined : { borderColor: tableSurface.borderColor }}
+            style={isVisual ? undefined : { borderColor: tableSurface.dividerColor }}
           >
             {lineItems.map((li) => {
               const q = effectivePricingLineQuantity(li);
@@ -1450,8 +1493,8 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                         placeholder="Item label"
                         onChange={(v) => patchLine(li.id, { label: v })}
                         ariaLabel="Line item label"
-                        className="font-medium text-foreground"
-                        inputClassName="w-full font-medium text-foreground"
+                        className="font-medium"
+                        inputClassName="w-full font-medium"
                       />
                       <label
                         className="flex cursor-pointer items-center gap-2 text-[11px]"
@@ -1500,7 +1543,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                       )}
                     </td>
                   ) : null}
-                  <td className="px-4 py-3 text-right align-middle tabular-nums font-medium text-foreground">
+                  <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
                     {formatCurrencyAmount(lineTotal, currency)}
                   </td>
                   <td className="px-2 py-3 text-right align-middle">

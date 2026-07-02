@@ -9,3 +9,10 @@ export const EditorCatalogServicesContext = React.createContext<readonly Catalog
 export function useEditorCatalogServices(): readonly CatalogServicePickerOption[] {
   return React.useContext(EditorCatalogServicesContext);
 }
+
+/** When true (proposal templates), tier/add-on unit prices are read-only — edit in Admin → Services. */
+export const EditorTemplatePricingReadOnlyContext = React.createContext(false);
+
+export function useEditorTemplatePricingReadOnly(): boolean {
+  return React.useContext(EditorTemplatePricingReadOnlyContext);
+}

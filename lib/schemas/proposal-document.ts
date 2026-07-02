@@ -58,6 +58,7 @@ const blockStyleSchema = z.object({
   variant: z.enum(["visual", "simple"]).optional(),
   primaryColor: colorString.optional(),
   highlightColor: colorString.optional(),
+  tableBackground: colorString.optional(),
 });
 
 const relaxedUrl = z.string().max(8192).optional();
