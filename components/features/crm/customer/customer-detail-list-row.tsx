@@ -6,7 +6,7 @@ export interface CustomerDetailListRowProps {
   title: string;
   dateLabel: string;
   badge: ReactNode;
-  meta: string;
+  meta: ReactNode;
   action: ReactNode;
 }
 
@@ -25,7 +25,7 @@ export function CustomerDetailListRow({
       </div>
       <div className="flex shrink-0 items-center gap-3">
         {badge}
-        <span className="text-muted-foreground text-xs uppercase tracking-wide">{meta}</span>
+        {meta}
         {action}
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Loader2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import { CustomerDetailListRow } from "@/components/features/crm/customer/customer-detail-list-row";
+import { CustomerProposalEngagementMeta } from "@/components/features/crm/customer/customer-proposal-engagement-meta";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { proposalSentLabel, proposalViewsLabel } from "@/lib/crm/customer-tab-labels";
+import { proposalSentLabel } from "@/lib/crm/customer-tab-labels";
 import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
 import { cloneProposalAction, sendProposalAction } from "@/server/actions/proposal-builder";
 import type { ProposalRecord } from "@/types/proposal";
@@ -71,7 +72,7 @@ export function CustomerProposalCard({ proposal, customerId, onDelete }: Custome
       title={proposal.title}
       dateLabel={proposalSentLabel(proposal.sentAt)}
       badge={<StatusBadge label={stage.label} variant={stage.variant} title={stage.title} />}
-      meta={proposalViewsLabel(proposal.viewCount)}
+      meta={<CustomerProposalEngagementMeta proposal={proposal} />}
       action={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

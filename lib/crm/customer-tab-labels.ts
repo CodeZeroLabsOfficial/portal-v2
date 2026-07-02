@@ -15,6 +15,12 @@ export function proposalViewsLabel(viewCount: number | undefined): string {
   return viewCount === 1 ? "1 open" : `${viewCount} opens`;
 }
 
+export function proposalEngagementLabel(totalEngagementSeconds: number | undefined): string {
+  if (typeof totalEngagementSeconds !== "number") return "Engagement not recorded";
+  const minutes = Math.max(0, Math.round(totalEngagementSeconds / 60));
+  return `${minutes} min on page`;
+}
+
 export function documentSignedLabel(signedAt: number): string {
   if (signedAt <= 0) return "—";
   return formatTabDateTime(signedAt);

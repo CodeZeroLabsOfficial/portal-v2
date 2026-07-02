@@ -20,7 +20,9 @@ export function CustomerDocumentCard({ doc, loading = false, onView }: CustomerD
       title={doc.proposalTitle}
       dateLabel={documentSignedLabel(doc.signedAt)}
       badge={<StatusBadge label="Signed" variant="success" />}
-      meta={doc.signerName}
+      meta={
+        <span className="text-muted-foreground text-xs uppercase tracking-wide">{doc.signerName}</span>
+      }
       action={
         <Button
           type="button"
