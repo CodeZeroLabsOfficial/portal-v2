@@ -1,11 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { GripVertical } from "lucide-react";
 
 import { OpportunityKanbanCard } from "@/components/features/crm/opportunity/opportunity-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import * as Kanban from "@/components/ui/kanban";
 import {
   OPPORTUNITY_STAGES,
@@ -71,16 +69,9 @@ export function OpportunitiesBoard({ opportunities }: OpportunitiesBoardProps) {
           const stageDeals = columns[stage] ?? [];
           return (
             <Kanban.Column key={stage} value={stage} className="w-[340px] min-w-[340px]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">{opportunityStageLabel(stage)}</span>
-                  <Badge variant="outline">{stageDeals.length}</Badge>
-                </div>
-                <Kanban.ColumnHandle asChild>
-                  <Button variant="ghost" size="icon" aria-label={`Reorder ${opportunityStageLabel(stage)} column`}>
-                    <GripVertical className="h-4 w-4" />
-                  </Button>
-                </Kanban.ColumnHandle>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">{opportunityStageLabel(stage)}</span>
+                <Badge variant="outline">{stageDeals.length}</Badge>
               </div>
               {stageDeals.length > 0 ? (
                 <div className="flex flex-col gap-2 p-0.5">

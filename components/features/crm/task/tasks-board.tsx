@@ -3,13 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  EllipsisVertical,
-  GripVertical,
-  MessageSquare,
-  Paperclip,
-  PlusCircleIcon
-} from "lucide-react";
+import { EllipsisVertical, MessageSquare, Paperclip, PlusCircleIcon } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { KanbanProgressRing } from "@/components/shared/kanban-progress-ring";
@@ -222,13 +216,7 @@ export function TasksBoard({ tasks, onRequestAddToColumn, addDisabled, onRequest
                     <span className="text-sm font-semibold">{taskBoardColumnLabel(columnId)}</span>
                     <Badge variant="outline">{columnTasks.length}</Badge>
                   </div>
-                  <div className="flex">
-                    <Kanban.ColumnHandle asChild>
-                      <Button variant="ghost" size="icon" aria-label={`Reorder ${taskBoardColumnLabel(columnId)} column`}>
-                        <GripVertical className="h-4 w-4" />
-                      </Button>
-                    </Kanban.ColumnHandle>
-                    <Tooltip>
+                  <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
@@ -241,7 +229,6 @@ export function TasksBoard({ tasks, onRequestAddToColumn, addDisabled, onRequest
                       </TooltipTrigger>
                       <TooltipContent>Add task</TooltipContent>
                     </Tooltip>
-                  </div>
                 </div>
                 {columnTasks.length > 0 ? (
                   <div className="flex flex-col gap-2 p-0.5">
