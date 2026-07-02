@@ -54,12 +54,15 @@ export interface CalendarDateRangePickerProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   value?: DateRange;
   onChange?: (range: DateRange | undefined) => void;
+  /** Matches DataTable toolbar controls (`h-8`, `size="sm"`). */
+  compact?: boolean;
 }
 
 export default function CalendarDateRangePicker({
   className,
   value: controlledValue,
-  onChange
+  onChange,
+  compact = false
 }: CalendarDateRangePickerProps) {
   const isMobile = useIsMobile();
   const isControlled = onChange !== undefined;
@@ -153,6 +156,12 @@ export default function CalendarDateRangePicker({
     <span>All time</span>
   );
 
+  const triggerButtonClassName = cn(
+    "justify-start gap-1.5 text-left font-normal",
+    compact && "h-8",
+    !date?.from && "text-muted-foreground"
+  );
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -165,11 +174,9 @@ export default function CalendarDateRangePicker({
                     <Button
                       id="date"
                       variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal",
-                        !date?.from && "text-muted-foreground"
-                      )}>
-                      <CalendarIcon />
+                      size={compact ? "sm" : "default"}
+                      className={triggerButtonClassName}>
+                      <CalendarIcon className="size-4 shrink-0" aria-hidden />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>{triggerLabel}</TooltipContent>
@@ -180,11 +187,9 @@ export default function CalendarDateRangePicker({
             <Button
               id="date"
               variant="outline"
-              className={cn(
-                "justify-start text-left font-normal",
-                !date?.from && "text-muted-foreground"
-              )}>
-              <CalendarIcon />
+              size={compact ? "sm" : "default"}
+              className={triggerButtonClassName}>
+              <CalendarIcon className="size-4 shrink-0" aria-hidden />
               {triggerLabel}
             </Button>
           )}

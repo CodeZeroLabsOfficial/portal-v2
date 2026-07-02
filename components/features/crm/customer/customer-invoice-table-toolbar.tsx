@@ -31,40 +31,43 @@ export function CustomerInvoiceTableToolbar({
   return (
     <div
       className={cn(
-        "flex min-w-0 w-full flex-wrap items-center gap-2 py-2",
+        "flex min-w-0 w-full flex-wrap items-center justify-between gap-2 py-2",
         className
       )}>
-      <Input
-        placeholder="Search invoices…"
-        value={(table.getColumn("searchLabel")?.getFilterValue() as string) ?? ""}
-        onChange={(event) => table.getColumn("searchLabel")?.setFilterValue(event.target.value)}
-        className="h-8 min-w-0 flex-1 sm:max-w-xs"
-      />
-      {table.getColumn("status") ? (
-        <DataTableFacetedFilter
-          column={table.getColumn("status")}
-          title="Status"
-          options={INVOICE_STATUS_FILTER_OPTIONS}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search invoices…"
+          value={(table.getColumn("searchLabel")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("searchLabel")?.setFilterValue(event.target.value)}
+          className="h-8 min-w-0 flex-1 sm:max-w-xs"
         />
-      ) : null}
+        {table.getColumn("status") ? (
+          <DataTableFacetedFilter
+            column={table.getColumn("status")}
+            title="Status"
+            options={INVOICE_STATUS_FILTER_OPTIONS}
+          />
+        ) : null}
+        {showReset ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => {
+              table.resetColumnFilters();
+              onDateRangeChange(undefined);
+            }}>
+            Reset
+            <X className="size-4" aria-hidden />
+          </Button>
+        ) : null}
+      </div>
       <CalendarDateRangePicker
         value={dateRange}
         onChange={onDateRangeChange}
+        compact
         className="shrink-0"
       />
-      {showReset ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8"
-          onClick={() => {
-            table.resetColumnFilters();
-            onDateRangeChange(undefined);
-          }}>
-          Reset
-          <X className="size-4" aria-hidden />
-        </Button>
-      ) : null}
     </div>
   );
 }
