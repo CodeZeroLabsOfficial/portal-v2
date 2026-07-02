@@ -139,7 +139,11 @@ import {
   normalizeColumnFlexForStorage,
   PROPOSAL_COLUMN_FR_MIN,
 } from "@/lib/proposal/columns";
-import { firstRootSplashBlockId, proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
+import {
+  firstRootSplashBlockId,
+  proposalBlockRendersFlushEditorBand,
+  proposalSectionChildSkipsTopInset,
+} from "@/lib/proposal/blocks";
 import {
   PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
   PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES,
@@ -1655,7 +1659,13 @@ function SectionBlockFields({
                     )}
                   />
                 ) : null}
-                <div className={proposalEditorSectionChildEdgePadClasses(idx, children.length)}>
+                <div
+                  className={proposalEditorSectionChildEdgePadClasses(
+                    idx,
+                    children.length,
+                    proposalSectionChildSkipsTopInset(child),
+                  )}
+                >
                 <SortableShell
                   id={child.id}
                   selected={isSelected}
@@ -1852,6 +1862,7 @@ function SectionBlockFields({
                   <BlockFields
                     block={child}
                     onChange={(next) => updateChild(child.id, next as ProposalContentBlock)}
+                    placement="section"
                     selection={{
                       selectedId: selectedBlockId,
                       onSelect: onSelectBlock,
@@ -1889,7 +1900,7 @@ function SectionBlockFields({
   return (
     <ProposalSectionShell background={block.background} variant="editor">
       {backdropOn ? (
-        <div className={PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES}>{sectionStack}</div>
+        sectionStack
       ) : (
         <div className="rounded-xl border border-dashed border-border/65 bg-muted/15 px-1 py-1 sm:bg-muted/[0.35]">
           {sectionStack}
@@ -2727,7 +2738,13 @@ function AgreementBlockFields({
                     )}
                   />
                 ) : null}
-                <div className={proposalEditorSectionChildEdgePadClasses(idx, children.length)}>
+                <div
+                  className={proposalEditorSectionChildEdgePadClasses(
+                    idx,
+                    children.length,
+                    proposalSectionChildSkipsTopInset(child),
+                  )}
+                >
                 <SortableShell
                   id={child.id}
                   selected={isSelected}
@@ -2904,6 +2921,7 @@ function AgreementBlockFields({
                   <BlockFields
                     block={child}
                     onChange={(next) => updateChild(child.id, next as ProposalAgreementChildBlock)}
+                    placement="section"
                     selection={{
                       selectedId: selectedBlockId,
                       onSelect: onSelectBlock,
@@ -3000,6 +3018,7 @@ function BlockFields({
   columnsInnerCellCallbacks,
   imageColumnToolbar,
   iconColumnToolbar,
+  placement = "root",
 }: {
   block: ProposalBlock;
   onChange: (next: ProposalBlock) => void;
@@ -3019,15 +3038,24 @@ function BlockFields({
     onInnerCellActiveChange: (cellId: string | null) => void;
     registerClearCellSelection: (clear: (() => void) | null) => void;
   };
+  /** Where the block is rendered — drives splash public-layout parity with live preview. */
+  placement?: "root" | "section";
 }) {
   const patch = (next: ProposalBlock) => onChange(next);
   const sectionChrome = useProposalSectionEditorChrome();
-  const seamlessSection = sectionChrome?.seamless ?? false;
+  const seamlessSection = placement === "section" && (sectionChrome?.seamless ?? false);
 
   switch (block.type) {
     case "splash": {
       const b = block as SplashBlock;
-      return <SplashBlockInspector block={b} onChange={(next) => patch(next)} />;
+      return (
+        <SplashBlockInspector
+          block={b}
+          onChange={(next) => patch(next)}
+          seamlessSection={seamlessSection}
+          rootLevel={placement === "root"}
+        />
+      );
     }
     case "section": {
       const b = block as SectionBlock;
