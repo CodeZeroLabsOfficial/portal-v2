@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { useProposalTemplatePickerState } from "@/hooks/use-proposal-template-picker-state";
 import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
-import { cn } from "@/lib/utils";
 import { deleteProposalAction } from "@/server/actions/proposal-builder";
 import { createDraftProposalFromCustomerAction } from "@/server/actions/proposals-crm";
 import type { CustomerRecord } from "@/types/customer";
@@ -173,8 +172,7 @@ export function CustomerProposalsTab({
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
                     <StatusBadge
                       label={stage.label}
-                      variant="secondary"
-                      className={cn(stage.className)}
+                      variant={stage.variant}
                       title={stage.title}
                     />
                   </div>

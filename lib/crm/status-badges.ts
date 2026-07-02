@@ -13,7 +13,6 @@ type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 export interface StatusBadgeDisplay {
   label: string;
   variant: BadgeVariant;
-  className?: string;
 }
 
 export function customerStatusBadgeDisplay(status: "active" | "archived"): StatusBadgeDisplay {
@@ -30,26 +29,10 @@ export function customerCrmTypeBadgeDisplay(crmType: CustomerCrmType): StatusBad
   return { label: "Contact", variant: "secondary" };
 }
 
-/** Maps subscription rollup to StatusBadge props; falls back to className for legacy fill colors. */
 export function subscriptionRollupBadgeDisplay(
-  rollup: CustomerSubscriptionRollup
+  rollup: CustomerSubscriptionRollup,
 ): StatusBadgeDisplay {
-  const legacy = getSubscriptionStatusBadgeDisplay(rollup);
-  const variantMap: Partial<Record<CustomerSubscriptionRollup, BadgeVariant>> = {
-    active: "success",
-    trialing: "success",
-    scheduled: "info",
-    past_due: "warning",
-    unpaid: "warning",
-    canceled: "secondary",
-    paused: "secondary",
-    none: "secondary"
-  };
-  return {
-    label: legacy.label,
-    variant: variantMap[rollup] ?? "secondary",
-    className: legacy.className
-  };
+  return getSubscriptionStatusBadgeDisplay(rollup);
 }
 
 export function opportunityStageBadgeDisplay(stage: OpportunityStage): StatusBadgeDisplay {
@@ -79,7 +62,7 @@ export function taskPriorityBadgeDisplay(priority: string | undefined): StatusBa
     case "medium":
       return { label, variant: "warning" };
     default:
-      return { label, variant: "success" };
+      return { label, variant: "neutral" };
   }
 }
 
@@ -90,10 +73,10 @@ export function taskColumnBadgeDisplay(status: string | undefined): StatusBadgeD
     case "done":
       return { label, variant: "success" };
     case "in_progress":
-      return { label, variant: "info" };
+      return { label, variant: "purple" };
     case "review":
       return { label, variant: "warning" };
     default:
-      return { label, variant: "secondary" };
+      return { label, variant: "info" };
   }
 }

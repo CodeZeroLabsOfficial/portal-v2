@@ -482,9 +482,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         header: "Subscriptions",
         cell: ({ row }) => {
           const d = subscriptionRollupBadgeDisplay(row.original.subscriptionRollup);
-          return (
-            <StatusBadge label={d.label} variant={d.variant} className={d.className} />
-          );
+          return <StatusBadge label={d.label} variant={d.variant} />;
         },
         enableSorting: false
       },

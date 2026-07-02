@@ -1,4 +1,9 @@
+import type { VariantProps } from "class-variance-authority";
+
+import type { badgeVariants } from "@/components/ui/badge";
 import type { ProposalRecord } from "@/types/proposal";
+
+type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
 export type ProposalLifecyclePhase = "draft" | "published" | "viewed";
 
@@ -8,14 +13,14 @@ export type ProposalStageBadgeKey =
   | "declined"
   | "expired";
 
-/** Shared fill badge colours for proposal status across hub, customer detail, and proposal editor. */
-export const PROPOSAL_STAGE_BADGE_CLASS: Record<ProposalStageBadgeKey, string> = {
-  draft: "bg-amber-500/10 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200",
-  published: "bg-sky-500/10 text-sky-900 dark:bg-sky-500/15 dark:text-sky-200",
-  viewed: "bg-violet-500/10 text-violet-900 dark:bg-violet-500/15 dark:text-violet-200",
-  accepted: "bg-emerald-500/15 text-emerald-400",
-  declined: "bg-destructive/10 text-destructive dark:text-destructive",
-  expired: "bg-muted/50 text-muted-foreground",
+/** Shared badge variants for proposal status across hub, customer detail, and proposal editor. */
+export const PROPOSAL_STAGE_BADGE_VARIANT: Record<ProposalStageBadgeKey, BadgeVariant> = {
+  draft: "warning",
+  published: "info",
+  viewed: "purple",
+  accepted: "success",
+  declined: "destructive",
+  expired: "secondary",
 };
 
 /** CRM proposal rows: viewed wins over published over draft. */
@@ -35,14 +40,14 @@ export function getProposalStageBadgeDisplay(p: ProposalRecord): {
   label: string;
   title: string;
   badgeKey: ProposalStageBadgeKey;
-  className: string;
+  variant: BadgeVariant;
 } {
   if (p.status === "accepted") {
     return {
       label: "Accepted",
       title: "The client accepted this proposal on the public page.",
       badgeKey: "accepted",
-      className: PROPOSAL_STAGE_BADGE_CLASS.accepted,
+      variant: PROPOSAL_STAGE_BADGE_VARIANT.accepted,
     };
   }
   if (p.status === "declined") {
@@ -50,7 +55,7 @@ export function getProposalStageBadgeDisplay(p: ProposalRecord): {
       label: "Declined",
       title: "The client declined this proposal.",
       badgeKey: "declined",
-      className: PROPOSAL_STAGE_BADGE_CLASS.declined,
+      variant: PROPOSAL_STAGE_BADGE_VARIANT.declined,
     };
   }
   if (p.status === "expired") {
@@ -58,7 +63,7 @@ export function getProposalStageBadgeDisplay(p: ProposalRecord): {
       label: "Expired",
       title: "This proposal is no longer active.",
       badgeKey: "expired",
-      className: PROPOSAL_STAGE_BADGE_CLASS.expired,
+      variant: PROPOSAL_STAGE_BADGE_VARIANT.expired,
     };
   }
   const phase = proposalLifecyclePhase(p);
@@ -67,7 +72,7 @@ export function getProposalStageBadgeDisplay(p: ProposalRecord): {
       label: "Draft",
       title: "Draft — not published to a public link yet. Use Publish in the editor when ready.",
       badgeKey: "draft",
-      className: PROPOSAL_STAGE_BADGE_CLASS.draft,
+      variant: PROPOSAL_STAGE_BADGE_VARIANT.draft,
     };
   }
   if (phase === "published") {
@@ -75,13 +80,13 @@ export function getProposalStageBadgeDisplay(p: ProposalRecord): {
       label: "Published",
       title: "Published — public proposal is ready to view; no recorded opens yet.",
       badgeKey: "published",
-      className: PROPOSAL_STAGE_BADGE_CLASS.published,
+      variant: PROPOSAL_STAGE_BADGE_VARIANT.published,
     };
   }
   return {
     label: "Viewed",
     title: "Viewed — recipient has viewed or acted on the public proposal.",
     badgeKey: "viewed",
-    className: PROPOSAL_STAGE_BADGE_CLASS.viewed,
+    variant: PROPOSAL_STAGE_BADGE_VARIANT.viewed,
   };
 }

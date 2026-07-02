@@ -12,17 +12,21 @@ const badgeVariants = cva(
         default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary: "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive:
-          "bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 [a&]:hover:bg-red-200/90 dark:[a&]:hover:bg-red-900/90",
         outline:
           "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         link: "text-primary underline-offset-4 [a&]:hover:underline",
-        // custom variants
+        // Pastel status variants — match UI kit todo-list badge fills (borderless).
         warning:
-          "border border-orange-400 bg-orange-50 text-orange-800 [a&]:hover:bg-orange-500/90 focus-visible:ring-orange-500/20 dark:focus-visible:ring-orange-500/40 dark:bg-orange-900/70 dark:text-white/80",
-        info: "border border-blue-400 bg-blue-50 text-blue-800 [a&]:hover:bg-blue-500/90 focus-visible:ring-blue-500/20 dark:focus-visible:ring-blue-500/40 dark:bg-blue-900/70 dark:text-white/80",
+          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 [a&]:hover:bg-yellow-200/90 dark:[a&]:hover:bg-yellow-900/90",
+        info: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 [a&]:hover:bg-blue-200/90 dark:[a&]:hover:bg-blue-900/90",
         success:
-          "border border-green-400 bg-green-50 text-green-800 [a&]:hover:bg-green-500/90 focus-visible:ring-green-500/20 dark:focus-visible:ring-green-500/40 dark:bg-green-900/70 dark:text-white/80"
+          "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 [a&]:hover:bg-green-200/90 dark:[a&]:hover:bg-green-800/90",
+        purple:
+          "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 [a&]:hover:bg-purple-200/90 dark:[a&]:hover:bg-purple-900/90",
+        neutral:
+          "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 [a&]:hover:bg-gray-300/90 dark:[a&]:hover:bg-gray-700/90"
       }
     },
     defaultVariants: {

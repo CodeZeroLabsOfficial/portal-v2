@@ -1,47 +1,51 @@
+import type { VariantProps } from "class-variance-authority";
+
+import type { badgeVariants } from "@/components/ui/badge";
 import type { CustomerSubscriptionRollup } from "@/types/customer";
 import type { SubscriptionStatus } from "@/types/subscription";
 
-/** Shared fill badge colours for subscription status (customer list, subscriptions hub). */
+type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
+
+export interface SubscriptionStatusBadgeDisplay {
+  label: string;
+  variant: BadgeVariant;
+}
+
+/** Maps subscription status to shared badge variants (customer list, subscriptions hub). */
 export function getSubscriptionStatusBadgeDisplay(
   status: SubscriptionStatus | CustomerSubscriptionRollup,
-): { label: string; className: string } {
+): SubscriptionStatusBadgeDisplay {
   if (status === "none") {
-    return { label: "No subscription", className: "bg-muted text-muted-foreground" };
+    return { label: "No subscription", variant: "secondary" };
   }
   if (status === "active" || status === "trialing") {
     return {
       label: status === "trialing" ? "Trialing" : "Active",
-      className: "bg-emerald-500/15 text-emerald-400",
+      variant: "success",
     };
   }
   if (status === "scheduled") {
-    return {
-      label: "Scheduled",
-      className: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
-    };
+    return { label: "Scheduled", variant: "info" };
   }
   if (status === "past_due" || status === "unpaid") {
     return {
       label: status === "past_due" ? "Past due" : "Unpaid",
-      className: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+      variant: "warning",
     };
   }
   if (status === "canceled") {
-    return { label: "Canceled", className: "bg-muted text-muted-foreground" };
+    return { label: "Canceled", variant: "secondary" };
   }
   if (status === "paused") {
-    return { label: "Paused", className: "bg-muted text-muted-foreground" };
+    return { label: "Paused", variant: "purple" };
   }
   return {
     label: status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    className: "bg-muted text-muted-foreground",
+    variant: "secondary",
   };
 }
 
-/** Payment-collection pause — violet fill, subscriptions list only. */
-export function getSubscriptionPausedBadgeDisplay(): { label: string; className: string } {
-  return {
-    label: "Paused",
-    className: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  };
+/** Payment-collection pause — subscriptions list only. */
+export function getSubscriptionPausedBadgeDisplay(): SubscriptionStatusBadgeDisplay {
+  return { label: "Paused", variant: "purple" };
 }
