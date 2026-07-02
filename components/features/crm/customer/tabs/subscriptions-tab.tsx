@@ -1,13 +1,25 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DateRange } from "react-day-picker";
+import { MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 
 import { CustomerSubscriptionTableToolbar } from "@/components/features/crm/customer/customer-subscription-table-toolbar";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import {
   mapSubscriptionsToTableRows,
@@ -16,9 +28,20 @@ import {
 } from "@/lib/crm/subscription-table";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import {
+  canCancelSubscription,
+  canPauseSubscription,
+  subscriptionStripeDashboardUrl
+} from "@/lib/subscription/row-actions";
+import {
   getSubscriptionPausedBadgeDisplay,
   getSubscriptionStatusBadgeDisplay
 } from "@/lib/subscription/status-badge";
+import {
+  cancelSubscriptionAction,
+  deleteSubscriptionAction,
+  pauseSubscriptionAction,
+  resumeSubscriptionAction
+} from "@/server/actions/subscriptions-crm";
 import type { CustomerRecord } from "@/types/customer";
 import type { SubscriptionRecord } from "@/types/subscription";
 
@@ -31,12 +54,93 @@ export function CustomerSubscriptionsTab({
   customer,
   subscriptions
 }: CustomerSubscriptionsTabProps) {
+  const router = useRouter();
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
+  const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
+  const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
 
   const tableRows = React.useMemo(() => {
     const rows = mapSubscriptionsToTableRows(subscriptions);
     return rows.filter((row) => subscriptionInDateRange(row, dateRange));
   }, [subscriptions, dateRange]);
+
+  async function runSubscriptionAction(
+    id: string,
+    action: () => Promise<{ ok: boolean; message?: string }>,
+    successMessage: string
+  ) {
+    setPendingId(id);
+    try {
+      const res = await action();
+      if (!res.ok) {
+        toast.error(res.message ?? "Action failed.");
+        return;
+      }
+      toast.success(successMessage);
+      router.refresh();
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  function openConfirm(
+    meta: { title: string; description: string },
+    action: () => Promise<{ ok: boolean; message?: string }>,
+    successMessage: string,
+    subscriptionId: string
+  ) {
+    setConfirmMeta(meta);
+    setConfirmAction(() => async () => {
+      setPendingId(subscriptionId);
+      try {
+        const res = await action();
+        if (!res.ok) {
+          throw new Error(res.message ?? "Action failed.");
+        }
+        toast.success(successMessage);
+        router.refresh();
+      } finally {
+        setPendingId(null);
+      }
+    });
+    setConfirmOpen(true);
+  }
+
+  function handlePause(id: string) {
+    void runSubscriptionAction(id, () => pauseSubscriptionAction(id), "Payment collection paused.");
+  }
+
+  function handleResume(id: string) {
+    void runSubscriptionAction(id, () => resumeSubscriptionAction(id), "Payment collection resumed.");
+  }
+
+  function handleCancel(subscription: SubscriptionTableRow) {
+    openConfirm(
+      {
+        title: "Cancel subscription",
+        description:
+          "Cancel this subscription at the end of the current billing period? The customer will keep access until then."
+      },
+      () => cancelSubscriptionAction(subscription.id),
+      "Subscription set to cancel at period end.",
+      subscription.id
+    );
+  }
+
+  function handleDelete(subscription: SubscriptionTableRow) {
+    openConfirm(
+      {
+        title: "Delete subscription",
+        description:
+          "Immediately cancel this subscription in Stripe and remove it from the portal? This cannot be undone."
+      },
+      () => deleteSubscriptionAction(subscription.id),
+      "Subscription deleted.",
+      subscription.id
+    );
+  }
 
   const columns = React.useMemo<ColumnDef<SubscriptionTableRow>[]>(
     () => [
@@ -90,6 +194,7 @@ export function CustomerSubscriptionsTab({
       },
       {
         id: "mrr",
+        meta: { className: "w-28 text-right" },
         header: () => <span className="block text-right">Amount</span>,
         accessorFn: (row) => row.mrrAmount ?? row.monthlyAmountMinor ?? 0,
         cell: ({ row }) => {
@@ -104,9 +209,58 @@ export function CustomerSubscriptionsTab({
             </div>
           );
         }
+      },
+      {
+        id: "actions",
+        meta: { className: "w-12" },
+        header: () => null,
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const subscription = row.original;
+          const busy = pendingId === subscription.id;
+          const stripeUrl = subscriptionStripeDashboardUrl(subscription.id);
+          const showPause = canPauseSubscription(subscription);
+          const showResume = subscription.paymentCollectionPaused;
+          const showCancel = canCancelSubscription(subscription);
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8" disabled={busy}>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {stripeUrl ? (
+                  <DropdownMenuItem asChild>
+                    <a href={stripeUrl} target="_blank" rel="noopener noreferrer">
+                      Open in Stripe
+                    </a>
+                  </DropdownMenuItem>
+                ) : null}
+                {showPause ? (
+                  <DropdownMenuItem onClick={() => handlePause(subscription.id)}>Pause</DropdownMenuItem>
+                ) : null}
+                {showResume ? (
+                  <DropdownMenuItem onClick={() => handleResume(subscription.id)}>Resume</DropdownMenuItem>
+                ) : null}
+                {showCancel ? (
+                  <DropdownMenuItem onClick={() => handleCancel(subscription)}>Cancel</DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => handleDelete(subscription)}>
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        }
       }
     ],
-    []
+    [pendingId]
   );
 
   return (
@@ -118,11 +272,24 @@ export function CustomerSubscriptionsTab({
         </p>
       ) : null}
 
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmMeta.title}
+        description={confirmMeta.description}
+        confirmLabel="Confirm"
+        destructive
+        onConfirm={async () => {
+          if (confirmAction) await confirmAction();
+        }}
+      />
+
       <Card className="min-w-0 py-0">
         <CardContent className="space-y-2 px-6 pb-4 pt-4">
           <DataTable
             columns={columns}
             data={tableRows}
+            tableClassName="table-fixed"
             initialPageSize={10}
             initialSorting={[{ id: "renews", desc: true }]}
             initialColumnVisibility={{ searchLabel: false }}
