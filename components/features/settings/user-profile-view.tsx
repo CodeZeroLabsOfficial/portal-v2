@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { Calendar, Globe, Mail, MapPin, Pencil, Phone, Shield, User } from "lucide-react";
+import { Calendar, Globe, Mail, MapPin, Phone, Shield, User } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import {
   Card,
   CardAction,
@@ -24,9 +23,10 @@ function formatDob(iso: string | undefined): string {
 
 export interface UserProfileViewProps {
   user: PortalUser;
+  onEdit: () => void;
 }
 
-export function UserProfileView({ user }: UserProfileViewProps) {
+export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
   const addressLines = formatAddressLines(user);
   const hasAddress = addressLines.length > 0;
   const dobLabel = formatDob(user.dateOfBirth);
@@ -40,12 +40,7 @@ export function UserProfileView({ user }: UserProfileViewProps) {
         </CardTitle>
         <CardDescription>Information stored on your workspace user record.</CardDescription>
         <CardAction>
-          <Button variant="secondary" size="sm" className="gap-1.5" asChild>
-            <Link href="/admin/settings/profile/edit">
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
-              Edit
-            </Link>
-          </Button>
+          <SettingsEditButton onClick={onEdit} />
         </CardAction>
       </CardHeader>
       <CardContent>

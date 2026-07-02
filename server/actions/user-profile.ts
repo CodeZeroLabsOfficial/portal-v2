@@ -60,7 +60,6 @@ export async function updateCurrentUserProfileAction(
 
   revalidatePath("/admin/settings", "layout");
   revalidatePath("/admin/settings/profile");
-  revalidatePath("/admin/settings/profile/edit");
 
   return { ok: true };
 }

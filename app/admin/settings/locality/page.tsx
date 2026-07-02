@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { LocalitySettingsForm } from "@/components/features/settings/locality-settings-form";
+import { LocalitySettingsPageClient } from "@/components/features/settings/locality-settings-page-client";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getAllCurrencyCodes, getAllTimeZones } from "@/lib/locality/data";
 
@@ -11,8 +11,8 @@ export default async function AdminSettingsLocalityPage() {
   }
 
   return (
-    <LocalitySettingsForm
-      user={user}
+    <LocalitySettingsPageClient
+      initialUser={user}
       timeZones={getAllTimeZones()}
       currencyCodes={getAllCurrencyCodes()}
     />

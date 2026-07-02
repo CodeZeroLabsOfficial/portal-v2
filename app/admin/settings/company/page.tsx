@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { CompanySettingsView } from "@/components/features/settings/company-settings-view";
+import { CompanySettingsPageClient } from "@/components/features/settings/company-settings-page-client";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getWorkspaceCompanySettings } from "@/server/firestore/organization-settings";
 
@@ -19,5 +19,5 @@ export default async function AdminSettingsCompanyPage() {
     );
   }
 
-  return <CompanySettingsView settings={settings} />;
+  return <CompanySettingsPageClient initialSettings={settings} />;
 }

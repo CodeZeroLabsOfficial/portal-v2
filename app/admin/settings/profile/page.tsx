@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { UserProfileView } from "@/components/features/settings/user-profile-view";
+import { ProfileSettingsPageClient } from "@/components/features/settings/profile-settings-page-client";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 
 export default async function AdminSettingsProfilePage() {
@@ -9,5 +9,5 @@ export default async function AdminSettingsProfilePage() {
     redirect("/login?next=/admin/settings/profile");
   }
 
-  return <UserProfileView user={user} />;
+  return <ProfileSettingsPageClient initialUser={user} />;
 }

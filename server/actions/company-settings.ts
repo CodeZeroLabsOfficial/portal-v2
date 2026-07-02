@@ -60,7 +60,6 @@ export async function updateWorkspaceCompanySettingsAction(
 
   revalidatePath("/admin/settings", "layout");
   revalidatePath("/admin/settings/company");
-  revalidatePath("/admin/settings/company/edit");
 
   return { ok: true };
 }
