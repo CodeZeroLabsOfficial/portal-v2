@@ -1,11 +1,20 @@
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
-export default function AdminOpportunitiesPage() {
-  return (
-    <ComingSoonPage
-      title="Pipeline"
-      phase="Phase 2 — CRM"
-      description="Opportunity board with stage rules and deal tracking."
-    />
-  );
+import { OpportunitiesPanel } from "@/components/features/crm/opportunity/opportunities-panel";
+import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { listOpportunityBoardCardsForStaff } from "@/server/firestore/crm-opportunities";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminOpportunitiesPage() {
+  await connection();
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    redirect("/login?next=/admin/opportunities");
+  }
+
+  const opportunities = await listOpportunityBoardCardsForStaff(user);
+
+  return <OpportunitiesPanel opportunities={opportunities} />;
 }

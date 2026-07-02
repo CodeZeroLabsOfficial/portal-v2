@@ -1,0 +1,267 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import {
+  Building2,
+  FileText,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Sparkles,
+  Tag,
+  Users
+} from "lucide-react";
+import { z } from "zod";
+
+import { InlineEditableAddressFields } from "@/components/shared/inline-editable-address-fields";
+import { InlineEditableField } from "@/components/shared/inline-editable-field";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  buildCustomerUpdatePayload,
+  type CustomerInlineFieldOverrides
+} from "@/lib/customer/form-defaults";
+import { normalizeAddressFields, type AddressFields } from "@/lib/common/format";
+import { updateCustomerAction } from "@/server/actions/customers-crm";
+import type { CustomerRecord } from "@/types/customer";
+
+const detailLabelClass =
+  "flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground";
+
+const detailLabelIconClass = "size-3.5 shrink-0 opacity-80";
+
+export interface CustomerContactDetailsCardProps {
+  customer: CustomerRecord;
+  convertLeadBusy?: boolean;
+  onConvertLead?: () => void;
+}
+
+export function CustomerContactDetailsCard({
+  customer,
+  convertLeadBusy = false,
+  onConvertLead
+}: CustomerContactDetailsCardProps) {
+  const router = useRouter();
+  const [activeFieldId, setActiveFieldId] = React.useState<string | null>(null);
+  const fieldsDisabled = customer.status === "archived";
+  const contactAddress: AddressFields = normalizeAddressFields({
+    addressLine1: customer.addressLine1,
+    addressLine2: customer.addressLine2,
+    city: customer.city,
+    region: customer.region,
+    postalCode: customer.postalCode,
+    country: customer.country
+  });
+
+  async function persistField(
+    overrides: CustomerInlineFieldOverrides
+  ): Promise<{ ok: boolean; message?: string }> {
+    const res = await updateCustomerAction(buildCustomerUpdatePayload(customer, overrides));
+    if (res.ok) {
+      router.refresh();
+    }
+    return res;
+  }
+
+  const phoneDisplay = customer.phone?.trim() || customer.companyPhone?.trim() || "";
+
+  return (
+    <Card className="border-border/80 bg-card/80 shadow-sm lg:col-span-2">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 border-b border-border/60 bg-muted/20">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Users className="text-muted-foreground size-5" aria-hidden />
+          Contact details
+        </CardTitle>
+        {customer.crmType === "lead" && onConvertLead ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground shrink-0 gap-1.5"
+            disabled={convertLeadBusy}
+            onClick={onConvertLead}>
+            {convertLeadBusy ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Sparkles className="size-4" aria-hidden />
+            )}
+            Convert lead
+          </Button>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-5 p-6 text-sm">
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <Tag className={detailLabelIconClass} aria-hidden />
+              Name
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="name"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={customer.name}
+                editLabel="name"
+                placeholder="Contact name"
+                disabled={fieldsDisabled}
+                onSave={async (next) => {
+                  const trimmed = next.trim();
+                  if (!trimmed) {
+                    return { ok: false, message: "Name is required." };
+                  }
+                  if (trimmed.length > 200) {
+                    return { ok: false, message: "Name must be 200 characters or fewer." };
+                  }
+                  return persistField({ name: trimmed });
+                }}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <Mail className={detailLabelIconClass} aria-hidden />
+              Email
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="email"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={customer.email}
+                editLabel="email"
+                placeholder="email@example.com"
+                disabled={fieldsDisabled}
+                onSave={async (next) => {
+                  const trimmed = next.trim();
+                  if (!trimmed) {
+                    return { ok: false, message: "Email is required." };
+                  }
+                  if (!z.string().email().safeParse(trimmed).success) {
+                    return { ok: false, message: "Enter a valid email address." };
+                  }
+                  if (trimmed.length > 320) {
+                    return { ok: false, message: "Email must be 320 characters or fewer." };
+                  }
+                  return persistField({ email: trimmed });
+                }}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <Phone className={detailLabelIconClass} aria-hidden />
+              Phone
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="phone"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={phoneDisplay}
+                editLabel="phone"
+                placeholder="Phone number"
+                disabled={fieldsDisabled}
+                onSave={async (next) => persistField({ phone: next.trim() })}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <Building2 className={detailLabelIconClass} aria-hidden />
+              Company
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="company"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={customer.company ?? ""}
+                editLabel="company"
+                placeholder="Company name"
+                disabled={fieldsDisabled}
+                onSave={async (next) => persistField({ company: next.trim() })}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <FileText className={detailLabelIconClass} aria-hidden />
+              ABN
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="companyAbn"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={customer.companyAbn ?? ""}
+                editLabel="ABN"
+                placeholder="ABN"
+                disabled={fieldsDisabled}
+                onSave={async (next) => persistField({ companyAbn: next.trim() })}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1">
+            <dt className={detailLabelClass}>
+              <FileText className={detailLabelIconClass} aria-hidden />
+              ACN
+            </dt>
+            <dd>
+              <InlineEditableField
+                fieldId="companyAcn"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={customer.companyAcn ?? ""}
+                editLabel="ACN"
+                placeholder="ACN"
+                disabled={fieldsDisabled}
+                onSave={async (next) => persistField({ companyAcn: next.trim() })}
+              />
+            </dd>
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <dt className={detailLabelClass}>
+              <MapPin className={detailLabelIconClass} aria-hidden />
+              Address
+            </dt>
+            <dd>
+              <InlineEditableAddressFields
+                fieldId="address"
+                activeFieldId={activeFieldId}
+                onActiveFieldIdChange={setActiveFieldId}
+                value={contactAddress}
+                editLabel="address"
+                disabled={fieldsDisabled}
+                onSave={async (next) => {
+                  const normalized = normalizeAddressFields(next);
+                  return persistField({
+                    addressLine1: normalized.addressLine1 ?? "",
+                    addressLine2: normalized.addressLine2 ?? "",
+                    city: normalized.city ?? "",
+                    region: normalized.region ?? "",
+                    postalCode: normalized.postalCode ?? "",
+                    country: normalized.country ?? ""
+                  });
+                }}
+              />
+            </dd>
+          </div>
+        </dl>
+        {customer.tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {customer.tags.map((tag) => (
+              <span
+                key={tag}
+                className="border-border/60 bg-background/60 rounded-full border px-2.5 py-0.5 text-xs font-medium text-foreground/90">
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}

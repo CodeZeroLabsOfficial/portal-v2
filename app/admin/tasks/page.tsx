@@ -1,11 +1,22 @@
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
-export default function AdminTasksPage() {
+import { TasksPanel } from "@/components/features/crm/task/tasks-panel";
+import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { listTasksForStaff } from "@/server/firestore/crm-tasks";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminTasksPage() {
+  await connection();
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    redirect("/login?next=/admin/tasks");
+  }
+
+  const tasks = await listTasksForStaff(user);
+
   return (
-    <ComingSoonPage
-      title="Tasks"
-      phase="Phase 2 — CRM"
-      description="Task board and list views for internal follow-ups."
-    />
+    <TasksPanel tasks={tasks} viewerUid={user.uid} organizationId={user.organizationId} />
   );
 }
