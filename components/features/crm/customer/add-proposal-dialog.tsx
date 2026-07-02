@@ -76,25 +76,28 @@ export function AddProposalDialog({
           <DialogTitle>Add proposal</DialogTitle>
         </DialogHeader>
         {hasTemplates ? (
-          <form onSubmit={onSubmit} className="mt-4 flex gap-2">
-            <Select
-              value={proposalTemplateId}
-              onValueChange={setProposalTemplateId}
-              disabled={pending}>
-              <SelectTrigger id="proposal-template" className="min-w-0 flex-1">
-                <SelectValue placeholder="Select template" />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <form onSubmit={onSubmit} className="mt-4 flex min-w-0 gap-2">
+            <div className="min-w-0 flex-1">
+              <Select
+                value={proposalTemplateId}
+                onValueChange={setProposalTemplateId}
+                disabled={pending}>
+                <SelectTrigger id="proposal-template" className="w-full">
+                  <SelectValue placeholder="Select template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               type="submit"
               size="icon"
+              className="shrink-0"
               disabled={!canSubmit}
               aria-label="Create proposal">
               {pending ? (
