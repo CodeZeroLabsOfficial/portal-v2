@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -16,11 +15,10 @@ import type { CustomerActivityRecord } from "@/types/customer";
 const ACTIVITY_PREVIEW_LIMIT = 10;
 
 export interface CustomerLatestActivityProps {
-  customerId: string;
   activities: CustomerActivityRecord[];
 }
 
-export function CustomerLatestActivity({ customerId, activities }: CustomerLatestActivityProps) {
+export function CustomerLatestActivity({ activities }: CustomerLatestActivityProps) {
   const timeline = [...activities]
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, ACTIVITY_PREVIEW_LIMIT);
@@ -29,13 +27,6 @@ export function CustomerLatestActivity({ customerId, activities }: CustomerLates
     <Card>
       <CardHeader>
         <CardTitle>Latest Activity</CardTitle>
-        <CardAction>
-          <Link
-            href={`/admin/customers/${customerId}?tab=notes`}
-            className="text-muted-foreground hover:text-primary text-sm hover:underline">
-            View all
-          </Link>
-        </CardAction>
       </CardHeader>
       <CardContent className="ps-8">
         {timeline.length === 0 ? (

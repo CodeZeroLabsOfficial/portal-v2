@@ -4,36 +4,29 @@ import * as React from "react";
 import { Search } from "lucide-react";
 
 import { AddCustomerNoteDialog } from "@/components/features/crm/customer/notes/add-customer-note-dialog";
-import { CustomerNoteTimeline } from "@/components/features/crm/customer/notes/customer-note-timeline";
+import { CustomerNotesList } from "@/components/features/crm/customer/notes/customer-notes-list";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
 import {
-  buildCustomerTimelineItems,
-  CUSTOMER_TIMELINE_FILTERS,
-  filterCustomerTimelineItems,
-  type CustomerTimelineFilter
-} from "@/lib/crm/customer-note-timeline";
+  CUSTOMER_NOTE_FILTERS,
+  filterCustomerNotes,
+  type CustomerNoteFilter
+} from "@/lib/crm/customer-notes";
 import { cn } from "@/lib/utils";
-import type { CustomerActivityRecord, CustomerNoteRecord } from "@/types/customer";
+import type { CustomerNoteRecord } from "@/types/customer";
 
 export interface CustomerNotesPanelProps {
   customerId: string;
   notes: CustomerNoteRecord[];
-  activities: CustomerActivityRecord[];
 }
 
-export function CustomerNotesPanel({ customerId, notes, activities }: CustomerNotesPanelProps) {
+export function CustomerNotesPanel({ customerId, notes }: CustomerNotesPanelProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [filter, setFilter] = React.useState<CustomerTimelineFilter>("all");
+  const [filter, setFilter] = React.useState<CustomerNoteFilter>("all");
 
-  const allItems = React.useMemo(
-    () => buildCustomerTimelineItems(notes, activities),
-    [notes, activities]
-  );
-
-  const filteredItems = React.useMemo(
-    () => filterCustomerTimelineItems(allItems, filter, searchQuery),
-    [allItems, filter, searchQuery]
+  const filteredNotes = React.useMemo(
+    () => filterCustomerNotes(notes, filter, searchQuery),
+    [notes, filter, searchQuery]
   );
 
   function clearFilters() {
@@ -45,7 +38,7 @@ export function CustomerNotesPanel({ customerId, notes, activities }: CustomerNo
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
         <Typography variant="h3" className="text-base">
-          Notes &amp; activity
+          Notes
         </Typography>
         <AddCustomerNoteDialog customerId={customerId} />
       </div>
@@ -58,14 +51,14 @@ export function CustomerNotesPanel({ customerId, notes, activities }: CustomerNo
           />
           <Input
             className="pl-9"
-            placeholder="Search notes and activity"
+            placeholder="Search notes"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            aria-label="Search notes and activity"
+            aria-label="Search notes"
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          {CUSTOMER_TIMELINE_FILTERS.map(({ value, label }) => (
+          {CUSTOMER_NOTE_FILTERS.map(({ value, label }) => (
             <button
               key={value}
               type="button"
@@ -83,11 +76,11 @@ export function CustomerNotesPanel({ customerId, notes, activities }: CustomerNo
       </div>
 
       <div className="bg-card px-4 py-5 sm:px-5">
-        <CustomerNoteTimeline
-          items={filteredItems}
-          hasAnyItems={allItems.length > 0}
+        <CustomerNotesList
+          notes={filteredNotes}
+          hasAnyNotes={notes.length > 0}
           searchQuery={searchQuery}
-          onClearSearch={clearFilters}
+          onClearFilters={clearFilters}
         />
       </div>
     </div>

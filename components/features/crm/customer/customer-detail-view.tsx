@@ -101,7 +101,7 @@ export function CustomerDetailView({
           </div>
         }
       panels={{
-        overview: <CustomerOverviewTab customerId={customer.id} activities={activities} />,
+        overview: <CustomerOverviewTab activities={activities} />,
         billing: <CustomerBillingTab customer={customer} invoices={invoices} />,
         subscriptions: (
           <CustomerSubscriptionsTab customer={customer} subscriptions={subscriptions} />
@@ -113,7 +113,7 @@ export function CustomerDetailView({
             templates={templates}
           />
         ),
-        notes: <CustomerNotesTab customer={customer} notes={notes} activities={activities} />,
+        notes: <CustomerNotesTab customer={customer} notes={notes} />,
         documents: (
           <CustomerDocumentsTab customer={customer} signedAgreements={signedAgreements} />
         ),
