@@ -1,7 +1,11 @@
+import Link from "next/link";
+
+import { PageHeader } from "@/components/shared/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { toSessionUserView } from "@/lib/auth/session-user-view";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -18,16 +22,18 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">Operations</h1>
-          <Badge variant="secondary">Phase 0</Badge>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          Welcome back{view ? `, ${view.displayName}` : ""}. The new portal shell is live — CRM,
-          billing, and proposal screens are rebuilt in the following phases.
-        </p>
-      </div>
+      <PageHeader
+        title="Operations"
+        description={`Welcome back${view ? `, ${view.displayName}` : ""}. Settings are live — CRM, billing, and proposal screens ship in upcoming phases.`}
+        actions={
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Phase 1</Badge>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/settings">Settings</Link>
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {PLACEHOLDER_METRICS.map((metric) => (
@@ -45,10 +51,10 @@ export default async function AdminDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Foundation ready</CardTitle>
+          <CardTitle>What&apos;s new in Phase 1</CardTitle>
           <CardDescription>
-            Authentication, session handling, API routes, and the domain layer have been carried
-            over from the existing portal. Navigation links become active as each phase ships.
+            Company, profile, locality, and integrations settings are available under Settings in the
+            sidebar. Other navigation links show a preview until their phase ships.
           </CardDescription>
         </CardHeader>
       </Card>

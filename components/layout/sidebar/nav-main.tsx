@@ -36,7 +36,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   subscriptions: WalletMinimalIcon,
   services: PackageIcon,
   tasks: SquareCheckIcon,
-  Templates: LayoutTemplateIcon,
+  templates: LayoutTemplateIcon,
   reports: ChartBarDecreasingIcon,
   settings: SettingsIcon,
   customer: BadgeDollarSignIcon,

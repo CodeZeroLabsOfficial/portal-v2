@@ -16,3 +16,8 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   { id: "locality", href: "/admin/settings/locality", label: "Locality", icon: Globe },
   { id: "integrations", href: "/admin/settings/integrations", label: "Integrations", icon: Puzzle },
 ];
+
+/** Phase 1 live settings — Team and other placeholders stay out of nav until built. */
+export const SETTINGS_NAV_LIVE: SettingsNavItem[] = SETTINGS_NAV_ITEMS.filter(
+  (item) => item.id !== "team",
+);
