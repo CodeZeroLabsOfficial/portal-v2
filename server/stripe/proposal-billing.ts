@@ -1,9 +1,9 @@
 import Stripe from "stripe";
-import { DEFAULT_CURRENCY } from "@/lib/constants";
-import { findProposalBlockById, iterateProposalContentBlocks } from "@/lib/proposal-blocks";
-import { effectivePricingLineQuantity } from "@/lib/pricing-line-quantity";
-import { resolveProposalCommerce, type ProposalStripeOneOffItem } from "@/lib/proposal-commerce";
-import { packageCommitmentTotalMinor } from "@/lib/proposal-packages-totals";
+import { DEFAULT_CURRENCY } from "@/config/constants";
+import { findProposalBlockById, iterateProposalContentBlocks } from "@/lib/proposal/blocks";
+import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import { resolveProposalCommerce, type ProposalStripeOneOffItem } from "@/lib/proposal/commerce/commerce";
+import { packageCommitmentTotalMinor } from "@/lib/proposal/commerce/packages-totals";
 import type { CustomerRecord } from "@/types/customer";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
 import type { PackagesBlock, PricingBlock, ProposalBlock, ProposalRecord } from "@/types/proposal";

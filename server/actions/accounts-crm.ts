@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireStaffSession } from "@/lib/auth/server-session";
 import { createAccountFormSchema, updateAccountFormSchema } from "@/lib/schemas/account";
-import { zodErrorToMessage } from "@/lib/zod-error";
+import { zodErrorToMessage } from "@/lib/common/zod-error";
 import {
   createAccountDocument,
   updateAccountDetailsForGroup,

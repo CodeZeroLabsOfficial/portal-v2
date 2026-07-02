@@ -3,7 +3,7 @@ import {
   applyCatalogServiceTermLookupKeys,
   normalizeLookupKeyBase,
   slugifyCatalogServiceName,
-} from "@/lib/catalog-service-slug";
+} from "@/lib/catalog/service-slug";
 import type { CatalogServiceRecord, CatalogServiceTerm } from "@/types/catalog-service";
 
 const trimmed = z.string().trim();

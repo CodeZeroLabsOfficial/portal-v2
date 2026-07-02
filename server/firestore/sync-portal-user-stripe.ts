@@ -1,7 +1,7 @@
 import type { Firestore } from "firebase-admin/firestore";
 import { Timestamp } from "firebase-admin/firestore";
 import { asString } from "@/lib/firestore/coerce";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
 
 function isStaffRole(role: unknown): boolean {

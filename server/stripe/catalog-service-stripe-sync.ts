@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
-import { resolveCatalogServiceTermLookupKey, slugifyCatalogServiceName } from "@/lib/catalog-service-slug";
-import { logError } from "@/lib/logging";
+import { resolveCatalogServiceTermLookupKey, slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
+import { logError } from "@/lib/common/logging";
 import type { CatalogServiceRecord, CatalogServiceTerm } from "@/types/catalog-service";
 
 const STRIPE_MIN_UNIT_AMOUNT = 50;

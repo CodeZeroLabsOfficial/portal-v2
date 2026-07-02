@@ -4,7 +4,7 @@ import { requireStaffSession } from "@/lib/auth/server-session";
 import {
   PROPOSAL_LIBRARY_ALLOWED_CONTENT_TYPES,
   assertStaffLibraryBlobPathname,
-} from "@/lib/proposal-media-library-blob";
+} from "@/lib/proposal/media/media-library-blob";
 
 const MAX_UPLOAD_BYTES = 250 * 1024 * 1024;
 

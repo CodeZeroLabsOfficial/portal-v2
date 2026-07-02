@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { PUBLIC_ANALYTICS_RATE_MAX, PUBLIC_ANALYTICS_RATE_WINDOW_SEC } from "@/lib/constants";
+import { PUBLIC_ANALYTICS_RATE_MAX, PUBLIC_ANALYTICS_RATE_WINDOW_SEC } from "@/config/constants";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";

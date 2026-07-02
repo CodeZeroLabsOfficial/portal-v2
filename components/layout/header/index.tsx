@@ -8,7 +8,7 @@ import UserMenu from "@/components/layout/header/user-menu";
 import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import type { SessionUserView } from "@/lib/session-user-view";
+import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export function SiteHeader({ user }: { user: SessionUserView }) {
   const { toggleSidebar, open } = useSidebar();

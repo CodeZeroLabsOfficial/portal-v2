@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { coerceTimestampToMillis } from "@/lib/firestore/timestamp";
 import { normalizeOpportunityStage } from "@/lib/crm/opportunity-stages";
 import { COLLECTIONS } from "@/server/firestore/collections";

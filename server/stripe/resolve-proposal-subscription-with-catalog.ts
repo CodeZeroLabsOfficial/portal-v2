@@ -1,4 +1,4 @@
-import { resolveSubscriptionStripePriceIdFromProposal } from "@/lib/proposal-subscription-price";
+import { resolveSubscriptionStripePriceIdFromProposal } from "@/lib/proposal/commerce/subscription-price";
 import type { ProposalRecord } from "@/types/proposal";
 import { loadBillingCatalogForOrganization } from "@/server/catalog/billing-catalog";
 

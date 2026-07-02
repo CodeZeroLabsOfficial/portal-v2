@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
-import { getAllCurrencyCodes, getAllTimeZones, isIso3166Alpha2 } from "@/lib/locality-data";
+import { getAllCurrencyCodes, getAllTimeZones, isIso3166Alpha2 } from "@/lib/locality/data";
 import { updateLocalityPreferencesSchema } from "@/lib/schemas/locality-preferences";
-import { zodErrorToMessage } from "@/lib/zod-error";
+import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
 import { COLLECTIONS } from "@/server/firestore/collections";

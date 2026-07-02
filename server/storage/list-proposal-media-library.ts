@@ -1,10 +1,10 @@
 import { list, type ListBlobResultBlob } from "@vercel/blob";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import {
   getProposalMediaLibraryPrefix,
   proposalLibraryAssetFromBlobListItem,
-} from "@/lib/proposal-media-library-blob";
-import type { ProposalLibraryAsset } from "@/lib/proposal-media-library-types";
+} from "@/lib/proposal/media/media-library-blob";
+import type { ProposalLibraryAsset } from "@/lib/proposal/media/media-library-types";
 
 /**
  * Lists blobs under {@link getProposalMediaLibraryPrefix} for the proposal builder library (Vercel Blob).

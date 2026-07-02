@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireStaffSession } from "@/lib/auth/server-session";
 import { addCustomerNoteSchema, createCustomerSchema, updateCustomerFormSchema } from "@/lib/schemas/customer";
-import { zodErrorToMessage } from "@/lib/zod-error";
+import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { z } from "zod";
 import { getStorageFileSignedReadUrl } from "@/lib/firebase/admin-storage";
 import { FieldValue } from "firebase-admin/firestore";

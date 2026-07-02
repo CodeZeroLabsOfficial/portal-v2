@@ -3,9 +3,9 @@ import {
   PROPOSAL_COLUMN_FR_MAX,
   PROPOSAL_COLUMN_FR_MIN,
   normalizeColumnFlexForStorage,
-} from "@/lib/proposal-columns";
-import { normalizePackagesTotalSectionLabelForPersistence } from "@/lib/proposal-packages-totals";
-import { escapeHtml } from "@/lib/escape-html";
+} from "@/lib/proposal/columns";
+import { normalizePackagesTotalSectionLabelForPersistence } from "@/lib/proposal/commerce/packages-totals";
+import { escapeHtml } from "@/lib/common/escape-html";
 import type { ProposalBlock, ProposalContentBlock, ProposalDocument, SectionBackground } from "@/types/proposal";
 
 const idSchema = z.string().min(4);

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getServerEnv } from "@/lib/env/server";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
-import { logError, logInfo } from "@/lib/logging";
+import { logError, logInfo } from "@/lib/common/logging";
 import { getStripe } from "@/lib/stripe/server";
 import { applyStripeWebhookEvent } from "@/server/stripe/stripe-sync";
 

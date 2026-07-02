@@ -1,4 +1,4 @@
-import type { SessionUserView } from "@/lib/session-user-view";
+import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export interface PortalNavItemView {
   id: string;

@@ -1,5 +1,5 @@
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
-import { toSessionUserView } from "@/lib/session-user-view";
+import { toSessionUserView } from "@/lib/auth/session-user-view";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";

@@ -1,4 +1,4 @@
-import { logError, type LogFields } from "@/lib/logging";
+import { logError, type LogFields } from "@/lib/common/logging";
 
 /**
  * Wraps a Firestore admin write so that:

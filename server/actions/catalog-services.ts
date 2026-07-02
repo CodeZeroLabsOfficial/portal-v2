@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { requireStaffSession } from "@/lib/auth/server-session";
-import { slugifyCatalogServiceName } from "@/lib/catalog-service-slug";
+import { slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { getStripe } from "@/lib/stripe/server";
 import {
   createCatalogServiceSchema,
@@ -15,7 +15,7 @@ import {
   saveCatalogServiceSchema,
   saveInputToCatalogTerms,
 } from "@/lib/schemas/catalog-service";
-import { zodErrorToMessage } from "@/lib/zod-error";
+import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getCatalogServiceForStaff } from "@/server/firestore/catalog-services";
 import { syncCatalogServiceToStripe } from "@/server/stripe/catalog-service-stripe-sync";

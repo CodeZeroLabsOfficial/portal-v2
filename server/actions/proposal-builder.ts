@@ -8,14 +8,14 @@ import { z } from "zod";
 import { requireStaffSession } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { softenPublicFirestoreErrorMessage } from "@/lib/firebase/public-error-messages";
-import { omitUndefinedDeep } from "@/lib/omit-undefined-deep";
+import { omitUndefinedDeep } from "@/lib/common/omit-undefined-deep";
 import { COLLECTIONS } from "@/server/firestore/collections";
-import { encodeProposalDocumentForFirestore } from "@/lib/proposal-firestore-document";
+import { encodeProposalDocumentForFirestore } from "@/lib/proposal/firestore-document";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
 import { hydrateAgreementBlocksInDocument } from "@/server/proposal/hydrate-agreement-contract-templates";
-import { effectivePricingLineQuantity } from "@/lib/pricing-line-quantity";
-import { findProposalBlockById } from "@/lib/proposal-blocks";
-import { hashSharePassword, sealProposalAccess, verifySharePassword } from "@/lib/proposal-share-crypto";
+import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import { findProposalBlockById } from "@/lib/proposal/blocks";
+import { hashSharePassword, sealProposalAccess, verifySharePassword } from "@/lib/proposal/public/share-crypto";
 import { getAdminProposalRecord } from "@/server/firestore/portal-data";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
 import {
@@ -24,12 +24,12 @@ import {
 } from "@/server/firestore/proposal-accept-crm";
 import { getProposalTemplateNameForOrganization } from "@/server/firestore/proposal-templates";
 import { updateOpportunityStage } from "@/server/firestore/crm-opportunities";
-import { PROPOSAL_UNLOCK_COOKIE } from "@/lib/proposal-public-session";
-import { cloneProposalDocument } from "@/lib/proposal-clone-document";
+import { PROPOSAL_UNLOCK_COOKIE } from "@/lib/proposal/public/public-session";
+import { cloneProposalDocument } from "@/lib/proposal/clone-document";
 import {
   isProposalPackageSelectionComplete,
   isPublicProposalPackageSelectionsLocked,
-} from "@/lib/proposal-package-selection";
+} from "@/lib/proposal/commerce/package-selection";
 import { loadBillingCatalogForOrganization } from "@/server/catalog/billing-catalog";
 import { resolveSubscriptionStripePriceIdForProposalWithStripe } from "@/server/stripe/resolve-proposal-subscription-with-catalog";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
@@ -37,7 +37,7 @@ import { uploadSignedAgreementSignaturePng } from "@/lib/firebase/admin-storage"
 import {
   buildFullAgreementTextSnapshot,
   buildSignedAgreementCommerceSnapshot,
-} from "@/lib/signed-agreement-build";
+} from "@/lib/agreement/signed-build";
 import type { ProposalRecord } from "@/types/proposal";
 import type { PortalUser } from "@/types/user";
 

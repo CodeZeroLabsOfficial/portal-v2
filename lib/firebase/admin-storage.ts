@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getStorage } from "firebase-admin/storage";
 import { getFirebaseAdminApp, getFirebaseStorageBucketName } from "@/lib/firebase/admin-app";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 
 const MAX_SIGNATURE_BYTES = 2_400_000;
 

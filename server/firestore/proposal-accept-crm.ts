@@ -1,5 +1,5 @@
 import { FieldValue, Timestamp, type Firestore } from "firebase-admin/firestore";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import type { ProposalRecord } from "@/types/proposal";
 

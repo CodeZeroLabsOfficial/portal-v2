@@ -8,7 +8,7 @@ import {
   addOpportunityActivitySchema,
   addOpportunityNoteSchema,
 } from "@/lib/schemas/opportunity-notes";
-import { zodFirstMessage } from "@/lib/zod-error";
+import { zodFirstMessage } from "@/lib/common/zod-error";
 import type { OpportunityStage } from "@/types/opportunity";
 import {
   appendOpportunityActivity,

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
-import { toSessionUserView } from "@/lib/session-user-view";
+import { toSessionUserView } from "@/lib/auth/session-user-view";
 import { PortalShell } from "@/components/layout/portal-shell";
 import type { PortalNavItemView } from "@/components/layout/nav-types";
 

@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOutFromPortal } from "@/components/auth/logout-button";
-import type { SessionUserView } from "@/lib/session-user-view";
+import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export default function UserMenu({ user }: { user: SessionUserView }) {
   const router = useRouter();

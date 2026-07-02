@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import type { ProposalStripeOneOffItem } from "@/lib/proposal-commerce";
+import type { ProposalStripeOneOffItem } from "@/lib/proposal/commerce/commerce";
 
 const STRIPE_MIN_MINOR = 50;
 

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { getFirebaseAdminAuth } from "@/lib/firebase/admin-app";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 
 function authErrorCode(err: unknown): string {
   if (typeof err !== "object" || err === null || !("code" in err)) return "";

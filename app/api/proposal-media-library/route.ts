@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffSession } from "@/lib/auth/server-session";
-import { getProposalMediaLibraryPrefix } from "@/lib/proposal-media-library-blob";
+import { getProposalMediaLibraryPrefix } from "@/lib/proposal/media/media-library-blob";
 import { listProposalMediaLibraryAssets } from "@/server/storage/list-proposal-media-library";
 
 export async function GET() {

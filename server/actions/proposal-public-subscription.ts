@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { resolveAgreementSubscriptionStartDateIso } from "@/lib/agreement-subscription-start-date";
-import { findFirstAgreementBlock } from "@/lib/proposal-blocks";
-import { resolveProposalCommerce } from "@/lib/proposal-commerce";
-import { zodErrorToMessage } from "@/lib/zod-error";
+import { resolveAgreementSubscriptionStartDateIso } from "@/lib/agreement/subscription-start-date";
+import { findFirstAgreementBlock } from "@/lib/proposal/blocks";
+import { resolveProposalCommerce } from "@/lib/proposal/commerce/commerce";
+import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { getStripe } from "@/lib/stripe/server";
 import {

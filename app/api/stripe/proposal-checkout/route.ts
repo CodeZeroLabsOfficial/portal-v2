@@ -2,7 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { isStaff, getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { getRequestOrigin } from "@/lib/stripe/request-origin";
 import { getStripe } from "@/lib/stripe/server";
 import { COLLECTIONS } from "@/server/firestore/collections";

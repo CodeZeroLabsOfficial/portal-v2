@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { FIREBASE_SESSION_COOKIE_NAME, FIREBASE_SESSION_MAX_AGE_SECONDS } from "@/lib/auth/session-cookie";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
-import { logError, logInfo } from "@/lib/logging";
+import { logError, logInfo } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import type { PortalUser, UserRole } from "@/types/user";
 

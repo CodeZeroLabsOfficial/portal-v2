@@ -3,7 +3,7 @@ import { applicationDefault, cert, getApps, initializeApp, type App } from "fire
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getServerEnv } from "@/lib/env/server";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 
 function getExplicitProjectId(): string | undefined {
   const projectId = process.env.FIREBASE_PROJECT_ID ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;

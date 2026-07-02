@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffSession } from "@/lib/auth/server-session";
-import { contractTemplateToAgreementSnapshot } from "@/lib/contract-template-agreement-snapshot";
+import { contractTemplateToAgreementSnapshot } from "@/lib/contract-template/agreement-snapshot";
 import { listContractTemplatesForOrg } from "@/server/firestore/contract-templates";
 
 function previewSnippet(legalHtml: string, maxLen = 140): string {

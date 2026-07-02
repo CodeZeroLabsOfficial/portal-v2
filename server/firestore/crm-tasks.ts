@@ -1,6 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { isStaff } from "@/lib/auth/server-session";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { parseTaskRecord } from "@/server/firestore/parse-task";
 import type { TaskBoardColumnId } from "@/lib/tasks/task-board-columns";

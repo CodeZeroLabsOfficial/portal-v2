@@ -14,7 +14,7 @@ import { parseTaskRecord } from "@/server/firestore/parse-task";
 import type { TaskRecord } from "@/types/task";
 import type { PortalUser } from "@/types/user";
 import type { CustomerRecord } from "@/types/customer";
-import type { CustomerListRow } from "@/lib/customer-list";
+import type { CustomerListRow } from "@/lib/customer/list";
 import {
   getAccountDetailForKey,
   getAdminAccountListRows as loadCrmAccountListRows,

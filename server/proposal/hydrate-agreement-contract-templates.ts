@@ -2,7 +2,7 @@ import {
   agreementBlockNeedsContractHydration,
   applyContractTemplateSnapshotToAgreementBlock,
   contractTemplateToAgreementSnapshot,
-} from "@/lib/contract-template-agreement-snapshot";
+} from "@/lib/contract-template/agreement-snapshot";
 import { getContractTemplatesForOrgByIds } from "@/server/firestore/contract-templates";
 import type { AgreementBlock, ProposalBlock, ProposalDocument } from "@/types/proposal";
 

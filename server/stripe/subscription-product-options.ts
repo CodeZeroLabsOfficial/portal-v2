@@ -1,4 +1,4 @@
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { getStripe } from "@/lib/stripe/server";
 import type { SubscriptionProductOption } from "@/types/subscription-product";
 import type Stripe from "stripe";

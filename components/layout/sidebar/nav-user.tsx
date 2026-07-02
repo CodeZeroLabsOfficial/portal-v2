@@ -21,7 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOutFromPortal } from "@/components/auth/logout-button";
-import type { SessionUserView } from "@/lib/session-user-view";
+import type { SessionUserView } from "@/lib/auth/session-user-view";
 
 export function NavUser({ user }: { user: SessionUserView }) {
   const { isMobile } = useSidebar();

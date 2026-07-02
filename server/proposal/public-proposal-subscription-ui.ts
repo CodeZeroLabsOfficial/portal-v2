@@ -1,5 +1,5 @@
-import { utcDateIsoFromMillis } from "@/lib/date-utc-iso";
-import { resolveFirstPackageSubscriptionFromProposal } from "@/lib/proposal-subscription-from-catalog";
+import { utcDateIsoFromMillis } from "@/lib/common/date-utc-iso";
+import { resolveFirstPackageSubscriptionFromProposal } from "@/lib/proposal/commerce/subscription-from-catalog";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { getStripe } from "@/lib/stripe/server";
 import { COLLECTIONS } from "@/server/firestore/collections";

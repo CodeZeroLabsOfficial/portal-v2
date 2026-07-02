@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { getRequestOrigin } from "@/lib/stripe/request-origin";
 import { getStripe } from "@/lib/stripe/server";
 

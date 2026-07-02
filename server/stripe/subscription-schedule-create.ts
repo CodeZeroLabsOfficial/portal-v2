@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import type { Firestore } from "firebase-admin/firestore";
 import type Stripe from "stripe";
-import { logError } from "@/lib/logging";
+import { logError } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import type { CustomerRecord } from "@/types/customer";
 import { ensureStripeCustomer } from "@/server/stripe/proposal-billing";
