@@ -61,7 +61,7 @@ export function CustomerProposalsTab({
             </Button>
           </CardAction>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2 pt-0">
+        <CardContent className="flex flex-col gap-3 pt-0">
           {proposalsMatched.length === 0 ? (
             <CustomerTabEmptyState icon={FileText} embedded>
               <p>No linked proposals yet.</p>
