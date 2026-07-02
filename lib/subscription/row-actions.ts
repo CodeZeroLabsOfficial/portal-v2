@@ -1,4 +1,4 @@
-import type { SubscriptionTableRow } from "@/lib/crm/subscription-table";
+import type { SubscriptionRecord } from "@/types/subscription";
 
 /** Stripe Dashboard deep link for a subscription or subscription schedule id. */
 export function subscriptionStripeDashboardUrl(id: string): string | null {
@@ -12,7 +12,7 @@ export function subscriptionStripeDashboardUrl(id: string): string | null {
   return null;
 }
 
-export function canPauseSubscription(subscription: SubscriptionTableRow): boolean {
+export function canPauseSubscription(subscription: SubscriptionRecord): boolean {
   if (subscription.paymentCollectionPaused) return false;
   if (
     subscription.status === "scheduled" ||
@@ -24,6 +24,6 @@ export function canPauseSubscription(subscription: SubscriptionTableRow): boolea
   return subscription.id.trim().startsWith("sub_");
 }
 
-export function canCancelSubscription(subscription: SubscriptionTableRow): boolean {
+export function canCancelSubscription(subscription: SubscriptionRecord): boolean {
   return subscription.status !== "canceled" && subscription.status !== "incomplete_expired";
 }

@@ -1,11 +1,10 @@
-import { Calendar, Globe, Mail, MapPin, Phone, Shield, User } from "lucide-react";
+import { Calendar, Globe, Mail, MapPin, Phone, Shield } from "lucide-react";
 
 import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,13 +33,9 @@ export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5 text-muted-foreground" aria-hidden />
-          Profile details
-        </CardTitle>
-        <CardDescription>Information stored on your workspace user record.</CardDescription>
+        <CardTitle>Profile details</CardTitle>
         <CardAction>
-          <SettingsEditButton onClick={onEdit} />
+          <SettingsEditButton onClick={onEdit} ariaLabel="Edit profile details" />
         </CardAction>
       </CardHeader>
       <CardContent>

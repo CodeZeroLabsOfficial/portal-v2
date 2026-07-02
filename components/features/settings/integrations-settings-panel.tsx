@@ -1,11 +1,10 @@
-import { CreditCard, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -20,15 +19,7 @@ export function IntegrationsSettingsPanel({ stripeConnected }: IntegrationsSetti
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#635bff]/15 text-[#635bff]">
-            <CreditCard className="h-5 w-5" aria-hidden />
-          </div>
-          Stripe
-        </CardTitle>
-        <CardDescription>
-          Sync customers, subscriptions, invoices, and payments from Stripe.
-        </CardDescription>
+        <CardTitle>Stripe</CardTitle>
         <CardAction>
           <div className="flex flex-col items-end gap-2">
             <Badge variant={stripeConnected ? "success" : "secondary"} className="gap-1.5">

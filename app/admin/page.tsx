@@ -1,64 +1,36 @@
-import Link from "next/link";
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
 
+import { AdminDashboard } from "@/components/features/dashboard/admin-dashboard";
+import { AdminDashboardRecentAside } from "@/components/features/dashboard/admin-dashboard-recent-aside";
 import { PageHeader } from "@/components/shared/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
-import { toSessionUserView } from "@/lib/auth/session-user-view";
+import { getAdminPortalData } from "@/server/firestore/portal-data";
 
 export const dynamic = "force-dynamic";
 
-const PLACEHOLDER_METRICS = [
-  { label: "Monthly recurring revenue", value: "—", hint: "Wired in Phase 3" },
-  { label: "Active subscriptions", value: "—", hint: "Wired in Phase 3" },
-  { label: "Open proposals", value: "—", hint: "Wired in Phase 4" },
-  { label: "Customers", value: "—", hint: "Wired in Phase 2" },
-];
-
 export default async function AdminDashboardPage() {
+  await connection();
   const user = await getCurrentSessionUser();
-  const view = user ? toSessionUserView(user) : null;
+  if (!user) {
+    redirect("/login?next=/admin");
+  }
+
+  const data = await getAdminPortalData(user);
+  const displayName = user.displayName ?? "";
+  const userLabel = user.email || user.uid;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Operations"
-        description={`Welcome back${view ? `, ${view.displayName}` : ""}. Settings are live — CRM, billing, and proposal screens ship in upcoming phases.`}
-        actions={
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Phase 1</Badge>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/admin/settings">Settings</Link>
-            </Button>
-          </div>
-        }
+        title="Dashboard"
+        description="CRM and operations are live — customers, pipeline, subscriptions, services, and tasks. Proposal builder ships in Phase 4."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {PLACEHOLDER_METRICS.map((metric) => (
-          <Card key={metric.label}>
-            <CardHeader className="pb-2">
-              <CardDescription>{metric.label}</CardDescription>
-              <Typography variant="display-lg">{metric.value}</Typography>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-xs">{metric.hint}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <AdminDashboard data={data} displayName={displayName} userLabel={userLabel} />
+        <AdminDashboardRecentAside data={data} />
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>What&apos;s new in Phase 1</CardTitle>
-          <CardDescription>
-            Company, profile, locality, and integrations settings are available under Settings in the
-            sidebar. Other navigation links show a preview until their phase ships.
-          </CardDescription>
-        </CardHeader>
-      </Card>
     </div>
   );
 }

@@ -1,11 +1,10 @@
-import { Clock, DollarSign, Globe2, Languages, MapPin } from "lucide-react";
+import { Clock, DollarSign, Languages, MapPin } from "lucide-react";
 
 import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -59,15 +58,9 @@ export function LocalitySettingsView({ user, onEdit }: LocalitySettingsViewProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe2 className="h-5 w-5 text-muted-foreground" aria-hidden />
-          Regional preferences
-        </CardTitle>
-        <CardDescription>
-          Time zone, language, formats, region, and currency used across your workspace.
-        </CardDescription>
+        <CardTitle>Regional preferences</CardTitle>
         <CardAction>
-          <SettingsEditButton onClick={onEdit} />
+          <SettingsEditButton onClick={onEdit} ariaLabel="Edit regional preferences" />
         </CardAction>
       </CardHeader>
       <CardContent>

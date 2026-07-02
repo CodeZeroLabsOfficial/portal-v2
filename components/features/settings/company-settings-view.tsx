@@ -1,11 +1,10 @@
-import { Building2, FileText, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { FileText, Globe, Mail, MapPin, Phone } from "lucide-react";
 
 import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,13 +23,9 @@ export function CompanySettingsView({ settings, onEdit }: CompanySettingsViewPro
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-muted-foreground" aria-hidden />
-          Company details
-        </CardTitle>
-        <CardDescription>Legal entity and contact information for your workspace.</CardDescription>
+        <CardTitle>Company details</CardTitle>
         <CardAction>
-          <SettingsEditButton onClick={onEdit} />
+          <SettingsEditButton onClick={onEdit} ariaLabel="Edit company details" />
         </CardAction>
       </CardHeader>
       <CardContent>
