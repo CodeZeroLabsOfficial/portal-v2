@@ -68,12 +68,8 @@ export const PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES = "gap-y-0";
  * Top inset on the first child only. Bottom inset lives on the section stack *after* the
  * trailing insert row so “add below” sits directly under the last block (e.g. a spacer).
  */
-export function proposalEditorSectionChildEdgePadClasses(
-  index: number,
-  childCount: number,
-  skipTopInset = false,
-): string {
-  if (childCount <= 0 || index !== 0 || skipTopInset) return "";
+export function proposalEditorSectionChildEdgePadClasses(index: number, childCount: number): string {
+  if (childCount <= 0 || index !== 0) return "";
   return PROPOSAL_EDITOR_SECTION_INNER_PAD_TOP_CLASSES;
 }
 

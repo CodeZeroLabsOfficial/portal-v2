@@ -102,11 +102,6 @@ export function proposalBlockRendersFlushEditorBand(block: ProposalBlock): boole
   }
 }
 
-/** Section stack children that should not receive the first-child top band inset (hero bands). */
-export function proposalSectionChildSkipsTopInset(child: ProposalContentBlock): boolean {
-  return child.type === "splash";
-}
-
 /** First top-level splash block id — used for template company logo on the public hero. */
 export function firstRootSplashBlockId(blocks: ProposalBlock[]): string | null {
   const first = blocks[0];

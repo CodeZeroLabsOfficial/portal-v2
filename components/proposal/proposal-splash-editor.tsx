@@ -22,7 +22,6 @@ import {
 } from "@/components/proposal/proposal-branding-context";
 import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
 import { ProposalSplashBlockCanvas } from "@/components/proposal/proposal-splash-block";
-import { PROPOSAL_PUBLIC_VIEWPORT_BREAKOUT_CLASSES } from "@/lib/proposal/public/public-layout";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1005,49 +1004,21 @@ export function ProposalSplashBackgroundPickerWithBranding({
   );
 }
 
-export function SplashBlockInspector({
-  block,
-  onChange,
-  seamlessSection = false,
-  rootLevel = false,
-}: {
-  block: SplashBlock;
-  onChange: (next: SplashBlock) => void;
-  /** Inside a section band with an active backdrop — match public full-bleed layout. */
-  seamlessSection?: boolean;
-  /** Top-level splash outside a section — match public edge-to-edge chrome. */
-  rootLevel?: boolean;
-}) {
+export function SplashBlockInspector({ block, onChange }: { block: SplashBlock; onChange: (next: SplashBlock) => void }) {
   const html = block.html ?? (block.body ? `<p>${escapeHtml(block.body)}</p>` : "<p></p>");
   const companyLogoUrl = useSplashCompanyLogoUrl(block.id);
   const splashLogo =
     companyLogoUrl && block.showLogo !== false ? companyLogoUrl : null;
-  const publicLayout = seamlessSection || rootLevel;
 
-  const canvas = (
-    <ProposalSplashBlockCanvas
-      block={block}
-      mode="editor"
-      logoUrl={splashLogo}
-      presentation={publicLayout ? "publicEdge" : "editor"}
-    >
+  return (
+    <ProposalSplashBlockCanvas block={block} mode="editor" logoUrl={splashLogo}>
       <ProposalRichText
         key={block.id}
         html={html}
         onChange={(nextHtml) => onChange({ ...block, html: nextHtml, body: undefined })}
         placeholder="Start typing…"
-        className={
-          publicLayout
-            ? "min-h-0 !px-0 !py-0 border-transparent bg-transparent text-white [&_.ProseMirror]:min-h-0 [&_p]:text-white/90"
-            : "min-h-[120px] !px-0 !py-0 border-white/25 bg-black/30 text-white [&_p]:text-white/90"
-        }
+        className="min-h-[120px] !px-0 !py-0 border-white/25 bg-black/30 text-white [&_p]:text-white/90"
       />
     </ProposalSplashBlockCanvas>
   );
-
-  if (seamlessSection) {
-    return <div className={PROPOSAL_PUBLIC_VIEWPORT_BREAKOUT_CLASSES}>{canvas}</div>;
-  }
-
-  return canvas;
 }

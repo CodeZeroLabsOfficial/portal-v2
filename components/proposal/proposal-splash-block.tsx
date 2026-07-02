@@ -247,8 +247,10 @@ export function ProposalSplashBlockCanvas({
   const cardOpacity = Math.max(0, Math.min(100, block.cardOpacity ?? 70));
 
   const editorChrome = mode === "editor";
-  const presentation = presentationProp ?? (editorChrome ? "editor" : "publicEdge");
+  const presentation = editorChrome ? "editor" : (presentationProp ?? "editor");
   const publicEdge = presentation === "publicEdge";
+  const cardChrome =
+    "rounded-xl shadow-md ring-1 ring-black/[0.08] dark:ring-white/10";
 
   const railTextClasses = splashRailTextAlignClasses(align.horizontal);
 
@@ -309,11 +311,9 @@ export function ProposalSplashBlockCanvas({
     <div
       className={cn(
         "proposal-splash-block relative isolate w-full min-w-0 overflow-hidden",
-        editorChrome && !publicEdge
-          ? "rounded-xl shadow-md ring-1 ring-black/[0.08] dark:ring-white/10"
-          : publicEdge
-            ? "rounded-none border-t border-black/[0.07] shadow-none ring-0 dark:border-white/[0.08]"
-            : "rounded-xl ring-1 ring-black/[0.08] dark:ring-white/10",
+        publicEdge
+          ? "rounded-none border-t border-black/[0.07] shadow-none ring-0 dark:border-white/[0.08]"
+          : cardChrome,
         className,
       )}
       style={heightStyle}

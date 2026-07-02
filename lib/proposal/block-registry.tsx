@@ -28,7 +28,6 @@ import { isPublicProposalPackageSelectionsLocked } from "@/lib/proposal/commerce
 import {
   PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
   PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
-  PROPOSAL_PUBLIC_VIEWPORT_BREAKOUT_CLASSES,
 } from "@/lib/proposal/public/public-layout";
 import { isProposalImagePlaceholderUrl } from "@/lib/proposal/media/image-placeholder";
 import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
@@ -141,12 +140,10 @@ function AccordionPublicView({ block }: { block: AccordionBlock }) {
 
 function renderSplashBlock({
   block,
-  splashPublicPresentation,
   proposalContext,
 }: ProposalBlockViewProps): React.ReactNode {
   const s = block as SplashBlock;
   const pub = s.html?.trim() ? s.html : s.body ? `<p>${escapeHtml(s.body)}</p>` : "<p></p>";
-  const pres = splashPublicPresentation ?? "nestedColumn";
   const splashLogo =
     proposalContext?.brandingLogoUrl &&
     splashShowsCompanyLogo(s, proposalContext.brandingLogoUrl, proposalContext.firstRootSplashBlockId ?? null)
@@ -157,13 +154,10 @@ function renderSplashBlock({
       block={s}
       mode="public"
       publicHtml={pub}
-      presentation="publicEdge"
+      presentation="editor"
       logoUrl={splashLogo}
     />
   );
-  if (pres === "nestedColumn") {
-    return <div className={PROPOSAL_PUBLIC_VIEWPORT_BREAKOUT_CLASSES}>{canvas}</div>;
-  }
   return canvas;
 }
 
