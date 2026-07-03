@@ -12,7 +12,15 @@ import type {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrencyAmount } from "@/lib/common/format";
-import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
+import {
+  readableForeground,
+  resolveBlockStyle,
+  resolveTableSurfaceColors,
+  tableSurfaceControlStyle,
+  tableSurfaceInlineTone,
+  tableSurfaceOutlineButtonStyle,
+  withAlpha,
+} from "@/lib/proposal/block-style";
 import {
   DEFAULT_PACKAGES_UPFRONT_COST_12_MINOR,
   formatPackageTierIncluded,
@@ -421,6 +429,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
   const label24 = block.plan24Label ?? "24 months";
   const headerBarFg = readableForeground(style.primaryColor);
   const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const addonsInlineTone = tableSurfaceInlineTone(tableSurface);
   const headerSimpleDividerColor =
     headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
   const headerSimpleSolid: React.CSSProperties = {
@@ -657,14 +666,13 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                       const lineTotal = Math.round(unitMinor * q);
                       const qtyProps = editableAddonQty
                         ? {
-                            tone: "light" as const,
+                            tone: addonsInlineTone,
                             value: q,
                             min: 0,
                             step: 1,
                             width: "w-16" as const,
                             onChange: (v: number) => patchAddonLine(li.id, { quantity: v }),
                             ariaLabel: "Default quantity" as const,
-                            className: "text-foreground" as const,
                           }
                         : null;
                       return (
@@ -672,18 +680,18 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                           <td className="px-4 py-3 text-left align-middle">
                             <div className="flex flex-col items-start gap-1">
                               {linkedService ? (
-                                <span className="block w-full font-medium text-foreground">
+                                <span className="block w-full font-medium">
                                   {linkedService.serviceName}
                                 </span>
                               ) : (
                                 <InlineText
-                                  tone="light"
+                                  tone={addonsInlineTone}
                                   value={li.label}
                                   placeholder="Add-on label"
                                   onChange={(v) => patchAddonLine(li.id, { label: v })}
                                   ariaLabel="Add-on label"
-                                  className="font-medium text-foreground"
-                                  inputClassName="w-full font-medium text-foreground"
+                                  className="font-medium"
+                                  inputClassName="w-full font-medium"
                                 />
                               )}
                             </div>
@@ -698,7 +706,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                               </span>
                             ) : (
                               <InlinePrice
-                                tone="light"
+                                tone={addonsInlineTone}
                                 minor={li.unitAmountMinor}
                                 currency={currency}
                                 onChange={(v) => patchAddonLine(li.id, { unitAmountMinor: v })}
@@ -713,7 +721,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                               </span>
                             </td>
                           ) : null}
-                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium text-foreground">
+                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
                             {formatCurrencyAmount(lineTotal, currency)}
                           </td>
                           <td className="px-2 py-3 text-right align-middle">
@@ -721,7 +729,8 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                               type="button"
                               onClick={() => removeAddonLine(li.id)}
                               aria-label="Remove add-on"
-                              className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                              className="rounded p-1 opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                              style={{ color: tableSurface.mutedForeground }}
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -732,11 +741,11 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                     <tr>
                       <td colSpan={editableAddonQty ? 5 : 4} className="px-4 py-2">
                         {catalogAddons.length === 0 ? (
-                          <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                          <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
                             Add active add-ons in Admin → Services (activate to sync Stripe prices).
                           </p>
                         ) : availableCatalogAddons.length === 0 ? (
-                          <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                          <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
                             All catalogue items have been added to this table.
                           </p>
                         ) : (
@@ -744,7 +753,11 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                className="flex w-full items-center gap-2 rounded-md border border-dashed border-border bg-transparent px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:bg-muted/30 hover:text-foreground data-[state=open]:border-primary/60 data-[state=open]:bg-muted/30 data-[state=open]:text-foreground"
+                                className="flex w-full items-center gap-2 rounded-md border border-dashed bg-transparent px-2 py-1.5 text-left text-sm transition-colors hover:opacity-90 data-[state=open]:opacity-90"
+                                style={{
+                                  color: tableSurface.mutedForeground,
+                                  borderColor: tableSurface.dividerColor,
+                                }}
                               >
                                 <Plus className="h-3.5 w-3.5" />
                                 Add catalogue items
@@ -938,10 +951,13 @@ function TierCard({
   const otherTermLabel = term === "12_months" ? "24-month monthly" : "12-month monthly";
   const features = tier.features ?? [];
   const standardSurface = resolveTableSurfaceColors(tableBackground);
+  const standardInlineTone = tableSurfaceInlineTone(standardSurface);
+  const standardControlStyle = tableSurfaceControlStyle(standardSurface);
   const tierNameReadOnly = pricingReadOnly && Boolean(tier.serviceId?.trim());
 
   const recommendedFg = readableForeground(highlightColor);
   const recommendedTone = recommendedFg === "#ffffff" ? "dark" : "light";
+  const inlineTone = isRecommended ? recommendedTone : standardInlineTone;
   const recommendedDimText =
     recommendedFg === "#ffffff" ? "rgba(255,255,255,0.78)" : "rgba(15,23,42,0.62)";
   const recommendedFaintBorder =
@@ -1004,7 +1020,7 @@ function TierCard({
           <p className="text-base font-semibold">{tier.name}</p>
         ) : (
           <InlineText
-            tone={recommendedTone}
+            tone={inlineTone}
             value={tier.name}
             placeholder="Tier name"
             onChange={(v) => onChange({ name: v })}
@@ -1042,7 +1058,7 @@ function TierCard({
               />
             ) : (
               <InlinePrice
-                tone={recommendedTone}
+                tone={inlineTone}
                 minor={monthlyMinor}
                 currency={currency}
                 onChange={(v) =>
@@ -1071,7 +1087,7 @@ function TierCard({
               <TierPriceAmount minor={otherMonthlyMinor} currency={currency} className="text-xs" />
             ) : (
               <InlinePrice
-                tone={recommendedTone}
+                tone={inlineTone}
                 minor={otherMonthlyMinor}
                 currency={currency}
                 onChange={(v) =>
@@ -1104,7 +1120,7 @@ function TierCard({
                 />
               ) : (
                 <InlinePrice
-                  tone={recommendedTone}
+                  tone={inlineTone}
                   minor={tier.upfrontCost12Minor ?? 0}
                   currency={currency}
                   onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
@@ -1138,20 +1154,13 @@ function TierCard({
             <select
               className={cn(
                 "mt-0.5 w-full rounded-md border px-2 py-1.5 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
-                isRecommended
-                  ? "border-white/35 bg-white text-slate-900 [color-scheme:light]"
-                  : "[color-scheme:light]",
+                isRecommended && "border-white/35 bg-white text-slate-900 [color-scheme:light]",
               )}
               style={
                 isRecommended
                   ? { color: "#0f172a", backgroundColor: "#ffffff" }
                   : {
-                      borderColor: standardSurface.borderColor,
-                      backgroundColor:
-                        standardSurface.foreground === "#ffffff"
-                          ? "rgba(255,255,255,0.12)"
-                          : "#ffffff",
-                      color: "#0f172a",
+                      ...standardControlStyle,
                     }
               }
               value={tier.serviceId ?? ""}
@@ -1181,24 +1190,18 @@ function TierCard({
         ) : null}
 
         <div className="mt-auto pt-3">
-          <Button
+          <button
             type="button"
             disabled
-            variant="outline"
-            size="sm"
-            className={cn("w-full rounded-full font-semibold")}
+            className="inline-flex h-8 w-full items-center justify-center rounded-full border text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
             style={
               isRecommended
                 ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
-                : {
-                    borderColor: standardSurface.borderColor,
-                    color: standardSurface.foreground,
-                    backgroundColor: withAlpha(standardSurface.foreground, 0.06),
-                  }
+                : tableSurfaceOutlineButtonStyle(standardSurface)
             }
           >
             Select
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -1330,6 +1333,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
   const headerSimpleDividerColor =
     headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
   const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const tableInlineTone = tableSurfaceInlineTone(tableSurface);
 
   return (
     <div
@@ -1473,14 +1477,13 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               const lineTotal = Math.round(li.unitAmountMinor * q);
               const qtyProps = editable
                 ? {
-                    tone: "light" as const,
+                    tone: (isVisual ? "light" : tableInlineTone) as "light" | "dark",
                     value: q,
                     min: isVisual ? 1 : 0,
                     step: 1,
                     width: "w-16" as const,
                     onChange: (v: number) => patchLine(li.id, { quantity: v }),
                     ariaLabel: "Quantity" as const,
-                    className: "text-foreground" as const,
                   }
                 : null;
               return (
@@ -1488,7 +1491,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                   <td className="px-4 py-3 align-middle">
                     <div className="flex flex-col gap-1">
                       <InlineText
-                        tone="light"
+                        tone={isVisual ? "light" : tableInlineTone}
                         value={li.label}
                         placeholder="Item label"
                         onChange={(v) => patchLine(li.id, { label: v })}
@@ -1518,7 +1521,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                     style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
                   >
                     <InlinePrice
-                      tone="light"
+                      tone={isVisual ? "light" : tableInlineTone}
                       minor={li.unitAmountMinor}
                       currency={currency}
                       onChange={(v) => patchLine(li.id, { unitAmountMinor: v })}
@@ -1551,7 +1554,8 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                       type="button"
                       onClick={() => removeLine(li.id)}
                       aria-label="Remove line item"
-                      className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                      className="rounded p-1 opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                      style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -1564,7 +1568,19 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                 <button
                   type="button"
                   onClick={addLine}
-                  className="flex w-full items-center gap-2 rounded-md border border-dashed border-border bg-transparent px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:bg-muted/30 hover:text-foreground"
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md border border-dashed bg-transparent px-2 py-1.5 text-left text-sm transition-colors",
+                    isVisual &&
+                      "border-border text-muted-foreground hover:border-primary/60 hover:bg-muted/30 hover:text-foreground",
+                  )}
+                  style={
+                    isVisual
+                      ? undefined
+                      : {
+                          color: tableSurface.mutedForeground,
+                          borderColor: tableSurface.dividerColor,
+                        }
+                  }
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add a line item

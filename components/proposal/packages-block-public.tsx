@@ -17,9 +17,15 @@ import {
   resolvePackagesTotalSectionLabel,
 } from "@/lib/proposal/commerce/packages-totals";
 import { cn } from "@/lib/utils";
-import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
+import {
+  readableForeground,
+  resolveBlockStyle,
+  resolveTableSurfaceColors,
+  tableSurfaceControlStyle,
+  tableSurfaceOutlineButtonStyle,
+  withAlpha,
+} from "@/lib/proposal/block-style";
 import { saveProposalPackageSelectionAction } from "@/server/actions/proposal-builder";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-accordion-expand-surface";
 import { PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS } from "@/lib/proposal/rich-text/inline-heading-rich-display";
@@ -102,6 +108,8 @@ export function PackagesBlockPublic({
   const activeTermFg = readableForeground(style.primaryColor);
   const totalBarFg = readableForeground(style.primaryColor);
   const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const addonsControlStyle = tableSurfaceControlStyle(tableSurface);
+  const addonsOutlineButtonStyle = tableSurfaceOutlineButtonStyle(tableSurface);
   const addonsTitle = block.addonsTitle ?? "Add-ons";
   const totalSectionLabel = resolvePackagesTotalSectionLabel(block.totalSectionLabel);
   const allowAddonEdit = block.allowAddonQuantityEdit !== false;
@@ -383,27 +391,21 @@ export function PackagesBlockPublic({
                 </div>
 
                 <div className="mt-auto pt-3">
-                  <Button
+                  <button
                     type="button"
                     disabled={!interactive || busy}
                     onClick={() => void selectTier(tier.id)}
-                    variant="outline"
-                    size="sm"
-                    className={cn("w-full rounded-full font-semibold")}
+                    className="inline-flex h-8 w-full items-center justify-center gap-2 rounded-full border text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
                     style={{
                       ...(isRecommended
                         ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
-                        : {
-                            borderColor: tableSurface.borderColor,
-                            color: tableSurface.foreground,
-                            backgroundColor: withAlpha(tableSurface.foreground, 0.06),
-                          }),
+                        : addonsOutlineButtonStyle),
                       ...(selectedRingStyle ?? {}),
                     }}
                   >
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     {isSelected ? "Selected" : "Select"}
-                  </Button>
+                  </button>
                 </div>
               </div>
 
@@ -531,45 +533,51 @@ export function PackagesBlockPublic({
                             <td className="px-4 py-3 text-center align-middle">
                               <div className="flex min-h-8 w-full items-center justify-center tabular-nums">
                                 {qRaw <= 0 ? (
-                                  <Button
+                                  <button
                                     key="addon-qty-add"
                                     type="button"
-                                    variant="outline"
-                                    size="sm"
                                     disabled={!interactive || !selectedTierId}
                                     className={cn(
-                                      "h-8 gap-1 rounded-md border-border/60 px-2.5 text-xs font-medium",
+                                      "inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium",
                                       "animate-in fade-in-0 zoom-in-95 duration-200",
+                                      "disabled:pointer-events-none disabled:opacity-50",
                                     )}
+                                    style={addonsOutlineButtonStyle}
                                     aria-label={`Add ${li.label}`}
                                     onClick={() => patchAddonQty(li, 1)}
                                   >
                                     <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
                                     Add
-                                  </Button>
+                                  </button>
                                 ) : (
                                   <span
                                     key="addon-qty-stepper"
                                     className={cn(
-                                      "inline-flex items-center rounded-md border border-border/60 bg-background p-0.5 shadow-sm",
+                                      "inline-flex items-center rounded-md border p-0.5 shadow-sm",
                                       "animate-in fade-in-0 zoom-in-95 duration-200",
                                     )}
+                                    style={{
+                                      borderColor: addonsControlStyle.borderColor,
+                                      backgroundColor: addonsControlStyle.backgroundColor,
+                                      color: addonsControlStyle.color,
+                                    }}
                                   >
                                     <button
                                       type="button"
                                       disabled={!interactive || !selectedTierId}
                                       className={cn(
-                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-foreground outline-none transition-colors",
-                                        "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
+                                        "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                                         "disabled:pointer-events-none disabled:opacity-50",
                                       )}
+                                      style={{ color: addonsControlStyle.color }}
                                       aria-label={`Decrease ${li.label} quantity`}
                                       onClick={() => patchAddonQty(li, qRaw - 1)}
                                     >
                                       <Minus className="h-3.5 w-3.5" aria-hidden />
                                     </button>
                                     <span
-                                      className="min-w-7 px-1 text-center text-sm font-medium tabular-nums text-foreground"
+                                      className="min-w-7 px-1 text-center text-sm font-medium tabular-nums"
                                       aria-live="polite"
                                     >
                                       {qRaw}
@@ -578,10 +586,11 @@ export function PackagesBlockPublic({
                                       type="button"
                                       disabled={!interactive || !selectedTierId}
                                       className={cn(
-                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-foreground outline-none transition-colors",
-                                        "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
+                                        "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                                         "disabled:pointer-events-none disabled:opacity-50",
                                       )}
+                                      style={{ color: addonsControlStyle.color }}
                                       aria-label={`Increase ${li.label} quantity`}
                                       onClick={() => patchAddonQty(li, qRaw + 1)}
                                     >

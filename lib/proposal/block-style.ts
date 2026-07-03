@@ -60,6 +60,49 @@ export function resolveTableSurfaceColors(background: string): TableSurfaceColor
   };
 }
 
+/** True when `tableBackground` is dark enough to need light foreground copy. */
+export function tableSurfaceOnDark(surface: TableSurfaceColors): boolean {
+  return surface.foreground === "#ffffff";
+}
+
+export type TableSurfaceInlineTone = "light" | "dark";
+
+/** Inline edit hover tone for controls sitting on a custom table surface. */
+export function tableSurfaceInlineTone(surface: TableSurfaceColors): TableSurfaceInlineTone {
+  return tableSurfaceOnDark(surface) ? "dark" : "light";
+}
+
+export interface TableSurfaceControlColors {
+  color: string;
+  backgroundColor: string;
+  borderColor: string;
+  colorScheme: "light" | "dark";
+}
+
+/** Select / input fill on a tier card or table row with a custom `tableBackground`. */
+export function tableSurfaceControlStyle(surface: TableSurfaceColors): TableSurfaceControlColors {
+  const onDark = tableSurfaceOnDark(surface);
+  return {
+    color: surface.foreground,
+    backgroundColor: onDark ? withAlpha("#ffffff", 0.12) : "#ffffff",
+    borderColor: surface.borderColor,
+    colorScheme: onDark ? "dark" : "light",
+  };
+}
+
+/** Ghost outline button on a custom table surface (e.g. tier Select, add-on qty). */
+export function tableSurfaceOutlineButtonStyle(surface: TableSurfaceColors): {
+  color: string;
+  backgroundColor: string;
+  borderColor: string;
+} {
+  return {
+    borderColor: surface.borderColor,
+    color: surface.foreground,
+    backgroundColor: withAlpha(surface.foreground, 0.06),
+  };
+}
+
 /** Resolves the CTA button color for an Accept (agreement) block, falling back to mint. */
 export function resolveAgreementButtonColor(style?: BlockStyle): string {
   return style?.primaryColor?.trim() || DEFAULT_AGREEMENT_BUTTON_COLOR;

@@ -4,7 +4,7 @@ import * as React from "react";
 import type { PricingBlock } from "@/types/proposal";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import { cn } from "@/lib/utils";
-import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
+import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, tableSurfaceControlStyle, withAlpha } from "@/lib/proposal/block-style";
 import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
 import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
 
@@ -48,6 +48,7 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
 
   const headerBarFg = readableForeground(style.primaryColor);
   const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const tableControlStyle = tableSurfaceControlStyle(tableSurface);
 
   const headerSimpleStyle: React.CSSProperties = {
     backgroundColor: style.primaryColor,
@@ -194,7 +195,8 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
                           min={0}
                           step={1}
                           disabled={hidden}
-                          className="w-14 rounded-md border border-border/60 bg-background px-2 py-1 text-right text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
+                          className="w-14 rounded-md border px-2 py-1 text-right outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
+                          style={tableControlStyle}
                           value={qRaw}
                           onChange={(e) => {
                             const n = Number(e.target.value);
