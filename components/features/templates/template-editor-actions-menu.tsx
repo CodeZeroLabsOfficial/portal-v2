@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EllipsisVertical, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Trash2 } from "lucide-react";
 
 import {
   ProposalDocumentActions,
@@ -11,12 +11,6 @@ import {
 } from "@/components/features/proposal/editor/save-publish-actions";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { deleteContractTemplateAction } from "@/server/actions/contract-templates";
 import { deleteProposalTemplateAction } from "@/server/actions/proposal-templates";
 import { toast } from "sonner";
@@ -73,7 +67,7 @@ export function TemplateEditorActionsMenu(props: TemplateEditorActionsMenuProps)
 
 export interface TemplateEditorInlineActionsProps extends TemplateEditorActionsMenuProps {}
 
-/** Inline preview / save / publish for the builder top bar (matches proposal CRM actions). */
+/** Inline preview / delete / save / publish for the builder top bar. */
 export function TemplateEditorInlineActions({
   variant,
   templateId,
@@ -92,6 +86,8 @@ export function TemplateEditorInlineActions({
   const isTemplate = variant === "template";
   const displayName =
     templateName.trim() || (isContractTemplate ? "Untitled contract" : "Untitled template");
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleteBusy, setDeleteBusy] = React.useState(false);
 
   async function handleDelete() {
     const res = isContractTemplate
@@ -102,8 +98,37 @@ export function TemplateEditorInlineActions({
     router.refresh();
   }
 
+  async function handleDeleteConfirm() {
+    setDeleteBusy(true);
+    try {
+      await handleDelete();
+      toast.success("Deleted.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed.");
+      throw err;
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
   return (
     <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={saving || sending || deleteBusy}
+        onClick={() => setDeleteOpen(true)}
+        className="gap-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        aria-label={isContractTemplate ? "Delete contract template" : "Delete template"}
+      >
+        {deleteBusy ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        ) : (
+          <Trash2 className="h-4 w-4" aria-hidden />
+        )}
+        Delete
+      </Button>
       <Button
         variant="ghost"
         size="sm"
@@ -124,76 +149,6 @@ export function TemplateEditorInlineActions({
         onPublish={onPublish ?? (() => {})}
         showPublish={isTemplate && Boolean(onPublish)}
       />
-      <TemplateEditorDeleteMenu
-        displayName={displayName}
-        isContractTemplate={isContractTemplate}
-        onDelete={handleDelete}
-        busy={saving || sending}
-      />
-    </>
-  );
-}
-
-function TemplateEditorDeleteMenu({
-  displayName,
-  isContractTemplate,
-  onDelete,
-  busy,
-}: {
-  displayName: string;
-  isContractTemplate: boolean;
-  onDelete: () => Promise<void>;
-  busy: boolean;
-}) {
-  const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [deleteBusy, setDeleteBusy] = React.useState(false);
-
-  async function handleDeleteConfirm() {
-    setDeleteBusy(true);
-    try {
-      await onDelete();
-      toast.success("Deleted.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Delete failed.");
-      throw err;
-    } finally {
-      setDeleteBusy(false);
-    }
-  }
-
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            disabled={busy || deleteBusy}
-            aria-label={`More actions for ${displayName}`}
-          >
-            {deleteBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />
-            ) : (
-              <EllipsisVertical className="h-4 w-4 text-muted-foreground" aria-hidden />
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-[10rem]">
-          <DropdownMenuItem
-            className="cursor-pointer text-destructive focus:text-destructive"
-            disabled={deleteBusy}
-            onSelect={(e) => {
-              e.preventDefault();
-              setDeleteOpen(true);
-            }}
-          >
-            <Trash2 aria-hidden />
-            Delete template
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

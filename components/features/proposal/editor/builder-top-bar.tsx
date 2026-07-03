@@ -38,7 +38,7 @@ export function BuilderTopBar({
             <ChevronLeft className="size-4" />
           </Link>
         </Button>
-        <div className="flex h-8 min-w-[10rem] flex-1 basis-[14rem] items-center border-b border-border">
+        <div className="flex h-8 min-w-0 max-w-[min(36rem,calc(100vw-16rem))] items-center pl-2 sm:pl-3">
           <BuilderTopBarTitle fallbackLabel={titleFallback} />
         </div>
         <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>

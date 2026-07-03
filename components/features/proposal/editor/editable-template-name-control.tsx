@@ -16,7 +16,7 @@ export interface EditableTemplateNameControlProps {
   onStartEdit: () => void;
   onConfirm: () => void;
   onCancel: () => void;
-  /** compact: width-capped inline title; standalone: full-width title row */
+  /** compact: width-capped inline title; standalone: builder top bar title */
   appearance?: "compact" | "standalone";
   placeholder?: string;
   className?: string;
@@ -52,7 +52,7 @@ export function EditableTemplateNameControl({
           "inline-flex min-w-0 items-center gap-1",
           isCompact
             ? "min-w-[20rem] w-[min(36rem,calc(100vw-18rem))] sm:min-w-[28rem]"
-            : "w-full min-w-[10rem] flex-1",
+            : "min-w-[10rem] w-[min(36rem,calc(100vw-18rem))] sm:min-w-[28rem]",
           className,
         )}
       >
@@ -111,7 +111,7 @@ export function EditableTemplateNameControl({
         "disabled:pointer-events-none disabled:opacity-50",
         isCompact
           ? "max-w-[12rem] text-sm font-normal text-foreground sm:max-w-xs"
-          : "h-8 w-full flex-1 text-xs font-medium text-foreground",
+          : "h-8 max-w-full text-xs font-medium text-foreground",
         className,
       )}
     >
