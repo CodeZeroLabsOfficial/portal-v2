@@ -1,16 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -25,23 +18,22 @@ import type {
 const chartConfig = {
   activity: {
     label: "Activity",
-    color: "var(--chart-1)",
+    color: "var(--primary)",
   },
 } satisfies ChartConfig;
 
 interface AdminDashboardActivityChartProps {
   tabs: AdminDashboardChartTabPayload[];
-  rangeLabel: string;
   defaultTab?: AdminDashboardChartTabId;
 }
 
 export function AdminDashboardActivityChart({
   tabs,
-  rangeLabel,
   defaultTab = "subscriptions",
 }: AdminDashboardActivityChartProps) {
   const [activeTab, setActiveTab] = React.useState<AdminDashboardChartTabId>(defaultTab);
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const fillGradientId = React.useId().replace(/:/g, "");
 
   const chartData = React.useMemo(
     () =>
@@ -52,55 +44,44 @@ export function AdminDashboardActivityChart({
     [active],
   );
 
-  const seriesTotal = React.useMemo(
-    () => (active?.points ?? []).reduce((sum, value) => sum + value, 0),
-    [active],
-  );
-
   return (
-    <Card className="@container/card relative h-full overflow-hidden">
-      <CardHeader>
-        <CardTitle>Activity</CardTitle>
-        <CardDescription>{rangeLabel}</CardDescription>
-        <CardAction className="col-start-auto row-start-auto justify-self-start md:col-start-2 md:row-start-1 md:justify-self-end">
-          <div
-            className="end-0 top-0 flex max-w-full divide-x overflow-x-auto rounded-md border-s border-e border-t border-b md:absolute md:rounded-none md:rounded-bl-md md:border-e-transparent md:border-t-transparent"
-            role="tablist"
-            aria-label="Dashboard activity metrics"
-          >
-            {tabs.map((tab) => {
-              const isSelected = tab.id === activeTab;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  title={tab.hint}
-                  aria-selected={isSelected}
-                  data-active={isSelected}
-                  className="data-[active=true]:bg-muted relative flex min-w-[5.5rem] flex-1 flex-col justify-center gap-1 px-4 py-3 text-left sm:min-w-[6.5rem] sm:px-6 sm:py-4"
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <span className="text-muted-foreground text-xs">{tab.label}</span>
-                  <span className="font-display text-lg leading-none tabular-nums sm:text-2xl">
-                    {tab.valueDisplay}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {active?.hint ? (
-          <p className="text-muted-foreground mb-3 text-xs">{active.hint}</p>
-        ) : null}
-        <ChartContainer config={chartConfig} className="h-[186px] w-full lg:h-[220px]">
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{ left: 0, right: 0, bottom: 0 }}
-          >
+    <Card className="@container/card overflow-hidden py-0">
+      <div
+        className="grid grid-cols-2 divide-x border-b sm:grid-cols-4"
+        role="tablist"
+        aria-label="Dashboard activity metrics"
+      >
+        {tabs.map((tab) => {
+          const isSelected = tab.id === activeTab;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              title={tab.hint}
+              aria-selected={isSelected}
+              data-active={isSelected}
+              className="data-[active=true]:bg-muted relative flex flex-col justify-center gap-1 px-4 py-3 text-left sm:px-6 sm:py-4"
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="text-muted-foreground text-xs">{tab.label}</span>
+              <span className="font-display text-lg leading-none tabular-nums sm:text-2xl">
+                {tab.valueDisplay}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full lg:h-[250px]">
+          <AreaChart data={chartData} accessibilityLayer margin={{ left: 0, right: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-activity)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-activity)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="label"
@@ -110,9 +91,10 @@ export function AdminDashboardActivityChart({
               minTickGap={32}
             />
             <ChartTooltip
+              cursor={false}
               content={
                 <ChartTooltipContent
-                  className="w-[150px]"
+                  indicator="dot"
                   nameKey="activity"
                   formatter={(value) => [
                     `${value} ${Number(value) === 1 ? "update" : "updates"}`,
@@ -121,12 +103,15 @@ export function AdminDashboardActivityChart({
                 />
               }
             />
-            <Bar dataKey="activity" fill="var(--color-activity)" radius={5} />
-          </BarChart>
+            <Area
+              dataKey="activity"
+              type="natural"
+              fill={`url(#${fillGradientId})`}
+              stroke="var(--color-activity)"
+              strokeWidth={2}
+            />
+          </AreaChart>
         </ChartContainer>
-        <p className="text-muted-foreground mt-2 text-xs tabular-nums">
-          {seriesTotal} update{seriesTotal === 1 ? "" : "s"} in period
-        </p>
       </CardContent>
     </Card>
   );

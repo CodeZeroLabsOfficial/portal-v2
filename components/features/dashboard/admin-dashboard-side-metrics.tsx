@@ -26,7 +26,7 @@ export function AdminDashboardSideMetrics({
       <CardContent>
         <p className="mb-2 text-sm font-bold">Highlights</p>
         <div className="divide-y *:py-3">
-          <div className="flex justify-between gap-3 text-sm">
+          <div className="flex justify-between text-sm">
             <span>Open tickets</span>
             <span className="flex items-center gap-1 tabular-nums">
               {ticketBuckets.critical > 0 ? (
@@ -37,11 +37,11 @@ export function AdminDashboardSideMetrics({
               {openTicketTotal}
             </span>
           </div>
-          <div className="flex justify-between gap-3 text-sm">
+          <div className="flex justify-between text-sm">
             <span>Critical urgency</span>
             <span className="tabular-nums">{ticketBuckets.critical}</span>
           </div>
-          <div className="flex justify-between gap-3 text-sm">
+          <div className="flex justify-between text-sm">
             <span>Tasks due this week</span>
             <span className="flex items-center gap-1 tabular-nums">
               {taskDue.overdue > 0 ? (
@@ -49,10 +49,6 @@ export function AdminDashboardSideMetrics({
               ) : null}
               {taskDue.dueThisWeek}
             </span>
-          </div>
-          <div className="flex justify-between gap-3 text-sm">
-            <span>Overdue tasks</span>
-            <span className="tabular-nums">{taskDue.overdue}</span>
           </div>
         </div>
       </CardContent>

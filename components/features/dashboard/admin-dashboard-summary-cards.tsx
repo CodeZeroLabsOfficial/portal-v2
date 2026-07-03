@@ -56,7 +56,6 @@ function SummaryCard({ kpi, icon: Icon }: SummaryCardConfig) {
       </CardHeader>
       <CardContent>
         <div className="font-display text-2xl tabular-nums lg:text-3xl">{kpi.value}</div>
-        {showDelta ? <p className="text-muted-foreground mt-2 text-xs">{kpi.footer}</p> : null}
       </CardContent>
     </Card>
   );

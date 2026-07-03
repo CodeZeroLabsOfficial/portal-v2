@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Typography } from "@/components/ui/typography";
 import {
   buildDashboardViewModel,
   resolveDashboardEarliestMs,
@@ -77,19 +76,17 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
 
   return (
     <>
-      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-4 flex flex-row items-center justify-between space-y-2">
         <div>
-          <Typography variant="h1">Welcome back, {name}!</Typography>
-          <Typography variant="muted" className="mt-1">
-            Here are your stats for {today}
-          </Typography>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back, {name}!</h1>
+          <p className="text-muted-foreground text-sm">Here are your stats for {today}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center space-x-2">
           <CalendarDateRangePicker value={dateRange} onChange={setDateRange} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
-                <FolderUp className="size-4" aria-hidden />
+                <FolderUp />
                 <span className="hidden lg:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
@@ -113,9 +110,9 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
         <TabsContent value="overview" className="space-y-4">
           <AdminDashboardSummaryCards {...view.kpis} />
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <AdminDashboardActivityChart tabs={view.chartTabs} rangeLabel={view.range.label} />
+              <AdminDashboardActivityChart tabs={view.chartTabs} />
             </div>
             <AdminDashboardSideMetrics
               openTicketTotal={view.openTicketTotal}
@@ -124,7 +121,7 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
             />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
+          <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
             <AdminDashboardReminders tasks={data.tasks} />
             <AdminDashboardAchievement invoices={data.invoices} />
             <AdminDashboardStatusChart proposals={data.proposals} />
