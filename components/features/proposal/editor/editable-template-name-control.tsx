@@ -50,7 +50,9 @@ export function EditableTemplateNameControl({
       <div
         className={cn(
           "inline-flex min-w-0 items-center gap-1",
-          isBreadcrumb ? "max-w-[14rem] sm:max-w-md" : "w-full min-w-[10rem] flex-1",
+          isBreadcrumb
+            ? "min-w-[20rem] w-[min(36rem,calc(100vw-18rem))] sm:min-w-[28rem]"
+            : "w-full min-w-[10rem] flex-1",
           className,
         )}
       >
@@ -74,7 +76,7 @@ export function EditableTemplateNameControl({
           className={cn(
             "min-w-0 flex-1 shadow-none focus-visible:ring-2 focus-visible:ring-ring",
             isBreadcrumb
-              ? "h-7 border-0 bg-transparent px-0 text-sm font-normal text-foreground"
+              ? "h-8 rounded-md border border-border/80 bg-muted/30 px-2.5 text-sm font-normal text-foreground"
               : "h-8 border-0 bg-transparent px-0 text-xs font-medium text-foreground",
           )}
         />

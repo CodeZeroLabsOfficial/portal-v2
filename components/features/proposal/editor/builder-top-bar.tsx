@@ -59,7 +59,7 @@ export function BuilderTopBar({
               return (
                 <React.Fragment key={`${segment.label}-${index}`}>
                   {index > 0 ? <BreadcrumbSeparator /> : null}
-                  <BreadcrumbItem>
+                  <BreadcrumbItem className={isLast ? "min-w-0 max-w-full flex-1" : undefined}>
                     {isLast ? (
                       <BuilderBreadcrumbTitleSegment fallbackLabel={segment.label} />
                     ) : segment.href ? (
