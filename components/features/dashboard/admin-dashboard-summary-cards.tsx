@@ -1,16 +1,9 @@
 "use client";
 
-import { Award, DollarSign, LifeBuoy, Wallet } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardKpiCard } from "@/lib/dashboard/build-dashboard-view";
 import { cn } from "@/lib/utils";
 
@@ -21,44 +14,51 @@ interface AdminDashboardSummaryCardsProps {
   openTickets: DashboardKpiCard;
 }
 
-interface SummaryCardConfig {
-  kpi: DashboardKpiCard;
-  icon: LucideIcon;
-}
-
-function SummaryCard({ kpi, icon: Icon }: SummaryCardConfig) {
+function SummaryCard({ kpi }: { kpi: DashboardKpiCard }) {
   const showDelta = typeof kpi.delta === "string" && kpi.delta.length > 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{kpi.title}</CardTitle>
-        <CardDescription>
+    <Card className="w-full gap-0 p-6 py-4">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground text-sm font-medium">{kpi.title}</dt>
           {showDelta ? (
-            <>
-              <span
-                className={cn(
-                  kpi.deltaNeutral
-                    ? "text-muted-foreground"
-                    : kpi.deltaPositive
-                      ? "text-success"
-                      : "text-destructive",
-                )}
-              >
-                {kpi.delta}{" "}
+            <Badge
+              variant="outline"
+              className={cn(
+                "inline-flex shrink-0 items-center px-1.5 py-0.5 ps-2.5 text-xs font-medium",
+                kpi.deltaNeutral
+                  ? "text-muted-foreground"
+                  : kpi.deltaPositive
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+              )}
+            >
+              {!kpi.deltaNeutral ? (
+                kpi.deltaPositive ? (
+                  <TrendingUp
+                    className="mr-0.5 -ml-1 size-5 shrink-0 self-center text-green-500"
+                    aria-hidden
+                  />
+                ) : (
+                  <TrendingDown
+                    className="mr-0.5 -ml-1 size-5 shrink-0 self-center text-red-500"
+                    aria-hidden
+                  />
+                )
+              ) : null}
+              <span className="sr-only">
+                {kpi.deltaNeutral
+                  ? "No change"
+                  : kpi.deltaPositive
+                    ? "Increased by "
+                    : "Decreased by "}
               </span>
-              vs prior period
-            </>
-          ) : (
-            kpi.footer
-          )}
-        </CardDescription>
-        <CardAction>
-          <Icon className="text-muted-foreground/50 size-4 lg:size-6" aria-hidden />
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <div className="font-display text-2xl tabular-nums lg:text-3xl">{kpi.value}</div>
+              {kpi.delta}
+            </Badge>
+          ) : null}
+        </div>
+        <dd className="text-foreground mt-2 text-3xl font-semibold tabular-nums">{kpi.value}</dd>
       </CardContent>
     </Card>
   );
@@ -70,17 +70,12 @@ export function AdminDashboardSummaryCards({
   activeLeads,
   openTickets,
 }: AdminDashboardSummaryCardsProps) {
-  const cards: SummaryCardConfig[] = [
-    { kpi: revenue, icon: DollarSign },
-    { kpi: payments, icon: Wallet },
-    { kpi: activeLeads, icon: Award },
-    { kpi: openTickets, icon: LifeBuoy },
-  ];
+  const cards: DashboardKpiCard[] = [revenue, payments, activeLeads, openTickets];
 
   return (
     <div className="*:data-[slot=card]:from-primary/10 grid gap-4 *:data-[slot=card]:bg-gradient-to-t md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => (
-        <SummaryCard key={card.kpi.title} {...card} />
+      {cards.map((kpi) => (
+        <SummaryCard key={kpi.title} kpi={kpi} />
       ))}
     </div>
   );

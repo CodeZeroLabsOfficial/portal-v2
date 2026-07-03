@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { customerToFormDefaults } from "@/lib/customer/form-defaults";
 import { combineCustomerName, splitCustomerName } from "@/lib/customer/name-split";
+import { formatCustomerTagsInput, parseCustomerTagsInput } from "@/lib/customer/tags";
 import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { updateCustomerFormSchema } from "@/lib/schemas/customer";
@@ -30,18 +31,6 @@ export interface CustomerEditSheetProps {
   customer: CustomerRecord;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-function tagsToInput(tags: string[]): string {
-  return tags.join(", ");
-}
-
-function parseTagsInput(raw: string): string[] {
-  return raw
-    .split(/[,;]/)
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .slice(0, 20);
 }
 
 export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEditSheetProps) {
@@ -64,7 +53,7 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
     const { firstName: first, lastName: last } = splitCustomerName(customer.name);
     setFirstName(first);
     setLastName(last);
-    setTagInput(tagsToInput(customer.tags));
+    setTagInput(formatCustomerTagsInput(customer.tags));
     setServerError(null);
   }, [open, customer, form]);
 
@@ -75,7 +64,7 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
 
   async function onSubmit(values: CustomerProfileFormValues) {
     setServerError(null);
-    const tags = parseTagsInput(tagInput);
+    const tags = parseCustomerTagsInput(tagInput);
     const contactAddress = normalizeAddressFields({
       addressLine1: values.addressLine1,
       addressLine2: values.addressLine2,

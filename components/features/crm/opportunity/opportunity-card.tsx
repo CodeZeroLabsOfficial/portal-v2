@@ -88,7 +88,7 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={`/admin/customers/${opp.customerId}`}>Open account</Link>
+                    <Link href={`/admin/customers/${opp.customerId}`}>View Profile</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

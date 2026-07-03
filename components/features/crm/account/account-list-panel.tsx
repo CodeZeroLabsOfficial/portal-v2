@@ -158,7 +158,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/admin/accounts/${row.original.key}`}>Open account</Link>
+                <Link href={`/admin/accounts/${row.original.key}`}>View Account</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

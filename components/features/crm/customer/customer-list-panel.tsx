@@ -47,6 +47,7 @@ import {
   subscriptionRollupBadgeDisplay
 } from "@/lib/crm/status-badges";
 import type { CustomerListRow } from "@/lib/customer/list";
+import { parseCustomerTagsInput } from "@/lib/customer/tags";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { createCustomerSchema } from "@/lib/schemas/customer";
 import {
@@ -161,11 +162,7 @@ function AddCustomerDialog({
 
   async function onSubmit(values: CustomerProfileFormValues) {
     setServerError(null);
-    const tags = tagInput
-      .split(/[,;]/)
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .slice(0, 20);
+    const tags = parseCustomerTagsInput(tagInput);
     const contactAddress = normalizeAddressFields({
       addressLine1: values.addressLine1,
       addressLine2: values.addressLine2,
@@ -399,7 +396,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/admin/customers/${id}`}>Open profile</Link>
+                  <Link href={`/admin/customers/${id}`}>View Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {row.original.status === "active" ? (
