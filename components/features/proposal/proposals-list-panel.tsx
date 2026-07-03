@@ -96,7 +96,7 @@ function ProposalsListToolbar({
           {table.getColumn("stageKey") ? (
             <DataTableFacetedFilter
               column={table.getColumn("stageKey")}
-              title="Stage"
+              title="Status"
               options={PROPOSAL_STAGE_FILTER_OPTIONS}
             />
           ) : null}
@@ -234,6 +234,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
       },
       {
         accessorKey: "title",
+        meta: { viewLabel: "Title" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
         cell: ({ row }) => (
           <Link
@@ -262,6 +263,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
       },
       {
         accessorKey: "accountCompanyName",
+        meta: { viewLabel: "Account" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Account" />,
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.accountCompanyName}</span>
@@ -269,6 +271,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
       },
       {
         accessorKey: "contactName",
+        meta: { viewLabel: "Contact" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Contact" />,
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.contactName}</span>
@@ -277,7 +280,8 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
       {
         id: "stageKey",
         accessorKey: "stageKey",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
+        meta: { viewLabel: "Status" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
           const display = getProposalStageBadgeDisplay(row.original);
@@ -292,6 +296,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
       },
       {
         accessorKey: "updatedAt",
+        meta: { viewLabel: "Last Edited" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Last edited" />,
         cell: ({ row }) => (
           <time

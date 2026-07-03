@@ -12,6 +12,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+function columnViewLabel<TData>(column: { id: string; columnDef: { meta?: { viewLabel?: string } } }): string {
+  return column.columnDef.meta?.viewLabel ?? column.id;
+}
 
 export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) {
   return (
@@ -22,20 +27,22 @@ export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) 
           View
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[150px]">
+      <DropdownMenuContent align="end" className="min-w-[11rem]">
         <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {table
           .getAllColumns()
           .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
           .map((column) => {
+            const label = columnViewLabel(column);
+            const isCustomLabel = label !== column.id;
             return (
               <DropdownMenuCheckboxItem
                 key={column.id}
-                className="capitalize"
+                className={cn(!isCustomLabel && "capitalize")}
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}>
-                {column.id}
+                {label}
               </DropdownMenuCheckboxItem>
             );
           })}

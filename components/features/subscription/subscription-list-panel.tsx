@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef, Table } from "@tanstack/react-table";
-import { Loader2, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
+import { MoreHorizontal, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddSubscriptionDialog } from "@/components/features/subscription/add-subscription-dialog";
@@ -501,9 +501,6 @@ export function SubscriptionListPanel({
       },
       {
         id: "actions",
-        header: () => null,
-        enableSorting: false,
-        enableHiding: false,
         cell: ({ row }) => {
           const subscription = row.original.subscription;
           const busy = pendingId === subscription.id || bulkBusy;
@@ -516,7 +513,7 @@ export function SubscriptionListPanel({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-8" disabled={busy}>
-                  {busy ? <Loader2 className="size-4 animate-spin" /> : <MoreHorizontal />}
+                  <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

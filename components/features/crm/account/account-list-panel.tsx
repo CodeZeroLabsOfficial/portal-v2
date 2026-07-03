@@ -64,6 +64,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
     () => [
       {
         accessorKey: "displayName",
+        meta: { viewLabel: "Company" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
         cell: ({ row }) => (
           <Link
@@ -91,6 +92,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         accessorKey: "contactName",
+        meta: { viewLabel: "Contact" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Contact" />,
         cell: ({ row }) => {
           const name = row.original.contactName.trim();
@@ -117,6 +119,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         accessorKey: "addressSummary",
+        meta: { viewLabel: "Address" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
         cell: ({ row }) => {
           const summary = row.original.addressSummary.trim();
@@ -129,6 +132,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         accessorKey: "companyPhone",
+        meta: { viewLabel: "Phone" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
         cell: ({ row }) => {
           const phone = row.original.companyPhone.trim();
@@ -137,6 +141,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         accessorKey: "companyEmail",
+        meta: { viewLabel: "Email" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
         cell: ({ row }) => {
           const email = row.original.companyEmail.trim();
@@ -145,6 +150,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         accessorKey: "companyWebsite",
+        meta: { viewLabel: "Website" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Website" />,
         cell: ({ row }) => {
           const website = row.original.companyWebsite.trim();

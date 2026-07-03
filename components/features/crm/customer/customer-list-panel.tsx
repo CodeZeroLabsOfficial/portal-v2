@@ -308,6 +308,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       },
       {
         accessorKey: "name",
+        meta: { viewLabel: "Name" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
         cell: ({ row }) => (
           <Link
@@ -328,6 +329,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       },
       {
         accessorKey: "status",
+        meta: { viewLabel: "Status" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         cell: ({ row }) => {
           const d = customerStatusBadgeDisplay(row.original.status);
@@ -340,6 +342,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       },
       {
         accessorKey: "company",
+        meta: { viewLabel: "Company" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
         cell: ({ row }) => {
           const company = row.original.company?.trim();
@@ -356,10 +359,12 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       },
       {
         accessorKey: "email",
+        meta: { viewLabel: "Email" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />
       },
       {
         accessorKey: "subscriptionRollup",
+        meta: { viewLabel: "Subscriptions" },
         header: "Subscriptions",
         cell: ({ row }) => {
           const d = subscriptionRollupBadgeDisplay(row.original.subscriptionRollup);
@@ -368,18 +373,8 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         enableSorting: false
       },
       {
-        accessorKey: "tags",
-        header: "Tags",
-        cell: ({ row }) =>
-          row.original.tags.length > 0 ? (
-            <span className="text-muted-foreground text-xs">{row.original.tags.join(", ")}</span>
-          ) : (
-            "—"
-          ),
-        enableSorting: false
-      },
-      {
         accessorKey: "crmType",
+        meta: { viewLabel: "Type" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
         cell: ({ row }) => {
           const d = customerCrmTypeBadgeDisplay(row.original.crmType);

@@ -35,19 +35,22 @@ function SummaryCard({ kpi, icon: Icon }: SummaryCardConfig) {
         <CardTitle>{kpi.title}</CardTitle>
         <CardDescription>
           {showDelta ? (
-            <span
-              className={cn(
-                kpi.deltaNeutral
-                  ? "text-muted-foreground"
-                  : kpi.deltaPositive
-                    ? "text-green-600"
-                    : "text-red-600",
-              )}
-            >
-              {kpi.delta} from previous period
-            </span>
+            <>
+              <span
+                className={cn(
+                  kpi.deltaNeutral
+                    ? "text-muted-foreground"
+                    : kpi.deltaPositive
+                      ? "text-green-600"
+                      : "text-red-600",
+                )}
+              >
+                {kpi.delta}{" "}
+              </span>
+              from previous period
+            </>
           ) : (
-            <span className="text-muted-foreground">{kpi.footer}</span>
+            kpi.footer
           )}
         </CardDescription>
         <CardAction>

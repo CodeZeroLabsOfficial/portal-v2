@@ -233,6 +233,7 @@ export function TemplatesListTable({ rows, localityTimeZone }: TemplatesListTabl
       },
       {
         accessorKey: "name",
+        meta: { viewLabel: "Name" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Template name" />,
         cell: ({ row }) => (
           <Link href={row.original.editHref} className="line-clamp-2 font-medium hover:underline">
@@ -260,6 +261,7 @@ export function TemplatesListTable({ rows, localityTimeZone }: TemplatesListTabl
       },
       {
         accessorKey: "typeLabel",
+        meta: { viewLabel: "Type" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
         cell: ({ row }) => {
           const d = templateTypeBadgeDisplay(row.original.typeLabel);
@@ -269,6 +271,7 @@ export function TemplatesListTable({ rows, localityTimeZone }: TemplatesListTabl
       },
       {
         accessorKey: "stage",
+        meta: { viewLabel: "Stage" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
         cell: ({ row }) => {
           const d = templateStageBadgeDisplay(row.original.stage);
@@ -284,6 +287,7 @@ export function TemplatesListTable({ rows, localityTimeZone }: TemplatesListTabl
       },
       {
         accessorKey: "lastEditedMs",
+        meta: { viewLabel: "Last Edited" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Last edited" />,
         cell: ({ row }) => (
           <time
