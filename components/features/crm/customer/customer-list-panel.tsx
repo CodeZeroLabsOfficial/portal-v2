@@ -32,6 +32,7 @@ import {
   subscriptionRollupBadgeDisplay
 } from "@/lib/crm/status-badges";
 import type { CustomerListRow } from "@/lib/customer/list";
+import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import {
   archiveCustomerAction,
   deleteCustomerAction,
@@ -107,8 +108,7 @@ function CustomerToolbar({
 export function CustomerListPanel({ rows }: CustomerListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [editingCustomer, setEditingCustomer] = React.useState<CustomerRecord | null>(null);
+  const customerEditSheet = useSheetEntityState<CustomerRecord>();
   const [pendingId, setPendingId] = React.useState<string | null>(null);
   const [editLoadingId, setEditLoadingId] = React.useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = React.useState(false);
@@ -129,8 +129,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       toast.error(res.message);
       return;
     }
-    setEditingCustomer(res.customer);
-    setEditOpen(true);
+    customerEditSheet.show(res.customer);
   }
 
   async function handleArchive(id: string, archived: boolean) {
@@ -338,14 +337,11 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         }
       />
       <AddCustomerSheet open={addOpen} onOpenChange={setAddOpen} />
-      {editingCustomer ? (
+      {customerEditSheet.entity ? (
         <CustomerEditSheet
-          customer={editingCustomer}
-          open={editOpen}
-          onOpenChange={(open) => {
-            setEditOpen(open);
-            if (!open) setEditingCustomer(null);
-          }}
+          customer={customerEditSheet.entity}
+          open={customerEditSheet.open}
+          onOpenChange={customerEditSheet.onOpenChange}
         />
       ) : null}
       <ConfirmDialog

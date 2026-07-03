@@ -119,7 +119,7 @@ function SectionOutlineRow({
 
   if (editing) {
     return (
-      <div className="flex min-w-0 flex-1 items-center gap-1">
+      <div className="relative min-w-0 flex-1">
         <Input
           ref={inputRef}
           aria-label="Section name"
@@ -136,12 +136,12 @@ function SectionOutlineRow({
               onCancel();
             }
           }}
-          className="h-7 min-w-0 flex-1 px-2 text-sm"
+          className="h-7 w-full min-w-0 px-2 pr-9 text-sm"
         />
         <Button
           type="button"
           size="icon-sm"
-          className="size-7 shrink-0"
+          className="absolute right-0 top-1/2 size-7 -translate-y-1/2 shrink-0"
           aria-label="Save section name"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onConfirm}
@@ -153,13 +153,13 @@ function SectionOutlineRow({
   }
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-0.5">
+    <div className="relative min-w-0 flex-1">
       <OutlineNavButton label={displayLabel} selected={selected} onNavigate={onNavigate} />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="text-muted-foreground size-7 shrink-0 opacity-0 transition-opacity group-hover/outline-row:opacity-100 focus-visible:opacity-100"
+        className="text-muted-foreground absolute right-0 top-1/2 size-7 -translate-y-1/2 shrink-0 opacity-0 transition-opacity group-hover/outline-row:opacity-100 focus-visible:opacity-100"
         aria-label={`Rename section: ${displayLabel}`}
         onClick={(e) => {
           e.stopPropagation();
@@ -219,7 +219,7 @@ export function BlockOutlinePanel() {
         return (
           <li
             key={block.id}
-            className="group/outline-row text-muted-foreground flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+            className="group/outline-row text-muted-foreground relative flex items-center gap-2 rounded-md px-2 py-1.5 pr-8 text-sm"
           >
             <span className="text-foreground/70 tabular-nums">{index + 1}.</span>
             {block.type === "section" ? (

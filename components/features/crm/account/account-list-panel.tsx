@@ -21,9 +21,15 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import type { AccountListRow } from "@/lib/account/list";
 import { getAccountDetailAction } from "@/server/actions/accounts-crm";
 import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
+
+interface AccountEditPayload {
+  account: AccountDetailAggregate;
+  accountKey: string;
+}
 
 interface AccountListPanelProps {
   rows: AccountListRow[];
@@ -58,9 +64,7 @@ function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
 export function AccountListPanel({ rows }: AccountListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [editingAccount, setEditingAccount] = React.useState<AccountDetailAggregate | null>(null);
-  const [editingAccountKey, setEditingAccountKey] = React.useState<string | null>(null);
+  const accountEditSheet = useSheetEntityState<AccountEditPayload>();
   const [editLoadingKey, setEditLoadingKey] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -75,9 +79,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       toast.error(res.message);
       return;
     }
-    setEditingAccount(res.account);
-    setEditingAccountKey(res.accountKey);
-    setEditOpen(true);
+    accountEditSheet.show({ account: res.account, accountKey: res.accountKey });
   }
 
   const columns = React.useMemo<ColumnDef<AccountListRow>[]>(
@@ -211,18 +213,12 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         }
       />
       <AddAccountDialog open={addOpen} onOpenChange={setAddOpen} />
-      {editingAccount && editingAccountKey ? (
+      {accountEditSheet.entity ? (
         <AccountEditSheet
-          account={editingAccount}
-          accountKey={editingAccountKey}
-          open={editOpen}
-          onOpenChange={(open) => {
-            setEditOpen(open);
-            if (!open) {
-              setEditingAccount(null);
-              setEditingAccountKey(null);
-            }
-          }}
+          account={accountEditSheet.entity.account}
+          accountKey={accountEditSheet.entity.accountKey}
+          open={accountEditSheet.open}
+          onOpenChange={accountEditSheet.onOpenChange}
         />
       ) : null}
       <DataTable

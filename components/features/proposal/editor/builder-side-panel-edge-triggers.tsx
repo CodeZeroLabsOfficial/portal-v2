@@ -2,7 +2,11 @@
 
 import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 
-import { BUILDER_SIDE_PANEL_TOP_CLASS } from "@/components/features/proposal/editor/builder-side-panel";
+import {
+  BUILDER_INSPECTOR_TOGGLE_RIGHT_CLASS,
+  BUILDER_OUTLINE_TOGGLE_LEFT_CLASS,
+  BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS,
+} from "@/components/features/proposal/editor/builder-side-panel";
 import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,14 +25,14 @@ function BuilderSidePanelEdgeTrigger({ side, label, onClick }: BuilderSidePanelE
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon-sm"
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "fixed z-30 size-8 rounded-md border bg-background shadow-sm",
-        BUILDER_SIDE_PANEL_TOP_CLASS,
-        isLeft ? "left-0 rounded-l-none" : "right-0 rounded-r-none",
+        "text-muted-foreground fixed z-30 size-8 shrink-0",
+        BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS,
+        isLeft ? BUILDER_OUTLINE_TOGGLE_LEFT_CLASS : BUILDER_INSPECTOR_TOGGLE_RIGHT_CLASS,
       )}
     >
       <OpenIcon className="size-4" aria-hidden />
