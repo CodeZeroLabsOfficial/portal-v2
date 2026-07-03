@@ -13,6 +13,10 @@ import {
   ProposalEditorChrome,
   type ProposalEditShellToolbarProps,
 } from "@/components/features/proposal/editor/proposal-editor-chrome";
+import {
+  scrollBuilderCanvasToBlock,
+  useRegisterBuilderCanvasNavigation,
+} from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { useRegisterBuilderTopBarTitle } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { useRegisterBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
@@ -264,6 +268,22 @@ export function ProposalDocumentEditor({
       templateNameEditing,
       saving,
     ],
+  );
+
+  const navigateToBlock = React.useCallback(
+    (blockId: string) => {
+      setRootColumnsLayoutEditingId((current) => (current !== null && current !== blockId ? null : current));
+      setSelectedBlockId(blockId);
+      requestAnimationFrame(() => {
+        scrollBuilderCanvasToBlock(blockId);
+      });
+    },
+    [],
+  );
+
+  useRegisterBuilderCanvasNavigation(
+    embeddedInBuilder ? { selectedBlockId, navigateToBlock } : null,
+    [embeddedInBuilder, selectedBlockId, navigateToBlock],
   );
 
   return (

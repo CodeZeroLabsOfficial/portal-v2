@@ -6,8 +6,30 @@ import { createAccountFormSchema, updateAccountFormSchema } from "@/lib/schemas/
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import {
   createAccountDocument,
+  getAccountDetailForKey,
   updateAccountDetailsForGroup,
+  type AccountDetailAggregate,
 } from "@/server/firestore/crm-customers";
+
+export async function getAccountDetailAction(
+  accountKey: string,
+): Promise<
+  { ok: true; account: AccountDetailAggregate; accountKey: string } | { ok: false; message: string }
+> {
+  const user = await requireStaffSession();
+  if (!user) {
+    return { ok: false, message: "You need an admin or team session to edit accounts." };
+  }
+  const key = accountKey.trim();
+  if (!key) {
+    return { ok: false, message: "Account key is required." };
+  }
+  const account = await getAccountDetailForKey(user, key);
+  if (!account) {
+    return { ok: false, message: "Account not found." };
+  }
+  return { ok: true, account, accountKey: key };
+}
 
 export async function updateAccountAction(
   raw: unknown,

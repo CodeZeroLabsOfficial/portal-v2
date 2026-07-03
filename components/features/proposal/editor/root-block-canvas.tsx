@@ -24,6 +24,7 @@ import {
   blockLabel,
 } from "@/components/features/proposal/editor/proposal-block-fields";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
+import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
 import { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
 import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
@@ -130,7 +131,7 @@ export function RootBlockCanvas({
                   const flushBand = proposalBlockRendersFlushEditorBand(block);
                   const isSection = block.type === "section";
                   return (
-                    <div key={block.id}>
+                    <div key={block.id} id={proposalBuilderBlockDomId(block.id)} className="scroll-mt-28">
                       <SortableShell
                         id={block.id}
                         selected={isSelected}

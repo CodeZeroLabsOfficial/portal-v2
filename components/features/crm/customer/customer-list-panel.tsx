@@ -3,15 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
+import { AddCustomerSheet } from "@/components/features/crm/customer/add-customer-sheet";
+import { CustomerEditSheet } from "@/components/features/crm/customer/customer-edit-sheet";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { FormServerError } from "@/components/shared/form-server-error";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
@@ -19,27 +19,12 @@ import { DataTableViewOptions } from "@/components/shared/data-table/data-table-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import {
-  CustomerProfileFormFields
-} from "@/components/features/crm/customer/customer-profile-form-fields";
-import { combineCustomerName } from "@/lib/customer/name-split";
-import {
-  EMPTY_CUSTOMER_PROFILE_FORM_VALUES,
-  type CustomerProfileFormValues
-} from "@/lib/customer/profile-form-values";
 import { Input } from "@/components/ui/input";
 import {
   customerCrmTypeBadgeDisplay,
@@ -47,22 +32,16 @@ import {
   subscriptionRollupBadgeDisplay
 } from "@/lib/crm/status-badges";
 import type { CustomerListRow } from "@/lib/customer/list";
-import { parseCustomerTagsInput } from "@/lib/customer/tags";
-import { normalizeAddressFields } from "@/lib/common/format";
-import { createCustomerSchema } from "@/lib/schemas/customer";
 import {
   archiveCustomerAction,
-  createCustomerAction,
-  deleteCustomerAction
+  deleteCustomerAction,
+  getCustomerDetailAction
 } from "@/server/actions/customers-crm";
+import type { CustomerRecord } from "@/types/customer";
 
 interface CustomerListPanelProps {
   rows: CustomerListRow[];
 }
-
-const defaultValues: CustomerProfileFormValues = {
-  ...EMPTY_CUSTOMER_PROFILE_FORM_VALUES
-};
 
 function CustomerToolbar({
   table,
@@ -125,106 +104,13 @@ function CustomerToolbar({
   );
 }
 
-function AddCustomerDialog({
-  open,
-  onOpenChange
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const router = useRouter();
-  const [serverError, setServerError] = React.useState<string | null>(null);
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [tagInput, setTagInput] = React.useState("");
-
-  const form = useForm<CustomerProfileFormValues>({
-    resolver: zodResolver(createCustomerSchema),
-    defaultValues
-  });
-
-  React.useEffect(() => {
-    if (!open) {
-      form.reset(defaultValues);
-      setFirstName("");
-      setLastName("");
-      setTagInput("");
-      setServerError(null);
-    }
-  }, [open, form]);
-
-  React.useEffect(() => {
-    form.setValue("name", combineCustomerName(firstName, lastName), {
-      shouldValidate: true,
-      shouldDirty: false
-    });
-  }, [firstName, lastName, form]);
-
-  async function onSubmit(values: CustomerProfileFormValues) {
-    setServerError(null);
-    const tags = parseCustomerTagsInput(tagInput);
-    const contactAddress = normalizeAddressFields({
-      addressLine1: values.addressLine1,
-      addressLine2: values.addressLine2,
-      city: values.city,
-      region: values.region,
-      postalCode: values.postalCode,
-      country: values.country
-    });
-    const { id: _id, ...createPayload } = values;
-    const result = await createCustomerAction({ ...createPayload, ...contactAddress, tags });
-    if (!result.ok) {
-      setServerError(result.message);
-      return;
-    }
-    onOpenChange(false);
-    router.push(`/admin/customers/${result.customerId}`);
-    router.refresh();
-  }
-
-  const busy = form.formState.isSubmitting;
-  const profileForm = form;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>New customer</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <FormServerError message={serverError} />
-            <CustomerProfileFormFields
-              form={profileForm}
-              mode="create"
-              disabled={busy}
-              firstName={firstName}
-              lastName={lastName}
-              onFirstNameChange={setFirstName}
-              onLastNameChange={setLastName}
-              tagInput={tagInput}
-              onTagInputChange={setTagInput}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              Create
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export function CustomerListPanel({ rows }: CustomerListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [editingCustomer, setEditingCustomer] = React.useState<CustomerRecord | null>(null);
   const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [editLoadingId, setEditLoadingId] = React.useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
@@ -234,6 +120,18 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
   React.useEffect(() => {
     router.refresh();
   }, [router]);
+
+  async function openEdit(customerId: string) {
+    setEditLoadingId(customerId);
+    const res = await getCustomerDetailAction(customerId);
+    setEditLoadingId(null);
+    if (!res.ok) {
+      toast.error(res.message);
+      return;
+    }
+    setEditingCustomer(res.customer);
+    setEditOpen(true);
+  }
 
   async function handleArchive(id: string, archived: boolean) {
     setPendingId(id);
@@ -386,18 +284,23 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         id: "actions",
         cell: ({ row }) => {
           const id = row.original.id;
-          const busy = pendingId === id;
+          const busy = pendingId === id || editLoadingId === id;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-8" disabled={busy}>
-                  <MoreHorizontal />
+                  {editLoadingId === id ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <MoreHorizontal />
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href={`/admin/customers/${id}`}>View Profile</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openEdit(id)}>Edit</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {row.original.status === "active" ? (
                   <DropdownMenuItem onClick={() => void handleArchive(id, true)}>
@@ -419,7 +322,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         }
       }
     ],
-    [pendingId]
+    [pendingId, editLoadingId]
   );
 
   return (
@@ -434,7 +337,17 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           </Button>
         }
       />
-      <AddCustomerDialog open={addOpen} onOpenChange={setAddOpen} />
+      <AddCustomerSheet open={addOpen} onOpenChange={setAddOpen} />
+      {editingCustomer ? (
+        <CustomerEditSheet
+          customer={editingCustomer}
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) setEditingCustomer(null);
+          }}
+        />
+      ) : null}
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

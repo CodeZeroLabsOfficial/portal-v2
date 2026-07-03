@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, Pencil } from "lucide-react";
 
+import { useBuilderCanvasNavigation } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { useDocumentEditor } from "@/components/features/proposal/editor/document-editor-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,11 +55,41 @@ function blockOutlineLabel(block: ProposalBlock, outlineIndex: number): string {
   }
 }
 
+function outlineNavButtonClasses(selected: boolean): string {
+  return cn(
+    "text-foreground min-w-0 flex-1 truncate rounded-sm px-1.5 py-0.5 text-left text-sm font-medium transition-colors",
+    "hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    selected && "bg-muted",
+  );
+}
+
+interface OutlineNavButtonProps {
+  label: string;
+  selected: boolean;
+  onNavigate: () => void;
+}
+
+function OutlineNavButton({ label, selected, onNavigate }: OutlineNavButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={`Go to ${label}`}
+      aria-current={selected ? "true" : undefined}
+      onClick={onNavigate}
+      className={outlineNavButtonClasses(selected)}
+    >
+      {label}
+    </button>
+  );
+}
+
 interface SectionOutlineRowProps {
   block: SectionBlock;
   index: number;
+  selected: boolean;
   editing: boolean;
   draftTitle: string;
+  onNavigate: () => void;
   onDraftChange: (value: string) => void;
   onStartEdit: () => void;
   onConfirm: () => void;
@@ -68,8 +99,10 @@ interface SectionOutlineRowProps {
 function SectionOutlineRow({
   block,
   index,
+  selected,
   editing,
   draftTitle,
+  onNavigate,
   onDraftChange,
   onStartEdit,
   onConfirm,
@@ -120,29 +153,35 @@ function SectionOutlineRow({
   }
 
   return (
-    <button
-      type="button"
-      aria-label={`Rename section: ${displayLabel}`}
-      onClick={onStartEdit}
-      className={cn(
-        "group/section-outline inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-left",
-        "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-      )}
-    >
-      <span className="text-foreground min-w-0 truncate font-medium">{displayLabel}</span>
-      <Pencil
-        className="text-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity group-hover/section-outline:opacity-100 group-focus-visible/section-outline:opacity-100"
-        aria-hidden
-      />
-    </button>
+    <div className="flex min-w-0 flex-1 items-center gap-0.5">
+      <OutlineNavButton label={displayLabel} selected={selected} onNavigate={onNavigate} />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="text-muted-foreground size-7 shrink-0 opacity-0 transition-opacity group-hover/outline-row:opacity-100 focus-visible:opacity-100"
+        aria-label={`Rename section: ${displayLabel}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onStartEdit();
+        }}
+      >
+        <Pencil className="size-3.5" aria-hidden />
+      </Button>
+    </div>
   );
 }
 
 export function BlockOutlinePanel() {
   const { document, updateBlock } = useDocumentEditor();
+  const navigation = useBuilderCanvasNavigation();
   const blocks = document.blocks;
   const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null);
   const [draftTitle, setDraftTitle] = React.useState("");
+
+  function navigateToBlock(blockId: string) {
+    navigation?.navigateToBlock(blockId);
+  }
 
   function startEditSection(block: SectionBlock) {
     setEditingSectionId(block.id);
@@ -173,28 +212,39 @@ export function BlockOutlinePanel() {
 
   return (
     <ol className="space-y-1">
-      {blocks.map((block, index) => (
-        <li
-          key={block.id}
-          className="text-muted-foreground flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
-        >
-          <span className="text-foreground/70 tabular-nums">{index + 1}.</span>
-          {block.type === "section" ? (
-            <SectionOutlineRow
-              block={block}
-              index={index}
-              editing={editingSectionId === block.id}
-              draftTitle={draftTitle}
-              onDraftChange={setDraftTitle}
-              onStartEdit={() => startEditSection(block)}
-              onConfirm={() => confirmEdit(block)}
-              onCancel={cancelEdit}
-            />
-          ) : (
-            <span className="text-foreground font-medium">{blockOutlineLabel(block, index)}</span>
-          )}
-        </li>
-      ))}
+      {blocks.map((block, index) => {
+        const selected = navigation?.selectedBlockId === block.id;
+        const label = blockOutlineLabel(block, index);
+
+        return (
+          <li
+            key={block.id}
+            className="group/outline-row text-muted-foreground flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+          >
+            <span className="text-foreground/70 tabular-nums">{index + 1}.</span>
+            {block.type === "section" ? (
+              <SectionOutlineRow
+                block={block}
+                index={index}
+                selected={selected}
+                editing={editingSectionId === block.id}
+                draftTitle={draftTitle}
+                onNavigate={() => navigateToBlock(block.id)}
+                onDraftChange={setDraftTitle}
+                onStartEdit={() => startEditSection(block)}
+                onConfirm={() => confirmEdit(block)}
+                onCancel={cancelEdit}
+              />
+            ) : (
+              <OutlineNavButton
+                label={label}
+                selected={selected}
+                onNavigate={() => navigateToBlock(block.id)}
+              />
+            )}
+          </li>
+        );
+      })}
     </ol>
   );
 }

@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
+import { AccountFormFields } from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +16,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createAccountFormSchema, type CreateAccountFormInput } from "@/lib/schemas/account";
 import { createAccountAction } from "@/server/actions/accounts-crm";
 
@@ -77,73 +76,7 @@ export function AddAccountDialog({ open, onOpenChange }: AddAccountDialogProps) 
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <FormServerError message={serverError} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="account-company">
-                  Company name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="account-company"
-                  autoComplete="organization"
-                  placeholder="Company Name Pty Ltd"
-                  {...form.register("company")}
-                />
-                {form.formState.errors.company ? (
-                  <p className="text-destructive text-xs">{form.formState.errors.company.message}</p>
-                ) : null}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="account-company-phone">Company phone</Label>
-                <Input
-                  id="account-company-phone"
-                  type="tel"
-                  autoComplete="off"
-                  placeholder="+61 400 000 000"
-                  {...form.register("companyPhone")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="account-company-email">Company email</Label>
-                <Input
-                  id="account-company-email"
-                  type="email"
-                  autoComplete="off"
-                  placeholder="info@company.com"
-                  {...form.register("companyEmail")}
-                />
-                {form.formState.errors.companyEmail ? (
-                  <p className="text-destructive text-xs">{form.formState.errors.companyEmail.message}</p>
-                ) : null}
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="account-company-website">Company website</Label>
-                <Input
-                  id="account-company-website"
-                  autoComplete="off"
-                  placeholder="https://www.company.com"
-                  {...form.register("companyWebsite")}
-                />
-                {form.formState.errors.companyWebsite ? (
-                  <p className="text-destructive text-xs">{form.formState.errors.companyWebsite.message}</p>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Company address</Label>
-              <Input placeholder="Line 1" {...form.register("companyAddressLine1")} />
-              <Input placeholder="Line 2" {...form.register("companyAddressLine2")} />
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                <Input placeholder="City" {...form.register("companyCity")} />
-                <Input placeholder="State / region" {...form.register("companyRegion")} />
-                <Input placeholder="Postal code" {...form.register("companyPostalCode")} />
-                <Input placeholder="Country" {...form.register("companyCountry")} />
-              </div>
-            </div>
+            <AccountFormFields form={form} idPrefix="account" disabled={busy} />
           </div>
 
           <DialogFooter>

@@ -7,11 +7,10 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
+import { AccountFormFields, type AccountFormFieldsProps } from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { accountToFormDefaults } from "@/lib/account/form-defaults";
 import { updateAccountFormSchema, type UpdateAccountFormInput } from "@/lib/schemas/account";
 import { updateAccountAction } from "@/server/actions/accounts-crm";
@@ -71,71 +70,11 @@ export function AccountEditForm({ account, accountKey }: AccountEditFormProps) {
         <CardContent className="p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <FormServerError message={serverError} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-account-company">
-                  Company name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="edit-account-company"
-                  placeholder="Company Name Pty Ltd"
-                  {...form.register("company")}
-                />
-                {form.formState.errors.company ? (
-                  <p className="text-destructive text-xs">{form.formState.errors.company.message}</p>
-                ) : null}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-account-company-phone">Company phone</Label>
-                <Input
-                  id="edit-account-company-phone"
-                  type="tel"
-                  placeholder="+61 400 000 000"
-                  {...form.register("companyPhone")}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-account-company-email">Company email</Label>
-                <Input
-                  id="edit-account-company-email"
-                  type="email"
-                  autoComplete="off"
-                  placeholder="info@company.com"
-                  {...form.register("companyEmail")}
-                />
-                {form.formState.errors.companyEmail ? (
-                  <p className="text-destructive text-xs">
-                    {form.formState.errors.companyEmail.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-account-company-website">Company website</Label>
-                <Input
-                  id="edit-account-company-website"
-                  placeholder="https://www.company.com"
-                  {...form.register("companyWebsite")}
-                />
-                {form.formState.errors.companyWebsite ? (
-                  <p className="text-destructive text-xs">
-                    {form.formState.errors.companyWebsite.message}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Company address</Label>
-              <Input placeholder="Line 1" {...form.register("companyAddressLine1")} />
-              <Input placeholder="Line 2" {...form.register("companyAddressLine2")} />
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                <Input placeholder="City" {...form.register("companyCity")} />
-                <Input placeholder="State / region" {...form.register("companyRegion")} />
-                <Input placeholder="Postal code" {...form.register("companyPostalCode")} />
-                <Input placeholder="Country" {...form.register("companyCountry")} />
-              </div>
-            </div>
+            <AccountFormFields
+              form={form as unknown as AccountFormFieldsProps["form"]}
+              idPrefix="edit-account"
+              disabled={busy}
+            />
 
             <div className="flex flex-wrap justify-end gap-2 border-t pt-4">
               <Button

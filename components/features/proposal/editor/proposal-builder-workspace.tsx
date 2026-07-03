@@ -4,6 +4,7 @@ import * as React from "react";
 import type { ReactNode } from "react";
 
 import { BlockOutlinePanel } from "@/components/features/proposal/editor/block-outline-panel";
+import { BuilderCanvasNavigationProvider } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { BuilderTopBarTitleProvider } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { BuilderInspectorPanel } from "@/components/features/proposal/editor/builder-inspector-panel";
 import { BuilderShell } from "@/components/features/proposal/editor/builder-shell";
@@ -47,45 +48,47 @@ export function ProposalBuilderWorkspace({
     <DocumentEditorProvider initialDocument={editorProps.initialDocument}>
       <BuilderTopBarActionsProvider>
         <BuilderTopBarTitleProvider>
-          <BuilderSidePanelProvider>
-            <BuilderShell
-              topBar={
-                <BuilderTopBar
-                  backHref={backHref}
-                  backLabel={backLabel}
-                  titleFallback={titleFallback}
-                  actions={<BuilderTopBarActionsSlot />}
-                />
-              }
-              outline={
-                <BuilderPanel title="Outline">
-                  <BuilderOutlineFromDocument />
-                </BuilderPanel>
-              }
-              canvas={
-                <div className="px-4 pb-6 pt-12 lg:px-8">
-                  <ProposalDocumentEditorLazy
-                    {...editorProps}
-                    variant={variant}
-                    initialTemplateName={initialTemplateName}
-                    embeddedInBuilder
-                    proposalEditMiddleSlot={undefined}
+          <BuilderCanvasNavigationProvider>
+            <BuilderSidePanelProvider>
+              <BuilderShell
+                topBar={
+                  <BuilderTopBar
+                    backHref={backHref}
+                    backLabel={backLabel}
+                    titleFallback={titleFallback}
+                    actions={<BuilderTopBarActionsSlot />}
                   />
-                </div>
-              }
-              inspector={
-                <BuilderPanel title="Inspector">
-                  {inspectorContent ?? (
-                    <BuilderInspectorPanel
-                      details={detailsSlot}
-                      share={shareSlot}
-                      branding={brandingSlot}
+                }
+                outline={
+                  <BuilderPanel title="Outline" side="left">
+                    <BuilderOutlineFromDocument />
+                  </BuilderPanel>
+                }
+                canvas={
+                  <div className="px-4 pb-6 pt-12 lg:px-8">
+                    <ProposalDocumentEditorLazy
+                      {...editorProps}
+                      variant={variant}
+                      initialTemplateName={initialTemplateName}
+                      embeddedInBuilder
+                      proposalEditMiddleSlot={undefined}
                     />
-                  )}
-                </BuilderPanel>
-              }
-            />
-          </BuilderSidePanelProvider>
+                  </div>
+                }
+                inspector={
+                  <BuilderPanel title="Inspector" side="right">
+                    {inspectorContent ?? (
+                      <BuilderInspectorPanel
+                        details={detailsSlot}
+                        share={shareSlot}
+                        branding={brandingSlot}
+                      />
+                    )}
+                  </BuilderPanel>
+                }
+              />
+            </BuilderSidePanelProvider>
+          </BuilderCanvasNavigationProvider>
         </BuilderTopBarTitleProvider>
       </BuilderTopBarActionsProvider>
     </DocumentEditorProvider>

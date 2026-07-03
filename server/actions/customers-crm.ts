@@ -20,6 +20,7 @@ import {
   updateCustomerDocument,
   enableCustomerPortalAccess,
 } from "@/server/firestore/crm-customers";
+import type { CustomerRecord } from "@/types/customer";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 import { getStripe } from "@/lib/stripe/server";
 
@@ -48,6 +49,24 @@ export async function createCustomerAction(
   }
   revalidateCrmCustomerPaths(result.customerId);
   return { ok: true, customerId: result.customerId };
+}
+
+export async function getCustomerDetailAction(
+  customerId: string,
+): Promise<{ ok: true; customer: CustomerRecord } | { ok: false; message: string }> {
+  const user = await requireStaffSession();
+  if (!user) {
+    return { ok: false, message: "You need an admin or team session to manage customers." };
+  }
+  const id = customerId.trim();
+  if (!id) {
+    return { ok: false, message: "Customer id is required." };
+  }
+  const customer = await getCustomerRecordForOrg(user, id);
+  if (!customer) {
+    return { ok: false, message: "Customer not found." };
+  }
+  return { ok: true, customer };
 }
 
 export async function updateCustomerAction(

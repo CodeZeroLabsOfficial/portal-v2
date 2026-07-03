@@ -3,9 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Plus, X } from "lucide-react";
+import { Loader2, MoreHorizontal, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
+import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
 import { AddAccountDialog } from "@/components/features/crm/account/add-account-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table/data-table";
@@ -20,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import type { AccountListRow } from "@/lib/account/list";
+import { getAccountDetailAction } from "@/server/actions/accounts-crm";
+import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
 
 interface AccountListPanelProps {
   rows: AccountListRow[];
@@ -54,10 +58,27 @@ function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
 export function AccountListPanel({ rows }: AccountListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [editingAccount, setEditingAccount] = React.useState<AccountDetailAggregate | null>(null);
+  const [editingAccountKey, setEditingAccountKey] = React.useState<string | null>(null);
+  const [editLoadingKey, setEditLoadingKey] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     router.refresh();
   }, [router]);
+
+  async function openEdit(accountKey: string) {
+    setEditLoadingKey(accountKey);
+    const res = await getAccountDetailAction(accountKey);
+    setEditLoadingKey(null);
+    if (!res.ok) {
+      toast.error(res.message);
+      return;
+    }
+    setEditingAccount(res.account);
+    setEditingAccountKey(res.accountKey);
+    setEditOpen(true);
+  }
 
   const columns = React.useMemo<ColumnDef<AccountListRow>[]>(
     () => [
@@ -149,23 +170,32 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       },
       {
         id: "actions",
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/admin/accounts/${row.original.key}`}>View Account</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
+        cell: ({ row }) => {
+          const key = row.original.key;
+          const busy = editLoadingKey === key;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8" disabled={busy}>
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <MoreHorizontal />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/admin/accounts/${key}`}>View Account</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openEdit(key)}>Edit</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        }
       }
     ],
-    []
+    [editLoadingKey]
   );
 
   return (
@@ -181,6 +211,20 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         }
       />
       <AddAccountDialog open={addOpen} onOpenChange={setAddOpen} />
+      {editingAccount && editingAccountKey ? (
+        <AccountEditSheet
+          account={editingAccount}
+          accountKey={editingAccountKey}
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) {
+              setEditingAccount(null);
+              setEditingAccountKey(null);
+            }
+          }}
+        />
+      ) : null}
       <DataTable
         columns={columns}
         data={rows}

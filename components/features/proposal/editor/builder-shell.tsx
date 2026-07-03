@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { BuilderSidePanel } from "@/components/features/proposal/editor/builder-side-panel";
+import { BuilderSidePanelEdgeTriggers } from "@/components/features/proposal/editor/builder-side-panel-edge-triggers";
 
 export interface BuilderShellProps {
   topBar: React.ReactNode;
@@ -32,8 +33,9 @@ function BuilderDesktopLayout({
       <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
         {outline}
       </BuilderSidePanel>
-      <main className="min-h-0 min-w-0 flex-[1_1_70%] overflow-x-clip overflow-y-auto scroll-pt-12">
-        {canvas}
+      <main className="relative min-h-0 min-w-0 flex-[1_1_70%]">
+        <BuilderSidePanelEdgeTriggers />
+        <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12">{canvas}</div>
       </main>
       <BuilderSidePanel side="right" label="Inspector" open={inspectorOpen}>
         {inspector}
