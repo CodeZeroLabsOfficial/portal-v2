@@ -675,6 +675,7 @@ const sectionBlockSchema = z.object({
   id: idSchema,
   type: z.literal("section"),
   children: z.array(nestedBlockSchema).default([]),
+  title: z.string().optional(),
   style: blockStyleSchema.optional(),
   background: sectionBackgroundSchema.optional(),
 });
@@ -789,10 +790,12 @@ export function parseProposalDocument(input: unknown): ProposalDocument {
           const bgSafe = sectionBackgroundSchema.safeParse(o.background);
           if (bgSafe.success) backgroundSafe = bgSafe.data as SectionBackground;
         }
+        const titleRaw = typeof o.title === "string" ? o.title.trim() : "";
         blocks.push({
           id,
           type: "section",
           children,
+          ...(titleRaw ? { title: titleRaw } : {}),
           ...(styleSafe.success &&
           (styleSafe.data.variant !== undefined ||
             styleSafe.data.primaryColor !== undefined ||

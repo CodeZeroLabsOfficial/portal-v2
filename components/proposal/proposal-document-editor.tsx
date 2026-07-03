@@ -13,7 +13,7 @@ import {
   ProposalEditorChrome,
   type ProposalEditShellToolbarProps,
 } from "@/components/features/proposal/editor/proposal-editor-chrome";
-import { useRegisterBuilderBreadcrumbTitle } from "@/components/features/proposal/editor/builder-breadcrumb-title";
+import { useRegisterBuilderTopBarTitle } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { useRegisterBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
@@ -241,7 +241,7 @@ export function ProposalDocumentEditor({
     ],
   );
 
-  useRegisterBuilderBreadcrumbTitle(
+  useRegisterBuilderTopBarTitle(
     embeddedInBuilder && isNamedTemplateShell && (templateId || contractTemplateId)
       ? {
           value: templateName,

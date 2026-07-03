@@ -33,10 +33,7 @@ export default async function EditContractTemplateBuilderPage({ params }: PagePr
     <ProposalBuilderWorkspace
       backHref="/admin/templates"
       backLabel="Templates"
-      breadcrumbSegments={[
-        { label: "Templates", href: "/admin/templates" },
-        { label: row.name?.trim() || "Untitled contract" },
-      ]}
+      titleFallback={row.name?.trim() || "Untitled contract"}
       variant="contract-template"
       contractTemplateId={row.id}
       initialTemplateName={row.name}

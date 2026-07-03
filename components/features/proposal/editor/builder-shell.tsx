@@ -58,7 +58,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
             </SheetTrigger>
             <SheetContent side="left" className="w-[min(100vw-2rem,20rem)] p-0">
               <SheetHeader className="border-b px-4 py-3">
-                <SheetTitle>Blocks</SheetTitle>
+                <SheetTitle>Outline</SheetTitle>
               </SheetHeader>
               <div className="overflow-y-auto p-4">{outline}</div>
             </SheetContent>

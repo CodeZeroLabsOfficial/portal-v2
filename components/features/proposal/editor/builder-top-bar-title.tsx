@@ -3,14 +3,12 @@
 import * as React from "react";
 
 import {
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
-import {
   EditableTemplateNameControl,
   type EditableTemplateNameControlProps,
 } from "@/components/features/proposal/editor/editable-template-name-control";
+import { cn } from "@/lib/utils";
 
-export type BuilderBreadcrumbTitleState = Pick<
+export type BuilderTopBarTitleState = Pick<
   EditableTemplateNameControlProps,
   | "value"
   | "emptyLabel"
@@ -22,19 +20,19 @@ export type BuilderBreadcrumbTitleState = Pick<
   | "onCancel"
 >;
 
-interface BuilderBreadcrumbTitleStore {
-  setTitle: (state: BuilderBreadcrumbTitleState | null) => void;
+interface BuilderTopBarTitleStore {
+  setTitle: (state: BuilderTopBarTitleState | null) => void;
   subscribe: (listener: () => void) => () => void;
-  getTitle: () => BuilderBreadcrumbTitleState | null;
+  getTitle: () => BuilderTopBarTitleState | null;
 }
 
-const BuilderBreadcrumbTitleContext = React.createContext<BuilderBreadcrumbTitleStore | null>(null);
+const BuilderTopBarTitleContext = React.createContext<BuilderTopBarTitleStore | null>(null);
 
-export function BuilderBreadcrumbTitleProvider({ children }: { children: React.ReactNode }) {
-  const titleRef = React.useRef<BuilderBreadcrumbTitleState | null>(null);
+export function BuilderTopBarTitleProvider({ children }: { children: React.ReactNode }) {
+  const titleRef = React.useRef<BuilderTopBarTitleState | null>(null);
   const listenersRef = React.useRef(new Set<() => void>());
 
-  const store = React.useMemo<BuilderBreadcrumbTitleStore>(
+  const store = React.useMemo<BuilderTopBarTitleStore>(
     () => ({
       setTitle(state) {
         titleRef.current = state;
@@ -52,13 +50,13 @@ export function BuilderBreadcrumbTitleProvider({ children }: { children: React.R
   );
 
   return (
-    <BuilderBreadcrumbTitleContext.Provider value={store}>{children}</BuilderBreadcrumbTitleContext.Provider>
+    <BuilderTopBarTitleContext.Provider value={store}>{children}</BuilderTopBarTitleContext.Provider>
   );
 }
 
-/** Last breadcrumb segment — editable when the embedded editor registers title state. */
-export function BuilderBreadcrumbTitleSegment({ fallbackLabel }: { fallbackLabel: string }) {
-  const store = React.useContext(BuilderBreadcrumbTitleContext);
+/** Top bar document title — editable when the embedded editor registers title state. */
+export function BuilderTopBarTitle({ fallbackLabel }: { fallbackLabel: string }) {
+  const store = React.useContext(BuilderTopBarTitleContext);
   const title = React.useSyncExternalStore(
     store?.subscribe ?? (() => () => {}),
     () => store?.getTitle() ?? null,
@@ -66,19 +64,19 @@ export function BuilderBreadcrumbTitleSegment({ fallbackLabel }: { fallbackLabel
   );
 
   if (title) {
-    return <EditableTemplateNameControl appearance="breadcrumb" {...title} />;
+    return <EditableTemplateNameControl appearance="standalone" {...title} />;
   }
 
   return (
-    <BreadcrumbPage className="max-w-[12rem] truncate sm:max-w-xs">{fallbackLabel}</BreadcrumbPage>
+    <span className={cn("text-foreground min-w-0 truncate text-xs font-medium")}>{fallbackLabel}</span>
   );
 }
 
-export function useRegisterBuilderBreadcrumbTitle(
-  state: BuilderBreadcrumbTitleState | null,
+export function useRegisterBuilderTopBarTitle(
+  state: BuilderTopBarTitleState | null,
   deps: React.DependencyList,
 ) {
-  const store = React.useContext(BuilderBreadcrumbTitleContext);
+  const store = React.useContext(BuilderTopBarTitleContext);
   const stateRef = React.useRef(state);
   stateRef.current = state;
 

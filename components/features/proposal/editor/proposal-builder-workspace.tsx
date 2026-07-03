@@ -4,7 +4,7 @@ import * as React from "react";
 import type { ReactNode } from "react";
 
 import { BlockOutlinePanel } from "@/components/features/proposal/editor/block-outline-panel";
-import { BuilderBreadcrumbTitleProvider } from "@/components/features/proposal/editor/builder-breadcrumb-title";
+import { BuilderTopBarTitleProvider } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { BuilderInspectorPanel } from "@/components/features/proposal/editor/builder-inspector-panel";
 import { BuilderShell } from "@/components/features/proposal/editor/builder-shell";
 import {
@@ -12,24 +12,19 @@ import {
   BuilderTopBarActionsSlot,
 } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { BuilderSidePanelProvider } from "@/components/features/proposal/editor/builder-side-panel-context";
-import { DocumentEditorProvider, useDocumentEditor } from "@/components/features/proposal/editor/document-editor-context";
-import {
-  BuilderPanel,
-  BuilderTopBar,
-  type BuilderBreadcrumbSegment,
-} from "@/components/features/proposal/editor/builder-top-bar";
+import { DocumentEditorProvider } from "@/components/features/proposal/editor/document-editor-context";
+import { BuilderPanel, BuilderTopBar } from "@/components/features/proposal/editor/builder-top-bar";
 import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
 import type { ProposalDocumentEditorProps } from "@/components/proposal/proposal-document-editor";
 
 function BuilderOutlineFromDocument() {
-  const { document } = useDocumentEditor();
-  return <BlockOutlinePanel blocks={document.blocks} />;
+  return <BlockOutlinePanel />;
 }
 
 export interface ProposalBuilderWorkspaceProps extends ProposalDocumentEditorProps {
   backHref: string;
   backLabel: string;
-  breadcrumbSegments: BuilderBreadcrumbSegment[];
+  titleFallback: string;
   inspectorContent?: ReactNode;
   detailsSlot?: React.ReactNode;
   shareSlot?: React.ReactNode;
@@ -39,7 +34,7 @@ export interface ProposalBuilderWorkspaceProps extends ProposalDocumentEditorPro
 export function ProposalBuilderWorkspace({
   backHref,
   backLabel,
-  breadcrumbSegments,
+  titleFallback,
   inspectorContent,
   detailsSlot,
   shareSlot,
@@ -51,14 +46,14 @@ export function ProposalBuilderWorkspace({
   return (
     <DocumentEditorProvider initialDocument={editorProps.initialDocument}>
       <BuilderTopBarActionsProvider>
-        <BuilderBreadcrumbTitleProvider>
+        <BuilderTopBarTitleProvider>
           <BuilderSidePanelProvider>
             <BuilderShell
               topBar={
                 <BuilderTopBar
                   backHref={backHref}
                   backLabel={backLabel}
-                  segments={breadcrumbSegments}
+                  titleFallback={titleFallback}
                   actions={<BuilderTopBarActionsSlot />}
                 />
               }
@@ -91,7 +86,7 @@ export function ProposalBuilderWorkspace({
               }
             />
           </BuilderSidePanelProvider>
-        </BuilderBreadcrumbTitleProvider>
+        </BuilderTopBarTitleProvider>
       </BuilderTopBarActionsProvider>
     </DocumentEditorProvider>
   );

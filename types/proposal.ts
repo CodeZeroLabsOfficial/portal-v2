@@ -496,6 +496,8 @@ export type ProposalAgreementChildBlock = Exclude<ProposalContentBlock, Agreemen
 export interface SectionBlock extends ProposalBlockBase {
   type: "section";
   children: ProposalContentBlock[];
+  /** Editor/outline label; not rendered on the public proposal. */
+  title?: string;
   /** Optional hero / layout styling (same shape as quote & plans blocks). */
   style?: BlockStyle;
   /** Optional cinematic backdrop beneath nested content. */

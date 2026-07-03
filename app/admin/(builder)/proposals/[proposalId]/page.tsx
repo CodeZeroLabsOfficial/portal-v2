@@ -58,10 +58,7 @@ export default async function AdminProposalBuilderPage({ params, searchParams }:
     <ProposalBuilderWorkspace
       backHref={customerBackId ? `/admin/customers/${encodeURIComponent(customerBackId)}` : "/admin/proposals"}
       backLabel={customerBackId ? "Customer" : "Proposals"}
-      breadcrumbSegments={[
-        { label: "Proposals", href: "/admin/proposals" },
-        { label: proposal.document.title?.trim() || "Untitled proposal" },
-      ]}
+      titleFallback={proposal.document.title?.trim() || "Untitled proposal"}
       detailsSlot={
         <ProposalBuilderMetadata
           proposal={proposal}

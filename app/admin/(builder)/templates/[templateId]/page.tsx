@@ -32,10 +32,7 @@ export default async function EditProposalTemplateBuilderPage({ params }: PagePr
     <ProposalBuilderWorkspace
       backHref="/admin/templates"
       backLabel="Templates"
-      breadcrumbSegments={[
-        { label: "Templates", href: "/admin/templates" },
-        { label: template.name?.trim() || "Untitled template" },
-      ]}
+      titleFallback={template.name?.trim() || "Untitled template"}
       brandingSlot={
         <Typography variant="muted" className="text-sm">
           Template logo and colors are edited on splash blocks in the canvas.
