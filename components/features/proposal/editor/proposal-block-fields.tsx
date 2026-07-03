@@ -85,7 +85,7 @@ import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-
 import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
 import { useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
 import {
-  SECTION_CHILD_DRAG_GUTTER_CLASSES,
+  SectionChildBlockGutter,
   SectionChildDragHandle,
   SectionChildInsertSlot,
 } from "@/components/proposal/proposal-section-child-chrome";
@@ -250,6 +250,8 @@ function SortableShell({
   suppressToolbar = false,
   /** Drag notch: select row without clearing nested column cell focus (columns blocks). */
   onSelectFromNotch,
+  /** Section-child row: `+` beside the drag notch (insert below this block). */
+  sectionChildInsertMenu,
   /** Root-level block outside a section — remap tokens for dark admin chrome over a light canvas. */
   rootLightSurface = false,
 }: {
@@ -258,6 +260,7 @@ function SortableShell({
   selected: boolean;
   onSelect: () => void;
   onSelectFromNotch?: () => void;
+  sectionChildInsertMenu?: (plusTrigger: React.ReactNode) => React.ReactNode;
   toolbar?: (ctx: {
     dragAttributes: DraggableAttributes;
     dragListeners: DraggableSyntheticListeners;
@@ -282,7 +285,7 @@ function SortableShell({
     toolbar && !suppressToolbar && (selected || (toolbarShowOnHover && hovered)),
   );
   const sectionChild = layout === "section-child";
-  const showSectionDragGutter = sectionChild && (hovered || isDragging);
+  const showSectionGutter = sectionChild && (hovered || selected || isDragging);
 
   const sectionChildRingClasses = prefersLightSection
     ? cn(
@@ -339,23 +342,19 @@ function SortableShell({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {sectionChild ? (
-        <div
-          data-section-drag-gutter
-          className={cn(
-            SECTION_CHILD_DRAG_GUTTER_CLASSES,
-            showSectionDragGutter
-              ? "visible pointer-events-auto opacity-100"
-              : "invisible pointer-events-none opacity-0",
-          )}
-        >
-          <SectionChildDragHandle
-            aria-label="Drag to reorder"
-            onPointerDown={() => (onSelectFromNotch ?? onSelect)()}
-            {...attributes}
-            {...listeners}
-          />
-        </div>
+      {sectionChild && sectionChildInsertMenu ? (
+        <SectionChildBlockGutter
+          visible={showSectionGutter}
+          insertMenu={sectionChildInsertMenu}
+          dragHandle={
+            <SectionChildDragHandle
+              aria-label="Drag to reorder"
+              onPointerDown={() => (onSelectFromNotch ?? onSelect)()}
+              {...attributes}
+              {...listeners}
+            />
+          }
+        />
       ) : null}
       <div className={cn("relative min-w-0", sectionChild ? "flex-1" : "w-full")}>
         {showToolbar && toolbar && !sectionChild ? (
@@ -1250,7 +1249,6 @@ export function SectionBlockFields({
           {children.map((child, idx) => {
             const isSelected = selectedBlockId === child.id;
             const supportsStyle = child.type === "packages" || child.type === "pricing";
-            const isLastChild = idx === children.length - 1;
             return (
               <div key={child.id} className="relative isolate min-w-0">
                 {idx === 0 ? (
@@ -1267,6 +1265,13 @@ export function SectionBlockFields({
                   flush
                   layout="section-child"
                   toolbarShowOnHover={false}
+                  sectionChildInsertMenu={(trigger) => (
+                    <SectionInsertMenu
+                      align="start"
+                      onAdd={(b) => addChildAt(b, idx + 1)}
+                      trigger={trigger}
+                    />
+                  )}
                   suppressToolbar={child.type === "columns" && columnsChrome.isInnerCellActive(child.id)}
                   onSelect={() => {
                     setColumnsLayoutEditingId((prev) =>
@@ -1473,16 +1478,6 @@ export function SectionBlockFields({
                   />
                 </SortableShell>
                 </div>
-                <SectionChildInsertSlot
-                  placement={isLastChild ? "trailing" : "between"}
-                  menu={(trigger) => (
-                    <SectionInsertMenu
-                      align="start"
-                      onAdd={(b) => addChildAt(b, idx + 1)}
-                      trigger={trigger}
-                    />
-                  )}
-                />
               </div>
             );
           })}
@@ -2198,7 +2193,6 @@ export function AgreementBlockFields({
           {children.map((child, idx) => {
             const isSelected = selectedBlockId === child.id;
             const supportsStyle = child.type === "packages" || child.type === "pricing";
-            const isLastChild = idx === children.length - 1;
             return (
               <div key={child.id} className="relative isolate min-w-0">
                 {idx === 0 ? (
@@ -2215,6 +2209,13 @@ export function AgreementBlockFields({
                   flush
                   layout="section-child"
                   toolbarShowOnHover={false}
+                  sectionChildInsertMenu={(trigger) => (
+                    <SectionInsertMenu
+                      align="start"
+                      onAdd={(b) => addChildAt(b, idx + 1)}
+                      trigger={trigger}
+                    />
+                  )}
                   suppressToolbar={child.type === "columns" && columnsChrome.isInnerCellActive(child.id)}
                   onSelect={() => {
                     setColumnsLayoutEditingId((prev) =>
@@ -2401,16 +2402,6 @@ export function AgreementBlockFields({
                   />
                 </SortableShell>
                 </div>
-                <SectionChildInsertSlot
-                  placement={isLastChild ? "trailing" : "between"}
-                  menu={(trigger) => (
-                    <SectionInsertMenu
-                      align="start"
-                      onAdd={(b) => addChildAt(b, idx + 1)}
-                      trigger={trigger}
-                    />
-                  )}
-                />
               </div>
             );
           })}
