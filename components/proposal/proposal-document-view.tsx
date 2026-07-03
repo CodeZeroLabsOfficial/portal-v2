@@ -65,6 +65,7 @@ export interface ProposalDocumentViewProps {
   customerSignerPrefill?: ProposalCustomerSignerPrefill | null;
   /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
   catalogServices?: readonly CatalogServicePickerOption[];
+  stripePublishableKey?: string;
   /** In-editor live preview — first section band sits flush under the preview frame. */
   flushTop?: boolean;
 }
@@ -187,6 +188,7 @@ export function ProposalDocumentView({
   publicSubscriptionUi = null,
   customerSignerPrefill = null,
   catalogServices = [],
+  stripePublishableKey,
   flushTop = false,
 }: ProposalDocumentViewProps) {
   const style = React.useMemo(() => {
@@ -220,6 +222,7 @@ export function ProposalDocumentView({
       publicSubscriptionUi,
       customerSignerPrefill,
       catalogServices,
+      stripePublishableKey,
     }),
     [
       document.blocks,
@@ -234,6 +237,7 @@ export function ProposalDocumentView({
       publicSubscriptionUi,
       customerSignerPrefill,
       catalogServices,
+      stripePublishableKey,
     ],
   );
 

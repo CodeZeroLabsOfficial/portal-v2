@@ -1,8 +1,30 @@
-import { IntegrationsSettingsPanel } from "@/components/features/settings/integrations-settings-panel";
-import { isStripeApiConfigured, isStripeWebhookConfigured } from "@/lib/stripe/server";
+import { redirect } from "next/navigation";
 
-export default function AdminSettingsIntegrationsPage() {
-  const stripeConnected = isStripeApiConfigured() && isStripeWebhookConfigured();
+import { IntegrationsSettingsPageClient } from "@/components/features/settings/integrations-settings-page-client";
+import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { getStripeIntegrationStatus } from "@/lib/stripe/integration-status";
+import { getPortalIntegrationsSettings } from "@/server/firestore/integrations-settings";
 
-  return <IntegrationsSettingsPanel stripeConnected={stripeConnected} />;
+export default async function AdminSettingsIntegrationsPage() {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    redirect("/login?next=/admin/settings/integrations");
+  }
+
+  const [settings, stripeStatus] = await Promise.all([
+    getPortalIntegrationsSettings(),
+    getStripeIntegrationStatus(),
+  ]);
+
+  if (settings === null) {
+    return (
+      <p className="text-destructive text-sm">
+        Integration settings could not be loaded. Check that Firebase Admin is configured.
+      </p>
+    );
+  }
+
+  return (
+    <IntegrationsSettingsPageClient initialSettings={settings} initialStripeStatus={stripeStatus} />
+  );
 }

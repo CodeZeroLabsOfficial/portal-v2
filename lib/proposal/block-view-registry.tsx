@@ -59,6 +59,7 @@ export interface ProposalRenderContext {
   publicSubscriptionUi?: ProposalPublicSubscriptionUi | null;
   customerSignerPrefill?: import("@/types/proposal").ProposalCustomerSignerPrefill | null;
   catalogServices?: readonly CatalogServicePickerOption[];
+  stripePublishableKey?: string;
 }
 
 export interface ProposalBlockViewProps {
@@ -442,6 +443,7 @@ function renderAgreementBlock({
       publicSubscriptionUi={proposalContext?.publicSubscriptionUi}
       customerSignerPrefill={proposalContext?.customerSignerPrefill}
       catalogServices={proposalContext?.catalogServices}
+      stripePublishableKey={proposalContext?.stripePublishableKey}
       renderAgreementChild={(child) =>
         renderBlock(child)
       }

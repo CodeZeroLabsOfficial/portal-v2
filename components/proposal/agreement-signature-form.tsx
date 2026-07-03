@@ -270,6 +270,7 @@ export interface AgreementSignatureFormProps {
   localityTimeZone?: string;
   shareToken?: string;
   publicSubscriptionUi?: ProposalPublicSubscriptionUi | null;
+  stripePublishableKey?: string;
   /**
    * When false, hide subscription card capture in the modal and do not require billing before accept.
    * Default true.
@@ -304,6 +305,7 @@ export function AgreementSignatureForm({
   localityTimeZone,
   shareToken,
   publicSubscriptionUi,
+  stripePublishableKey,
   paymentDetailsSectionEnabled = true,
   monthlyTotalMinor,
   monthlyCurrency,
@@ -1114,6 +1116,7 @@ export function AgreementSignatureForm({
                           active={paymentSectionOpen}
                           shareToken={shareToken}
                           ui={publicSubscriptionUi}
+                          stripePublishableKey={stripePublishableKey}
                           cardElementId="proposal-accept-flow-subscription-card"
                           mode="save_card_only"
                           monthlyTotalMinor={monthlyTotalMinor}

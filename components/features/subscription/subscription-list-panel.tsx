@@ -50,6 +50,7 @@ export interface SubscriptionListPanelProps {
   rows: SubscriptionListRow[];
   customerOptions: { id: string; label: string }[];
   catalogServiceOptions: CatalogServicePickerOption[];
+  stripePublishableKey?: string;
 }
 
 interface SubscriptionListTableRow extends SubscriptionListRow {
@@ -212,7 +213,8 @@ function SubscriptionListToolbar({
 export function SubscriptionListPanel({
   rows,
   customerOptions,
-  catalogServiceOptions
+  catalogServiceOptions,
+  stripePublishableKey,
 }: SubscriptionListPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -566,6 +568,7 @@ export function SubscriptionListPanel({
         onOpenChange={setAddOpen}
         customerOptions={customerOptions}
         catalogServiceOptions={catalogServiceOptions}
+        stripePublishableKey={stripePublishableKey}
       />
 
       <ConfirmDialog

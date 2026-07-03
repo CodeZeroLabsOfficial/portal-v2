@@ -66,8 +66,9 @@ export interface AgreementBlockPublicProps {
   publicSubscriptionUi?: ProposalPublicSubscriptionUi | null;
   /** CRM-linked customer fields for agreement pre-fill (public page only). */
   customerSignerPrefill?: ProposalCustomerSignerPrefill | null;
-  /** Active catalogue services — classifies recurring vs one-off add-ons in the summary. */
+  /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
   catalogServices?: readonly CatalogServicePickerOption[];
+  stripePublishableKey?: string;
   /** When false (editor / preview) the CTA is disabled and the sign form is read-only. */
   interactive?: boolean;
   /** Renders nested blocks above the sign button (same pipeline as the public document viewer). */
@@ -371,6 +372,7 @@ export function AgreementBlockPublic({
   publicSubscriptionUi = null,
   customerSignerPrefill = null,
   catalogServices = [],
+  stripePublishableKey,
   renderAgreementChild,
 }: AgreementBlockPublicProps) {
   const router = useRouter();
@@ -859,6 +861,7 @@ export function AgreementBlockPublic({
                     localityTimeZone={localityTimeZone}
                     shareToken={shareToken}
                     publicSubscriptionUi={publicSubscriptionUi}
+                    stripePublishableKey={stripePublishableKey}
                     paymentDetailsSectionEnabled={block.paymentDetailsSectionEnabled !== false}
                     monthlyTotalMinor={subscriptionMonthly?.total}
                     monthlyCurrency={subscriptionMonthly?.currency}

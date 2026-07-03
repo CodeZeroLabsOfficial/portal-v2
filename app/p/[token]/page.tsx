@@ -7,6 +7,7 @@ import { ProposalDocumentView } from "@/components/proposal/proposal-document-vi
 import { ProposalPasswordGate } from "@/components/proposal/proposal-password-gate";
 import { ProposalPublicFooter } from "@/components/proposal/proposal-public-footer";
 import { hasAgreementBlock, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
+import { getStripePublishableKey } from "@/lib/stripe/publishable-key";
 import { PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES } from "@/lib/proposal/public/public-layout";
 import { isProposalUnlockedForRequest } from "@/lib/proposal/public/public-session";
 import { listCatalogServicePickerOptionsForOrganizationId } from "@/server/firestore/catalog-services";
@@ -62,15 +63,16 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
     : proposal.document;
 
   const agreementPresent = hasAgreementBlock(publicDocument.blocks);
-  const [publicSubscriptionUi, customerSignerPrefill, catalogServices] = unlocked
+  const [publicSubscriptionUi, customerSignerPrefill, catalogServices, stripePublishableKey] = unlocked
     ? await Promise.all([
         agreementPresent ? loadProposalPublicSubscriptionUi(proposal) : Promise.resolve(null),
         proposal.customerId?.trim()
           ? loadProposalCustomerSignerPrefill(proposal)
           : Promise.resolve(null),
         listCatalogServicePickerOptionsForOrganizationId(proposal.organizationId),
+        getStripePublishableKey(),
       ])
-    : [null, null, []];
+    : [null, null, [], undefined];
 
   const showFooter = !agreementPresent || proposal.status === "accepted";
   const flushBottom = !showFooter && proposalEndsInFullBleedBand(publicDocument.blocks);
@@ -96,6 +98,7 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
               publicSubscriptionUi={publicSubscriptionUi}
               customerSignerPrefill={customerSignerPrefill}
               catalogServices={catalogServices}
+              stripePublishableKey={stripePublishableKey}
             />
           ) : (
             <ProposalPasswordGate shareToken={proposal.shareToken} />

@@ -53,13 +53,20 @@ Set on your hosting provider (e.g. Vercel) or in `.env.local` for development:
 | Variable | Purpose |
 |----------|---------|
 | `STRIPE_SECRET_KEY` | Server-side Stripe SDK — invoices, Checkout, Billing Portal |
+| `STRIPE_WEBHOOK_SECRET` | Required on the Next.js host for webhook status checks; canonical webhook handler runs on Firebase |
 | `STRIPE_DEFAULT_SUBSCRIPTION_PRICE_ID` | Optional `price_…` id for proposal “Checkout (subscription)” without prompting |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS` | Firebase Admin — required for Firestore writes |
 | `NEXT_PUBLIC_APP_URL` | Optional fallback origin if reverse-proxy headers are missing |
 
-`STRIPE_WEBHOOK_SECRET` is **not** required on the Next.js host after migrating to Firebase.
+### Portal settings (publishable key — required for card entry)
 
-Never expose secret keys to the browser; only `NEXT_PUBLIC_*` belongs in client bundles.
+Staff configure the **Stripe publishable key** (`pk_test_…` / `pk_live_…`) under **Admin → Settings → Integrations → Stripe**. It is stored in Firestore at `app_settings/integrations` and passed to Stripe.js for card collection (Add subscription, public proposal checkout).
+
+An optional **webhook URL** field in the same sheet is for reference when pasting your Firebase `stripeWebhook` endpoint into the Stripe Dashboard.
+
+**Connected** on the Integrations page requires all three: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and a saved publishable key.
+
+Never expose secret keys to the browser.
 
 ## 3. Firestore layout
 
@@ -117,6 +124,8 @@ Stripe maintains Firebase Extensions for specific workflows (e.g. catalog or pay
 - [ ] `STRIPE_WEBHOOK_SECRET` set as a Firebase secret matching the active Stripe endpoint.
 - [ ] Legacy Next.js webhook URL disabled in Stripe Dashboard.
 - [ ] `STRIPE_SECRET_KEY` on Firebase (functions) and Next.js (create routes).
+- [ ] `STRIPE_WEBHOOK_SECRET` on Firebase (functions) and Next.js (integration status).
+- [ ] Stripe publishable key saved under **Settings → Integrations**.
 - [ ] Firebase Admin credentials present on the Next.js server.
 - [ ] Customer Portal branding configured under Stripe **Settings → Billing → Customer portal**.
 - [ ] Test mode end-to-end: invoice from proposal → webhook rows appear → staff/customer views show mirrors.

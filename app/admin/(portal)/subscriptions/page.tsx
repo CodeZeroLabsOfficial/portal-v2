@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SubscriptionListPanel } from "@/components/features/subscription/subscription-list-panel";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { getStripePublishableKey } from "@/lib/stripe/publishable-key";
 import { getAdminSubscriptionsSnapshot } from "@/server/firestore/crm-customers";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getAdminCustomerListRows } from "@/server/firestore/portal-data";
@@ -16,10 +17,11 @@ export default async function AdminSubscriptionsPage() {
     redirect("/login?next=/admin/subscriptions");
   }
 
-  const [data, customers, catalogServiceOptions] = await Promise.all([
+  const [data, customers, catalogServiceOptions, stripePublishableKey] = await Promise.all([
     getAdminSubscriptionsSnapshot(user),
     getAdminCustomerListRows(user),
-    listCatalogServicePickerOptionsForOrg(user)
+    listCatalogServicePickerOptionsForOrg(user),
+    getStripePublishableKey(),
   ]);
 
   const rows =
@@ -45,6 +47,7 @@ export default async function AdminSubscriptionsPage() {
       rows={rows}
       customerOptions={customerOptions}
       catalogServiceOptions={catalogServiceOptions}
+      stripePublishableKey={stripePublishableKey}
     />
   );
 }

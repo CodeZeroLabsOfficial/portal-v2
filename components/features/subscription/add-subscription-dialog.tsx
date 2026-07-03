@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { isCatalogServicePlanPickerOption } from "@/lib/catalog/service-tier";
 import { formatCurrencyAmount } from "@/lib/common/format";
-import { getFirebasePublicConfig } from "@/lib/env/client-public";
+import { StripeIntegrationNotConfiguredAlert } from "@/components/shared/stripe-not-configured-alert";
 import { createSubscriptionSchema, type CreateSubscriptionInput } from "@/lib/schemas/subscription";
 import { createSubscriptionAction } from "@/server/actions/subscriptions-crm";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
@@ -60,6 +60,7 @@ export interface AddSubscriptionDialogProps {
   onOpenChange: (open: boolean) => void;
   customerOptions: { id: string; label: string }[];
   catalogServiceOptions: CatalogServicePickerOption[];
+  stripePublishableKey?: string;
 }
 
 interface SavedCardOption {
@@ -89,7 +90,8 @@ export function AddSubscriptionDialog({
   open,
   onOpenChange,
   customerOptions,
-  catalogServiceOptions
+  catalogServiceOptions,
+  stripePublishableKey,
 }: AddSubscriptionDialogProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -139,7 +141,7 @@ export function AddSubscriptionDialog({
   const durationOptions = selectedService?.durations ?? [];
   const selectedCustomerId = form.watch("customerId");
   const effectivePmId = form.watch("defaultPaymentMethodId");
-  const publishableKey = getFirebasePublicConfig()?.stripePublishableKey?.trim();
+  const publishableKey = stripePublishableKey?.trim();
 
   React.useEffect(() => {
     if (!open) {
@@ -542,11 +544,7 @@ export function AddSubscriptionDialog({
                     />
                   </>
                 ) : null}
-                {!publishableKey ? (
-                  <p className="text-destructive text-xs">
-                    Configure NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to collect card details.
-                  </p>
-                ) : null}
+                {!publishableKey ? <StripeIntegrationNotConfiguredAlert /> : null}
                 {cardError ? <p className="text-destructive text-xs">{cardError}</p> : null}
                 {cardLoading ? (
                   <p className="text-muted-foreground text-xs">Checking existing card…</p>

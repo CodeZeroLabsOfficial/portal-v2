@@ -13,9 +13,9 @@ import {
 import { createProposalPublicSubscriptionAction } from "@/server/actions/proposal-public-subscription";
 import { Button } from "@/components/ui/button";
 import { FormServerError } from "@/components/shared/form-server-error";
+import { StripePublicPaymentsUnavailableAlert } from "@/components/shared/stripe-not-configured-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getFirebasePublicConfig } from "@/lib/env/client-public";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export interface ProposalPublicSubscriptionFormPanelProps {
   active: boolean;
   /** DOM id for the Stripe Card element mount target (must be unique per mounted instance). */
   cardElementId: string;
+  stripePublishableKey?: string;
   /** `save_card_only`: collect card before acceptance. `manage_subscription`: full create flow. */
   mode: "save_card_only" | "manage_subscription";
   /** Shown in save_card_only header as “Monthly total”. */
@@ -55,6 +56,7 @@ export function ProposalPublicSubscriptionFormPanel({
   ui,
   active,
   cardElementId,
+  stripePublishableKey,
   mode,
   monthlyTotalMinor,
   monthlyCurrency,
@@ -116,7 +118,7 @@ export function ProposalPublicSubscriptionFormPanel({
     showAddCard,
   ]);
 
-  const publishableKey = getFirebasePublicConfig()?.stripePublishableKey?.trim();
+  const publishableKey = stripePublishableKey?.trim();
 
   const {
     cardReady,
@@ -459,11 +461,7 @@ export function ProposalPublicSubscriptionFormPanel({
                 />
               </div>
             ) : null}
-            {!publishableKey ? (
-              <p className="text-xs text-destructive">
-                Configure NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to collect card details.
-              </p>
-            ) : null}
+            {!publishableKey ? <StripePublicPaymentsUnavailableAlert /> : null}
             {cardError ? <p className="text-xs text-destructive">{cardError}</p> : null}
             {cardLoading ? <p className="text-xs text-muted-foreground">Checking saved cards…</p> : null}
             {mode === "save_card_only" && cardSummary && !showAddCard ? (
