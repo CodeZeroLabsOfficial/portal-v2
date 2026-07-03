@@ -3,13 +3,15 @@ import test from "node:test";
 
 import {
   applyBlockStyleById,
+  documentEditorReducer,
   insertRootBlockAt,
+  mergeNestedCommerceBlockStyles,
   patchBlockBackground,
   removeBlockById,
   reorderRootBlocks,
   updateBlockById,
 } from "./document-store";
-import type { PackagesBlock, ProposalBlock, ProposalDocument, SectionBlock, TextBlock } from "@/types/proposal";
+import type { PackagesBlock, PricingBlock, ProposalBlock, ProposalDocument, SectionBlock, TextBlock } from "@/types/proposal";
 
 const textA: TextBlock = { id: "text-a", type: "text", html: "<p>A</p>" };
 const textB: TextBlock = { id: "text-b", type: "text", html: "<p>B</p>" };
@@ -86,4 +88,78 @@ test("applyBlockStyleById patches nested packages block in section", () => {
   const next = applyBlockStyleById(pkgDoc, "pkg-1", { variant: "visual" });
   const child = (next.blocks[0] as SectionBlock).children[0] as PackagesBlock;
   assert.equal(child.style?.variant, "visual");
+});
+
+test("mergeNestedCommerceBlockStyles preserves tableBackground on stale packages content patch", () => {
+  const styled: PackagesBlock = {
+    id: "pkg-1",
+    type: "packages",
+    currency: "AUD",
+    tiers: [{ id: "t1", name: "Starter", includedUsers: 1, includedLocations: 1, includedAdmins: 0, monthlyCost12Minor: 0, monthlyCost24Minor: 0, features: [] }],
+    style: { tableBackground: "#15141F", primaryColor: "#673AB7" },
+  };
+  const stale: PackagesBlock = {
+    id: "pkg-1",
+    type: "packages",
+    currency: "AUD",
+    tiers: [{ id: "t1", name: "Starter Plus", includedUsers: 1, includedLocations: 1, includedAdmins: 0, monthlyCost12Minor: 0, monthlyCost24Minor: 0, features: [] }],
+  };
+  const merged = mergeNestedCommerceBlockStyles(styled, stale) as PackagesBlock;
+  assert.equal(merged.style?.tableBackground, "#15141F");
+  assert.equal(merged.tiers[0]?.name, "Starter Plus");
+});
+
+test("updateBlock via reducer preserves nested packages style after section child edit", () => {
+  const packages: PackagesBlock = {
+    id: "pkg-1",
+    type: "packages",
+    currency: "AUD",
+    tiers: [],
+    style: { tableBackground: "#15141F" },
+  };
+  const sectionWithPkg: SectionBlock = {
+    id: "section-2",
+    type: "section",
+    children: [packages],
+  };
+  let state: ProposalDocument = {
+    title: "Pkg",
+    blocks: [sectionWithPkg],
+  };
+  const stalePackages: PackagesBlock = {
+    id: "pkg-1",
+    type: "packages",
+    currency: "AUD",
+    tiers: [{ id: "t1", name: "Pro", includedUsers: 5, includedLocations: 1, includedAdmins: 1, monthlyCost12Minor: 1000, monthlyCost24Minor: 900, features: [] }],
+  };
+  const staleSection: SectionBlock = {
+    id: "section-2",
+    type: "section",
+    children: [stalePackages],
+  };
+  state = documentEditorReducer(state, { type: "updateBlock", id: "section-2", block: staleSection });
+  const child = (state.blocks[0] as SectionBlock).children[0] as PackagesBlock;
+  assert.equal(child.style?.tableBackground, "#15141F");
+  assert.equal(child.tiers[0]?.name, "Pro");
+});
+
+test("updateBlock preserves pricing style on direct root block replace", () => {
+  const pricing: PricingBlock = {
+    id: "price-1",
+    type: "pricing",
+    currency: "aud",
+    lineItems: [],
+    style: { tableBackground: "#0F172A" },
+  };
+  let state: ProposalDocument = { title: "P", blocks: [pricing] };
+  const stale: PricingBlock = {
+    id: "price-1",
+    type: "pricing",
+    currency: "aud",
+    lineItems: [{ id: "li-1", label: "Item", unitAmountMinor: 500, quantity: 1 }],
+  };
+  state = documentEditorReducer(state, { type: "updateBlock", id: "price-1", block: stale });
+  const block = state.blocks[0] as PricingBlock;
+  assert.equal(block.style?.tableBackground, "#0F172A");
+  assert.equal(block.lineItems[0]?.label, "Item");
 });

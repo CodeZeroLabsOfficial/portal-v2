@@ -171,6 +171,72 @@ function blockTypeSupportsStyle(type: ProposalBlock["type"]): boolean {
   return type === "packages" || type === "pricing";
 }
 
+type CommerceStyledBlock = ProposalBlock & { style?: BlockStyle };
+
+/** Keep toolbar-applied `style` when inline editors submit a stale block copy without it. */
+function preserveCommerceBlockStyleOnContentUpdate(
+  existing: CommerceStyledBlock,
+  incoming: CommerceStyledBlock,
+): CommerceStyledBlock {
+  if (existing.type !== incoming.type) return incoming;
+  if (!blockTypeSupportsStyle(existing.type)) return incoming;
+  if (existing.style === undefined) return incoming;
+  if (incoming.style !== undefined) return incoming;
+  return { ...incoming, style: existing.style };
+}
+
+/**
+ * Recursively preserve packages/pricing `style` on content edits that replace a parent
+ * (section, agreement, columns) or the commerce block itself with a stale payload.
+ */
+export function mergeNestedCommerceBlockStyles(
+  existing: ProposalBlock,
+  incoming: ProposalBlock,
+): ProposalBlock {
+  if (existing.id !== incoming.id || existing.type !== incoming.type) {
+    return incoming;
+  }
+
+  if (blockTypeSupportsStyle(existing.type)) {
+    return preserveCommerceBlockStyleOnContentUpdate(
+      existing as CommerceStyledBlock,
+      incoming as CommerceStyledBlock,
+    );
+  }
+
+  if (existing.type === "section" && incoming.type === "section") {
+    const children = incoming.children.map((child) => {
+      const prev = existing.children.find((c) => c.id === child.id);
+      if (!prev) return child;
+      return mergeNestedCommerceBlockStyles(prev as ProposalBlock, child as ProposalBlock) as ProposalContentBlock;
+    });
+    return { ...incoming, children };
+  }
+
+  if (existing.type === "agreement" && incoming.type === "agreement") {
+    const children = incoming.children.map((child) => {
+      const prev = existing.children.find((c) => c.id === child.id);
+      if (!prev) return child;
+      return mergeNestedCommerceBlockStyles(prev as ProposalBlock, child as ProposalBlock) as ProposalAgreementChildBlock;
+    });
+    return { ...incoming, children };
+  }
+
+  if (existing.type === "columns" && incoming.type === "columns") {
+    const stacks = incoming.stacks.map((stack, stackIndex) =>
+      stack.map((child) => {
+        const prevStack = existing.stacks[stackIndex];
+        const prev = prevStack?.find((c) => c.id === child.id);
+        if (!prev) return child;
+        return mergeNestedCommerceBlockStyles(prev as ProposalBlock, child as ProposalBlock) as ProposalColumnChildBlock;
+      }),
+    );
+    return { ...incoming, stacks };
+  }
+
+  return incoming;
+}
+
 export function applyBlockStyleById(
   document: ProposalDocument,
   id: string,
@@ -241,7 +307,9 @@ export function documentEditorReducer(
     case "setTitle":
       return setDocumentTitle(state, action.title);
     case "updateBlock":
-      return updateBlockById(state, action.id, () => action.block);
+      return updateBlockById(state, action.id, (existing) =>
+        mergeNestedCommerceBlockStyles(existing, action.block),
+      );
     case "removeBlock":
       return removeBlockById(state, action.id);
     case "insertRootBlock":
