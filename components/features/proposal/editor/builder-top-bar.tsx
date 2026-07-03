@@ -25,7 +25,6 @@ export interface BuilderTopBarProps {
   backHref: string;
   backLabel: string;
   segments: BuilderBreadcrumbSegment[];
-  statusBadge?: React.ReactNode;
   actions: React.ReactNode;
   className?: string;
 }
@@ -34,7 +33,6 @@ export function BuilderTopBar({
   backHref,
   backLabel,
   segments,
-  statusBadge,
   actions,
   className,
 }: BuilderTopBarProps) {
@@ -74,8 +72,7 @@ export function BuilderTopBar({
             })}
           </BreadcrumbList>
         </Breadcrumb>
-        {statusBadge ? <div className="shrink-0">{statusBadge}</div> : null}
-        <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>
       </div>
     </header>
   );

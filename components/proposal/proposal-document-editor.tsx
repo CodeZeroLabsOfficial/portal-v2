@@ -9,9 +9,11 @@ import {
   useColumnsInnerCellChrome,
 } from "@/components/features/proposal/editor/proposal-block-fields";
 import {
+  BuilderEmbeddedChromeActions,
   ProposalEditorChrome,
   type ProposalEditShellToolbarProps,
 } from "@/components/features/proposal/editor/proposal-editor-chrome";
+import { useRegisterBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
 import { ProposalBrandingProvider } from "@/components/proposal/proposal-branding-context";
@@ -186,6 +188,55 @@ export function ProposalDocumentEditor({
     void saveAndExitTemplateNameEdit(() => setTemplateNameEditing(false));
   }
 
+  const editorChromeProps: React.ComponentProps<typeof ProposalEditorChrome> = {
+    variant,
+    embeddedInBuilder,
+    templateId,
+    contractTemplateId,
+    initialTemplateName,
+    templateName,
+    onTemplateNameChange: setTemplateName,
+    templateNameEditing,
+    onTemplateNameEditingChange: setTemplateNameEditing,
+    onTemplateNameBlurSave: handleTemplateNameBlurSave,
+    onTemplateNameEnterSave: handleTemplateNameEnterSave,
+    agreementTitle,
+    onAgreementTitleChange: setAgreementTitle,
+    proposalEditShellToolbar,
+    initialStatus,
+    saving,
+    sending,
+    message,
+    saveJustSucceeded,
+    publishJustSucceeded,
+    onSave: () => void save(),
+    onPublish: isTemplate ? () => void publishTemplate() : () => void send(),
+  };
+
+  useRegisterBuilderTopBarActions(
+    () => {
+      if (!embeddedInBuilder) return null;
+      return <BuilderEmbeddedChromeActions {...editorChromeProps} />;
+    },
+    [
+      embeddedInBuilder,
+      variant,
+      templateId,
+      contractTemplateId,
+      initialTemplateName,
+      templateName,
+      templateNameEditing,
+      agreementTitle,
+      proposalEditShellToolbar,
+      initialStatus,
+      saving,
+      sending,
+      message,
+      saveJustSucceeded,
+      publishJustSucceeded,
+    ],
+  );
+
   return (
     <EditorCatalogServicesContext.Provider value={catalogServiceOptions}>
       <EditorTemplatePricingReadOnlyContext.Provider value={true}>
@@ -194,35 +245,8 @@ export function ProposalDocumentEditor({
             <ProposalBrandingProvider value={brandingContextValue}>
               <ProposalContractTemplateLibraryProvider>
                 <BlockMenuProfileContext.Provider value={blockMenuProfile}>
-                  <div className="space-y-8">
-                    <ProposalEditorChrome
-                      variant={variant}
-                      embeddedInBuilder={embeddedInBuilder}
-                      templateId={templateId}
-                      contractTemplateId={contractTemplateId}
-                      initialTemplateName={initialTemplateName}
-                      templateName={templateName}
-                      onTemplateNameChange={setTemplateName}
-                      templateNameEditing={templateNameEditing}
-                      onTemplateNameEditingChange={setTemplateNameEditing}
-                      onTemplateNameBlurSave={handleTemplateNameBlurSave}
-                      onTemplateNameEnterSave={handleTemplateNameEnterSave}
-                      agreementTitle={agreementTitle}
-                      onAgreementTitleChange={setAgreementTitle}
-                      proposalEditShellToolbar={proposalEditShellToolbar}
-                      initialStatus={initialStatus}
-                      saving={saving}
-                      sending={sending}
-                      message={message}
-                      saveJustSucceeded={saveJustSucceeded}
-                      publishJustSucceeded={publishJustSucceeded}
-                      onSave={() => void save()}
-                      onPublish={
-                        isTemplate
-                          ? () => void publishTemplate()
-                          : () => void send()
-                      }
-                    />
+                  <div className={embeddedInBuilder ? "space-y-0" : "space-y-8"}>
+                    {!embeddedInBuilder ? <ProposalEditorChrome {...editorChromeProps} /> : null}
 
                     {!embeddedInBuilder ? proposalEditMiddleSlot : null}
 

@@ -5,7 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, Check, ExternalLink, Loader2, Pencil, Save, Send } from "lucide-react";
 
 import { ProposalSavePublishButtons } from "@/components/features/proposal/editor/save-publish-actions";
-import { TemplateEditorActionsMenu } from "@/components/features/templates/template-editor-actions-menu";
+import {
+  TemplateEditorActionsMenu,
+  TemplateEditorInlineActions,
+} from "@/components/features/templates/template-editor-actions-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -40,7 +43,7 @@ export interface ProposalEditorChromeProps {
   onPublish?: () => void;
 }
 
-function ProposalCrmEditActions({
+export function ProposalCrmEditActions({
   shareToken,
   saving,
   sending,
@@ -88,6 +91,65 @@ function ProposalCrmEditActions({
   );
 }
 
+/** Save / preview / publish row for the fullscreen builder top bar. */
+export function BuilderEmbeddedChromeActions(props: ProposalEditorChromeProps) {
+  const {
+    variant,
+    templateId,
+    contractTemplateId,
+    initialTemplateName = "",
+    templateName,
+    proposalEditShellToolbar,
+    saving,
+    sending,
+    saveJustSucceeded,
+    publishJustSucceeded,
+    onSave,
+    onPublish,
+    message,
+  } = props;
+
+  const isTemplate = variant === "template";
+  const isContractTemplate = variant === "contract-template";
+  const isNamedTemplateShell = isTemplate || isContractTemplate;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {isNamedTemplateShell && (templateId || contractTemplateId) ? (
+        <TemplateEditorInlineActions
+          variant={isContractTemplate ? "contract-template" : "template"}
+          templateId={templateId}
+          contractTemplateId={contractTemplateId}
+          templateName={templateName.trim() || initialTemplateName || ""}
+          previewHref={
+            isContractTemplate
+              ? `/admin/templates/contracts/${contractTemplateId}/preview`
+              : `/admin/templates/${templateId}/preview`
+          }
+          saving={saving}
+          sending={sending}
+          saveJustSucceeded={saveJustSucceeded}
+          publishJustSucceeded={publishJustSucceeded}
+          onSave={onSave}
+          onPublish={isTemplate ? onPublish : undefined}
+        />
+      ) : null}
+      {proposalEditShellToolbar ? (
+        <ProposalCrmEditActions
+          shareToken={proposalEditShellToolbar.shareToken}
+          saving={saving}
+          sending={sending}
+          saveJustSucceeded={saveJustSucceeded}
+          publishJustSucceeded={publishJustSucceeded}
+          onSave={onSave}
+          onPublish={onPublish ?? (() => {})}
+        />
+      ) : null}
+      {message ? <span className="text-muted-foreground text-sm">{message}</span> : null}
+    </div>
+  );
+}
+
 /** Top chrome for template shells, CRM proposal toolbar, and embedded builder actions. */
 export function ProposalEditorChrome({
   variant,
@@ -118,41 +180,7 @@ export function ProposalEditorChrome({
   const isNamedTemplateShell = isTemplate || isContractTemplate;
 
   if (embeddedInBuilder) {
-    return (
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {isNamedTemplateShell && (templateId || contractTemplateId) ? (
-          <TemplateEditorActionsMenu
-            variant={isContractTemplate ? "contract-template" : "template"}
-            templateId={templateId}
-            contractTemplateId={contractTemplateId}
-            templateName={templateName.trim() || initialTemplateName || ""}
-            previewHref={
-              isContractTemplate
-                ? `/admin/templates/contracts/${contractTemplateId}/preview`
-                : `/admin/templates/${templateId}/preview`
-            }
-            saving={saving}
-            sending={sending}
-            saveJustSucceeded={saveJustSucceeded}
-            publishJustSucceeded={publishJustSucceeded}
-            onSave={onSave}
-            onPublish={isTemplate ? onPublish : undefined}
-          />
-        ) : null}
-        {proposalEditShellToolbar ? (
-          <ProposalCrmEditActions
-            shareToken={proposalEditShellToolbar.shareToken}
-            saving={saving}
-            sending={sending}
-            saveJustSucceeded={saveJustSucceeded}
-            publishJustSucceeded={publishJustSucceeded}
-            onSave={onSave}
-            onPublish={onPublish ?? (() => {})}
-          />
-        ) : null}
-        {message ? <span className="text-muted-foreground text-sm">{message}</span> : null}
-      </div>
-    );
+    return null;
   }
 
   if (isNamedTemplateShell && (templateId || contractTemplateId)) {

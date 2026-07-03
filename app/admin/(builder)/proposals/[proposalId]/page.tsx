@@ -4,10 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { ProposalBuilderMetadata } from "@/components/features/proposal/proposal-builder-metadata";
 import { ProposalShareSettings } from "@/components/features/proposal/proposal-share-settings";
 import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
-import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
 import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getAdminProposalRecord } from "@/server/firestore/portal-data";
@@ -56,8 +54,6 @@ export default async function AdminProposalBuilderPage({ params, searchParams }:
   const recipientDisplayName =
     recipientCustomer?.name.trim() || recipientCustomer?.email.trim() || null;
 
-  const stage = getProposalStageBadgeDisplay(proposal);
-
   return (
     <ProposalBuilderWorkspace
       backHref={customerBackId ? `/admin/customers/${encodeURIComponent(customerBackId)}` : "/admin/proposals"}
@@ -66,9 +62,6 @@ export default async function AdminProposalBuilderPage({ params, searchParams }:
         { label: "Proposals", href: "/admin/proposals" },
         { label: proposal.document.title?.trim() || "Untitled proposal" },
       ]}
-      statusBadge={
-        <StatusBadge label={stage.label} variant={stage.variant} title={stage.title} />
-      }
       detailsSlot={
         <ProposalBuilderMetadata
           proposal={proposal}

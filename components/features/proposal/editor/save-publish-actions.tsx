@@ -39,6 +39,7 @@ export interface ProposalSavePublishButtonsProps {
   publishJustSucceeded: boolean;
   onSave: () => void;
   onPublish: () => void;
+  showPublish?: boolean;
 }
 
 /** Inline Save + Publish buttons — proposal CRM editor toolbar row. */
@@ -49,6 +50,7 @@ export function ProposalSavePublishButtons({
   publishJustSucceeded,
   onSave,
   onPublish,
+  showPublish = true,
 }: ProposalSavePublishButtonsProps) {
   return (
     <>
@@ -70,23 +72,25 @@ export function ProposalSavePublishButtons({
         )}
         {saveJustSucceeded && !saving ? "Saved" : "Save"}
       </Button>
-      <Button
-        type="button"
-        size="sm"
-        disabled={sending}
-        onClick={onPublish}
-        className="min-w-[5.5rem] gap-2 transition-colors"
-        aria-label={publishJustSucceeded && !sending ? "Published" : "Publish"}
-      >
-        {sending ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-        ) : publishJustSucceeded ? (
-          <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
-        ) : (
-          <Send className="h-4 w-4 shrink-0" aria-hidden />
-        )}
-        {publishJustSucceeded && !sending ? "Published" : "Publish"}
-      </Button>
+      {showPublish ? (
+        <Button
+          type="button"
+          size="sm"
+          disabled={sending}
+          onClick={onPublish}
+          className="min-w-[5.5rem] gap-2 transition-colors"
+          aria-label={publishJustSucceeded && !sending ? "Published" : "Publish"}
+        >
+          {sending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+          ) : publishJustSucceeded ? (
+            <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+          ) : (
+            <Send className="h-4 w-4 shrink-0" aria-hidden />
+          )}
+          {publishJustSucceeded && !sending ? "Published" : "Publish"}
+        </Button>
+      ) : null}
     </>
   );
 }

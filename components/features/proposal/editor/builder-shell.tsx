@@ -2,14 +2,10 @@
 
 import * as React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BuilderCollapsibleAside } from "@/components/features/proposal/editor/builder-collapsible-aside";
 
 export interface BuilderShellProps {
   topBar: React.ReactNode;
@@ -19,7 +15,8 @@ export interface BuilderShellProps {
   className?: string;
 }
 
-const BUILDER_LAYOUT_COOKIE = "proposal_builder_layout";
+const BUILDER_OUTLINE_STORAGE_KEY = "proposal_builder_outline_open";
+const BUILDER_INSPECTOR_STORAGE_KEY = "proposal_builder_inspector_open";
 
 export function BuilderShell({ topBar, outline, canvas, inspector, className }: BuilderShellProps) {
   const isMobile = useIsMobile();
@@ -64,29 +61,23 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   return (
     <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
-      <ResizablePanelGroup
-        orientation="horizontal"
-        className="min-h-0 flex-1"
-        id={BUILDER_LAYOUT_COOKIE}
-      >
-        <ResizablePanel
-          id="outline"
-          defaultSize="16%"
-          minSize="12%"
-          maxSize="24%"
-          collapsible
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <BuilderCollapsibleAside
+          side="left"
+          label="Outline"
+          storageKey={BUILDER_OUTLINE_STORAGE_KEY}
         >
           {outline}
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel id="canvas" defaultSize="54%" minSize="40%">
-          <main className="h-full overflow-y-auto">{canvas}</main>
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel id="inspector" defaultSize="30%" minSize="22%" maxSize="36%">
+        </BuilderCollapsibleAside>
+        <main className="min-h-0 min-w-0 flex-[1_1_70%] overflow-y-auto">{canvas}</main>
+        <BuilderCollapsibleAside
+          side="right"
+          label="Inspector"
+          storageKey={BUILDER_INSPECTOR_STORAGE_KEY}
+        >
           {inspector}
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </BuilderCollapsibleAside>
+      </div>
     </div>
   );
 }
