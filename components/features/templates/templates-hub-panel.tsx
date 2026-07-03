@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { TemplatesListTable } from "@/components/features/templates/templates-list-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -25,7 +26,7 @@ function NewProposalTemplateButton() {
     const res = await createProposalTemplateAction();
     setBusy(false);
     if (!res.ok) {
-      window.alert(res.message);
+      toast.error(res.message);
       return;
     }
     router.push(`/admin/templates/${res.templateId}`);
@@ -49,7 +50,7 @@ function NewContractTemplateButton() {
     const res = await createContractTemplateAction();
     setBusy(false);
     if (!res.ok) {
-      window.alert(res.message);
+      toast.error(res.message);
       return;
     }
     router.push(`/admin/templates/contracts/${res.contractTemplateId}`);

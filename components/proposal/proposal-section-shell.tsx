@@ -10,8 +10,8 @@ import {
 } from "@/lib/proposal/section-background";
 import type { SectionBackground } from "@/types/proposal";
 import {
-  PROPOSAL_DARK_EDITOR_SURFACE_CLASSES,
-  PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
+  PROPOSAL_CANVAS_SURFACE_DARK_CLASSES,
+  PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
 } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES } from "@/lib/proposal/public/public-layout";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
@@ -69,10 +69,10 @@ export function ProposalSectionShell({
         editorCanvas ? "min-h-0 overflow-visible" : "min-h-[220px] overflow-hidden",
         surfaceChrome,
         shellRadius,
-        !prefersLight && PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES,
+        !prefersLight && PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
         prefersLight &&
           cn(
-            PROPOSAL_DARK_EDITOR_SURFACE_CLASSES,
+            PROPOSAL_CANVAS_SURFACE_DARK_CLASSES,
             "text-white [&_h2]:!text-white",
             "[&_.proposal-rich-text]:!text-white/[0.9] [&_.proposal-rich-text_a]:text-sky-200 [&_.proposal-rich-text_a]:underline-offset-4",
             "[&_.text-muted-foreground]:text-white/72",

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * `app/globals.css`). Apply on bright section bands and root-level editor blocks so
  * `text-foreground` stays dark when the admin shell is in dark mode.
  */
-export const PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES = cn(
+export const PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES = cn(
   "[color-scheme:light]",
   "[--background:var(--color-white)]",
   "[--foreground:var(--base-800)]",
@@ -30,7 +30,7 @@ export const PROPOSAL_LIGHT_EDITOR_SURFACE_CLASSES = cn(
  * Dark editorial band tokens for image/video/heavy fills. Keeps tier cards white while
  * `text-foreground` / `text-muted-foreground` read on the section backdrop.
  */
-export const PROPOSAL_DARK_EDITOR_SURFACE_CLASSES = cn(
+export const PROPOSAL_CANVAS_SURFACE_DARK_CLASSES = cn(
   "[color-scheme:dark]",
   "[--foreground:var(--base-200)]",
   "[--card:var(--color-white)]",
@@ -51,4 +51,6 @@ export const PROPOSAL_DARK_EDITOR_SURFACE_CLASSES = cn(
 );
 
 /** Class on the Edit blocks tab stack — root-level blocks without a section shell. */
-export const PROPOSAL_DOCUMENT_EDITOR_CANVAS_CLASS = "proposal-document-editor-canvas";
+export const PROPOSAL_CANVAS_ROOT_CLASS = "proposal-document-editor-canvas";
+
+export type ProposalCanvasSurface = "light" | "dark";

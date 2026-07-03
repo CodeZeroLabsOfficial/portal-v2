@@ -492,14 +492,14 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
           </div>
         </div>
 
-        <p className={cn("text-[11px] text-muted-foreground", isVisual ? "mt-2" : "mt-1.5")}>
+        <p className={cn("text-xs text-muted-foreground", isVisual ? "mt-2" : "mt-1.5")}>
           Currency:{" "}
           <InlineText
             tone="light"
             value={(block.currency ?? "aud").toLowerCase()}
             onChange={(v) => patch({ currency: v.toLowerCase().slice(0, 3) })}
             ariaLabel="Currency code"
-            className="inline-block text-[11px] uppercase tracking-wider text-muted-foreground"
+            className="inline-block text-xs uppercase tracking-wider text-muted-foreground"
           />
         </p>
       </div>
@@ -552,7 +552,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" sideOffset={4} className="w-[min(200px,calc(100vw-2rem))] p-1">
-              <p className="px-2 pb-1 pt-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="px-2 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Add to plan
               </p>
               <DropdownMenuItem
@@ -619,7 +619,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                   </TooltipContent>
                 </Tooltip>
                 <div className="text-right" style={{ color: headerBarFg }}>
-                  <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
+                  <span className="block text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
                   <div className="mt-0.5 text-lg font-semibold tabular-nums leading-none">
                     {formatCurrencyAmount(addonsPreviewMinor, currency)}
                     <span className="ml-1 text-xs font-medium opacity-90">/ mo</span>
@@ -637,7 +637,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                 <table className="w-full min-w-[480px] text-left text-sm">
                   <thead>
                     <tr
-                      className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
+                      className="border-b border-dashed text-left text-xs font-medium uppercase tracking-wide"
                       style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
                     >
                       <th className="px-4 py-2.5 text-left">Description</th>
@@ -808,7 +808,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
           </p>
         ) : null}
         {previewTierId || addonsPreviewMinor > 0 ? (
-          <p className="max-w-[280px] text-pretty text-left text-[11px] leading-snug opacity-80 sm:ml-auto sm:text-right">
+          <p className="max-w-[280px] text-pretty text-left text-xs leading-snug opacity-80 sm:ml-auto sm:text-right">
             Total commitment over {previewTermMonths} mo:{" "}
             <span className="whitespace-nowrap tabular-nums font-medium opacity-95">
               {formatCurrencyAmount(commitmentPreviewMinor, currency)}
@@ -981,7 +981,7 @@ function TierCard({
           onClick={onToggleRecommended}
           aria-pressed={isRecommended}
           aria-label={isRecommended ? "Unmark as recommended" : "Mark as recommended"}
-          className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow transition-all"
+          className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide shadow transition-all"
           style={markRecommendedBadgeStyle}
         >
           <Sparkles className="h-3 w-3" />
@@ -1015,7 +1015,7 @@ function TierCard({
         )}
 
         <ul
-          className="mt-2 space-y-1 text-[13px] leading-snug"
+          className="mt-2 space-y-1 text-sm leading-snug"
           style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
         >
           <li>
@@ -1063,12 +1063,12 @@ function TierCard({
           </p>
 
           <p
-            className="mt-2 text-[11px]"
+            className="mt-2 text-xs"
             style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
           >
             {otherTermLabel}:{" "}
             {pricingReadOnly ? (
-              <TierPriceAmount minor={otherMonthlyMinor} currency={currency} className="text-[11px]" />
+              <TierPriceAmount minor={otherMonthlyMinor} currency={currency} className="text-xs" />
             ) : (
               <InlinePrice
                 tone={recommendedTone}
@@ -1080,7 +1080,7 @@ function TierCard({
                   )
                 }
                 ariaLabel="Other-term monthly price"
-                className="text-[11px]"
+                className="text-xs"
               />
             )}
           </p>
@@ -1091,7 +1091,7 @@ function TierCard({
               style={dashedBorderStyle}
             >
               <p
-                className="text-[11px] font-semibold uppercase tracking-wide"
+                className="text-xs font-semibold uppercase tracking-wide"
                 style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
               >
                 Upfront (12-month)
@@ -1116,7 +1116,7 @@ function TierCard({
           ) : null}
 
           {pricingReadOnly && !tier.serviceId?.trim() ? (
-            <p className="mt-2 text-[10px]" style={standardMutedStyle}>
+            <p className="mt-2 text-xs" style={standardMutedStyle}>
               Link a catalogue service to load pricing from Admin → Services.
             </p>
           ) : null}
@@ -1130,7 +1130,7 @@ function TierCard({
             }}
           >
             <label
-              className="mb-1 block text-[11px] font-medium"
+              className="mb-1 block text-xs font-medium"
               style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
             >
               Catalogue service
@@ -1206,7 +1206,7 @@ function TierCard({
         {features.map((feat, idx) => (
           <li
             key={`${idx}-${feat}`}
-            className="group/feat flex items-start gap-1.5 text-xs text-foreground sm:text-[13px]"
+            className="group/feat flex items-start gap-1.5 text-xs text-foreground sm:text-sm"
           >
             <Check
               className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/60 sm:h-4 sm:w-4"
@@ -1227,8 +1227,8 @@ function TierCard({
                 onChange({ features: next });
               }}
               ariaLabel={`Feature ${idx + 1}`}
-              className="flex-1 text-xs text-foreground sm:text-[13px]"
-              inputClassName="w-full text-xs text-foreground sm:text-[13px]"
+              className="flex-1 text-xs text-foreground sm:text-sm"
+              inputClassName="w-full text-xs text-foreground sm:text-sm"
             />
             <button
               type="button"
@@ -1355,7 +1355,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
             inputClassName="text-base font-semibold text-foreground w-full"
           />
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
               <input
                 type="checkbox"
                 checked={editable}
@@ -1364,13 +1364,13 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               />
               Editable qty
             </label>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               <InlineText
                 tone="light"
                 value={(block.currency ?? "aud").toLowerCase()}
                 onChange={(v) => patch({ currency: v.toLowerCase().slice(0, 3) })}
                 ariaLabel="Currency code"
-                className="text-[10px] uppercase"
+                className="text-xs uppercase"
               />
             </span>
           </div>
@@ -1393,13 +1393,13 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
+              <span className="text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
               <span className="text-lg font-semibold tabular-nums leading-none">
                 {formatCurrencyAmount(previewTotal, currency)}
               </span>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-dashed border-border/50 bg-muted/10 px-4 py-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-dashed border-border/50 bg-muted/10 px-4 py-2 text-xs">
             <label className="flex cursor-pointer items-center gap-1.5 text-muted-foreground">
               <input
                 type="checkbox"
@@ -1445,7 +1445,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
           <thead>
             <tr
               className={cn(
-                "border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide",
+                "border-b border-dashed text-left text-xs font-medium uppercase tracking-wide",
                 isVisual && "border-border/60 bg-muted/20 text-muted-foreground",
               )}
               style={
@@ -1497,7 +1497,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
                         inputClassName="w-full font-medium"
                       />
                       <label
-                        className="flex cursor-pointer items-center gap-2 text-[11px]"
+                        className="flex cursor-pointer items-center gap-2 text-xs"
                         style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
                       >
                         <input
@@ -1577,7 +1577,7 @@ export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProp
               <tr style={totalRowStyle}>
                 <td
                   colSpan={editable ? 3 : 2}
-                  className="px-4 py-3 text-right text-[13px] font-semibold text-foreground"
+                  className="px-4 py-3 text-right text-sm font-semibold text-foreground"
                 >
                   Total (preview)
                 </td>

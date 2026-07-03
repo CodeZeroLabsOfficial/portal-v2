@@ -2,12 +2,17 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { acceptProposalPublicAction } from "@/server/actions/proposal-builder";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  PROPOSAL_PUBLIC_PANEL_DESCRIPTION_CLASSES,
+  PROPOSAL_PUBLIC_PANEL_TITLE_CLASSES,
+} from "@/lib/proposal/public/public-typography";
 
 export interface ProposalPublicFooterProps {
   shareToken: string;
@@ -61,21 +66,20 @@ export function ProposalPublicFooter({
   }
 
   return (
-    <div className="mt-16 space-y-8 print:hidden">
+    <div className="space-y-6">
       {isAccepted ? (
-        <Card className="border-emerald-500/35 bg-emerald-500/10">
-          <CardHeader>
-            <CardTitle className="text-base text-emerald-800 dark:text-emerald-100">Accepted</CardTitle>
-            <CardDescription className="text-emerald-900/90 dark:text-emerald-50/90">
-              Thank you{displayName ? `, ${displayName}` : ""}. We will follow up shortly with next steps.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <Alert className="border-emerald-500/35 bg-emerald-500/10 text-emerald-950 dark:text-emerald-50">
+          <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" aria-hidden />
+          <AlertTitle className="text-emerald-900 dark:text-emerald-100">Accepted</AlertTitle>
+          <AlertDescription className="text-emerald-900/90 dark:text-emerald-50/90">
+            Thank you{displayName ? `, ${displayName}` : ""}. We will follow up shortly with next steps.
+          </AlertDescription>
+        </Alert>
       ) : (
-        <Card className="border-border/80">
-          <CardHeader>
-            <CardTitle className="text-base">Accept proposal</CardTitle>
-            <CardDescription>
+        <Card className="border-border/80 shadow-sm">
+          <CardHeader className="space-y-1.5">
+            <CardTitle className={PROPOSAL_PUBLIC_PANEL_TITLE_CLASSES}>Accept proposal</CardTitle>
+            <CardDescription className={PROPOSAL_PUBLIC_PANEL_DESCRIPTION_CLASSES}>
               By accepting, you confirm you agree to the scope, pricing, and terms presented above.
             </CardDescription>
           </CardHeader>
@@ -93,9 +97,14 @@ export function ProposalPublicFooter({
                   minLength={2}
                 />
               </div>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertTitle>Could not accept</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
               <Button type="submit" className="gap-2" disabled={busy || name.trim().length < 2}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
                 Accept proposal
               </Button>
             </form>

@@ -522,7 +522,7 @@ export function renderProposalBlockFromRegistry(props: ProposalBlockViewProps): 
 
 /** Editor-side block UI re-exports (batch 2) for builder chrome discovery. */
 export { AccordionBlockEditor } from "@/components/proposal/accordion-block-editor";
-export { BlockToolbar } from "@/components/proposal/proposal-block-toolbar";
+export { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
 export { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
 export { ProposalIconBlockEditorRow } from "@/components/proposal/proposal-icon-block-editor";
 export { ProposalImageBlockEditor } from "@/components/proposal/proposal-image-block-editor";

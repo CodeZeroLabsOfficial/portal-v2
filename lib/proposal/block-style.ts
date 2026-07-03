@@ -12,7 +12,7 @@ export const DEFAULT_AGREEMENT_BUTTON_COLOR = DEFAULT_PRIMARY_COLOR;
 /** Preset swatches surfaced in the Style popover for the interactive proposal editor. */
 export const STYLE_PRESET_COLORS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "#673AB7", label: "Purple" },
-  { value: "#4543F7", label: "Indigo" },
+  { value: "#15141F", label: "Ink" },
   { value: "#0D0D15", label: "Charcoal" },
   { value: "#0F172A", label: "Slate" },
   { value: "#475569", label: "Steel" },

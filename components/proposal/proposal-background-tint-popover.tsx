@@ -2,6 +2,11 @@
 
 import * as React from "react";
 import { Check, Pipette } from "lucide-react";
+import { ProposalToolbarSectionLabel } from "@/components/features/proposal/editor/toolbar";
+import {
+  type ProposalToolbarAppearance,
+  PROPOSAL_TOOLBAR_TOKENS,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import { STYLE_PRESET_COLORS } from "@/lib/proposal/block-style";
 import { cn } from "@/lib/utils";
 import type { SectionBackground, SplashBlockBackground } from "@/types/proposal";
@@ -93,7 +98,7 @@ function hsvToHex(h: number, s: number, v: number): string {
 }
 
 function RangeRowTint({
-  elevated,
+  appearance,
   labelMuted,
   label,
   value,
@@ -103,7 +108,7 @@ function RangeRowTint({
   format,
   onChange,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   labelMuted: string;
   label: string;
   value: number;
@@ -116,8 +121,10 @@ function RangeRowTint({
   return (
     <div>
       <div className="mb-1 flex items-end justify-between gap-3">
-        <p className={cn("text-[10px] font-semibold uppercase tracking-[0.12em]", labelMuted)}>{label}</p>
-        <span className="font-mono text-[11px] font-semibold tabular-nums text-foreground underline decoration-muted-foreground/45 underline-offset-[3px]">
+        <ProposalToolbarSectionLabel appearance={appearance ?? "surface"}>
+          {label}
+        </ProposalToolbarSectionLabel>
+        <span className={cn("font-mono font-semibold tabular-nums text-foreground underline decoration-muted-foreground/45 underline-offset-[3px]", PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact)}>
           {format(value)}
           {suffix}
         </span>
@@ -131,7 +138,7 @@ function RangeRowTint({
         aria-label={label}
         className={cn(
           "h-1.5 w-full cursor-pointer accent-sky-500 hover:accent-sky-600",
-          elevated && "[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:rounded-full",
+          appearance === "elevated" && "[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:rounded-full",
         )}
         onChange={(e) => onChange(Number(e.target.value))}
       />
@@ -143,13 +150,13 @@ function SatValPlane({
   hue,
   s,
   v,
-  elevated,
+  appearance,
   onPick,
 }: {
   hue: number;
   s: number;
   v: number;
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   onPick: (nextS: number, nextV: number) => void;
 }) {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -172,7 +179,7 @@ function SatValPlane({
       ref={ref}
       className={cn(
         "relative h-[118px] w-full cursor-crosshair touch-none select-none overflow-hidden rounded-md",
-        elevated && "ring-1 ring-inset ring-white/10",
+        appearance === "elevated" && "ring-1 ring-inset ring-white/10",
       )}
       style={{
         background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pure})`,
@@ -203,13 +210,13 @@ function SatValPlane({
 }
 
 function TintAdvancedColorBlock({
-  elevated,
+  appearance,
   labelMuted,
   popoverOpen,
   tintHex,
   onTintColor,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   labelMuted: string;
   popoverOpen: boolean;
   tintHex: string;
@@ -275,7 +282,9 @@ function TintAdvancedColorBlock({
 
   return (
     <div>
-      <p className={cn("mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em]", labelMuted)}>Tint colour</p>
+      <ProposalToolbarSectionLabel appearance={appearance ?? "surface"} className="mb-1.5">
+        Tint colour
+      </ProposalToolbarSectionLabel>
       <div className="grid grid-cols-6 gap-1.5">
         {STYLE_PRESET_COLORS.map((c) => {
           const isActive = sameHex(c.value, tintHex);
@@ -288,8 +297,8 @@ function TintAdvancedColorBlock({
               className={cn(
                 "relative h-7 w-7 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 isActive
-                  ? cn("ring-2 ring-ring ring-offset-1", elevated ? "ring-offset-zinc-900" : "ring-offset-background")
-                  : elevated
+                  ? cn("ring-2 ring-ring ring-offset-1", appearance === "elevated" ? "ring-offset-zinc-900" : "ring-offset-background")
+                  : appearance
                     ? "border-zinc-700 hover:scale-105"
                     : "border-border hover:scale-105",
               )}
@@ -316,7 +325,7 @@ function TintAdvancedColorBlock({
       </div>
 
       <div className="mt-2 space-y-2">
-        <SatValPlane hue={hsv.h} s={hsv.s} v={hsv.v} elevated={elevated} onPick={(s, v) => applyHsv({ s, v })} />
+        <SatValPlane hue={hsv.h} s={hsv.s} v={hsv.v} appearance={appearance} onPick={(s, v) => applyHsv({ s, v })} />
         <input
           type="range"
           min={0}
@@ -335,11 +344,11 @@ function TintAdvancedColorBlock({
       <div
         className={cn(
           "mt-2 flex h-8 items-center gap-1.5 rounded-md border px-2 py-0",
-          elevated ? "border-zinc-700/70 bg-black/40" : "border-border/70 bg-muted/30",
+          appearance === "elevated" ? "border-zinc-700/70 bg-black/40" : "border-border/70 bg-muted/30",
         )}
       >
         <span
-          className={cn("h-5 w-5 shrink-0 rounded-full ring-1", elevated ? "ring-zinc-600" : "ring-border")}
+          className={cn("h-5 w-5 shrink-0 rounded-full ring-1", appearance === "elevated" ? "ring-zinc-600" : "ring-border")}
           style={{ backgroundColor: tintHex }}
         />
         <Input
@@ -351,7 +360,7 @@ function TintAdvancedColorBlock({
           aria-label="Tint colour hex"
           className={cn(
             "min-w-0 flex-1 border-0 bg-transparent p-0 text-xs font-medium tabular-nums tracking-tight",
-            elevated ? "text-zinc-100" : "text-foreground",
+            appearance === "elevated" ? "text-zinc-100" : "text-foreground",
           )}
           placeholder="#000000"
           onKeyDown={(e) => {
@@ -368,7 +377,7 @@ function TintAdvancedColorBlock({
             aria-label="Pick colour from screen"
             className={cn(
               "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
-              elevated ? "text-zinc-300 hover:bg-white/10" : "text-muted-foreground hover:bg-muted/60",
+              appearance === "elevated" ? "text-zinc-300 hover:bg-white/10" : "text-muted-foreground hover:bg-muted/60",
             )}
             onClick={() => void pickFromScreen()}
           >
@@ -381,11 +390,11 @@ function TintAdvancedColorBlock({
 }
 
 function TintTriggerRow({
-  elevated,
+  appearance,
   tintHex,
   open,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   tintHex: string;
   open?: boolean;
 }) {
@@ -394,15 +403,15 @@ function TintTriggerRow({
       className={cn(
         "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left ring-1 ring-border/50 transition-colors",
         "cursor-pointer hover:bg-muted/35 hover:ring-border/70",
-        open && !elevated && "bg-sky-500/10 ring-sky-500/30",
-        open && elevated && "bg-white/10 ring-white/25",
-        elevated && "ring-white/12 hover:bg-white/5 hover:ring-white/20",
+        open && appearance !== "elevated" && "bg-sky-500/10 ring-sky-500/30",
+        open && appearance === "elevated" && "bg-white/10 ring-white/25",
+        appearance === "elevated" && "ring-white/12 hover:bg-white/5 hover:ring-white/20",
       )}
     >
       <div
         className={cn(
           "relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted/25",
-          elevated ? "border-white/15" : "border-border/60",
+          appearance === "elevated" ? "border-white/15" : "border-border/60",
         )}
       >
         <span
@@ -421,8 +430,8 @@ function TintTriggerRow({
         />
       </div>
       <div className="min-w-0 flex-1 text-left">
-        <p className={cn("text-xs font-semibold text-foreground", elevated && "text-zinc-100")}>Background tint</p>
-        <p className={cn("truncate text-[10px]", elevated ? "text-zinc-400" : "text-muted-foreground")}>
+        <p className={cn("text-xs font-semibold text-foreground", appearance === "elevated" && "text-zinc-100")}>Background tint</p>
+        <p className={cn("truncate text-xs", appearance === "elevated" ? "text-zinc-400" : "text-muted-foreground")}>
           Colour, style, opacity &amp; blur
         </p>
       </div>
@@ -431,7 +440,7 @@ function TintTriggerRow({
 }
 
 function TintPopoverInner({
-  elevated,
+  appearance,
   labelMuted,
   popoverOpen,
   tintHex,
@@ -445,7 +454,7 @@ function TintPopoverInner({
   onBlur,
   opacitySuffix,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   labelMuted: string;
   popoverOpen: boolean;
   tintHex: string;
@@ -462,7 +471,7 @@ function TintPopoverInner({
   return (
     <div className="space-y-3">
       <TintAdvancedColorBlock
-        elevated={elevated}
+        appearance={appearance}
         labelMuted={labelMuted}
         popoverOpen={popoverOpen}
         tintHex={tintHex}
@@ -470,22 +479,24 @@ function TintPopoverInner({
       />
 
       <div>
-        <p className={cn("mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em]", labelMuted)}>Tint style</p>
+        <ProposalToolbarSectionLabel appearance={appearance ?? "surface"} className="mb-1.5">
+          Tint style
+        </ProposalToolbarSectionLabel>
         <div
           className={cn(
             "inline-flex h-8 w-full rounded-md p-0.5",
-            elevated ? "bg-zinc-800/90 ring-1 ring-inset ring-white/10" : "bg-muted/60 ring-1 ring-inset ring-border/60",
+            appearance === "elevated" ? "bg-zinc-800/90 ring-1 ring-inset ring-white/10" : "bg-muted/60 ring-1 ring-inset ring-border/60",
           )}
         >
           <button
             type="button"
             className={cn(
-              "h-7 flex-1 rounded-[6px] text-[11px] font-semibold transition-colors",
+              "h-7 flex-1 rounded-[6px] text-xs font-semibold transition-colors",
               !styleBlend
-                ? elevated
+                ? appearance
                   ? "bg-zinc-600 text-white shadow-sm"
                   : "bg-background text-foreground shadow-sm"
-                : elevated
+                : appearance
                   ? "text-zinc-400 hover:text-zinc-200"
                   : "text-muted-foreground hover:text-foreground",
             )}
@@ -497,12 +508,12 @@ function TintPopoverInner({
           <button
             type="button"
             className={cn(
-              "h-7 flex-1 rounded-[6px] text-[11px] font-semibold transition-colors",
+              "h-7 flex-1 rounded-[6px] text-xs font-semibold transition-colors",
               styleBlend
-                ? elevated
+                ? appearance
                   ? "bg-zinc-600 text-white shadow-sm"
                   : "bg-background text-foreground shadow-sm"
-                : elevated
+                : appearance
                   ? "text-zinc-400 hover:text-zinc-200"
                   : "text-muted-foreground hover:text-foreground",
             )}
@@ -515,7 +526,7 @@ function TintPopoverInner({
       </div>
 
       <RangeRowTint
-        elevated={elevated}
+        appearance={appearance}
         labelMuted={labelMuted}
         label="Tint opacity"
         value={tintOpacity}
@@ -526,7 +537,7 @@ function TintPopoverInner({
         onChange={onTintOpacity}
       />
       <RangeRowTint
-        elevated={elevated}
+        appearance={appearance}
         labelMuted={labelMuted}
         label="Background blur"
         value={blur}
@@ -541,7 +552,7 @@ function TintPopoverInner({
 }
 
 export function SectionBackgroundTintPopover({
-  elevated,
+  appearance,
   labelMuted,
   tintColor,
   tintStyle = "normal",
@@ -549,7 +560,7 @@ export function SectionBackgroundTintPopover({
   blurStrength = 0,
   onPatch,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   labelMuted: string;
   tintColor?: string;
   tintStyle?: "normal" | "blend";
@@ -564,7 +575,7 @@ export function SectionBackgroundTintPopover({
     <Popover open={poOpen} onOpenChange={setPoOpen}>
       <PopoverTrigger asChild>
         <button type="button" className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-          <TintTriggerRow elevated={elevated} tintHex={tintHex} open={poOpen} />
+          <TintTriggerRow appearance={appearance} tintHex={tintHex} open={poOpen} />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -573,12 +584,12 @@ export function SectionBackgroundTintPopover({
         align="start"
         className={cn(
           "w-[min(252px,calc(100vw-2rem))] p-3",
-          elevated && "border-white/15 bg-zinc-900/98 text-zinc-100 ring-1 ring-white/12",
+          appearance === "elevated" && "border-white/15 bg-zinc-900/98 text-zinc-100 ring-1 ring-white/12",
         )}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <TintPopoverInner
-          elevated={elevated}
+          appearance={appearance}
           labelMuted={labelMuted}
           popoverOpen={poOpen}
           tintHex={tintHex}
@@ -617,7 +628,7 @@ export function SplashBackgroundTintPopover({
     <Popover open={poOpen} onOpenChange={setPoOpen}>
       <PopoverTrigger asChild>
         <button type="button" className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-          <TintTriggerRow elevated={false} tintHex={tintHex} open={poOpen} />
+          <TintTriggerRow appearance="surface" tintHex={tintHex} open={poOpen} />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -628,7 +639,7 @@ export function SplashBackgroundTintPopover({
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <TintPopoverInner
-          elevated={false}
+          appearance="surface"
           labelMuted="text-muted-foreground"
           popoverOpen={poOpen}
           tintHex={tintHex}

@@ -27,12 +27,14 @@ import {
   PROPOSAL_DOCUMENT_ROOT_STACK_GAP_CLASSES,
   PROPOSAL_EDITOR_SECTION_INNER_PAD_BOTTOM_CLASSES,
   PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
+  PROPOSAL_PUBLIC_LOGO_BAND_CLASSES,
+  PROPOSAL_PUBLIC_LOGO_IMAGE_CLASSES,
 } from "@/lib/proposal/public/public-layout";
 import { firstRootSplashBlockId, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
 import {
   type ProposalRenderContext,
   renderProposalBlockFromRegistry,
-} from "@/lib/proposal/block-registry";
+} from "@/lib/proposal/block-view-registry";
 import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
 import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
 import { cn } from "@/lib/utils";
@@ -244,9 +246,9 @@ export function ProposalDocumentView({
     <article style={style} className={cn("w-full space-y-0", className)}>
       {showDocumentLevelLogo ? (
         <div className={PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES}>
-          <div className="flex justify-center pb-4">
+          <div className={PROPOSAL_PUBLIC_LOGO_BAND_CLASSES}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={branding!.logoUrl} alt="" className="h-10 max-w-[200px] object-contain" />
+            <img src={branding!.logoUrl} alt="" className={PROPOSAL_PUBLIC_LOGO_IMAGE_CLASSES} />
           </div>
         </div>
       ) : null}

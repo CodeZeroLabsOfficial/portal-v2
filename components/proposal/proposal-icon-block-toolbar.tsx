@@ -6,7 +6,8 @@ import type { IconBlock } from "@/types/proposal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES } from "@/lib/proposal/editor-glass";
+import { PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES } from "@/lib/proposal/editor-glass";
+import { ProposalToolbarSectionLabel, ProposalToolbarShell } from "@/components/features/proposal/editor/toolbar";
 import { cn } from "@/lib/utils";
 import {
   PROPOSAL_ICON_DEFAULT_NAME,
@@ -17,10 +18,10 @@ import {
   resolveProposalPresetIcon,
 } from "@/lib/proposal/icon-presets";
 
-/** Matches {@link BlockToolbar} `appearance="surface"` and {@link ProposalImageBlockToolbar} pill chrome. */
+/** Matches {@link ProposalBlockToolbar} `appearance="surface"` and {@link ProposalImageBlockToolbar} pill chrome. */
 const barShell = cn(
-  "inline-flex max-w-[calc(100vw-3rem)] shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto rounded-full border p-1",
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES,
+  "inline-flex max-w-[calc(100vw-3rem)] shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto rounded-full p-1",
+  PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES,
   "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 );
 
@@ -36,7 +37,7 @@ export type ProposalIconColumnToolbarActions = {
 export type ProposalIconBlockToolbarProps = {
   block: IconBlock;
   onChange: (next: IconBlock) => void;
-  /** `toolbar` = single control for {@link BlockToolbar} `backdropPickerSlot`; `embedded` = full mini-bar for column cells. */
+  /** `toolbar` = single control for {@link ProposalBlockToolbar} `backdropPickerSlot`; `embedded` = full mini-bar for column cells. */
   variant: "toolbar" | "embedded";
   className?: string;
   /** Column cell: show remove control in the embedded bar. */
@@ -134,9 +135,9 @@ export function ProposalIconBlockToolbar({
         <div className="max-h-[min(22rem,50vh)] overflow-y-auto overscroll-contain p-1.5">
           {suggestedFiltered.length > 0 ? (
             <div className="mb-2">
-              <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground dark:text-zinc-500">
+              <ProposalToolbarSectionLabel appearance="surface" className="px-2 pb-1 pt-1">
                 Suggested
-              </p>
+              </ProposalToolbarSectionLabel>
               <ul className="space-y-0.5">
                 {suggestedFiltered.map((opt) => (
                   <li key={opt.name}>
@@ -160,9 +161,9 @@ export function ProposalIconBlockToolbar({
           {rest.length > 0 ? (
             <div>
               {suggestedFiltered.length > 0 ? (
-                <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground dark:text-zinc-500">
+                <ProposalToolbarSectionLabel appearance="surface" className="px-2 pb-1 pt-1">
                   All icons
-                </p>
+                </ProposalToolbarSectionLabel>
               ) : null}
               <ul className="space-y-0.5">
                 {rest.map((opt) => (

@@ -1,7 +1,8 @@
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
-import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
+import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
+import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getProposalTemplateForStaff } from "@/server/firestore/proposal-templates";
@@ -12,7 +13,7 @@ interface PageProps {
   params: Promise<{ templateId: string }>;
 }
 
-export default async function EditProposalTemplatePage({ params }: PageProps) {
+export default async function EditProposalTemplateBuilderPage({ params }: PageProps) {
   await connection();
   const { templateId } = await params;
   const user = await getCurrentSessionUser();
@@ -28,7 +29,18 @@ export default async function EditProposalTemplatePage({ params }: PageProps) {
   const catalogServiceOptions = await listCatalogServicePickerOptionsForOrg(user);
 
   return (
-    <ProposalDocumentEditorLazy
+    <ProposalBuilderWorkspace
+      backHref="/admin/templates"
+      backLabel="Templates"
+      breadcrumbSegments={[
+        { label: "Templates", href: "/admin/templates" },
+        { label: template.name?.trim() || "Untitled template" },
+      ]}
+      brandingSlot={
+        <Typography variant="muted" className="text-sm">
+          Template logo and colors are edited on splash blocks in the canvas.
+        </Typography>
+      }
       variant="template"
       templateId={template.id}
       initialTemplateName={template.name}

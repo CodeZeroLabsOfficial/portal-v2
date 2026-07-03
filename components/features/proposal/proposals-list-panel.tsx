@@ -4,15 +4,22 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef, Table } from "@tanstack/react-table";
-import { Loader2, MoreHorizontal, Trash2, X } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Loader2, MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { ProposalEngagementMeta } from "@/components/features/proposal/proposal-engagement-meta";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { DataTableBulkToolbar } from "@/components/shared/data-table/data-table-bulk-toolbar";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -67,48 +74,35 @@ function mapToTableRows(rows: ProposalHubListRow[]): ProposalListTableRow[] {
 function ProposalsListToolbar({
   table,
   onBulkDelete,
-  bulkDeleteDisabled
+  bulkDeleteDisabled,
 }: {
   table: Table<ProposalListTableRow>;
   onBulkDelete: () => void;
   bulkDeleteDisabled: boolean;
 }) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search title, account, contact…"
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("title")?.setFilterValue(event.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {table.getColumn("stageKey") ? (
-          <DataTableFacetedFilter
-            column={table.getColumn("stageKey")}
-            title="Stage"
-            options={PROPOSAL_STAGE_FILTER_OPTIONS}
+    <DataTableBulkToolbar
+      table={table}
+      onBulkDelete={onBulkDelete}
+      bulkDeleteDisabled={bulkDeleteDisabled}
+      filters={
+        <>
+          <Input
+            placeholder="Search title, account, contact…"
+            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+            onChange={(event) => table.getColumn("title")?.setFilterValue(event.target.value)}
+            className="h-8 w-full sm:max-w-xs"
           />
-        ) : null}
-        {isFiltered ? (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        ) : null}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 ? (
-          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        ) : null}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
+          {table.getColumn("stageKey") ? (
+            <DataTableFacetedFilter
+              column={table.getColumn("stageKey")}
+              title="Stage"
+              options={PROPOSAL_STAGE_FILTER_OPTIONS}
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 
@@ -378,7 +372,23 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
         data={tableRows}
         initialPageSize={25}
         initialSorting={[{ id: "updatedAt", desc: true }]}
-        emptyMessage={rows.length === 0 ? "No proposals yet." : "No proposals match your filters."}
+        emptyMessage={
+          rows.length === 0 ? (
+            <Empty className="border-0 py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FileText />
+                </EmptyMedia>
+                <EmptyTitle>No proposals yet</EmptyTitle>
+                <EmptyDescription>
+                  Create a proposal from a customer or opportunity to get started.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            "No proposals match your filters."
+          )
+        }
         toolbar={(table) => {
           tableRef.current = table;
           return (

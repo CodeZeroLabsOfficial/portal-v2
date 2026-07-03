@@ -6,6 +6,7 @@ import { formatCurrencyAmount } from "@/lib/common/format";
 import { cn } from "@/lib/utils";
 import { readableForeground, resolveBlockStyle, resolveTableSurfaceColors, withAlpha } from "@/lib/proposal/block-style";
 import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
 
 type LineState = Record<string, number>;
 
@@ -102,7 +103,7 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
           </p>
           {isSimpleTable ? (
             <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-90">
+              <span className="text-xs font-semibold uppercase tracking-wide opacity-90">
                 Subtotal
               </span>
               <span className="text-lg font-semibold tabular-nums leading-none">
@@ -121,7 +122,8 @@ export function PricingBlockPublic({ block, className }: PricingBlockPublicProps
           <thead>
             <tr
               className={cn(
-                "border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide",
+                PROPOSAL_PUBLIC_META_LABEL_CLASSES,
+                "border-b border-dashed text-left",
                 isSimpleTable
                   ? ""
                   : "border-border/60 bg-muted/20 text-muted-foreground",

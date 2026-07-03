@@ -34,7 +34,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   /** Optional toolbar slot rendered above the table. Receives the table instance. */
   toolbar?: (table: TanStackTable<TData>) => React.ReactNode;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   initialPageSize?: number;
   initialSorting?: SortingState;
   initialColumnVisibility?: VisibilityState;

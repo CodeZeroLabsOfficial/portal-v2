@@ -31,30 +31,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ProposalToolbarIconButton,
+  ProposalToolbarSectionLabel,
+  ProposalToolbarSeparator,
+  ProposalToolbarShell,
+} from "@/components/features/proposal/editor/toolbar";
+import {
+  PROPOSAL_TOOLBAR_TOKENS,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES } from "@/lib/proposal/editor-glass";
 import { cn } from "@/lib/utils";
 import { isProposalImagePlaceholderUrl, PROPOSAL_IMAGE_BLOCK_PLACEHOLDER_URL } from "@/components/proposal/proposal-image-block-editor";
 
-/** Matches {@link BlockToolbar} `appearance="surface"` chrome. */
-const barShell = cn(
-  "inline-flex max-w-[calc(100vw-3rem)] shrink-0 flex-nowrap items-center gap-0.5 overflow-x-auto rounded-full border p-1",
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES,
-  "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-);
-
-function tbIconBtn(active?: boolean, opts?: { compactLabel?: boolean }) {
-  return cn(
-    "inline-flex h-8 shrink-0 items-center justify-center rounded-full text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    opts?.compactLabel ? "min-w-8 px-1.5 text-[10px] font-bold tracking-wide" : "w-8",
-    "text-muted-foreground hover:bg-background hover:text-foreground disabled:pointer-events-none disabled:opacity-40",
-    active && "bg-primary/15 text-foreground",
-  );
-}
-
-function toolbarDivider() {
-  return <span className="mx-0.5 h-5 w-px shrink-0 bg-border" aria-hidden />;
-}
+/** Matches {@link ProposalBlockToolbar} `appearance="surface"` chrome. */
+const barShellClassName =
+  "max-w-[calc(100vw-3rem)] shrink-0 flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 export type ProposalImageBlockToolbarProps = {
   variant: "shell" | "embedded";
@@ -176,21 +168,22 @@ export function ProposalImageBlockToolbar({
         }}
       />
 
-      <div
-        className={barShell}
+      <ProposalToolbarShell
+        appearance="surface"
+        className={cn("p-1", barShellClassName)}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <Popover open={linkOpen} onOpenChange={setLinkOpen}>
           <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={tbIconBtn(Boolean(block.href?.trim()))}
+            <ProposalToolbarIconButton
+              appearance="surface"
+              active={Boolean(block.href?.trim())}
               aria-label="Image link"
               title="Link"
             >
               <Link2 className="h-4 w-4" />
-            </button>
+            </ProposalToolbarIconButton>
           </PopoverTrigger>
           <PopoverContent className="w-72 p-3" align="start" sideOffset={8} onCloseAutoFocus={(e) => e.preventDefault()}>
             <div className="space-y-2">
@@ -218,15 +211,14 @@ export function ProposalImageBlockToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className={tbIconBtn()}
+            <ProposalToolbarIconButton
+              appearance="surface"
               aria-label="Replace image"
               title="Replace image"
               disabled={uploading}
             >
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-            </button>
+            </ProposalToolbarIconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[11rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
             <DropdownMenuItem
@@ -275,20 +267,21 @@ export function ProposalImageBlockToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <button type="button" className={tbIconBtn()} title="Crop (coming soon)" disabled>
+        <ProposalToolbarIconButton appearance="surface" title="Crop (coming soon)" aria-label="Crop (coming soon)" disabled>
           <Crop className="h-4 w-4" />
-        </button>
+        </ProposalToolbarIconButton>
 
         <Popover open={altOpen} onOpenChange={setAltOpen}>
           <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={tbIconBtn(Boolean(block.alt?.trim() || block.caption?.trim()), { compactLabel: true })}
+            <ProposalToolbarIconButton
+              appearance="surface"
+              active={Boolean(block.alt?.trim() || block.caption?.trim())}
               aria-label="Alt text and caption"
               title="Alt text and caption"
+              className={cn("min-w-8 px-1.5 font-bold tracking-wide", PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact)}
             >
               ALT
-            </button>
+            </ProposalToolbarIconButton>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3" align="center" sideOffset={8} onCloseAutoFocus={(e) => e.preventDefault()}>
             <div className="space-y-3">
@@ -316,52 +309,52 @@ export function ProposalImageBlockToolbar({
           </PopoverContent>
         </Popover>
 
-        <button
-          type="button"
-          className={tbIconBtn(align === "left")}
+        <ProposalToolbarIconButton
+          appearance="surface"
+          active={align === "left"}
           aria-label="Align left"
           title="Align left"
           onClick={() => setAlign("left")}
         >
           <AlignLeft className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className={tbIconBtn(align === "center")}
+        </ProposalToolbarIconButton>
+        <ProposalToolbarIconButton
+          appearance="surface"
+          active={align === "center"}
           aria-label="Align center"
           title="Align center"
           onClick={() => setAlign("center")}
         >
           <AlignCenter className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className={tbIconBtn(align === "right")}
+        </ProposalToolbarIconButton>
+        <ProposalToolbarIconButton
+          appearance="surface"
+          active={align === "right"}
           aria-label="Align right"
           title="Align right"
           onClick={() => setAlign("right")}
         >
           <AlignRight className="h-4 w-4" />
-        </button>
+        </ProposalToolbarIconButton>
 
         {onDelete ? (
           <>
-            {toolbarDivider()}
-            <button
-              type="button"
-              className={cn(tbIconBtn(), "text-destructive hover:bg-red-500/15 hover:text-destructive")}
+            <ProposalToolbarSeparator appearance="surface" />
+            <ProposalToolbarIconButton
+              appearance="surface"
               aria-label="Delete block"
               title="Delete block"
+              className="text-destructive hover:bg-red-500/15 hover:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </ProposalToolbarIconButton>
           </>
         ) : null}
-      </div>
+      </ProposalToolbarShell>
     </div>
   );
 }

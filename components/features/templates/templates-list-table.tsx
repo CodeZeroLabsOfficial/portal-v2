@@ -3,15 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, EllipsisVertical, Loader2, Trash2, X } from "lucide-react";
+import { Copy, EllipsisVertical, LayoutTemplate, Loader2, Trash2 } from "lucide-react";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { DataTableBulkToolbar } from "@/components/shared/data-table/data-table-bulk-toolbar";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -22,6 +22,13 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import {
@@ -49,61 +56,48 @@ export interface TemplatesListTableProps {
 function TemplatesToolbar({
   table,
   onBulkDelete,
-  bulkDeleteDisabled
+  bulkDeleteDisabled,
 }: {
   table: Table<TemplateHubRow>;
   onBulkDelete: () => void;
   bulkDeleteDisabled: boolean;
 }) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search name, type, stage, or date…"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {table.getColumn("typeLabel") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("typeLabel")}
-            title="Type"
-            options={[
-              { label: "Proposal", value: "proposal" },
-              { label: "Contract", value: "contract" }
-            ]}
+    <DataTableBulkToolbar
+      table={table}
+      onBulkDelete={onBulkDelete}
+      bulkDeleteDisabled={bulkDeleteDisabled}
+      filters={
+        <>
+          <Input
+            placeholder="Search name, type, stage, or date…"
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
+            className="h-8 w-full sm:max-w-xs"
           />
-        )}
-        {table.getColumn("stage") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("stage")}
-            title="Stage"
-            options={[
-              { label: "Draft", value: "draft" },
-              { label: "Published", value: "published" }
-            ]}
-          />
-        )}
-        {isFiltered && (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
-          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        )}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
+          {table.getColumn("typeLabel") ? (
+            <DataTableFacetedFilter
+              column={table.getColumn("typeLabel")}
+              title="Type"
+              options={[
+                { label: "Proposal", value: "proposal" },
+                { label: "Contract", value: "contract" },
+              ]}
+            />
+          ) : null}
+          {table.getColumn("stage") ? (
+            <DataTableFacetedFilter
+              column={table.getColumn("stage")}
+              title="Stage"
+              options={[
+                { label: "Draft", value: "draft" },
+                { label: "Published", value: "published" },
+              ]}
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 
@@ -382,9 +376,22 @@ export function TemplatesListTable({ rows, localityTimeZone }: TemplatesListTabl
         initialPageSize={50}
         initialSorting={[{ id: "lastEditedMs", desc: true }]}
         emptyMessage={
-          rows.length === 0
-            ? "No templates yet. Use New template or New contract template to create reusable content for proposals and agreements."
-            : "No templates match your filters."
+          rows.length === 0 ? (
+            <Empty className="border-0 py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <LayoutTemplate />
+                </EmptyMedia>
+                <EmptyTitle>No templates yet</EmptyTitle>
+                <EmptyDescription>
+                  Use New template or New contract template to create reusable content for proposals
+                  and agreements.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            "No templates match your filters."
+          )
         }
         toolbar={(table) => {
           tableRef.current = table;

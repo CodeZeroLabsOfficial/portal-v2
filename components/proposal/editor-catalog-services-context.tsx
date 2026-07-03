@@ -10,8 +10,8 @@ export function useEditorCatalogServices(): readonly CatalogServicePickerOption[
   return React.useContext(EditorCatalogServicesContext);
 }
 
-/** When true (proposal templates), tier/add-on unit prices are read-only — edit in Admin → Services. */
-export const EditorTemplatePricingReadOnlyContext = React.createContext(false);
+/** When true, tier/add-on unit prices are read-only in the document editor — edit in Admin → Services. */
+export const EditorTemplatePricingReadOnlyContext = React.createContext(true);
 
 export function useEditorTemplatePricingReadOnly(): boolean {
   return React.useContext(EditorTemplatePricingReadOnlyContext);

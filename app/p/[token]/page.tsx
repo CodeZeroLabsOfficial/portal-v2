@@ -1,16 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
+import { ProposalPublicPageShell } from "@/components/features/proposal/viewer/public-page-shell";
 import { ProposalAnalyticsTracker } from "@/components/proposal/proposal-analytics-tracker";
 import { ProposalDocumentView } from "@/components/proposal/proposal-document-view";
 import { ProposalPasswordGate } from "@/components/proposal/proposal-password-gate";
 import { ProposalPublicFooter } from "@/components/proposal/proposal-public-footer";
 import { hasAgreementBlock, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
-import {
-  PROPOSAL_PUBLIC_CONTENT_CLASSES,
-  PROPOSAL_PUBLIC_DOCUMENT_OUTER_CLASSES,
-  PROPOSAL_PUBLIC_SHELL_CLASSES
-} from "@/lib/proposal/public/public-layout";
+import { PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES } from "@/lib/proposal/public/public-layout";
 import { isProposalUnlockedForRequest } from "@/lib/proposal/public/public-session";
 import { listCatalogServicePickerOptionsForOrganizationId } from "@/server/firestore/catalog-services";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
@@ -37,7 +34,7 @@ export async function generateMetadata(props: PublicProposalPageProps): Promise<
   }
   return {
     title: "Proposal",
-    robots: "noindex, nofollow"
+    robots: "noindex, nofollow",
   };
 }
 
@@ -71,27 +68,21 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
         proposal.customerId?.trim()
           ? loadProposalCustomerSignerPrefill(proposal)
           : Promise.resolve(null),
-        listCatalogServicePickerOptionsForOrganizationId(proposal.organizationId)
+        listCatalogServicePickerOptionsForOrganizationId(proposal.organizationId),
       ])
     : [null, null, []];
 
   const showFooter = !agreementPresent || proposal.status === "accepted";
   const flushBottom = !showFooter && proposalEndsInFullBleedBand(publicDocument.blocks);
 
-  const mainUnlockedClasses = flushBottom
-    ? "proposal-print-root w-full pb-0 pt-0 print:pb-0 min-h-dvh"
-    : "proposal-print-root w-full pb-12 pt-0 print:pb-8 sm:pb-14 min-h-dvh";
-
   return (
-    <main className={unlocked ? mainUnlockedClasses : `${PROPOSAL_PUBLIC_SHELL_CLASSES} min-h-dvh`}>
-      {!unlocked ? (
-        <div className={PROPOSAL_PUBLIC_CONTENT_CLASSES}>
-          <ProposalPasswordGate shareToken={proposal.shareToken} />
-        </div>
-      ) : (
-        <>
-          <ProposalAnalyticsTracker shareToken={proposal.shareToken} />
-          <div className={PROPOSAL_PUBLIC_DOCUMENT_OUTER_CLASSES}>
+    <div className={PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES}>
+      <ProposalPublicPageShell
+        locked={!unlocked}
+        flushBottom={unlocked ? flushBottom : false}
+        analytics={unlocked ? <ProposalAnalyticsTracker shareToken={proposal.shareToken} /> : null}
+        document={
+          unlocked ? (
             <ProposalDocumentView
               document={publicDocument}
               branding={proposal.branding}
@@ -106,19 +97,21 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
               customerSignerPrefill={customerSignerPrefill}
               catalogServices={catalogServices}
             />
-          </div>
-          {showFooter ? (
-            <div className={`${PROPOSAL_PUBLIC_CONTENT_CLASSES} mt-10`}>
-              <ProposalPublicFooter
-                shareToken={proposal.shareToken}
-                status={proposal.status}
-                acceptedByName={proposal.acceptedByName}
-                hideAcceptanceForm={agreementPresent}
-              />
-            </div>
-          ) : null}
-        </>
-      )}
-    </main>
+          ) : (
+            <ProposalPasswordGate shareToken={proposal.shareToken} />
+          )
+        }
+        footer={
+          unlocked && showFooter ? (
+            <ProposalPublicFooter
+              shareToken={proposal.shareToken}
+              status={proposal.status}
+              acceptedByName={proposal.acceptedByName}
+              hideAcceptanceForm={agreementPresent}
+            />
+          ) : null
+        }
+      />
+    </div>
   );
 }

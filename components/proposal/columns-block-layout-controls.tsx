@@ -94,7 +94,7 @@ export function ColumnsBlockLayoutControls({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={6} className="min-w-[11rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
-            <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Column count</p>
+            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Column count</p>
             {([2, 3, 4] as const).map((n) => (
               <DropdownMenuItem
                 key={n}
@@ -142,7 +142,7 @@ export function ColumnsBlockLayoutControls({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={6} className="min-w-[12rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
-            <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Column gap</p>
+            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Column gap</p>
             {GAP_OPTIONS.map((opt) => (
               <DropdownMenuItem
                 key={opt.value}
@@ -157,7 +157,7 @@ export function ColumnsBlockLayoutControls({
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Inset</p>
+            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Inset</p>
             {INSET_OPTIONS.map((opt) => (
               <DropdownMenuItem
                 key={opt.label}
@@ -188,7 +188,7 @@ export function ColumnsBlockLayoutControls({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={6} className="min-w-[10rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
-            <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Row alignment</p>
+            <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Row alignment</p>
             {ALIGN_OPTIONS.map((opt) => (
               <DropdownMenuItem
                 key={opt.value}

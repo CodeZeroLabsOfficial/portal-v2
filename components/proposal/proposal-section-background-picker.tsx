@@ -2,6 +2,12 @@
 
 import * as React from "react";
 import { Check, ImageIcon, Layers, MonitorPlay } from "lucide-react";
+import { ProposalToolbarSectionLabel } from "@/components/features/proposal/editor/toolbar";
+import {
+  type ProposalToolbarAppearance,
+  PROPOSAL_TOOLBAR_TOKENS,
+  proposalToolbarPanelClasses,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import { STYLE_PRESET_COLORS } from "@/lib/proposal/block-style";
 import {
   defaultSectionBackground,
@@ -10,10 +16,6 @@ import {
   resolveSectionBackground,
   type ResolvedSectionBackground,
 } from "@/lib/proposal/section-background";
-import {
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_DARK_SHELL_CLASSES,
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_PANEL_CLASSES,
-} from "@/lib/proposal/editor-glass";
 import { cn } from "@/lib/utils";
 import type { SectionBackground, SectionBackdropKind } from "@/types/proposal";
 import { Button } from "@/components/ui/button";
@@ -32,13 +34,13 @@ import { youtubeThumbnailFromPageUrl } from "@/components/proposal/embed-video";
 export interface ProposalSectionBackgroundPickerProps {
   background?: SectionBackground;
   onChange: (next: SectionBackground | undefined) => void;
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
 }
 
 export function ProposalSectionBackgroundPicker({
   background,
   onChange,
-  elevated = false,
+  appearance = "surface",
 }: ProposalSectionBackgroundPickerProps) {
   const mediaLibrary = useProposalMediaLibraryOptional();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -65,7 +67,7 @@ export function ProposalSectionBackgroundPicker({
     });
   }
 
-  const labelMuted = elevated ? "text-zinc-400" : "text-muted-foreground";
+  const labelMuted = appearance === "elevated" ? "text-zinc-400" : "text-muted-foreground";
 
   const showMediaFill =
     resolvedPreview.active &&
@@ -82,18 +84,18 @@ export function ProposalSectionBackgroundPicker({
           className={cn(
             "relative inline-flex h-8 w-8 rounded-full ring-2 transition-colors focus:outline-none focus-visible:ring-2",
             showMediaFill ? "overflow-hidden p-0 ring-border" : "items-center justify-center",
-            elevated
+            appearance === "elevated"
               ? "text-zinc-200 hover:bg-white/10 focus-visible:ring-white/35 data-[state=open]:bg-white/15"
               : "text-muted-foreground ring-offset-2 ring-offset-muted/90 hover:bg-background hover:text-foreground focus-visible:ring-ring data-[state=open]:bg-background data-[state=open]:shadow-sm dark:ring-offset-zinc-800",
-            hasPersistedBackdrop ? "" : elevated ? "ring-white/35" : "ring-border ring-dashed",
+            hasPersistedBackdrop ? "" : appearance === "elevated" ? "ring-white/35" : "ring-border ring-dashed",
           )}
         >
           {showMediaFill ? (
             <SectionBackgroundTriggerMediaFill model={model} preview={resolvedPreview} />
           ) : (
             <>
-              <Layers className={cn("h-4 w-4", elevated && !hasPersistedBackdrop && "opacity-90")} />
-              <PreviewSwatchMini model={model} elevated={elevated} />
+              <Layers className={cn("h-4 w-4", appearance === "elevated" && !hasPersistedBackdrop && "opacity-90")} />
+              <PreviewSwatchMini model={model} appearance={appearance} />
             </>
           )}
         </button>
@@ -103,9 +105,7 @@ export function ProposalSectionBackgroundPicker({
         sideOffset={8}
         className={cn(
           "w-[min(272px,calc(100vw-2rem))] overflow-hidden rounded-lg border p-0",
-          elevated
-            ? PROPOSAL_EDITOR_BUBBLE_TOOLBAR_DARK_SHELL_CLASSES
-            : PROPOSAL_EDITOR_BUBBLE_TOOLBAR_PANEL_CLASSES,
+          proposalToolbarPanelClasses(appearance),
         )}
         onCloseAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => {
@@ -117,8 +117,10 @@ export function ProposalSectionBackgroundPicker({
           if (t.closest("[data-background-tint-popover]")) e.preventDefault();
         }}
       >
-        <div className={cn("border-b px-3 py-2.5", elevated ? "border-white/10" : "border-border/60")}>
-          <p className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", labelMuted)}>Background type</p>
+        <div className={cn("border-b px-3 py-2.5", appearance === "elevated" ? "border-white/10" : "border-border/60")}>
+          <ProposalToolbarSectionLabel appearance={appearance}>
+            Background type
+          </ProposalToolbarSectionLabel>
           <Tabs
             value={model.kind}
             onValueChange={(v) => setKind(v as SectionBackdropKind)}
@@ -127,14 +129,15 @@ export function ProposalSectionBackgroundPicker({
             <TabsList
               className={cn(
                 "grid h-8 w-full grid-cols-3 items-stretch gap-0 rounded-md border-0 p-0.5 shadow-none",
-                elevated ? "bg-black/55" : "bg-muted/60",
+                appearance === "elevated" ? "bg-black/55" : "bg-muted/60",
               )}
             >
               <TabsTrigger
                 value="color"
                 className={cn(
-                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
-                  elevated && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
+                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
+                  PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact,
+                  appearance === "elevated" && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
                 )}
               >
                 Color
@@ -142,8 +145,9 @@ export function ProposalSectionBackgroundPicker({
               <TabsTrigger
                 value="image"
                 className={cn(
-                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
-                  elevated && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
+                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
+                  PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact,
+                  appearance === "elevated" && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
                 )}
               >
                 Image
@@ -151,8 +155,9 @@ export function ProposalSectionBackgroundPicker({
               <TabsTrigger
                 value="video"
                 className={cn(
-                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
-                  elevated && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
+                  "h-full min-h-0 w-full rounded-[6px] px-2 py-0 font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none",
+                  PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact,
+                  appearance === "elevated" && "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm",
                 )}
               >
                 Video
@@ -160,13 +165,13 @@ export function ProposalSectionBackgroundPicker({
             </TabsList>
             <TabsContent value="color" className="mt-2 space-y-2 outline-none">
               <TintSwatchPicker
-                elevated={elevated}
+                appearance={appearance}
                 label="Backdrop color"
                 value={normalizeHex(model.color) ?? "#0f172a"}
                 onChange={(c) => patch({ kind: "color", color: c, mediaUrl: undefined })}
               />
               <SectionBackgroundTintPopover
-                elevated={elevated}
+                appearance={appearance}
                 labelMuted={labelMuted}
                 tintColor={model.tintColor}
                 tintStyle={model.tintStyle}
@@ -177,7 +182,7 @@ export function ProposalSectionBackgroundPicker({
             </TabsContent>
             <TabsContent value="image" className="mt-2 space-y-2 outline-none">
               <MiniAssetRow
-                elevated={elevated}
+                appearance={appearance}
                 kind="image"
                 url={model.mediaUrl}
                 rowTitle="Background image"
@@ -199,7 +204,7 @@ export function ProposalSectionBackgroundPicker({
                 }
               />
               <div className="space-y-1 pt-1.5">
-                <Label className={cn("text-[10px] font-semibold uppercase tracking-[0.14em]", labelMuted)}>
+                <Label className={cn("text-xs font-semibold uppercase tracking-[0.14em]", labelMuted)}>
                   Image URL
                 </Label>
                 <Input
@@ -208,13 +213,13 @@ export function ProposalSectionBackgroundPicker({
                   placeholder="https://…"
                   className={cn(
                     "h-8 rounded-md text-xs",
-                    elevated ? "border-zinc-700 bg-zinc-900 text-zinc-100" : "border-border/80",
+                    appearance === "elevated" ? "border-zinc-700 bg-zinc-900 text-zinc-100" : "border-border/80",
                   )}
                   spellCheck={false}
                 />
               </div>
               <SectionBackgroundTintPopover
-                elevated={elevated}
+                appearance={appearance}
                 labelMuted={labelMuted}
                 tintColor={model.tintColor}
                 tintStyle={model.tintStyle}
@@ -225,7 +230,7 @@ export function ProposalSectionBackgroundPicker({
             </TabsContent>
             <TabsContent value="video" className="mt-2 space-y-1.5 outline-none">
               <MiniAssetRow
-                elevated={elevated}
+                appearance={appearance}
                 kind="video"
                 url={model.mediaUrl}
                 rowTitle="Background video"
@@ -248,7 +253,7 @@ export function ProposalSectionBackgroundPicker({
                 }
               />
               <SectionBackgroundTintPopover
-                elevated={elevated}
+                appearance={appearance}
                 labelMuted={labelMuted}
                 tintColor={model.tintColor}
                 tintStyle={model.tintStyle}
@@ -257,7 +262,7 @@ export function ProposalSectionBackgroundPicker({
                 onPatch={patch}
               />
               <MiniAssetRow
-                elevated={elevated}
+                appearance={appearance}
                 kind="image"
                 url={model.posterUrl}
                 rowTitle="Mobile image fallback"
@@ -284,14 +289,14 @@ export function ProposalSectionBackgroundPicker({
         </div>
 
         <div className="space-y-3 px-3 py-3">
-          <div className={cn("flex flex-wrap gap-2 border-t pt-2", elevated ? "border-white/10" : "border-border/60")}>
+          <div className={cn("flex flex-wrap gap-2 border-t pt-2", appearance === "elevated" ? "border-white/10" : "border-border/60")}>
             <Button
               type="button"
               variant="outline"
               size="sm"
               className={cn(
-                "h-8 flex-1 rounded-md text-[11px] font-medium",
-                elevated ? "border-zinc-600 text-zinc-200 hover:bg-zinc-800" : "border-border/80",
+                "h-8 flex-1 rounded-md text-xs font-medium",
+                appearance === "elevated" ? "border-zinc-600 text-zinc-200 hover:bg-zinc-800" : "border-border/80",
               )}
               onClick={() => onChange(undefined)}
               disabled={!background}
@@ -299,7 +304,7 @@ export function ProposalSectionBackgroundPicker({
               Clear background
             </Button>
           </div>
-          <p className={cn("text-[10px] leading-snug", labelMuted)}>
+          <p className={cn("text-xs leading-snug", labelMuted)}>
             {resolvedPreview.active
               ? "Shown on preview and shared pages after save."
               : "Pick a backdrop, then tune tint and blur."}
@@ -349,9 +354,15 @@ function SectionBackgroundTriggerMediaFill({
   return <span className="block h-full w-full bg-muted" aria-hidden />;
 }
 
-function PreviewSwatchMini({ model, elevated }: { model: SectionBackground; elevated?: boolean }) {
+function PreviewSwatchMini({
+  model,
+  appearance,
+}: {
+  model: SectionBackground;
+  appearance?: ProposalToolbarAppearance;
+}) {
   const preview = resolveSectionBackground(model);
-  const ringFg = elevated ? "ring-black/85" : "ring-background";
+  const ringFg = appearance === "elevated" ? "ring-black/85" : "ring-background";
 
   let inner: React.ReactNode;
   if (preview.kind === "color" || !preview.active) {
@@ -367,7 +378,7 @@ function PreviewSwatchMini({ model, elevated }: { model: SectionBackground; elev
         <span
           className="absolute bottom-1 right-1 h-4 w-4 overflow-hidden rounded-full ring-[1.5px]"
           style={{
-            borderColor: elevated ? "#27272a" : "var(--border)",
+            borderColor: appearance === "elevated" ? "#27272a" : "var(--border)",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary author URLs */}
@@ -409,21 +420,21 @@ function PreviewSwatchMini({ model, elevated }: { model: SectionBackground; elev
 }
 
 function MiniAssetRow({
-  elevated,
+  appearance,
   kind,
   url,
   rowTitle,
   emptyHint,
   onPickFromLibrary,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   kind: "image" | "video";
   url?: string;
   rowTitle?: string;
   emptyHint?: string;
   onPickFromLibrary?: () => void;
 }) {
-  const labelMuted = elevated ? "text-zinc-400" : "text-muted-foreground";
+  const labelMuted = appearance === "elevated" ? "text-zinc-400" : "text-muted-foreground";
   const trimmed = (url ?? "").trim();
   const titleText = rowTitle ?? `Background ${kind === "image" ? "image" : "video"}`;
   const defaultEmptyHint = onPickFromLibrary ? "Library or paste a HTTPS URL" : "Paste a HTTPS URL";
@@ -431,7 +442,7 @@ function MiniAssetRow({
   const rowClass = cn(
     "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left ring-1 ring-border/50 transition-colors",
     onPickFromLibrary && "cursor-pointer hover:bg-muted/35 hover:ring-border/70",
-    elevated && onPickFromLibrary && "ring-white/12 hover:bg-white/5 hover:ring-white/20",
+    appearance === "elevated" && onPickFromLibrary && "ring-white/12 hover:bg-white/5 hover:ring-white/20",
     !onPickFromLibrary && "bg-muted/10",
   );
 
@@ -452,7 +463,7 @@ function MiniAssetRow({
     <div
       className={cn(
         "relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted/20",
-        elevated ? "border-white/12" : "border-border/60",
+        appearance === "elevated" ? "border-white/12" : "border-border/60",
       )}
     >
       {!trimmed ? (
@@ -480,7 +491,7 @@ function MiniAssetRow({
   const text = (
     <div className="min-w-0 flex-1">
       <p className="text-xs font-semibold leading-tight text-foreground">{titleText}</p>
-      <p className={cn("mt-0.5 truncate text-[10px] leading-snug", labelMuted)}>{subtitle}</p>
+      <p className={cn("mt-0.5 truncate text-xs leading-snug", labelMuted)}>{subtitle}</p>
     </div>
   );
 
@@ -501,19 +512,19 @@ function MiniAssetRow({
 }
 
 function TintSwatchPicker({
-  elevated,
+  appearance,
   label,
   value,
   onChange,
 }: {
-  elevated?: boolean;
+  appearance?: ProposalToolbarAppearance;
   label: string;
   value: string;
   onChange: (hex: string) => void;
 }) {
-  const labelMuted = elevated ? "text-zinc-400" : "text-muted-foreground";
-  const ringActive = elevated ? "ring-offset-zinc-900" : "ring-offset-background";
-  const swatchIdle = elevated ? "border-zinc-700 hover:scale-105" : "border-border hover:scale-105";
+  const labelMuted = appearance === "elevated" ? "text-zinc-400" : "text-muted-foreground";
+  const ringActive = appearance === "elevated" ? "ring-offset-zinc-900" : "ring-offset-background";
+  const swatchIdle = appearance === "elevated" ? "border-zinc-700 hover:scale-105" : "border-border hover:scale-105";
 
   const [draft, setDraft] = React.useState(value);
   React.useEffect(() => setDraft(value), [value]);
@@ -527,7 +538,7 @@ function TintSwatchPicker({
   return (
     <div>
       {label ? (
-        <p className={cn("mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em]", labelMuted)}>{label}</p>
+        <p className={cn("mb-1.5 text-xs font-semibold uppercase tracking-[0.14em]", labelMuted)}>{label}</p>
       ) : null}
       <div className="grid grid-cols-6 gap-1.5">
         {STYLE_PRESET_COLORS.map((c) => {
@@ -561,10 +572,10 @@ function TintSwatchPicker({
       <div
         className={cn(
           "mt-1.5 flex h-8 items-center gap-2 rounded-md border px-2 py-0",
-          elevated ? "border-zinc-700/70 bg-black/40" : "border-border/70 bg-muted/30",
+          appearance === "elevated" ? "border-zinc-700/70 bg-black/40" : "border-border/70 bg-muted/30",
         )}
       >
-        <span className={cn("h-5 w-5 shrink-0 rounded-full ring-1", elevated ? "ring-zinc-600" : "ring-border")} style={{ backgroundColor: value }} />
+        <span className={cn("h-5 w-5 shrink-0 rounded-full ring-1", appearance === "elevated" ? "ring-zinc-600" : "ring-border")} style={{ backgroundColor: value }} />
         <Input
           type="text"
           value={draft}
@@ -574,7 +585,7 @@ function TintSwatchPicker({
           aria-label={label ? `${label} hex` : "Colour hex"}
           className={cn(
             "h-7 border-0 bg-transparent p-0 text-xs font-medium tabular-nums tracking-tight",
-            elevated ? "text-zinc-100" : "text-foreground",
+            appearance === "elevated" ? "text-zinc-100" : "text-foreground",
           )}
           placeholder="#0F172A"
           onKeyDown={(e) => {

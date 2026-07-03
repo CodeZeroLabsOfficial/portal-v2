@@ -25,16 +25,22 @@ import {
   resolveBlockStyle,
 } from "@/lib/proposal/block-style";
 import {
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_DARK_SHELL_CLASSES,
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_PANEL_CLASSES,
-  PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES,
-} from "@/lib/proposal/editor-glass";
+  ProposalToolbarIconButton,
+  ProposalToolbarSectionLabel,
+  ProposalToolbarSeparator,
+  ProposalToolbarShell,
+} from "@/components/features/proposal/editor/toolbar";
+import {
+  type ProposalToolbarAppearance,
+  PROPOSAL_TOOLBAR_TOKENS,
+  proposalToolbarPanelClasses,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import { cn } from "@/lib/utils";
 import type { BlockStyle } from "@/types/proposal";
 
-export interface BlockToolbarProps {
+export interface ProposalBlockToolbarProps {
   /** Controls palette + icon treatments. `elevated` is a dark floating bar; `surface` is a soft light pill aligned with editorial chrome. */
-  appearance?: "elevated" | "surface";
+  appearance?: ProposalToolbarAppearance;
   blockType: "pricing" | "packages" | "agreement" | "section" | "other";
   deleteLabel?: string;
   canMoveUp: boolean;
@@ -71,7 +77,7 @@ export interface BlockToolbarProps {
   compactPrimarySlot?: React.ReactNode;
 }
 
-export function BlockToolbar({
+export function ProposalBlockToolbar({
   appearance = "surface",
   blockType,
   deleteLabel = "Delete block",
@@ -93,32 +99,27 @@ export function BlockToolbar({
   backdropPickerSlot,
   compactChrome = false,
   compactPrimarySlot,
-}: BlockToolbarProps) {
+}: ProposalBlockToolbarProps) {
   const supportsStyle =
     (blockType === "packages" || blockType === "pricing" || blockType === "agreement") &&
     typeof onStyleChange === "function";
   const stylePickerMode: StylePickerMode = blockType === "agreement" ? "agreement" : "packages";
-
-  const elevated = appearance === "elevated";
-  const shell = elevated ? PROPOSAL_EDITOR_BUBBLE_TOOLBAR_DARK_SHELL_CLASSES : PROPOSAL_EDITOR_BUBBLE_TOOLBAR_SHELL_CLASSES;
-  const iconBtnBase = elevated
-    ? "text-zinc-300 hover:bg-white/10 hover:text-white focus-visible:ring-white/40"
-    : "text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring";
 
   const hasOverflowMenuItems =
     Boolean(overflowLeadingAction) || (overflowExtraItems?.length ?? 0) > 0;
   const showOverflowDropdown = Boolean(showOverflowMenu && hasOverflowMenuItems);
 
   return (
-    <div
-      className={cn("pointer-events-auto inline-flex items-center gap-0.5 rounded-full p-1", shell)}
+    <ProposalToolbarShell
+      appearance={appearance}
+      className="pointer-events-auto p-1"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
       {leadingSlot ? (
         <>
           <span className="inline-flex items-center">{leadingSlot}</span>
-          <ToolbarDivider elevated={elevated} />
+          <ToolbarDivider appearance={appearance} />
         </>
       ) : null}
       {compactChrome ? (
@@ -128,25 +129,26 @@ export function BlockToolbar({
               {compactPrimarySlot}
             </span>
           ) : null}
-          <ToolbarDivider elevated={elevated} />
+          <ToolbarDivider appearance={appearance} />
         </>
       ) : (
         <>
           {backdropPickerSlot ? (
             <>
               <span className="inline-flex items-center">{backdropPickerSlot}</span>
-              <ToolbarDivider elevated={elevated} />
+              <ToolbarDivider appearance={appearance} />
             </>
           ) : null}
           {auxiliarySlot ? (
             <>
               <span className="inline-flex items-center">{auxiliarySlot}</span>
-              <ToolbarDivider elevated={elevated} />
+              <ToolbarDivider appearance={appearance} />
             </>
           ) : null}
-          <ToolbarIconButton
-            elevated={elevated}
-            label="Move up"
+          <ProposalToolbarIconButton
+            appearance={appearance}
+            aria-label="Move up"
+            title="Move up"
             disabled={!canMoveUp}
             onClick={(e) => {
               e.stopPropagation();
@@ -154,10 +156,11 @@ export function BlockToolbar({
             }}
           >
             <ArrowUp className="h-4 w-4" />
-          </ToolbarIconButton>
-          <ToolbarIconButton
-            elevated={elevated}
-            label="Move down"
+          </ProposalToolbarIconButton>
+          <ProposalToolbarIconButton
+            appearance={appearance}
+            aria-label="Move down"
+            title="Move down"
             disabled={!canMoveDown}
             onClick={(e) => {
               e.stopPropagation();
@@ -165,54 +168,52 @@ export function BlockToolbar({
             }}
           >
             <ArrowDown className="h-4 w-4" />
-          </ToolbarIconButton>
-          <ToolbarDivider elevated={elevated} />
-          <ToolbarIconButton
-            elevated={elevated}
-            label="Duplicate"
+          </ProposalToolbarIconButton>
+          <ProposalToolbarSeparator appearance={appearance} />
+          <ProposalToolbarIconButton
+            appearance={appearance}
+            aria-label="Duplicate"
+            title="Duplicate"
             onClick={(e) => {
               e.stopPropagation();
               onDuplicate();
             }}
           >
             <Copy className="h-4 w-4" />
-          </ToolbarIconButton>
+          </ProposalToolbarIconButton>
           {supportsStyle ? (
             <StylePickerTrigger
               style={style}
               onStyleChange={onStyleChange!}
-              elevated={elevated}
+              appearance={appearance}
               mode={stylePickerMode}
             />
           ) : null}
           {onOpenSettings ? (
-            <ToolbarIconButton
-              elevated={elevated}
-              label="Block options"
+            <ProposalToolbarIconButton
+              appearance={appearance}
+              aria-label="Block options"
+              title="Block options"
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenSettings();
               }}
             >
               <Settings2 className="h-4 w-4" />
-            </ToolbarIconButton>
+            </ProposalToolbarIconButton>
           ) : null}
           {showOverflowDropdown ? (
             <>
-              <ToolbarDivider elevated={elevated} />
+              <ToolbarDivider appearance={appearance} />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    title="More"
+                  <ProposalToolbarIconButton
+                    appearance={appearance}
                     aria-label="More actions"
-                    className={cn(
-                      "inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2",
-                      iconBtnBase,
-                    )}
+                    title="More"
                   >
                     <EllipsisVertical className="h-4 w-4" />
-                  </button>
+                  </ProposalToolbarIconButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" sideOffset={6} className="min-w-[10rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
                   {overflowLeadingAction ? (
@@ -248,78 +249,37 @@ export function BlockToolbar({
               </DropdownMenu>
             </>
           ) : null}
-          <ToolbarDivider elevated={elevated} />
+          <ToolbarDivider appearance={appearance} />
         </>
       )}
-      <ToolbarIconButton
-        elevated={elevated}
-        label={deleteLabel}
+      <ProposalToolbarIconButton
+        appearance={appearance}
+        aria-label={deleteLabel}
+        title={deleteLabel}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
         className={
-          elevated
+          appearance === "elevated"
             ? "hover:bg-red-500/20 hover:text-red-300"
             : "text-destructive hover:bg-red-500/15 hover:text-destructive"
         }
       >
         <Trash2 className="h-4 w-4" />
-      </ToolbarIconButton>
+      </ProposalToolbarIconButton>
       {trailingSlot ? (
         <>
-          <ToolbarDivider elevated={elevated} />
+          <ToolbarDivider appearance={appearance} />
           <span className="inline-flex items-center">{trailingSlot}</span>
         </>
       ) : null}
-    </div>
+    </ProposalToolbarShell>
   );
 }
 
-function ToolbarIconButton({
-  elevated,
-  label,
-  onClick,
-  disabled,
-  children,
-  className,
-}: {
-  elevated: boolean;
-  label: string;
-  onClick?: (e: React.MouseEvent) => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const base =
-    elevated
-      ? "text-zinc-300 hover:bg-white/10 hover:text-white focus-visible:ring-white/40"
-      : "text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring";
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-30",
-        base,
-        className,
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ToolbarDivider({ elevated }: { elevated: boolean }) {
-  return (
-    <span
-      className={cn("mx-0.5 h-5 w-px", elevated ? "bg-white/15" : "bg-border")}
-      aria-hidden
-    />
-  );
+function ToolbarDivider({ appearance }: { appearance: ProposalToolbarAppearance }) {
+  return <ProposalToolbarSeparator appearance={appearance} />;
 }
 
 /**
@@ -337,57 +297,48 @@ function pickerDefaultPrimary(mode: StylePickerMode): string {
 function StylePickerTrigger({
   style,
   onStyleChange,
-  elevated,
+  appearance,
   mode = "packages",
 }: {
   style?: BlockStyle;
   onStyleChange: (next: BlockStyle | undefined) => void;
-  elevated: boolean;
+  appearance: ProposalToolbarAppearance;
   mode?: StylePickerMode;
 }) {
   const triggerColor =
     mode === "agreement"
       ? (style?.primaryColor?.trim() || DEFAULT_AGREEMENT_BUTTON_COLOR)
       : resolveBlockStyle(style).primaryColor;
-  const triggerCn = elevated
-    ? "text-zinc-300 hover:bg-white/10 hover:text-white focus-visible:ring-white/40 data-[state=open]:bg-white/15"
-    : "text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring data-[state=open]:bg-background";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          title={mode === "agreement" ? "Button color" : "Style"}
+        <ProposalToolbarIconButton
+          appearance={appearance}
           aria-label={mode === "agreement" ? "Button color" : "Style"}
-          className={cn(
-            "relative inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2",
-            triggerCn,
-          )}
+          title={mode === "agreement" ? "Button color" : "Style"}
+          className="relative data-[state=open]:bg-[var(--proposal-toolbar-active-bg)]"
         >
           <Palette className="h-4 w-4" />
           <span
             className={cn(
               "absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full ring-1",
-              elevated ? "ring-zinc-900" : "ring-background",
+              appearance === "elevated" ? "ring-zinc-900" : "ring-background",
             )}
             style={{ backgroundColor: triggerColor }}
             aria-hidden
           />
-        </button>
+        </ProposalToolbarIconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="center"
         sideOffset={8}
-        className={cn(
-          "w-72 border p-0",
-          elevated ? PROPOSAL_EDITOR_BUBBLE_TOOLBAR_DARK_SHELL_CLASSES : PROPOSAL_EDITOR_BUBBLE_TOOLBAR_PANEL_CLASSES,
-        )}
+        className={cn("w-72 border p-0", proposalToolbarPanelClasses(appearance))}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <StylePickerPanel
           style={style}
           onStyleChange={onStyleChange}
-          elevated={elevated}
+          appearance={appearance}
           mode={mode}
         />
       </DropdownMenuContent>
@@ -398,24 +349,27 @@ function StylePickerTrigger({
 function StylePickerPanel({
   style,
   onStyleChange,
-  elevated,
+  appearance,
   mode = "packages",
 }: {
   style?: BlockStyle;
   onStyleChange: (next: BlockStyle | undefined) => void;
-  elevated: boolean;
+  appearance: ProposalToolbarAppearance;
   mode?: StylePickerMode;
 }) {
-  const labelMuted = elevated ? "text-zinc-400" : "text-muted-foreground";
-  const frame = elevated ? "bg-zinc-800/80 ring-zinc-700/60" : "bg-muted/60 ring-border";
+  const frame =
+    appearance === "elevated" ? "bg-zinc-800/80 ring-zinc-700/60" : "bg-muted/60 ring-border";
 
   const resetButton = (
     <button
       type="button"
       onClick={() => onStyleChange(undefined)}
       className={cn(
-        "w-full rounded-md border px-2 py-1.5 text-[11px] font-medium transition-colors",
-        elevated ? "border-zinc-700/60 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200" : "border-border text-muted-foreground hover:text-foreground",
+        "w-full rounded-md border px-2 py-1.5 font-medium transition-colors",
+        PROPOSAL_TOOLBAR_TOKENS.surface.menuItemCompact,
+        appearance === "elevated"
+          ? "border-zinc-700/60 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+          : "border-border text-muted-foreground hover:text-foreground",
       )}
     >
       Reset to default
@@ -427,7 +381,7 @@ function StylePickerPanel({
     return (
       <div className="space-y-4 p-3">
         <ColorRow
-          elevated={elevated}
+          appearance={appearance}
           label="Button color"
           value={buttonColor}
           onChange={(v) => onStyleChange({ ...(style ?? {}), primaryColor: v })}
@@ -453,32 +407,34 @@ function StylePickerPanel({
   return (
     <div className="space-y-4 p-3">
       <div>
-        <p className={cn("px-1 text-[11px] font-semibold uppercase tracking-wider", labelMuted)}>Presentation</p>
+        <ProposalToolbarSectionLabel appearance={appearance}>
+          Presentation
+        </ProposalToolbarSectionLabel>
         <div className={cn("mt-2 inline-flex w-full rounded-lg p-0.5 ring-1", frame)}>
           <VariantPill
             label="Visual"
             active={resolved.variant === "visual"}
             onClick={() => patch({ variant: "visual" })}
-            elevated={elevated}
+            appearance={appearance}
           />
           <VariantPill
             label="Simple"
             active={resolved.variant === "simple"}
             onClick={() => patch({ variant: "simple" })}
-            elevated={elevated}
+            appearance={appearance}
           />
         </div>
       </div>
 
       <ColorRow
-        elevated={elevated}
+        appearance={appearance}
         label="Primary color"
         value={resolved.primaryColor}
         onChange={(v) => patch({ primaryColor: v })}
       />
 
       <ColorRow
-        elevated={elevated}
+        appearance={appearance}
         label="Table background"
         value={resolved.tableBackground}
         onChange={(v) => patch({ tableBackground: v })}
@@ -493,12 +449,12 @@ function VariantPill({
   label,
   active,
   onClick,
-  elevated,
+  appearance,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
-  elevated: boolean;
+  appearance: ProposalToolbarAppearance;
 }) {
   return (
     <button
@@ -506,7 +462,7 @@ function VariantPill({
       onClick={onClick}
       className={cn(
         "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        elevated
+        appearance === "elevated"
           ? active
             ? "bg-zinc-700 text-white shadow-sm"
             : "text-zinc-400 hover:text-white"
@@ -522,19 +478,19 @@ function VariantPill({
 }
 
 function ColorRow({
-  elevated,
+  appearance,
   label,
   value,
   onChange,
 }: {
-  elevated: boolean;
+  appearance: ProposalToolbarAppearance;
   label: string;
   value: string;
   onChange: (next: string) => void;
 }) {
-  const labelMuted = elevated ? "text-zinc-400" : "text-muted-foreground";
-  const ringActive = elevated ? "ring-offset-zinc-900" : "ring-offset-background";
-  const swatchIdle = elevated ? "border-zinc-700 hover:scale-105" : "border-border hover:scale-105";
+  const ringActive = appearance === "elevated" ? "ring-offset-zinc-900" : "ring-offset-background";
+  const swatchIdle =
+    appearance === "elevated" ? "border-zinc-700 hover:scale-105" : "border-border hover:scale-105";
   const [draft, setDraft] = React.useState(value);
   React.useEffect(() => setDraft(value), [value]);
 
@@ -546,7 +502,9 @@ function ColorRow({
 
   return (
     <div>
-      <p className={cn("px-1 text-[11px] font-semibold uppercase tracking-wider", labelMuted)}>{label}</p>
+      <ProposalToolbarSectionLabel appearance={appearance} className="mt-0">
+        {label}
+      </ProposalToolbarSectionLabel>
       <div className="mt-2 grid grid-cols-6 gap-2">
         {STYLE_PRESET_COLORS.map((c) => {
           const isActive = sameColor(c.value, value);
@@ -576,8 +534,20 @@ function ColorRow({
           );
         })}
       </div>
-      <div className={cn("mt-2 flex items-center gap-2 rounded-lg border p-1.5", elevated ? "border-zinc-700/60 bg-zinc-800/60" : "border-border bg-muted/40")}>
-        <span className={cn("h-6 w-6 shrink-0 rounded-full ring-1", elevated ? "ring-zinc-700" : "ring-border")} style={{ backgroundColor: value }} aria-hidden />
+      <div
+        className={cn(
+          "mt-2 flex items-center gap-2 rounded-lg border p-1.5",
+          appearance === "elevated" ? "border-zinc-700/60 bg-zinc-800/60" : "border-border bg-muted/40",
+        )}
+      >
+        <span
+          className={cn(
+            "h-6 w-6 shrink-0 rounded-full ring-1",
+            appearance === "elevated" ? "ring-zinc-700" : "ring-border",
+          )}
+          style={{ backgroundColor: value }}
+          aria-hidden
+        />
         <input
           type="text"
           value={draft}
@@ -590,9 +560,12 @@ function ColorRow({
             }
           }}
           spellCheck={false}
-          className={cn("w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground", elevated ? "text-zinc-100" : "text-foreground")}
+          className={cn(
+            "w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground",
+            appearance === "elevated" ? "text-zinc-100" : "text-foreground",
+          )}
           aria-label={`${label} hex value`}
-          placeholder="#4543F7"
+          placeholder="#15141F"
         />
       </div>
     </div>

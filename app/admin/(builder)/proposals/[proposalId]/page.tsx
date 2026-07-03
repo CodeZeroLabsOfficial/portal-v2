@@ -2,9 +2,12 @@ import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
 import { ProposalBuilderMetadata } from "@/components/features/proposal/proposal-builder-metadata";
-import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
+import { ProposalShareSettings } from "@/components/features/proposal/proposal-share-settings";
+import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
+import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
 import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getAdminProposalRecord } from "@/server/firestore/portal-data";
@@ -24,7 +27,7 @@ function firstQueryString(value: string | string[] | undefined): string | null {
   return t.length > 0 ? t : null;
 }
 
-export default async function AdminProposalDetailPage({ params, searchParams }: PageProps) {
+export default async function AdminProposalBuilderPage({ params, searchParams }: PageProps) {
   await connection();
   const user = await getCurrentSessionUser();
   if (!user) {
@@ -48,23 +51,41 @@ export default async function AdminProposalDetailPage({ params, searchParams }: 
     customerId ? getCustomerRecordForOrg(user, customerId) : Promise.resolve(null),
     sourceTemplateId && db
       ? getProposalTemplateNameForOrganization(db, proposal.organizationId, sourceTemplateId)
-      : Promise.resolve(null)
+      : Promise.resolve(null),
   ]);
   const recipientDisplayName =
     recipientCustomer?.name.trim() || recipientCustomer?.email.trim() || null;
 
-  const proposalDetailsSlot = (
-    <ProposalBuilderMetadata
-      proposal={proposal}
-      recipientDisplayName={recipientDisplayName}
-      customerId={customerId}
-      templateName={templateName}
-      sourceTemplateId={sourceTemplateId}
-    />
-  );
+  const stage = getProposalStageBadgeDisplay(proposal);
 
   return (
-    <ProposalDocumentEditorLazy
+    <ProposalBuilderWorkspace
+      backHref={customerBackId ? `/admin/customers/${encodeURIComponent(customerBackId)}` : "/admin/proposals"}
+      backLabel={customerBackId ? "Customer" : "Proposals"}
+      breadcrumbSegments={[
+        { label: "Proposals", href: "/admin/proposals" },
+        { label: proposal.document.title?.trim() || "Untitled proposal" },
+      ]}
+      statusBadge={
+        <StatusBadge label={stage.label} variant={stage.variant} title={stage.title} />
+      }
+      detailsSlot={
+        <ProposalBuilderMetadata
+          proposal={proposal}
+          recipientDisplayName={recipientDisplayName}
+          customerId={customerId}
+          templateName={templateName}
+          sourceTemplateId={sourceTemplateId}
+          variant="inspector"
+        />
+      }
+      shareSlot={
+        <ProposalShareSettings
+          proposalId={proposal.id}
+          hasPassword={Boolean(proposal.sharePasswordHash)}
+          variant="plain"
+        />
+      }
       proposalId={proposal.id}
       initialDocument={proposal.document}
       initialBranding={proposal.branding}
@@ -76,9 +97,8 @@ export default async function AdminProposalDetailPage({ params, searchParams }: 
           ? `/admin/customers/${encodeURIComponent(customerBackId)}`
           : null,
         recipientEmail: proposal.recipientEmail?.trim() || null,
-        shareToken: proposal.shareToken?.trim() || null
+        shareToken: proposal.shareToken?.trim() || null,
       }}
-      proposalEditMiddleSlot={proposalDetailsSlot}
     />
   );
 }

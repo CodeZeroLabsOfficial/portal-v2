@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-accordion-expand-surface";
 import { PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS } from "@/lib/proposal/rich-text/inline-heading-rich-display";
+import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
 import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
 
 export interface PackagesBlockPublicProps {
@@ -309,7 +310,7 @@ export function PackagesBlockPublic({
               >
                 {isRecommended ? (
                   <div
-                    className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow"
+                    className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide shadow"
                     style={{ backgroundColor: style.highlightColor, color: recommendedFg }}
                   >
                     Recommended
@@ -353,7 +354,7 @@ export function PackagesBlockPublic({
                       style={dashedBorderStyle}
                     >
                       <p
-                        className="text-[11px] font-semibold uppercase tracking-wide"
+                        className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
                         style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
                       >
                         12-month plan
@@ -477,7 +478,7 @@ export function PackagesBlockPublic({
                     </TooltipContent>
                   </Tooltip>
                   <div className="text-right">
-                    <p className="block text-[10px] font-semibold uppercase tracking-wide opacity-90">Subtotal</p>
+                    <p className="block text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</p>
                     <p className="mt-0.5 text-lg font-semibold tabular-nums leading-none">
                       {formatCurrencyAmount(addonsSubtotalMinor, currency)}
                       <span className="ml-1 text-xs font-medium opacity-90">/ mo</span>
@@ -495,7 +496,10 @@ export function PackagesBlockPublic({
                 <table className="w-full min-w-[320px] text-left text-sm [&_thead_th:first-child]:!text-left [&_tbody_td:first-child]:!text-left">
                   <thead>
                     <tr
-                      className="border-b border-dashed text-left text-[11px] font-medium uppercase tracking-wide"
+                      className={cn(
+                        PROPOSAL_PUBLIC_META_LABEL_CLASSES,
+                        "border-b border-dashed text-left",
+                      )}
                       style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
                     >
                       <th className="px-4 py-2.5 !text-left">Description</th>

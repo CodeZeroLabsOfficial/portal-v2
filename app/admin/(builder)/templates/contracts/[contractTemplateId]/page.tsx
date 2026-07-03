@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
-import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
+import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { contractTemplateRecordToDocument } from "@/lib/contract-template/document";
 import { getContractTemplateForStaff } from "@/server/firestore/contract-templates";
@@ -12,13 +12,13 @@ interface PageProps {
   params: Promise<{ contractTemplateId: string }>;
 }
 
-export default async function EditContractTemplatePage({ params }: PageProps) {
+export default async function EditContractTemplateBuilderPage({ params }: PageProps) {
   await connection();
   const { contractTemplateId } = await params;
   const user = await getCurrentSessionUser();
   if (!user) {
     redirect(
-      `/login?next=${encodeURIComponent(`/admin/templates/contracts/${contractTemplateId}`)}`
+      `/login?next=${encodeURIComponent(`/admin/templates/contracts/${contractTemplateId}`)}`,
     );
   }
 
@@ -30,7 +30,13 @@ export default async function EditContractTemplatePage({ params }: PageProps) {
   const document = contractTemplateRecordToDocument(row);
 
   return (
-    <ProposalDocumentEditorLazy
+    <ProposalBuilderWorkspace
+      backHref="/admin/templates"
+      backLabel="Templates"
+      breadcrumbSegments={[
+        { label: "Templates", href: "/admin/templates" },
+        { label: row.name?.trim() || "Untitled contract" },
+      ]}
       variant="contract-template"
       contractTemplateId={row.id}
       initialTemplateName={row.name}

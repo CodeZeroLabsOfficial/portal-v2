@@ -40,7 +40,7 @@ import { youtubeThumbnailFromPageUrl } from "@/components/proposal/embed-video";
 
 /** Section headings in the splash background / logo / layout toolbar. */
 const SPLASH_TOOLBAR_SECTION_LABEL_CLASS =
-  "text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground";
+  "text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground";
 
 function normalizeHex(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined;
@@ -108,7 +108,7 @@ function RangeRow({
     <div>
       <div className="mb-1 flex items-end justify-between gap-3">
         <p className={SPLASH_TOOLBAR_SECTION_LABEL_CLASS}>{label}</p>
-        <span className="font-mono text-[11px] font-semibold tabular-nums text-foreground underline decoration-muted-foreground/45 underline-offset-[3px]">
+        <span className="font-mono text-xs font-semibold tabular-nums text-foreground underline decoration-muted-foreground/45 underline-offset-[3px]">
           {format(value)}
           {suffix}
         </span>
@@ -563,20 +563,20 @@ export function ProposalSplashBackgroundPicker({
           >
             <TabsTrigger
               value="background"
-              className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+              className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
             >
               Background
             </TabsTrigger>
             <TabsTrigger
               value="layout"
-              className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+              className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
             >
               Layout
             </TabsTrigger>
             {showLogoTab ? (
               <TabsTrigger
                 value="logo"
-                className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+                className="h-full min-h-0 w-full rounded-[6px] px-1.5 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
               >
                 Logo
               </TabsTrigger>
@@ -599,19 +599,19 @@ export function ProposalSplashBackgroundPicker({
               <TabsList className="grid h-8 w-full grid-cols-3 items-stretch gap-0 rounded-md border-0 bg-muted/60 p-0.5 shadow-none">
                 <TabsTrigger
                   value="color"
-                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
                 >
                   Color
                 </TabsTrigger>
                 <TabsTrigger
                   value="image"
-                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
                 >
                   Image
                 </TabsTrigger>
                 <TabsTrigger
                   value="video"
-                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-[11px] font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
+                  className="h-full min-h-0 w-full rounded-[6px] px-2 py-0 text-xs font-semibold data-[state=inactive]:text-muted-foreground data-[state=inactive]:shadow-none"
                 >
                   Video
                 </TabsTrigger>
@@ -676,7 +676,7 @@ export function ProposalSplashBackgroundPicker({
                   </div>
                   <div className="min-w-0 flex-1 text-left">
                     <p className={SPLASH_TOOLBAR_SECTION_LABEL_CLASS}>Background image</p>
-                    <p className="mt-0.5 truncate text-[10px] leading-snug text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs leading-snug text-muted-foreground">
                       {model.url?.trim() || (mediaLibrary ? "Library or paste a HTTPS URL" : "Paste a HTTPS URL")}
                     </p>
                   </div>
