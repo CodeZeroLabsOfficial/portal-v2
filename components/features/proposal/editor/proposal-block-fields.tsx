@@ -406,7 +406,7 @@ function SortableShell({
           </div>
         ) : null}
         {showToolbar && toolbar && sectionChild ? (
-          <div className="pointer-events-none absolute right-0 top-0 z-50 pb-1 pt-0.5">
+          <div className="pointer-events-none absolute right-0 top-0 z-50 -translate-y-full pb-1.5 pt-0.5">
             <div className="pointer-events-auto">
               {toolbar({ dragAttributes: attributes, dragListeners: listeners })}
             </div>
@@ -1306,7 +1306,6 @@ export function SectionBlockFields({
                   selected={isSelected}
                   flush
                   layout="section-child"
-                  toolbarShowOnHover={false}
                   sectionChildInsertMenu={(trigger) => (
                     <SectionInsertMenu
                       align="start"
@@ -2251,7 +2250,6 @@ export function AgreementBlockFields({
                   selected={isSelected}
                   flush
                   layout="section-child"
-                  toolbarShowOnHover={false}
                   sectionChildInsertMenu={(trigger) => (
                     <SectionInsertMenu
                       align="start"
