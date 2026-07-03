@@ -14,7 +14,6 @@ import {
 import { Loader2, MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-import { ProposalEngagementMeta } from "@/components/features/proposal/proposal-engagement-meta";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
@@ -289,12 +288,6 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
         }
       },
       {
-        id: "engagement",
-        header: "Engagement",
-        cell: ({ row }) => <ProposalEngagementMeta proposal={row.original} />,
-        enableSorting: false
-      },
-      {
         accessorKey: "updatedAt",
         meta: { viewLabel: "Last Edited" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Last edited" />,
@@ -330,16 +323,16 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={editHref}>Edit</Link>
-                </DropdownMenuItem>
                 {canOpenPublic && publicUrl ? (
                   <DropdownMenuItem asChild>
                     <Link href={publicUrl} target="_blank" rel="noopener noreferrer">
-                      Open public
+                      Open
                     </Link>
                   </DropdownMenuItem>
                 ) : null}
+                <DropdownMenuItem asChild>
+                  <Link href={editHref}>Edit</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => void handleClone(proposal)}>Clone</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

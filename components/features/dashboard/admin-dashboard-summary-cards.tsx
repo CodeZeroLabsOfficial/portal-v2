@@ -41,13 +41,13 @@ function SummaryCard({ kpi, icon: Icon }: SummaryCardConfig) {
                   kpi.deltaNeutral
                     ? "text-muted-foreground"
                     : kpi.deltaPositive
-                      ? "text-green-600"
-                      : "text-red-600",
+                      ? "text-success"
+                      : "text-destructive",
                 )}
               >
                 {kpi.delta}{" "}
               </span>
-              from previous period
+              vs prior period
             </>
           ) : (
             kpi.footer

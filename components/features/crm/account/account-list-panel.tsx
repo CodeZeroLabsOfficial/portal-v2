@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import type { AccountListRow } from "@/lib/account/list";
-import { websiteHref } from "@/lib/common/format";
 
 interface AccountListPanelProps {
   rows: AccountListRow[];
@@ -146,24 +145,6 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         cell: ({ row }) => {
           const email = row.original.companyEmail.trim();
           return email || <span className="text-muted-foreground">—</span>;
-        }
-      },
-      {
-        accessorKey: "companyWebsite",
-        meta: { viewLabel: "Website" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Website" />,
-        cell: ({ row }) => {
-          const website = row.original.companyWebsite.trim();
-          if (!website) return <span className="text-muted-foreground">—</span>;
-          return (
-            <a
-              href={websiteHref(website)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary truncate hover:underline">
-              {website}
-            </a>
-          );
         }
       },
       {
