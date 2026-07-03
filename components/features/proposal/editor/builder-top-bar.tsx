@@ -65,7 +65,7 @@ export function BuilderPanel({ title, side, children, className }: BuilderPanelP
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="flex shrink-0 flex-col gap-4 px-6 pt-6">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex h-8 items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{title}</h2>
           {!isMobile ? (
             <Button

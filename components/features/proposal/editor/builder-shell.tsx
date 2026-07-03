@@ -17,6 +17,13 @@ export interface BuilderShellProps {
   className?: string;
 }
 
+function builderDesktopGridColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
+  if (outlineOpen && inspectorOpen) return "grid-cols-[20%_minmax(0,1fr)_20%]";
+  if (outlineOpen) return "grid-cols-[20%_minmax(0,1fr)_0px]";
+  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20%]";
+  return "grid-cols-[0px_minmax(0,1fr)_0px]";
+}
+
 function BuilderDesktopLayout({
   outline,
   canvas,
@@ -29,11 +36,16 @@ function BuilderDesktopLayout({
   const { outlineOpen, inspectorOpen } = useBuilderSidePanels();
 
   return (
-    <div className="flex min-h-0 flex-1 items-stretch">
+    <div
+      className={cn(
+        "grid min-h-0 flex-1 transition-[grid-template-columns] duration-200 ease-linear motion-reduce:transition-none",
+        builderDesktopGridColumns(outlineOpen, inspectorOpen),
+      )}
+    >
       <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
         {outline}
       </BuilderSidePanel>
-      <main className="relative min-h-0 min-w-0 flex-1">
+      <main className="relative min-h-0 min-w-0 overflow-hidden">
         <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12">{canvas}</div>
       </main>
       <BuilderSidePanel side="right" label="Inspector" open={inspectorOpen}>
