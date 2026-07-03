@@ -28,7 +28,7 @@ function BuilderSidePanelEdgeTrigger({ side, label, onClick }: BuilderSidePanelE
       className={cn(
         "fixed z-30 size-8 rounded-md border bg-background shadow-sm",
         BUILDER_SIDE_PANEL_TOP_CLASS,
-        isLeft ? "left-0 rounded-l-none" : "right-0 rounded-r-none",
+        isLeft ? "left-0 rounded-l-none border-l-0" : "right-0 rounded-r-none border-r-0",
       )}
     >
       <OpenIcon className="size-4" aria-hidden />

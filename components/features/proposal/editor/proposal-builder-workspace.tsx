@@ -65,7 +65,7 @@ export function ProposalBuilderWorkspace({
                   </BuilderPanel>
                 }
                 canvas={
-                  <div className="px-4 pb-6 pt-12 lg:px-8">
+                  <div className="px-4 pb-6 pt-12">
                     <ProposalDocumentEditorLazy
                       {...editorProps}
                       variant={variant}

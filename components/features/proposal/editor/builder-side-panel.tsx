@@ -7,8 +7,12 @@ import { cn } from "@/lib/utils";
 /** Aligns fixed panels with builder canvas `scroll-pt-12` / sticky top bar clearance. */
 export const BUILDER_SIDE_PANEL_TOP_CLASS = "top-12";
 
-/** Concrete width for gap + fixed panel (enables off-screen left/right calc like app sidebar). */
-export const BUILDER_SIDE_PANEL_WIDTH_CLASSES = "w-[clamp(11rem,15vw,18rem)]";
+/** Concrete width for gap + fixed panel — 20% / 60% / 20% builder columns when both open. */
+export const BUILDER_SIDE_PANEL_WIDTH_CLASSES = "w-[20%]";
+
+/** Off-screen slide distance (must match width). */
+export const BUILDER_SIDE_PANEL_OFFSCREEN_LEFT_CLASS = "left-[calc(-20%)]";
+export const BUILDER_SIDE_PANEL_OFFSCREEN_RIGHT_CLASS = "right-[calc(-20%)]";
 
 export interface BuilderSidePanelProps {
   side: "left" | "right";
@@ -44,10 +48,10 @@ export function BuilderSidePanel({ side, label, open, children }: BuilderSidePan
           isLeft
             ? open
               ? "left-0"
-              : "left-[calc(-1*clamp(11rem,15vw,18rem))]"
+              : BUILDER_SIDE_PANEL_OFFSCREEN_LEFT_CLASS
             : open
               ? "right-0"
-              : "right-[calc(-1*clamp(11rem,15vw,18rem))]",
+              : BUILDER_SIDE_PANEL_OFFSCREEN_RIGHT_CLASS,
         )}
       >
         <div

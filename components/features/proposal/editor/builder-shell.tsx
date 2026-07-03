@@ -33,8 +33,7 @@ function BuilderDesktopLayout({
       <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
         {outline}
       </BuilderSidePanel>
-      <main className="relative min-h-0 min-w-0 flex-[1_1_70%]">
-        <BuilderSidePanelEdgeTriggers />
+      <main className="relative min-h-0 min-w-0 flex-1">
         <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12">{canvas}</div>
       </main>
       <BuilderSidePanel side="right" label="Inspector" open={inspectorOpen}>
@@ -87,6 +86,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   return (
     <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
+      <BuilderSidePanelEdgeTriggers />
       <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />
     </div>
   );
