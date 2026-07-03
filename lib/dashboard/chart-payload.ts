@@ -1,4 +1,5 @@
 import type { AdminPortalData } from "@/server/firestore/portal-data";
+import { buildChartBuckets } from "@/lib/dashboard/range";
 
 export type AdminDashboardChartTabId = "subscriptions" | "proposals" | "supportTickets" | "tasks";
 
@@ -11,53 +12,36 @@ export interface AdminDashboardChartTabPayload {
   xLabels: string[];
 }
 
-function dayStartMs(d: Date): number {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-}
-
-/** Last `count` calendar days ending on `now`'s date (local), oldest first. */
-function buildDayStarts(now: Date, count: number): { starts: number[]; labels: string[] } {
-  const end = dayStartMs(now);
-  const starts: number[] = [];
-  const labels: string[] = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const t = end - i * 86400000;
-    starts.push(t);
-    labels.push(
-      new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short" }).format(new Date(t)),
-    );
-  }
-  return { starts, labels };
-}
-
 /**
- * Buckets `timestamps` into the contiguous day windows defined by `dayStarts`
- * (oldest first). Each bucket spans `[dayStarts[i], dayStarts[i] + 86400000)`.
- * Single-pass O(N) by computing the bucket index directly from the timestamp
- * — equivalent to the previous nested-loop version, which only worked because
- * `dayStarts` is contiguous and sorted.
+ * Buckets `timestamps` into contiguous windows defined by `bucketStarts`.
+ * `bucketMs` is the width of each bucket (one day or one week).
  */
-function binTimestampsInDayBuckets(timestamps: number[], dayStarts: number[]): number[] {
-  const counts = new Array(dayStarts.length).fill(0);
-  if (dayStarts.length === 0) return counts;
-  const first = dayStarts[0];
-  const totalMs = dayStarts.length * 86400000;
+function binTimestampsInBuckets(
+  timestamps: number[],
+  bucketStarts: number[],
+  bucketMs: number,
+): number[] {
+  const counts = new Array(bucketStarts.length).fill(0);
+  if (bucketStarts.length === 0) return counts;
+  const first = bucketStarts[0];
+  const totalMs = bucketStarts.length * bucketMs;
   for (const ts of timestamps) {
     if (typeof ts !== "number" || !Number.isFinite(ts) || ts <= 0) continue;
     const offset = ts - first;
     if (offset < 0 || offset >= totalMs) continue;
-    counts[Math.floor(offset / 86400000)] += 1;
+    counts[Math.floor(offset / bucketMs)] += 1;
   }
   return counts;
 }
 
 /**
- * Activity per day (last 14 days): subscriptions/proposals/tickets/tasks by `updatedAt`
- * (proposals also consider `createdAt` as activity signal).
+ * Activity per bucket in the selected range: subscriptions/proposals/tickets/tasks.
+ * Proposals also consider `createdAt` as an activity signal.
  */
 export function buildAdminDashboardChartTabs(
   data: AdminPortalData,
-  now: Date,
+  startMs: number,
+  endMs: number,
   headlines: {
     subscriptions: string;
     proposals: string;
@@ -66,26 +50,30 @@ export function buildAdminDashboardChartTabs(
   },
   hints: Record<AdminDashboardChartTabId, string | undefined>,
 ): AdminDashboardChartTabPayload[] {
-  const { starts, labels } = buildDayStarts(now, 14);
+  const { bucketStarts, labels, bucketMs } = buildChartBuckets(startMs, endMs);
 
-  const subPoints = binTimestampsInDayBuckets(
+  const subPoints = binTimestampsInBuckets(
     data.subscriptions.map((s) => s.updatedAt),
-    starts,
+    bucketStarts,
+    bucketMs,
   );
 
-  const proposalPoints = binTimestampsInDayBuckets(
+  const proposalPoints = binTimestampsInBuckets(
     data.proposals.map((p) => Math.max(p.createdAt, p.updatedAt)),
-    starts,
+    bucketStarts,
+    bucketMs,
   );
 
-  const ticketPoints = binTimestampsInDayBuckets(
+  const ticketPoints = binTimestampsInBuckets(
     data.supportTickets.map((t) => t.updatedAt),
-    starts,
+    bucketStarts,
+    bucketMs,
   );
 
-  const taskPoints = binTimestampsInDayBuckets(
+  const taskPoints = binTimestampsInBuckets(
     data.tasks.map((t) => t.updatedAt),
-    starts,
+    bucketStarts,
+    bucketMs,
   );
 
   return [
