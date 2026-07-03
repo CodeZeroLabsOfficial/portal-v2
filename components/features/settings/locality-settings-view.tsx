@@ -65,12 +65,19 @@ export function LocalitySettingsView({ user, onEdit }: LocalitySettingsViewProps
       </CardHeader>
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1 sm:col-span-2">
+          <div className="space-y-1">
             <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <Clock className="h-3.5 w-3.5" aria-hidden />
               Time zone
             </dt>
             <dd className="text-sm">{timeZoneLabel(user.timeZone)}</dd>
+          </div>
+          <div className="space-y-1">
+            <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <DollarSign className="h-3.5 w-3.5" aria-hidden />
+              Currency
+            </dt>
+            <dd className="text-sm">{currencyLabel(user.currencyCode)}</dd>
           </div>
           <div className="space-y-1">
             <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -93,13 +100,6 @@ export function LocalitySettingsView({ user, onEdit }: LocalitySettingsViewProps
           <div className="space-y-1">
             <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Time format</dt>
             <dd className="text-sm">{optionLabel(TIME_FORMAT_OPTIONS, user.timeFormatPreset)}</dd>
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <DollarSign className="h-3.5 w-3.5" aria-hidden />
-              Currency
-            </dt>
-            <dd className="text-sm">{currencyLabel(user.currencyCode)}</dd>
           </div>
         </dl>
       </CardContent>

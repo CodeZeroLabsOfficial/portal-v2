@@ -8,6 +8,12 @@ export interface PortalNavItemView {
   label: string;
 }
 
+export interface PortalNavGroupView {
+  id: string;
+  label: string;
+  items: PortalNavItemView[];
+}
+
 export interface PortalSearchItem {
   title: string;
   href: string;
@@ -22,8 +28,7 @@ export interface PortalSearchGroup {
 export type PortalSearchScope = "admin" | "customer";
 
 export interface PortalShellNav {
-  items: PortalNavItemView[];
-  footerItems: PortalNavItemView[];
+  groups: PortalNavGroupView[];
 }
 
 export interface PortalShellBrand {

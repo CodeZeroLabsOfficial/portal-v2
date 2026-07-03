@@ -9,8 +9,7 @@ import type { PortalShellProps } from "@/components/layout/nav-types";
 
 export function PortalShell({
   user,
-  items,
-  footerItems,
+  groups,
   brand,
   searchScope,
   defaultOpen,
@@ -30,7 +29,7 @@ export function PortalShell({
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" items={items} footerItems={footerItems} brand={brand} />
+      <AppSidebar variant="inset" groups={groups} brand={brand} />
       <SidebarInset>
         <SiteHeader user={user} searchScope={searchScope} />
         <div className="bg-muted/40 flex flex-1 flex-col">

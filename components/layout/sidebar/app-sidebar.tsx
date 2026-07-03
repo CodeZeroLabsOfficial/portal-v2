@@ -21,9 +21,9 @@ import { NavMain } from "@/components/layout/sidebar/nav-main";
 import type { PortalShellProps } from "@/components/layout/nav-types";
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> &
-  Pick<PortalShellProps, "items" | "footerItems" | "brand">;
+  Pick<PortalShellProps, "groups" | "brand">;
 
-export function AppSidebar({ items, footerItems, brand, ...props }: AppSidebarProps) {
+export function AppSidebar({ groups, brand, ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
@@ -58,7 +58,7 @@ export function AppSidebar({ items, footerItems, brand, ...props }: AppSidebarPr
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full">
-          <NavMain items={items} footerItems={footerItems} />
+          <NavMain groups={groups} />
         </ScrollArea>
       </SidebarContent>
     </Sidebar>

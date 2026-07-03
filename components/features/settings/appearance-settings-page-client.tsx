@@ -329,9 +329,11 @@ export function AppearanceSettingsPageClient({
               />
             </div>
 
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save portal settings"}
-            </Button>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save portal settings"}
+              </Button>
+            </div>
           </form>
         </section>
 

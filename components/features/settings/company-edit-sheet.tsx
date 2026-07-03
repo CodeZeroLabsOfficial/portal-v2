@@ -154,7 +154,35 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               ) : null}
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2">
+              <Label htmlFor="company-abn">ABN</Label>
+              <Input id="company-abn" autoComplete="off" placeholder="12 345 678 901" {...form.register("abn")} />
+              {form.formState.errors.abn ? (
+                <p className="text-xs text-destructive">{form.formState.errors.abn.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-acn">ACN</Label>
+              <Input id="company-acn" autoComplete="off" placeholder="123 456 789" {...form.register("acn")} />
+              {form.formState.errors.acn ? (
+                <p className="text-xs text-destructive">{form.formState.errors.acn.message}</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Input placeholder="Line 1" autoComplete="address-line1" {...form.register("addressLine1")} />
+              <Input placeholder="Line 2" autoComplete="address-line2" {...form.register("addressLine2")} />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Input placeholder="City" autoComplete="address-level2" {...form.register("city")} />
+                <Input placeholder="State / region" autoComplete="address-level1" {...form.register("region")} />
+                <Input placeholder="Postal code" autoComplete="postal-code" {...form.register("postalCode")} />
+                <Input placeholder="Country" autoComplete="country-name" {...form.register("country")} />
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="company-website">Website</Label>
               <Input
                 id="company-website"
@@ -165,32 +193,6 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
               {form.formState.errors.website ? (
                 <p className="text-xs text-destructive">{form.formState.errors.website.message}</p>
               ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-acn">ACN</Label>
-              <Input id="company-acn" autoComplete="off" placeholder="123 456 789" {...form.register("acn")} />
-              {form.formState.errors.acn ? (
-                <p className="text-xs text-destructive">{form.formState.errors.acn.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-abn">ABN</Label>
-              <Input id="company-abn" autoComplete="off" placeholder="12 345 678 901" {...form.register("abn")} />
-              {form.formState.errors.abn ? (
-                <p className="text-xs text-destructive">{form.formState.errors.abn.message}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Address</Label>
-            <Input placeholder="Line 1" autoComplete="address-line1" {...form.register("addressLine1")} />
-            <Input placeholder="Line 2" autoComplete="address-line2" {...form.register("addressLine2")} />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder="City" autoComplete="address-level2" {...form.register("city")} />
-              <Input placeholder="State / region" autoComplete="address-level1" {...form.register("region")} />
-              <Input placeholder="Postal code" autoComplete="postal-code" {...form.register("postalCode")} />
-              <Input placeholder="Country" autoComplete="country-name" {...form.register("country")} />
             </div>
           </div>
 

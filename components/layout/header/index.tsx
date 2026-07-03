@@ -7,7 +7,6 @@ import Notifications from "@/components/layout/header/notifications";
 import Search from "@/components/layout/header/search";
 import ThemeSwitch from "@/components/layout/header/theme-switch";
 import UserMenu from "@/components/layout/header/user-menu";
-import { ThemeCustomizerPanel } from "@/components/theme-customizer";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import type { PortalSearchScope } from "@/components/layout/nav-types";
@@ -34,7 +33,6 @@ export function SiteHeader({
         <div className="ml-auto flex items-center gap-2">
           <Notifications />
           <ThemeSwitch />
-          <ThemeCustomizerPanel />
           <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
           <UserMenu user={user} />
         </div>

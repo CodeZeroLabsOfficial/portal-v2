@@ -11,23 +11,30 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { PortalNavItemView } from "@/components/layout/nav-types";
+import type { PortalNavGroupView, PortalNavItemView } from "@/components/layout/nav-types";
 import { navIconForId } from "@/lib/layout/nav-icons";
 
 const navButtonClassName =
   "hover:text-foreground active:text-foreground hover:bg-[var(--primary)]/10 active:bg-[var(--primary)]/10";
 
-function isNavActive(href: string, pathname: string): boolean {
+function isNavActive(item: PortalNavItemView, pathname: string): boolean {
   const normalized = pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+  const { href, id } = item;
   if (href === "/admin" || href === "/dashboard") {
     return normalized === href;
+  }
+  if (id === "proposals") {
+    if (normalized === "/admin/proposals") return true;
+    if (!normalized.startsWith("/admin/proposals/")) return false;
+    if (normalized.startsWith("/admin/proposals/templates")) return false;
+    return true;
   }
   return normalized === href || normalized.startsWith(`${href}/`);
 }
 
 function NavRow({ item, pathname }: { item: PortalNavItemView; pathname: string }) {
   const Icon = navIconForId(item.id);
-  const active = isNavActive(item.href, pathname);
+  const active = isNavActive(item, pathname);
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -45,39 +52,26 @@ function NavRow({ item, pathname }: { item: PortalNavItemView; pathname: string 
   );
 }
 
-export function NavMain({
-  items,
-  footerItems,
-}: {
-  items: PortalNavItemView[];
-  footerItems: PortalNavItemView[];
-}) {
+export function NavMain({ groups }: { groups: PortalNavGroupView[] }) {
   const pathname = usePathname();
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupLabel>Operations</SidebarGroupLabel>
-        <SidebarGroupContent className="flex flex-col gap-2">
-          <SidebarMenu>
-            {items.map((item) => (
-              <NavRow key={item.id} item={item} pathname={pathname} />
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      {footerItems.length > 0 ? (
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel>System</SidebarGroupLabel>
+      {groups.map((group, index) => (
+        <SidebarGroup
+          key={group.id}
+          className={index === groups.length - 1 ? "mt-auto" : undefined}
+        >
+          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col gap-2">
             <SidebarMenu>
-              {footerItems.map((item) => (
+              {group.items.map((item) => (
                 <NavRow key={item.id} item={item} pathname={pathname} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      ) : null}
+      ))}
     </>
   );
 }

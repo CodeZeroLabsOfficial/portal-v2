@@ -19,7 +19,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { roleLabel } from "@/lib/auth/role-label";
 import { updateUserProfileSchema, type UpdateUserProfileInput } from "@/lib/schemas/user-profile";
 import { updateCurrentUserProfileAction } from "@/server/actions/user-profile";
 import type { PortalUser } from "@/types/user";
@@ -123,13 +122,9 @@ export function ProfileEditSheet({ user, open, onOpenChange, onSaved }: ProfileE
                 <p className="text-xs text-destructive">{form.formState.errors.lastName.message}</p>
               ) : null}
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="profile-email">Email</Label>
               <Input id="profile-email" type="email" value={user.email} disabled className="bg-muted/50" readOnly />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Role</Label>
-              <Input value={roleLabel(user.role)} disabled className="bg-muted/50" readOnly />
             </div>
             <div className="space-y-2">
               <Label htmlFor="profile-phone">Phone</Label>
@@ -145,7 +140,7 @@ export function ProfileEditSheet({ user, open, onOpenChange, onSaved }: ProfileE
                 <p className="text-xs text-destructive">{form.formState.errors.website.message}</p>
               ) : null}
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="profile-dob">Date of birth</Label>
               <Input id="profile-dob" type="date" {...form.register("dateOfBirth")} />
               {form.formState.errors.dateOfBirth ? (

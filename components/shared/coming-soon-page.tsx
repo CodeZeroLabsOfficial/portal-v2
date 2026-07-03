@@ -26,7 +26,8 @@ export function ComingSoonPage({ title, phase, description }: ComingSoonPageProp
           </CardDescription>
         </CardHeader>
         <CardContent className="text-muted-foreground text-sm">
-          Settings (company, profile, locality, integrations) are available now from the sidebar footer.
+          Settings (company, profile, locality, integrations) are available now under Configuration
+          in the sidebar.
         </CardContent>
       </Card>
     </div>

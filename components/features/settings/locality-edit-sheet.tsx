@@ -170,7 +170,7 @@ export function LocalityEditSheet({
           <FormServerError message={serverError} />
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="locality-tz">Time zone</Label>
               <select id="locality-tz" className={selectClassName} {...form.register("timeZone")}>
                 <option value="">App default</option>
@@ -181,6 +181,19 @@ export function LocalityEditSheet({
                 ))}
               </select>
               <p className="text-xs text-muted-foreground">Used for timestamps, deadlines, and calendar views.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="locality-currency">Currency</Label>
+              <select id="locality-currency" className={selectClassName} {...form.register("currencyCode")}>
+                <option value="">App default</option>
+                {currencyOptionsList.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">ISO 4217 code (e.g. AUD for Australian dollar).</p>
             </div>
 
             <div className="space-y-2">
@@ -232,18 +245,6 @@ export function LocalityEditSheet({
               </select>
             </div>
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="locality-currency">Currency</Label>
-              <select id="locality-currency" className={selectClassName} {...form.register("currencyCode")}>
-                <option value="">App default</option>
-                {currencyOptionsList.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">ISO 4217 code (e.g. AUD for Australian dollar).</p>
-            </div>
           </div>
 
           <SheetFooter className="px-0">

@@ -1,4 +1,4 @@
-import { Calendar, Globe, Mail, MapPin, Phone, Shield } from "lucide-react";
+import { Calendar, Globe, Mail, MapPin, Phone } from "lucide-react";
 
 import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import {
@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { roleLabel } from "@/lib/auth/role-label";
 import { formatAddressLines, websiteHref } from "@/lib/common/format";
 import type { PortalUser } from "@/types/user";
 
@@ -66,13 +65,6 @@ export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
                 <span className="text-muted-foreground">—</span>
               )}
             </dd>
-          </div>
-          <div className="space-y-1">
-            <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <Shield className="h-3.5 w-3.5" aria-hidden />
-              Role
-            </dt>
-            <dd className="text-sm">{roleLabel(user.role)}</dd>
           </div>
           <div className="space-y-1">
             <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
