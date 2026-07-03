@@ -5,6 +5,9 @@ import { GripVertical, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PROPOSAL_EDITOR_SECTION_CHILD_INSERT_HOST_CLASSES } from "@/lib/proposal/public/public-layout";
 
+/** Reserved width for the floating block gutter — pair with stack `pl-*`. */
+export const SECTION_CHILD_GUTTER_INSET_CLASSES = "pl-[4.25rem] sm:pl-[4.5rem]";
+
 /** Left rail beside section-child rows — fits [+][⋮⋮] with a hover bridge into content. */
 export const SECTION_CHILD_GUTTER_CLASSES = cn(
   "flex shrink-0 items-start gap-0.5 pt-1.5 pr-1 -mr-1.5",
@@ -86,8 +89,8 @@ export function SectionChildBlockGutter({
   );
 }
 
-/** Past the drag gutter — only used by the top-of-stack seam insert (index 0). */
-const SECTION_CHILD_INSERT_LEFT_CLASSES = "left-[4.25rem] sm:left-[4.5rem]";
+/** Past the stack inset — top-of-stack insert aligns with the floating gutter column. */
+const SECTION_CHILD_INSERT_LEFT_CLASSES = "-left-[4.25rem] sm:-left-[4.5rem]";
 
 /**
  * Insert above the first child in a section stack — seam-only; between-row inserts use

@@ -87,8 +87,14 @@ import { useProposalSectionEditorChrome } from "@/components/proposal/proposal-s
 import {
   SectionChildBlockGutter,
   SectionChildDragHandle,
+  SECTION_CHILD_GUTTER_INSET_CLASSES,
   SectionChildInsertSlot,
 } from "@/components/proposal/proposal-section-child-chrome";
+import {
+  SectionChildFloatingGutterProvider,
+  useRegisterSectionChildFloatingRow,
+  useSectionChildFloatingGutterOptional,
+} from "@/components/proposal/section-child-floating-gutter";
 import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
 import { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
 import {
@@ -272,11 +278,39 @@ function SortableShell({
   rootLightSurface?: boolean;
 }) {
   const [hovered, setHovered] = React.useState(false);
+  const rowElRef = React.useRef<HTMLDivElement | null>(null);
+  const floatingGutter = useSectionChildFloatingGutterOptional();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const sectionChrome = useProposalSectionEditorChrome();
   const seamless = sectionChrome?.seamless ?? false;
   const prefersLightSection = sectionChrome?.prefersLight ?? false;
   const flushEdges = flush ?? seamless;
+  const sectionChild = layout === "section-child";
+  const useFloatingGutter = sectionChild && Boolean(sectionChildInsertMenu && floatingGutter);
+
+  const setRowRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      rowElRef.current = node;
+      setNodeRef(node);
+    },
+    [setNodeRef],
+  );
+
+  useRegisterSectionChildFloatingRow(
+    useFloatingGutter
+      ? {
+          blockId: id,
+          getRowEl: () => rowElRef.current,
+          insertMenu: sectionChildInsertMenu!,
+          dragAttributes: attributes,
+          dragListeners: listeners,
+          onDragHandlePointerDown: () => (onSelectFromNotch ?? onSelect)(),
+          selected,
+          isDragging,
+        }
+      : null,
+  );
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -284,8 +318,7 @@ function SortableShell({
   const showToolbar = Boolean(
     toolbar && !suppressToolbar && (selected || (toolbarShowOnHover && hovered)),
   );
-  const sectionChild = layout === "section-child";
-  const showSectionGutter = sectionChild && (hovered || selected || isDragging);
+  const showSectionGutter = sectionChild && !useFloatingGutter && (hovered || selected || isDragging);
 
   const sectionChildRingClasses = prefersLightSection
     ? cn(
@@ -329,20 +362,28 @@ function SortableShell({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={useFloatingGutter ? setRowRef : setNodeRef}
       style={style}
+      data-section-child-row={useFloatingGutter ? id : undefined}
       className={cn(
         "group/sortblock relative scroll-mt-28",
-        sectionChild && "flex w-full",
+        sectionChild && !useFloatingGutter && "flex w-full",
         sectionChild &&
+          !useFloatingGutter &&
           "focus-within:[&_[data-section-drag-gutter]]:pointer-events-auto focus-within:[&_[data-section-drag-gutter]]:visible focus-within:[&_[data-section-drag-gutter]]:opacity-100",
         isDragging && "opacity-55",
         sectionChild && (selected || hovered) && "z-10",
       )}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => {
+        setHovered(true);
+        if (useFloatingGutter) floatingGutter?.notifyRowHover(id);
+      }}
+      onMouseLeave={() => {
+        setHovered(false);
+        if (useFloatingGutter) floatingGutter?.notifyRowUnhover();
+      }}
     >
-      {sectionChild && sectionChildInsertMenu ? (
+      {sectionChild && sectionChildInsertMenu && !useFloatingGutter ? (
         <SectionChildBlockGutter
           visible={showSectionGutter}
           insertMenu={sectionChildInsertMenu}
@@ -1239,9 +1280,10 @@ export function SectionBlockFields({
     ) : (
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onChildDragEnd}>
         <SortableContext items={sortableChildIds} strategy={verticalListSortingStrategy}>
-          <div
+          <SectionChildFloatingGutterProvider
             className={cn(
               "group/section-stack flex flex-col",
+              SECTION_CHILD_GUTTER_INSET_CLASSES,
               PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
               children.length > 0 && PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
             )}
@@ -1481,7 +1523,7 @@ export function SectionBlockFields({
               </div>
             );
           })}
-          </div>
+          </SectionChildFloatingGutterProvider>
         </SortableContext>
       </DndContext>
     );
@@ -2183,9 +2225,10 @@ export function AgreementBlockFields({
     ) : (
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onChildDragEnd}>
         <SortableContext items={sortableChildIds} strategy={verticalListSortingStrategy}>
-          <div
+          <SectionChildFloatingGutterProvider
             className={cn(
               "group/section-stack flex flex-col",
+              SECTION_CHILD_GUTTER_INSET_CLASSES,
               PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
               children.length > 0 && PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
             )}
@@ -2405,7 +2448,7 @@ export function AgreementBlockFields({
               </div>
             );
           })}
-          </div>
+          </SectionChildFloatingGutterProvider>
         </SortableContext>
       </DndContext>
     );
