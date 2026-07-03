@@ -10,17 +10,6 @@ export const BUILDER_SIDE_PANEL_TOP_CLASS = "top-12";
 /** Concrete width for gap + fixed panel (enables off-screen left/right calc like app sidebar). */
 export const BUILDER_SIDE_PANEL_WIDTH_CLASSES = "w-[clamp(11rem,15vw,18rem)]";
 
-/** Matches `BuilderPanel` header row (`pt-6` below sticky top bar). */
-export const BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS =
-  "top-[calc(theme(spacing.12)+theme(spacing.6))]";
-
-/** Outline collapse / expand — inner (canvas) edge of the left column, inset like header `px-6`. */
-export const BUILDER_OUTLINE_TOGGLE_LEFT_CLASS =
-  "left-[calc(clamp(11rem,15vw,18rem)-theme(spacing.6)-theme(spacing.8))]";
-
-/** Inspector collapse / expand — same inset as header `px-6`. */
-export const BUILDER_INSPECTOR_TOGGLE_RIGHT_CLASS = "right-6";
-
 export interface BuilderSidePanelProps {
   side: "left" | "right";
   label: string;
