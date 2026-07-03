@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AuthSplitScreen } from "@/components/auth/auth-split-screen";
 import { LoginForm } from "@/components/auth/login-form";
-import { AuthShell } from "@/components/auth/auth-shell";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { resolvePostLoginPath } from "@/lib/auth/post-login-path";
+import { getPortalAppearanceSettings } from "@/server/firestore/appearance-settings";
 
 interface LoginPageProps {
   searchParams: Promise<{ next?: string }>;
@@ -13,24 +13,21 @@ interface LoginPageProps {
 export default async function LoginPage(props: LoginPageProps) {
   const searchParams = await props.searchParams;
   const nextPath = searchParams.next ?? "/dashboard";
-  const currentUser = await getCurrentSessionUser();
+
+  const [currentUser, appearance] = await Promise.all([
+    getCurrentSessionUser(),
+    getPortalAppearanceSettings(),
+  ]);
+
   if (currentUser) {
     redirect(resolvePostLoginPath(nextPath, currentUser.role));
   }
 
+  const portalName = appearance?.portalName?.trim() || "Code Zero Labs";
+
   return (
-    <AuthShell
-      title="Sign in"
-      footer={
-        <>
-          Trouble signing in?{" "}
-          <Link href="/forgot-password" className="underline underline-offset-4">
-            Forgot password
-          </Link>
-        </>
-      }
-    >
+    <AuthSplitScreen portalName={portalName} description="Please sign in to your account">
       <LoginForm nextPath={nextPath} />
-    </AuthShell>
+    </AuthSplitScreen>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { useForm } from "react-hook-form";
@@ -47,38 +46,39 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
-      <div className="space-y-2">
-        <Label htmlFor="forgot-email">Email</Label>
+    <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmit)} noValidate>
+      <div>
+        <Label htmlFor="forgot-email" className="sr-only">
+          Email address
+        </Label>
         <Input
           id="forgot-email"
           type="email"
           autoComplete="email"
+          placeholder="Email address"
+          className="w-full"
           {...form.register("email")}
           required
         />
         {form.formState.errors.email ? (
-          <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+          <p className="text-destructive mt-1 text-xs">{form.formState.errors.email.message}</p>
         ) : null}
       </div>
+
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           {error}
         </p>
       ) : null}
       {info ? (
-        <p className="text-sm text-muted-foreground" role="status">
+        <p className="text-muted-foreground text-sm" role="status">
           {info}
         </p>
       ) : null}
+
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Sending..." : "Send reset link"}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        <Link href="/login" className="underline underline-offset-4">
-          Back to sign in
-        </Link>
-      </p>
     </form>
   );
 }
