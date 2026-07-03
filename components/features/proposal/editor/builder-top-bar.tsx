@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { BuilderBreadcrumbTitleSegment } from "@/components/features/proposal/editor/builder-breadcrumb-title";
 import { BuilderSidePanelToggles } from "@/components/features/proposal/editor/builder-side-panel-toggles";
 
 export interface BuilderBreadcrumbSegment {
@@ -59,14 +60,16 @@ export function BuilderTopBar({
                 <React.Fragment key={`${segment.label}-${index}`}>
                   {index > 0 ? <BreadcrumbSeparator /> : null}
                   <BreadcrumbItem>
-                    {isLast || !segment.href ? (
-                      <BreadcrumbPage className="max-w-[12rem] truncate sm:max-w-xs">
-                        {segment.label}
-                      </BreadcrumbPage>
-                    ) : (
+                    {isLast ? (
+                      <BuilderBreadcrumbTitleSegment fallbackLabel={segment.label} />
+                    ) : segment.href ? (
                       <BreadcrumbLink asChild>
                         <Link href={segment.href}>{segment.label}</Link>
                       </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="max-w-[12rem] truncate sm:max-w-xs">
+                        {segment.label}
+                      </BreadcrumbPage>
                     )}
                   </BreadcrumbItem>
                 </React.Fragment>

@@ -13,6 +13,7 @@ import {
   ProposalEditorChrome,
   type ProposalEditShellToolbarProps,
 } from "@/components/features/proposal/editor/proposal-editor-chrome";
+import { useRegisterBuilderBreadcrumbTitle } from "@/components/features/proposal/editor/builder-breadcrumb-title";
 import { useRegisterBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
@@ -77,7 +78,7 @@ export function ProposalDocumentEditor({
   const [templateName, setTemplateName] = React.useState(initialTemplateName);
   const [agreementTitle, setAgreementTitle] = React.useState(initialAgreementTitle);
   const [templateNameEditing, setTemplateNameEditing] = React.useState(false);
-  const skipNextTemplateNameBlurSaveRef = React.useRef(false);
+  const templateNameSnapshotRef = React.useRef(initialTemplateName);
   const [branding, setBranding] = React.useState<ProposalBranding | undefined>(initialBranding);
   const [selectedBlockId, setSelectedBlockId] = React.useState<string | null>(null);
   const [rootColumnsLayoutEditingId, setRootColumnsLayoutEditingId] = React.useState<string | null>(null);
@@ -175,18 +176,21 @@ export function ProposalDocumentEditor({
     return undefined;
   }
 
-  function handleTemplateNameBlurSave() {
-    if (skipNextTemplateNameBlurSaveRef.current) {
-      skipNextTemplateNameBlurSaveRef.current = false;
-      return;
-    }
-    void saveAndExitTemplateNameEdit(() => setTemplateNameEditing(false));
-  }
+  const handleTemplateNameStartEdit = React.useCallback(() => {
+    templateNameSnapshotRef.current = templateName;
+    setTemplateNameEditing(true);
+  }, [templateName]);
 
-  function handleTemplateNameEnterSave() {
-    skipNextTemplateNameBlurSaveRef.current = true;
+  const handleTemplateNameCancelEdit = React.useCallback(() => {
+    setTemplateName(templateNameSnapshotRef.current);
+    setTemplateNameEditing(false);
+  }, []);
+
+  const handleTemplateNameConfirmSave = React.useCallback(() => {
     void saveAndExitTemplateNameEdit(() => setTemplateNameEditing(false));
-  }
+  }, [saveAndExitTemplateNameEdit]);
+
+  const templateNameEmptyLabel = isContractTemplate ? "Untitled contract" : "Untitled template";
 
   const editorChromeProps: React.ComponentProps<typeof ProposalEditorChrome> = {
     variant,
@@ -197,9 +201,9 @@ export function ProposalDocumentEditor({
     templateName,
     onTemplateNameChange: setTemplateName,
     templateNameEditing,
-    onTemplateNameEditingChange: setTemplateNameEditing,
-    onTemplateNameBlurSave: handleTemplateNameBlurSave,
-    onTemplateNameEnterSave: handleTemplateNameEnterSave,
+    onTemplateNameStartEdit: handleTemplateNameStartEdit,
+    onTemplateNameConfirmSave: handleTemplateNameConfirmSave,
+    onTemplateNameCancelEdit: handleTemplateNameCancelEdit,
     agreementTitle,
     onAgreementTitleChange: setAgreementTitle,
     proposalEditShellToolbar,
@@ -234,6 +238,31 @@ export function ProposalDocumentEditor({
       message,
       saveJustSucceeded,
       publishJustSucceeded,
+    ],
+  );
+
+  useRegisterBuilderBreadcrumbTitle(
+    embeddedInBuilder && isNamedTemplateShell && (templateId || contractTemplateId)
+      ? {
+          value: templateName,
+          emptyLabel: templateNameEmptyLabel,
+          editing: templateNameEditing,
+          saving,
+          onChange: setTemplateName,
+          onStartEdit: handleTemplateNameStartEdit,
+          onConfirm: handleTemplateNameConfirmSave,
+          onCancel: handleTemplateNameCancelEdit,
+        }
+      : null,
+    [
+      embeddedInBuilder,
+      isNamedTemplateShell,
+      templateId,
+      contractTemplateId,
+      templateName,
+      templateNameEmptyLabel,
+      templateNameEditing,
+      saving,
     ],
   );
 

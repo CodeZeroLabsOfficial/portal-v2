@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, ExternalLink, Loader2, Pencil, Save, Send } from "lucide-react";
+import { ArrowLeft, Check, ExternalLink, Loader2, Save, Send } from "lucide-react";
 
 import { ProposalSavePublishButtons } from "@/components/features/proposal/editor/save-publish-actions";
 import {
   TemplateEditorActionsMenu,
   TemplateEditorInlineActions,
 } from "@/components/features/templates/template-editor-actions-menu";
+import { EditableTemplateNameControl } from "@/components/features/proposal/editor/editable-template-name-control";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,9 +28,9 @@ export interface ProposalEditorChromeProps {
   templateName: string;
   onTemplateNameChange: (name: string) => void;
   templateNameEditing: boolean;
-  onTemplateNameEditingChange: (editing: boolean) => void;
-  onTemplateNameBlurSave: () => void;
-  onTemplateNameEnterSave: () => void;
+  onTemplateNameStartEdit: () => void;
+  onTemplateNameConfirmSave: () => void;
+  onTemplateNameCancelEdit: () => void;
   agreementTitle: string;
   onAgreementTitleChange: (title: string) => void;
   proposalEditShellToolbar?: ProposalEditShellToolbarProps;
@@ -160,9 +161,9 @@ export function ProposalEditorChrome({
   templateName,
   onTemplateNameChange,
   templateNameEditing,
-  onTemplateNameEditingChange,
-  onTemplateNameBlurSave,
-  onTemplateNameEnterSave,
+  onTemplateNameStartEdit,
+  onTemplateNameConfirmSave,
+  onTemplateNameCancelEdit,
   agreementTitle,
   onAgreementTitleChange,
   proposalEditShellToolbar,
@@ -199,36 +200,18 @@ export function ProposalEditorChrome({
             </Link>
           </Button>
           <div className="flex h-8 min-w-[10rem] flex-1 basis-[14rem] items-center border-b border-border">
-            {templateNameEditing ? (
-              <Input
-                autoFocus
-                aria-label="Template name"
-                value={templateName}
-                disabled={saving}
-                onChange={(e) => onTemplateNameChange(e.target.value)}
-                onBlur={onTemplateNameBlurSave}
-                onKeyDown={(e) => {
-                  if (e.key !== "Enter") return;
-                  e.preventDefault();
-                  onTemplateNameEnterSave();
-                }}
-                placeholder="Template name"
-                className="h-8 border-0 bg-transparent px-0 text-xs font-medium text-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            ) : (
-              <button
-                type="button"
-                disabled={saving}
-                aria-label="Edit template name"
-                onClick={() => onTemplateNameEditingChange(true)}
-                className="flex h-8 w-full min-w-0 items-center gap-2 rounded-sm text-left text-xs font-medium outline-none ring-offset-background transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-              >
-                <span className="min-w-0 flex-1 truncate text-foreground">
-                  {templateName.trim() || (isContractTemplate ? "Untitled contract" : "Untitled template")}
-                </span>
-                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-            )}
+            <EditableTemplateNameControl
+              appearance="standalone"
+              value={templateName}
+              emptyLabel={isContractTemplate ? "Untitled contract" : "Untitled template"}
+              editing={templateNameEditing}
+              saving={saving}
+              onChange={onTemplateNameChange}
+              onStartEdit={onTemplateNameStartEdit}
+              onConfirm={onTemplateNameConfirmSave}
+              onCancel={onTemplateNameCancelEdit}
+              placeholder={isContractTemplate ? "Contract template name" : "Template name"}
+            />
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <TemplateEditorActionsMenu
