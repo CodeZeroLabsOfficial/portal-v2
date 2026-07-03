@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { BuilderSidePanelToggles } from "@/components/features/proposal/editor/builder-side-panel-toggles";
 
 export interface BuilderBreadcrumbSegment {
   label: string;
@@ -49,6 +50,7 @@ export function BuilderTopBar({
             <ChevronLeft className="size-4" />
           </Link>
         </Button>
+        <BuilderSidePanelToggles />
         <Breadcrumb className="min-w-0 flex-1">
           <BreadcrumbList>
             {segments.map((segment, index) => {

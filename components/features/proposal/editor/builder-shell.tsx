@@ -5,7 +5,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BuilderCollapsibleAside } from "@/components/features/proposal/editor/builder-collapsible-aside";
+import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
+import { BuilderSidePanel } from "@/components/features/proposal/editor/builder-side-panel";
 
 export interface BuilderShellProps {
   topBar: React.ReactNode;
@@ -15,8 +16,31 @@ export interface BuilderShellProps {
   className?: string;
 }
 
-const BUILDER_OUTLINE_STORAGE_KEY = "proposal_builder_outline_open";
-const BUILDER_INSPECTOR_STORAGE_KEY = "proposal_builder_inspector_open";
+function BuilderDesktopLayout({
+  outline,
+  canvas,
+  inspector,
+}: {
+  outline: React.ReactNode;
+  canvas: React.ReactNode;
+  inspector: React.ReactNode;
+}) {
+  const { outlineOpen, inspectorOpen } = useBuilderSidePanels();
+
+  return (
+    <div className="flex min-h-0 flex-1 items-stretch">
+      <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
+        {outline}
+      </BuilderSidePanel>
+      <main className="min-h-0 min-w-0 flex-[1_1_70%] overflow-x-clip overflow-y-auto scroll-pt-12">
+        {canvas}
+      </main>
+      <BuilderSidePanel side="right" label="Inspector" open={inspectorOpen}>
+        {inspector}
+      </BuilderSidePanel>
+    </div>
+  );
+}
 
 export function BuilderShell({ topBar, outline, canvas, inspector, className }: BuilderShellProps) {
   const isMobile = useIsMobile();
@@ -53,7 +77,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
             </SheetContent>
           </Sheet>
         </div>
-        <main className="min-h-0 flex-1 overflow-y-auto">{canvas}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto scroll-pt-12">{canvas}</main>
       </div>
     );
   }
@@ -61,23 +85,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   return (
     <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <BuilderCollapsibleAside
-          side="left"
-          label="Outline"
-          storageKey={BUILDER_OUTLINE_STORAGE_KEY}
-        >
-          {outline}
-        </BuilderCollapsibleAside>
-        <main className="min-h-0 min-w-0 flex-[1_1_70%] overflow-y-auto">{canvas}</main>
-        <BuilderCollapsibleAside
-          side="right"
-          label="Inspector"
-          storageKey={BUILDER_INSPECTOR_STORAGE_KEY}
-        >
-          {inspector}
-        </BuilderCollapsibleAside>
-      </div>
+      <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />
     </div>
   );
 }

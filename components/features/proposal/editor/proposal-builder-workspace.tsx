@@ -10,6 +10,7 @@ import {
   BuilderTopBarActionsProvider,
   BuilderTopBarActionsSlot,
 } from "@/components/features/proposal/editor/builder-top-bar-actions";
+import { BuilderSidePanelProvider } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { DocumentEditorProvider, useDocumentEditor } from "@/components/features/proposal/editor/document-editor-context";
 import {
   BuilderPanel,
@@ -59,7 +60,8 @@ export function ProposalBuilderWorkspace({
   return (
     <DocumentEditorProvider initialDocument={editorProps.initialDocument}>
       <BuilderTopBarActionsProvider>
-        <BuilderShell
+        <BuilderSidePanelProvider>
+          <BuilderShell
           topBar={
             <BuilderTopBar
               backHref={backHref}
@@ -87,7 +89,7 @@ export function ProposalBuilderWorkspace({
             </BuilderPanel>
           }
           canvas={
-            <div className="px-4 py-6 lg:px-8">
+            <div className="px-4 pb-6 pt-12 lg:px-8">
               <ProposalDocumentEditorLazy
                 {...editorProps}
                 variant={variant}
@@ -109,6 +111,7 @@ export function ProposalBuilderWorkspace({
             </BuilderPanel>
           }
         />
+        </BuilderSidePanelProvider>
       </BuilderTopBarActionsProvider>
     </DocumentEditorProvider>
   );

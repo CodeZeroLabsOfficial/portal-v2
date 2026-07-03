@@ -265,7 +265,11 @@ export function ProposalDocumentEditor({
                       ) : null}
                       <TabsContent
                         value="edit"
-                        className="mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
+                        className={
+                          embeddedInBuilder
+                            ? "mt-0 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
+                            : "mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
+                        }
                       >
                         {editorTab === "edit" ? (
                           <RootBlockCanvas
