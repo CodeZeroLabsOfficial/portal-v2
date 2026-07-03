@@ -47,11 +47,8 @@ export function BuilderTopBarActionsSlot() {
   return actions;
 }
 
-/** Mount editor toolbar actions in the builder top bar instead of the canvas chrome row. */
-export function useRegisterBuilderTopBarActions(
-  renderActions: () => React.ReactNode,
-  deps: React.DependencyList,
-) {
+/** Register document actions for {@link BuilderTopBarActionsSlot}. Re-runs each commit so save/publish always see the latest document. */
+export function useBuilderTopBarActions(renderActions: () => React.ReactNode) {
   const store = React.useContext(BuilderTopBarActionsContext);
   const renderRef = React.useRef(renderActions);
   renderRef.current = renderActions;
@@ -59,6 +56,9 @@ export function useRegisterBuilderTopBarActions(
   React.useLayoutEffect(() => {
     if (!store) return;
     store.setActions(renderRef.current());
-    return () => store.setActions(null);
-  }, [store, ...deps]);
+  });
+
+  React.useLayoutEffect(() => {
+    return () => store?.setActions(null);
+  }, [store]);
 }

@@ -18,7 +18,7 @@ import {
   useRegisterBuilderCanvasNavigation,
 } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { useRegisterBuilderTopBarTitle } from "@/components/features/proposal/editor/builder-top-bar-title";
-import { useRegisterBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
+import { useBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
 import { ProposalBrandingProvider } from "@/components/proposal/proposal-branding-context";
@@ -221,29 +221,10 @@ export function ProposalDocumentEditor({
     onPublish: isTemplate ? () => void publishTemplate() : () => void send(),
   };
 
-  useRegisterBuilderTopBarActions(
-    () => {
-      if (!embeddedInBuilder) return null;
-      return <BuilderEmbeddedChromeActions {...editorChromeProps} />;
-    },
-    [
-      embeddedInBuilder,
-      variant,
-      templateId,
-      contractTemplateId,
-      initialTemplateName,
-      templateName,
-      templateNameEditing,
-      agreementTitle,
-      proposalEditShellToolbar,
-      initialStatus,
-      saving,
-      sending,
-      message,
-      saveJustSucceeded,
-      publishJustSucceeded,
-    ],
-  );
+  useBuilderTopBarActions(() => {
+    if (!embeddedInBuilder) return null;
+    return <BuilderEmbeddedChromeActions {...editorChromeProps} />;
+  });
 
   useRegisterBuilderTopBarTitle(
     embeddedInBuilder && isNamedTemplateShell && (templateId || contractTemplateId)
