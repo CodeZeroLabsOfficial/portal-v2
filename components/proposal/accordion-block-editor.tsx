@@ -7,6 +7,7 @@ import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
+import { PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-accordion-expand-surface";
@@ -24,7 +25,7 @@ function panelEditorHtml(p: AccordionPanel): string {
 function accordionPanelTitleEditorHtml(p: AccordionPanel): string {
   if (p.titleHtml?.trim()) return p.titleHtml;
   const t = (p.title ?? "").trim() || "Untitled panel";
-  return `<h2>${escapeHtml(t)}</h2>`;
+  return `<h3>${escapeHtml(t)}</h3>`;
 }
 
 const LIGHT_SECTION_CHROME = { seamless: false, prefersLight: false } as const;
@@ -95,7 +96,7 @@ export function AccordionBlockEditor({
                     variant="ghost"
                     size="icon"
                     disabled={panels.length <= 1}
-                    className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/panel:opacity-100 disabled:pointer-events-none disabled:opacity-0"
+                    className="h-8 w-8 text-muted-foreground opacity-0 transition-colors group-hover/panel:opacity-100 hover:bg-destructive/10 hover:!text-destructive disabled:pointer-events-none disabled:opacity-0"
                     aria-label="Remove panel"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -136,7 +137,8 @@ export function AccordionBlockEditor({
                 id={contentId}
                 data-proposal-accordion-light-surface
                 className={cn(
-                  "w-full border-t border-border/45 bg-white px-4 py-4 text-zinc-900 sm:px-5",
+                  "w-full border-t border-border/45 px-4 py-4 sm:px-5",
+                  PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES,
                   idx === panels.length - 1 && "rounded-b-2xl",
                 )}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -162,7 +164,10 @@ export function AccordionBlockEditor({
         onClick={(e) => {
           e.stopPropagation();
           const id = newPanelId();
-          patchPanels([...panels, { id, title: "New panel", html: "<p></p>" }]);
+          patchPanels([
+            ...panels,
+            { id, title: "New panel", titleHtml: "<h3>New panel</h3>", html: "<p></p>" },
+          ]);
           setOpenIds((prev) => ({ ...prev, [id]: true }));
         }}
       >

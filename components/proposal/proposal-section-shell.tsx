@@ -12,6 +12,7 @@ import type { SectionBackground } from "@/types/proposal";
 import {
   PROPOSAL_CANVAS_SURFACE_DARK_CLASSES,
   PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
+  PROPOSAL_SECTION_DARK_ACCORDION_LIGHT_SURFACE_OVERRIDES,
 } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES } from "@/lib/proposal/public/public-layout";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
@@ -80,6 +81,7 @@ export function ProposalSectionShell({
             "[&_.bg-card]:[--foreground:var(--base-800)]",
             "[&_.bg-card]:[--muted-foreground:var(--color-neutral-500)]",
             "[&_.bg-card]:[--border:var(--base-200)]",
+            PROPOSAL_SECTION_DARK_ACCORDION_LIGHT_SURFACE_OVERRIDES,
           ),
       )}
     >

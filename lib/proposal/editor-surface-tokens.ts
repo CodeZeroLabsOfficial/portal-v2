@@ -50,6 +50,25 @@ export const PROPOSAL_CANVAS_SURFACE_DARK_CLASSES = cn(
   "[--ring:var(--base-200)]",
 );
 
+/** Accordion panel body — light island on dark section bands (editor + public). */
+export const PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES = cn(
+  "bg-white text-zinc-900",
+  PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
+);
+
+/**
+ * Restores readable copy inside accordion bodies when the parent section uses
+ * light-on-dark chrome (same pattern as tier cards on `bg-card`).
+ */
+export const PROPOSAL_SECTION_DARK_ACCORDION_LIGHT_SURFACE_OVERRIDES = cn(
+  "[&_[data-proposal-accordion-light-surface]]:text-zinc-900",
+  "[&_[data-proposal-accordion-light-surface]]:[--foreground:var(--base-800)]",
+  "[&_[data-proposal-accordion-light-surface]]:[--muted-foreground:var(--color-neutral-500)]",
+  "[&_[data-proposal-accordion-light-surface]]:[--border:var(--base-200)]",
+  "[&_[data-proposal-accordion-light-surface]_.proposal-rich-text]:!text-foreground",
+  "[&_[data-proposal-accordion-light-surface]_.proposal-rich-text_a]:!text-primary",
+);
+
 /** Class on the Edit blocks tab stack — root-level blocks without a section shell. */
 export const PROPOSAL_CANVAS_ROOT_CLASS = "proposal-document-editor-canvas";
 

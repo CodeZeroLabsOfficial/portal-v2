@@ -25,6 +25,7 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
       ? clampSpacerHeightPx(block.heightPx)
       : 40;
   const dragRef = React.useRef<{ startY: number; startH: number } | null>(null);
+  const [isResizing, setIsResizing] = React.useState(false);
 
   function applyHeight(next: number) {
     onChange({ ...block, heightPx: clampSpacerHeightPx(next) });
@@ -34,7 +35,7 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
   const labelHeight = Math.max(0, h - gripPx);
 
   return (
-    <div className="w-full">
+    <div className="group/spacer w-full">
       <label htmlFor={`spacer-h-a11y-${block.id}`} className="sr-only">
         Spacer height in pixels (1–2400)
       </label>
@@ -87,6 +88,7 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
             if (e.button !== 0) return;
             e.preventDefault();
             e.stopPropagation();
+            setIsResizing(true);
             dragRef.current = { startY: e.clientY, startH: h };
             (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId);
           }}
@@ -97,6 +99,7 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
           }}
           onPointerUp={(e) => {
             dragRef.current = null;
+            setIsResizing(false);
             try {
               (e.currentTarget as HTMLButtonElement).releasePointerCapture(e.pointerId);
             } catch {
@@ -105,6 +108,7 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
           }}
           onPointerCancel={(e) => {
             dragRef.current = null;
+            setIsResizing(false);
             try {
               (e.currentTarget as HTMLButtonElement).releasePointerCapture(e.pointerId);
             } catch {
@@ -120,7 +124,12 @@ export function SpacerBlockHeightEditor({ block, onChange }: SpacerBlockHeightEd
         </button>
       </div>
 
-      <p className="mt-1.5 text-xs text-muted-foreground">
+      <p
+        className={cn(
+          "pointer-events-none mt-1.5 text-center text-xs text-muted-foreground transition-opacity duration-150",
+          isResizing ? "opacity-100" : "opacity-0 group-hover/spacer:opacity-100",
+        )}
+      >
         Drag the bottom edge to set height. Readers only see vertical space — no line or label.
       </p>
     </div>

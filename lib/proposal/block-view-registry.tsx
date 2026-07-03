@@ -25,6 +25,7 @@ import { ProposalSectionShell } from "@/components/proposal/proposal-section-she
 import { ProposalSplashBlockCanvas } from "@/components/proposal/proposal-splash-block";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { isPublicProposalPackageSelectionsLocked } from "@/lib/proposal/commerce/package-selection";
+import { PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import {
   PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
   PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
@@ -114,7 +115,8 @@ function AccordionPublicView({ block }: { block: AccordionBlock }) {
               id={contentId}
               data-proposal-accordion-light-surface
               className={cn(
-                "w-full border-t border-border/45 bg-white px-4 py-4 text-zinc-900 sm:px-5",
+                "w-full border-t border-border/45 px-4 py-4 sm:px-5",
+                PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES,
                 panelIdx === accordionPanels.length - 1 && "rounded-b-2xl",
               )}
             >
