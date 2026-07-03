@@ -25,6 +25,7 @@ export interface SectionChildFloatingRowState {
 
 interface SectionChildFloatingGutterContextValue {
   registerRow: (state: SectionChildFloatingRowState) => void;
+  updateRow: (state: SectionChildFloatingRowState) => void;
   unregisterRow: (blockId: string) => void;
   notifyRowHover: (blockId: string) => void;
   notifyRowUnhover: () => void;
@@ -45,11 +46,18 @@ function gutterHasOpenMenu(stackEl: HTMLElement | null) {
 /** Register a section-child row with the stack-level floating gutter (when provider is present). */
 export function useRegisterSectionChildFloatingRow(state: SectionChildFloatingRowState | null) {
   const ctx = useSectionChildFloatingGutterOptional();
+  const stateRef = React.useRef(state);
+  stateRef.current = state;
 
   React.useLayoutEffect(() => {
     if (!ctx || !state) return;
     ctx.registerRow(state);
     return () => ctx.unregisterRow(state.blockId);
+  }, [ctx, state?.blockId]);
+
+  React.useLayoutEffect(() => {
+    if (!ctx || !stateRef.current) return;
+    ctx.updateRow(stateRef.current);
   });
 }
 
@@ -68,7 +76,6 @@ export function SectionChildFloatingGutterProvider({
 
   const [hoveredBlockId, setHoveredBlockId] = React.useState<string | null>(null);
   const [gutterTop, setGutterTop] = React.useState(0);
-  const [visible, setVisible] = React.useState(false);
 
   const clearHideTimer = React.useCallback(() => {
     if (hideTimerRef.current) {
@@ -82,16 +89,30 @@ export function SectionChildFloatingGutterProvider({
     hideTimerRef.current = setTimeout(() => {
       if (gutterHoverRef.current || gutterHasOpenMenu(stackRef.current)) return;
       setHoveredBlockId(null);
-      setVisible(false);
     }, GUTTER_HIDE_DELAY_MS);
   }, [clearHideTimer]);
 
   const registerRow = React.useCallback((state: SectionChildFloatingRowState) => {
+    const isNew = !rowsRef.current.has(state.blockId);
     rowsRef.current.set(state.blockId, state);
-    bumpRows();
+    if (isNew) bumpRows();
+  }, []);
+
+  const updateRow = React.useCallback((state: SectionChildFloatingRowState) => {
+    const prev = rowsRef.current.get(state.blockId);
+    if (!prev) {
+      rowsRef.current.set(state.blockId, state);
+      bumpRows();
+      return;
+    }
+    rowsRef.current.set(state.blockId, state);
+    if (prev.selected !== state.selected || prev.isDragging !== state.isDragging) {
+      bumpRows();
+    }
   }, []);
 
   const unregisterRow = React.useCallback((blockId: string) => {
+    if (!rowsRef.current.has(blockId)) return;
     rowsRef.current.delete(blockId);
     setHoveredBlockId((current) => (current === blockId ? null : current));
     bumpRows();
@@ -101,7 +122,6 @@ export function SectionChildFloatingGutterProvider({
     (blockId: string) => {
       clearHideTimer();
       setHoveredBlockId(blockId);
-      setVisible(true);
     },
     [clearHideTimer],
   );
@@ -116,7 +136,7 @@ export function SectionChildFloatingGutterProvider({
       if (row.selected || row.isDragging) return row.blockId;
     }
     return null;
-  }, [hoveredBlockId, visible, rowsVersion]);
+  }, [hoveredBlockId, rowsVersion]);
 
   const activeRow = activeBlockId ? rowsRef.current.get(activeBlockId) : undefined;
 
@@ -134,11 +154,10 @@ export function SectionChildFloatingGutterProvider({
   React.useLayoutEffect(() => {
     if (!activeBlockId) return;
     repositionGutter();
-    setVisible(true);
   }, [activeBlockId, repositionGutter]);
 
   React.useEffect(() => {
-    if (!visible) return;
+    if (!activeBlockId) return;
     const stackEl = stackRef.current;
     if (!stackEl) return;
 
@@ -153,22 +172,27 @@ export function SectionChildFloatingGutterProvider({
       window.removeEventListener("resize", onScrollOrResize);
       observer.disconnect();
     };
-  }, [visible, activeBlockId, repositionGutter]);
+  }, [activeBlockId, repositionGutter]);
 
   React.useEffect(() => () => clearHideTimer(), [clearHideTimer]);
 
   const contextValue = React.useMemo<SectionChildFloatingGutterContextValue>(
     () => ({
       registerRow,
+      updateRow,
       unregisterRow,
       notifyRowHover,
       notifyRowUnhover,
     }),
-    [registerRow, unregisterRow, notifyRowHover, notifyRowUnhover],
+    [registerRow, updateRow, unregisterRow, notifyRowHover, notifyRowUnhover],
   );
 
   const showGutter = Boolean(
-    visible && activeRow && (hoveredBlockId || activeRow.selected || activeRow.isDragging || gutterHasOpenMenu(stackRef.current)),
+    activeRow &&
+      (hoveredBlockId === activeBlockId ||
+        activeRow.selected ||
+        activeRow.isDragging ||
+        gutterHasOpenMenu(stackRef.current)),
   );
 
   return (
@@ -188,7 +212,7 @@ export function SectionChildFloatingGutterProvider({
             onMouseEnter={() => {
               gutterHoverRef.current = true;
               clearHideTimer();
-              setVisible(true);
+              if (activeBlockId) setHoveredBlockId(activeBlockId);
             }}
             onMouseLeave={() => {
               gutterHoverRef.current = false;
