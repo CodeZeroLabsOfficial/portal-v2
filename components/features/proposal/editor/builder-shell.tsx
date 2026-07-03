@@ -69,15 +69,21 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
         className="min-h-0 flex-1"
         id={BUILDER_LAYOUT_COOKIE}
       >
-        <ResizablePanel id="outline" defaultSize={16} minSize={12} maxSize={24} collapsible>
+        <ResizablePanel
+          id="outline"
+          defaultSize="16%"
+          minSize="12%"
+          maxSize="24%"
+          collapsible
+        >
           {outline}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel id="canvas" defaultSize={54} minSize={40}>
+        <ResizablePanel id="canvas" defaultSize="54%" minSize="40%">
           <main className="h-full overflow-y-auto">{canvas}</main>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel id="inspector" defaultSize={30} minSize={22} maxSize={36}>
+        <ResizablePanel id="inspector" defaultSize="30%" minSize="22%" maxSize="36%">
           {inspector}
         </ResizablePanel>
       </ResizablePanelGroup>
