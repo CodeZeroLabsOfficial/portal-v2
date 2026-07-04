@@ -50,7 +50,7 @@ export function TaskTodoItem({
   }
 
   const cardClassName = cn(
-    "cursor-pointer transition-shadow hover:shadow-md",
+    "cursor-pointer gap-0 py-0 transition-shadow hover:shadow-md",
     isDone && "opacity-70",
     isPending && "pointer-events-none opacity-60",
     viewMode === "grid" && "flex h-full flex-col"
@@ -59,7 +59,7 @@ export function TaskTodoItem({
   if (viewMode === "grid") {
     return (
       <Card className={cardClassName} onClick={() => onSelect?.(task)}>
-        <CardContent className="flex flex-1 flex-col justify-between pt-4">
+        <CardContent className="flex flex-1 flex-col justify-between p-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-start gap-3">
               <Checkbox
@@ -124,7 +124,7 @@ export function TaskTodoItem({
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-wrap justify-between border-t">
+        <CardFooter className="flex flex-wrap justify-between border-t px-4 pt-3 pb-4">
           <div className="flex items-center gap-2 capitalize">
             <StatusBadge label={columnBadge.label} variant={columnBadge.variant} />
             <StatusBadge label={priorityBadge.label} variant={priorityBadge.variant} />
@@ -142,7 +142,7 @@ export function TaskTodoItem({
 
   return (
     <Card className={cardClassName} onClick={() => onSelect?.(task)}>
-      <CardContent className="flex items-start gap-3 pt-4">
+      <CardContent className="flex items-start gap-3 p-4">
         <Checkbox
           checked={isDone}
           disabled={disabled || isPending}
