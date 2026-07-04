@@ -3,7 +3,9 @@
 import * as React from "react";
 import { ChevronRight, CreditCard, Loader2, PenLine, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   normalizeLocalityTimeZone,
   todayIsoDateInTimeZone,
@@ -185,39 +188,38 @@ function AgreementFlowAccordionTrigger({
   title,
   subtitle,
   open,
-  onToggle,
   disabled,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
   open: boolean;
-  onToggle: () => void;
   disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onToggle}
-      className={cn(
-        "flex w-full items-center gap-4 rounded-xl border border-border bg-muted/50 p-4 text-left shadow-sm transition-colors",
-        "hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        disabled && "cursor-not-allowed opacity-60",
-      )}
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary [&>svg]:h-5 [&>svg]:w-5">
-        {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-medium text-foreground">{title}</span>
-        {subtitle ? <span className="mt-0.5 block text-sm text-muted-foreground">{subtitle}</span> : null}
-      </span>
-      <ChevronRight
-        className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")}
-        aria-hidden
-      />
-    </button>
+    <CollapsibleTrigger asChild disabled={disabled}>
+      <button
+        type="button"
+        disabled={disabled}
+        className={cn(
+          "flex w-full items-center gap-4 rounded-xl border border-border bg-muted/50 p-4 text-left shadow-sm transition-colors",
+          "hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+          "disabled:cursor-not-allowed disabled:opacity-60",
+        )}
+      >
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary [&>svg]:size-5">
+          {icon}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-medium text-foreground">{title}</span>
+          {subtitle ? <span className="mt-0.5 block text-sm text-muted-foreground">{subtitle}</span> : null}
+        </span>
+        <ChevronRight
+          className={cn("size-5 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")}
+          aria-hidden
+        />
+      </button>
+    </CollapsibleTrigger>
   );
 }
 
@@ -699,13 +701,13 @@ export function AgreementSignatureForm({
 
   return (
     <form className="space-y-5" onSubmit={handleFinalSubmit} noValidate aria-busy={formLocked}>
-      <div className="relative rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-8">
+      <Card className="relative gap-0 py-0 shadow-sm">
         {formLocked ? (
           <div
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-background/85 backdrop-blur-[1px]"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-background/85 backdrop-blur-[1px]"
             aria-live="polite"
           >
-            <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+            <Loader2 className="size-8 animate-spin text-primary" aria-hidden />
             <p className="mt-3 text-sm font-semibold text-foreground">Signing agreement…</p>
             <p className="mt-1 max-w-[14rem] text-center text-xs text-muted-foreground">
               Please wait while we record your acceptance
@@ -713,7 +715,7 @@ export function AgreementSignatureForm({
             </p>
           </div>
         ) : null}
-        <div className={cn(formLocked && "pointer-events-none opacity-60")}>
+        <CardContent className={cn("pt-6 sm:pt-8", formLocked && "pointer-events-none opacity-60")}>
           <FieldSet className="mx-auto max-w-md gap-0">
             <FieldLegend className="mb-0 w-full text-center text-2xl font-semibold tracking-tight sm:text-[26px]">
               Accept
@@ -774,7 +776,7 @@ export function AgreementSignatureForm({
 
               <div className="space-y-3 pt-1">
                 {eSignaturesEnabled ? (
-                <div>
+                <Collapsible open={signSectionOpen} onOpenChange={setSignSectionOpen}>
                   <AgreementFlowAccordionTrigger
                     icon={<PenLine aria-hidden />}
                     title={capturedDataUrl ? "Signature added" : "Enter your signature"}
@@ -786,9 +788,9 @@ export function AgreementSignatureForm({
                         : "Draw, type, or upload your signature"
                     }
                     open={signSectionOpen}
-                    onToggle={() => setSignSectionOpen((o) => !o)}
                     disabled={disabled || formLocked}
                   />
+                  <CollapsibleContent forceMount>
                   <AgreementAccordionPanel open={signSectionOpen} className={signSectionOpen ? "mt-3" : undefined}>
                     <>
                       <Field>
@@ -873,31 +875,29 @@ export function AgreementSignatureForm({
                         <FieldLegend className="mb-0 text-xl font-semibold tracking-tight sm:text-2xl">
                           Adopt your signature
                         </FieldLegend>
-                        <div className="mt-5 flex rounded-lg bg-muted p-1">
-                          {(["type", "draw", "upload"] as const).map((m) => (
-                            <button
-                              key={m}
-                              type="button"
-                              disabled={disabled || formLocked}
-                              onClick={() => {
-                                onDismissError?.();
-                                setAdoptTab(m);
-                                setLocalError(null);
-                              }}
-                              className={cn(
-                                "flex-1 rounded-md py-2.5 text-sm font-semibold transition-all",
-                                adoptTab === m
-                                  ? "bg-background text-foreground shadow-sm"
-                                  : "text-muted-foreground hover:text-foreground",
-                              )}
-                            >
-                              {m === "type" ? "Type" : m === "draw" ? "Draw" : "Upload"}
-                            </button>
-                          ))}
-                        </div>
+                        <Tabs
+                          value={adoptTab}
+                          onValueChange={(value) => {
+                            onDismissError?.();
+                            setAdoptTab(value as AgreementSignatureMethod);
+                            setLocalError(null);
+                          }}
+                          className="mt-5 gap-5"
+                        >
+                          <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="type" disabled={disabled || formLocked}>
+                              Type
+                            </TabsTrigger>
+                            <TabsTrigger value="draw" disabled={disabled || formLocked}>
+                              Draw
+                            </TabsTrigger>
+                            <TabsTrigger value="upload" disabled={disabled || formLocked}>
+                              Upload
+                            </TabsTrigger>
+                          </TabsList>
 
-                        {adoptTab === "draw" ? (
-                          <Field className="mt-5">
+                          <TabsContent value="draw">
+                          <Field>
                             <div className="flex items-center justify-between gap-3">
                               <FieldLabel>Draw your signature</FieldLabel>
                               <Button
@@ -926,8 +926,10 @@ export function AgreementSignatureForm({
                               />
                             </div>
                           </Field>
-                        ) : adoptTab === "type" ? (
-                          <FieldGroup className="mt-5 gap-4">
+                          </TabsContent>
+
+                          <TabsContent value="type">
+                          <FieldGroup className="gap-4">
                             <Field>
                               <div className="flex items-center justify-between gap-3">
                                 <FieldLabel htmlFor="agreement-typed-signature">Enter your signature</FieldLabel>
@@ -973,8 +975,10 @@ export function AgreementSignatureForm({
                               </div>
                             </Field>
                           </FieldGroup>
-                        ) : (
-                          <Field className="mt-5">
+                          </TabsContent>
+
+                          <TabsContent value="upload">
+                          <Field>
                             <div className="flex items-center justify-between gap-3">
                               <FieldLabel>Upload an image of your signature</FieldLabel>
                               <Button
@@ -1024,7 +1028,7 @@ export function AgreementSignatureForm({
                                 />
                               ) : (
                                 <>
-                                  <Upload className="h-8 w-8 text-muted-foreground" aria-hidden />
+                                  <Upload className="size-8 text-muted-foreground" aria-hidden />
                                   <p className="text-sm text-muted-foreground">
                                     Drag an image here, or{" "}
                                     <span className="font-semibold text-foreground underline">browse</span>
@@ -1033,7 +1037,8 @@ export function AgreementSignatureForm({
                               )}
                             </div>
                           </Field>
-                        )}
+                          </TabsContent>
+                        </Tabs>
 
                         <FieldDescription className="mt-5">
                           By selecting Adopt and sign, I agree that my electronic signature is as valid and legally
@@ -1066,16 +1071,19 @@ export function AgreementSignatureForm({
                     ) : null}
                     </>
                   </AgreementAccordionPanel>
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
                 ) : (
-                  <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+                  <Card className="border-border bg-muted/30 py-4 shadow-none">
+                    <CardContent className="text-sm leading-relaxed text-muted-foreground">
                     Electronic signatures are turned off for this proposal. Confirm your name and email below — no
                     drawn or typed signature is required.
-                  </div>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {subscriptionBillingInModal && publicSubscriptionUi && shareToken ? (
-                  <div>
+                  <Collapsible open={paymentSectionOpen} onOpenChange={setPaymentSectionOpen}>
                     <AgreementFlowAccordionTrigger
                       icon={<CreditCard aria-hidden />}
                       title="Add payment details"
@@ -1085,21 +1093,20 @@ export function AgreementSignatureForm({
                           : "Securely add a card for your subscription"
                       }
                       open={paymentSectionOpen}
-                      onToggle={() => setPaymentSectionOpen((o) => !o)}
                       disabled={disabled || formLocked}
                     />
+                    <CollapsibleContent forceMount>
                     <AgreementAccordionPanel
                       open={paymentSectionOpen}
                       className={paymentSectionOpen ? "mt-3" : undefined}
                     >
-                      <div
+                      <Card
                         className={cn(
-                          "rounded-xl border bg-background transition-[padding,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none",
-                          paymentSectionOpen
-                            ? "border-border p-4 shadow-sm"
-                            : "border-transparent p-0 shadow-none",
+                          "gap-0 py-0 shadow-sm transition-[padding,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none",
+                          paymentSectionOpen ? "border-border" : "border-transparent shadow-none",
                         )}
                       >
+                        <CardContent className={paymentSectionOpen ? "pt-4" : "p-0"}>
                         <ProposalPublicSubscriptionFormPanel
                           active={paymentSectionOpen}
                           shareToken={shareToken}
@@ -1115,9 +1122,11 @@ export function AgreementSignatureForm({
                           primaryCtaColor={ctaColor}
                           primaryCtaForeground={ctaForeground}
                         />
-                      </div>
+                        </CardContent>
+                      </Card>
                     </AgreementAccordionPanel>
-                  </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 ) : null}
               </div>
             </FieldGroup>
@@ -1181,16 +1190,16 @@ export function AgreementSignatureForm({
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full gap-2 hover:opacity-95"
+              className="w-full gap-2 hover:opacity-95"
               style={{ backgroundColor: ctaColor, color: ctaForeground }}
               disabled={!canFinalSubmit}
             >
-              {formLocked ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+              {formLocked ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
               Sign Agreement
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </form>
   );
 }

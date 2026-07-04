@@ -4,7 +4,9 @@ import * as React from "react";
 import { ArrowRight, Download, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Typography } from "@/components/ui/typography";
 import {
   AGREEMENT_PRINT_EXCLUDE_ATTR,
   AGREEMENT_PRINT_TARGET_ATTR,
@@ -13,6 +15,10 @@ import {
 } from "@/hooks/use-agreement-print-mode";
 import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
+import {
+  AGREEMENT_MODAL_RICH_TEXT_CLASSES,
+  PROPOSAL_PUBLIC_META_LABEL_CLASSES,
+} from "@/lib/proposal/public/public-typography";
 import { cn } from "@/lib/utils";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
@@ -43,12 +49,18 @@ function AgreementPrintSignatureBlock({
 
   return (
     <section className="mt-12 hidden print:block">
-      <p className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">Signature</p>
-      <div className="mt-6 border-t border-zinc-200 pt-8">
+      <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Signature</p>
+      <div className="mt-6 border-t pt-8">
         {signerName?.trim() ? (
-          <p className="text-sm font-semibold text-zinc-900">{signerName.trim()}</p>
+          <Typography variant="small" className="text-sm font-semibold text-foreground">
+            {signerName.trim()}
+          </Typography>
         ) : null}
-        {signedLabel ? <p className="mt-1 text-xs text-zinc-500">Signed {signedLabel}</p> : null}
+        {signedLabel ? (
+          <Typography variant="muted" className="mt-1 text-xs">
+            Signed {signedLabel}
+          </Typography>
+        ) : null}
         <div className="mt-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -92,8 +104,8 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
         )}>
         {data ? (
           <>
-            <div className="flex items-center justify-between gap-3 border-b border-zinc-200 bg-white px-4 py-3 sm:px-6 print:hidden">
-              <DialogTitle className="truncate text-sm font-semibold tracking-tight text-zinc-900 sm:text-base">
+            <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6 print:hidden">
+              <DialogTitle className="truncate text-sm font-semibold tracking-tight sm:text-base">
                 {data.record.proposalTitle}
               </DialogTitle>
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -109,31 +121,30 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                 <Button
                   type="button"
                   size="sm"
-                  variant="default"
                   onClick={scrollToSignature}
-                  className="h-9 gap-1.5 rounded-md px-3 font-semibold shadow-sm">
+                  className="gap-1.5">
                   Next
                   <ArrowRight className="size-4" aria-hidden />
                 </Button>
-                <DialogClose
-                  aria-label="Close signed agreement"
-                  className="ml-1 inline-flex size-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">
-                  <X className="size-5" aria-hidden />
+                <DialogClose asChild>
+                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Close signed agreement">
+                    <X className="size-5" aria-hidden />
+                  </Button>
                 </DialogClose>
               </div>
             </div>
-            <div className="min-h-0 overflow-y-auto bg-white print:overflow-visible">
+            <div className="min-h-0 overflow-y-auto print:overflow-visible">
               <div
                 {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }}
                 className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-10 sm:py-14">
                 <header {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="text-center print:hidden">
-                  <h2 className="font-serif text-3xl leading-tight font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+                  <h2 className="font-serif text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl">
                     Signed agreement
                   </h2>
-                  <p className="mt-2 text-sm font-medium text-zinc-500">
-                    Re: <span className="text-zinc-900">{data.record.proposalTitle}</span>
-                  </p>
-                  <p className="mt-3 text-xs text-zinc-500">
+                  <Typography variant="muted" className="mt-2 font-medium">
+                    Re: <span className="text-foreground">{data.record.proposalTitle}</span>
+                  </Typography>
+                  <Typography variant="muted" className="mt-3 text-xs">
                     Signed{" "}
                     {data.record.signedAt > 0
                       ? new Date(data.record.signedAt).toLocaleString(undefined, {
@@ -145,43 +156,33 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                     {data.record.signerEmail ? <> · Email: {data.record.signerEmail}</> : null}
                     {data.record.signerOrganization ? <> · Org: {data.record.signerOrganization}</> : null} ·
                     Monthly total: {data.record.totalAmount.formatted}
-                  </p>
+                  </Typography>
                 </header>
 
                 <section className="mt-10">
-                  <h3 className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
-                    Agreement
-                  </h3>
+                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Agreement</p>
                   {(() => {
                     const rawBody = data.record.fullAgreementText?.trim() ?? "";
                     const bodyIsHtml = rawBody.includes("<");
                     if (!rawBody) {
                       return (
-                        <p className="mt-3 text-sm text-zinc-500">
+                        <Typography variant="muted" className="mt-3">
                           No agreement text snapshot for this record.
-                        </p>
+                        </Typography>
                       );
                     }
                     if (bodyIsHtml) {
                       return (
                         <div
-                          className={cn(
-                            "proposal-rich-text mt-4 max-w-none text-[15px] leading-relaxed text-zinc-700",
-                            "[&_h1]:mt-8 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-zinc-900",
-                            "[&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-zinc-900",
-                            "[&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-zinc-900",
-                            "[&_p]:mb-3 [&_p:last-child]:mb-0",
-                            "[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5",
-                            "[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5"
-                          )}
+                          className={cn(AGREEMENT_MODAL_RICH_TEXT_CLASSES, "mt-4")}
                           dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(rawBody) }}
                         />
                       );
                     }
                     return (
-                      <div className="mt-4 text-sm leading-relaxed whitespace-pre-wrap text-zinc-700">
+                      <Typography className="mt-4 whitespace-pre-wrap">
                         {rawBody}
-                      </div>
+                      </Typography>
                     );
                   })()}
                 </section>
@@ -196,27 +197,27 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                   ref={signatureRef}
                   id="customer-signed-agreement-signature"
                   className="mt-12 scroll-mt-24 print:hidden">
-                  <h3 className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
-                    Signature
-                  </h3>
+                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Signature</p>
                   {data.signatureSrc ? (
-                    <div className="mt-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={data.signatureSrc}
-                        alt={`Signature of ${data.record.signerName}`}
-                        className="max-h-40 max-w-full object-contain object-left"
-                      />
-                    </div>
+                    <Card className="mt-4 border-dashed bg-muted/30 py-4 shadow-none">
+                      <CardContent>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={data.signatureSrc}
+                          alt={`Signature of ${data.record.signerName}`}
+                          className="max-h-40 max-w-full object-contain object-left"
+                        />
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <p className="mt-4 text-sm text-zinc-500">
+                    <Typography variant="muted" className="mt-4">
                       No signature image on file (or it could not be loaded from storage).
-                    </p>
+                    </Typography>
                   )}
                   {data.record.signatureMethod ? (
-                    <p className="mt-2 text-xs text-zinc-500 capitalize">
+                    <Typography variant="muted" className="mt-2 text-xs capitalize">
                       Method: {data.record.signatureMethod}
-                    </p>
+                    </Typography>
                   ) : null}
                 </section>
               </div>
