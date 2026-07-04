@@ -62,7 +62,7 @@ export function TaskDetailSheet({
             <StatusBadge label={columnBadge.label} variant={columnBadge.variant} />
             <StatusBadge label={priorityBadge.label} variant={priorityBadge.variant} />
           </div>
-          <div className="w-full space-y-2">
+          <div className="mt-4 w-full space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="task-progress">Task Progress</Label>
               <span className="text-muted-foreground text-sm">{progress}%</span>
