@@ -57,6 +57,7 @@ import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-a
 import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
+import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
 
 function newId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `b-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -953,8 +954,12 @@ function TierCard({
   const pricingReadOnly = useEditorTemplatePricingReadOnly();
   const isRecommended = Boolean(tier.recommended);
   const monthlyMinor = term === "12_months" ? tier.monthlyCost12Minor ?? 0 : tier.monthlyCost24Minor ?? 0;
-  const otherMonthlyMinor = term === "12_months" ? tier.monthlyCost24Minor ?? 0 : tier.monthlyCost12Minor ?? 0;
-  const otherTermLabel = term === "12_months" ? "24-month monthly" : "12-month monthly";
+  const upfront =
+    term === "12_months" &&
+    typeof tier.upfrontCost12Minor === "number" &&
+    tier.upfrontCost12Minor > 0
+      ? tier.upfrontCost12Minor
+      : undefined;
   const features = tier.features ?? [];
   const standardSurface = resolveTableSurfaceColors(tableBackground);
   const standardInlineTone = tableSurfaceInlineTone(standardSurface);
@@ -1036,6 +1041,24 @@ function TierCard({
           />
         )}
 
+        <ul
+          className="mt-2 space-y-1 text-center text-[13px] leading-snug"
+          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+        >
+          <li>
+            <span className="font-medium">Included users</span>:{" "}
+            {formatPackageTierIncluded(tier.includedUsers)}
+          </li>
+          <li>
+            <span className="font-medium">Included locations</span>:{" "}
+            {formatPackageTierIncluded(tier.includedLocations)}
+          </li>
+          <li>
+            <span className="font-medium">Included admins</span>:{" "}
+            {formatPackageTierIncluded(tier.includedAdmins)}
+          </li>
+        </ul>
+
         <div className="mt-3 border-t border-dashed pt-3 text-center" style={dashedBorderStyle}>
           <div className="flex items-baseline justify-center gap-1">
             {pricingReadOnly ? (
@@ -1063,86 +1086,42 @@ function TierCard({
             className="text-xs"
             style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
           >
-            / month — {term === "12_months" ? "12-month plan" : "24-month plan"}
+            / month
           </p>
 
-          <p
-            className="mt-2 text-xs"
-            style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+          <div
+            className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
+            style={dashedBorderStyle}
           >
-            {otherTermLabel}:{" "}
-            {pricingReadOnly ? (
-              <TierPriceAmount minor={otherMonthlyMinor} currency={currency} className="text-xs" />
-            ) : (
+            <p
+              className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+              style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+            >
+              {term === "12_months" ? "12-month plan" : "24-month plan"}
+            </p>
+            {term === "12_months" && !pricingReadOnly ? (
               <InlinePrice
                 tone={inlineTone}
-                minor={otherMonthlyMinor}
+                minor={tier.upfrontCost12Minor ?? 0}
                 currency={currency}
-                onChange={(v) =>
-                  onChange(
-                    term === "12_months" ? { monthlyCost24Minor: v } : { monthlyCost12Minor: v },
-                  )
-                }
-                ariaLabel="Other-term monthly price"
-                className="text-xs"
+                onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
+                ariaLabel="Upfront cost (12-month)"
+                className="mt-0.5 text-xs"
               />
-            )}
-          </p>
-
-          {term === "12_months" ? (
-            <div
-              className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
-              style={dashedBorderStyle}
-            >
+            ) : term === "12_months" && upfront !== undefined ? (
+              <p className="mt-0.5 text-xs tabular-nums">
+                Upfront: {formatCurrencyAmount(upfront, currency)}
+              </p>
+            ) : (
               <p
-                className="text-xs font-semibold uppercase tracking-wide"
+                className="mt-0.5 text-xs"
                 style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
               >
-                Upfront (12-month)
+                No upfront charge
               </p>
-              {pricingReadOnly ? (
-                <TierPriceAmount
-                  minor={tier.upfrontCost12Minor ?? 0}
-                  currency={currency}
-                  className="mt-0.5 text-xs"
-                />
-              ) : (
-                <InlinePrice
-                  tone={inlineTone}
-                  minor={tier.upfrontCost12Minor ?? 0}
-                  currency={currency}
-                  onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
-                  ariaLabel="Upfront cost (12-month)"
-                  className="mt-0.5 text-xs"
-                />
-              )}
-            </div>
-          ) : null}
-
-          {pricingReadOnly && !tier.serviceId?.trim() ? (
-            <p className="mt-2 text-xs" style={standardMutedStyle}>
-              Link a catalogue service to load pricing from Admin → Services.
-            </p>
-          ) : null}
+            )}
+          </div>
         </div>
-
-        <ul
-          className="mt-3 space-y-1 text-center text-sm leading-snug"
-          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
-        >
-          <li>
-            <span className="font-medium">Included users</span>:{" "}
-            {formatPackageTierIncluded(tier.includedUsers)}
-          </li>
-          <li>
-            <span className="font-medium">Included locations</span>:{" "}
-            {formatPackageTierIncluded(tier.includedLocations)}
-          </li>
-          <li>
-            <span className="font-medium">Included admins</span>:{" "}
-            {formatPackageTierIncluded(tier.includedAdmins)}
-          </li>
-        </ul>
 
         {catalogServices.length > 0 ? (
           <div
@@ -1192,6 +1171,11 @@ function TierCard({
                 </option>
               ))}
             </select>
+            {pricingReadOnly && !tier.serviceId?.trim() ? (
+              <p className="mt-2 text-xs" style={standardMutedStyle}>
+                Link a catalogue service to load pricing from Admin → Services.
+              </p>
+            ) : null}
           </div>
         ) : null}
 

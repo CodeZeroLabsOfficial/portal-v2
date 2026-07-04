@@ -327,56 +327,8 @@ export function PackagesBlockPublic({
 
                 <h3 className="text-center text-base font-semibold">{tier.name}</h3>
 
-                <div
-                  className="mt-3 border-t border-dashed pt-3 text-center"
-                  style={dashedBorderStyle}
-                >
-                  <p className="text-xl font-semibold tabular-nums sm:text-2xl">
-                    {formatCurrencyAmount(mm, currency)}
-                  </p>
-                  <p
-                    className="text-xs"
-                    style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
-                  >
-                    / month
-                  </p>
-
-                  {term === "12_months" ? (
-                    <div
-                      className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
-                      style={dashedBorderStyle}
-                    >
-                      <p
-                        className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
-                        style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
-                      >
-                        12-month plan
-                      </p>
-                      {upfront !== undefined ? (
-                        <p className="mt-0.5 text-xs tabular-nums">
-                          Upfront: {formatCurrencyAmount(upfront, currency)}
-                        </p>
-                      ) : (
-                        <p
-                          className="mt-0.5 text-xs"
-                          style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
-                        >
-                          No upfront charge
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p
-                      className="mt-2 text-[11px]"
-                      style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
-                    >
-                      24-month term · billed monthly
-                    </p>
-                  )}
-                </div>
-
                 <ul
-                  className="mt-3 space-y-1 text-center text-[13px] leading-snug"
+                  className="mt-2 space-y-1 text-center text-[13px] leading-snug"
                   style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
                 >
                   <li>
@@ -392,6 +344,45 @@ export function PackagesBlockPublic({
                     {formatPackageTierIncluded(tier.includedAdmins)}
                   </li>
                 </ul>
+
+                <div
+                  className="mt-3 border-t border-dashed pt-3 text-center"
+                  style={dashedBorderStyle}
+                >
+                  <p className="text-xl font-semibold tabular-nums sm:text-2xl">
+                    {formatCurrencyAmount(mm, currency)}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                  >
+                    / month
+                  </p>
+
+                  <div
+                    className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
+                    style={dashedBorderStyle}
+                  >
+                    <p
+                      className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+                      style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                    >
+                      {term === "12_months" ? "12-month plan" : "24-month plan"}
+                    </p>
+                    {term === "12_months" && upfront !== undefined ? (
+                      <p className="mt-0.5 text-xs tabular-nums">
+                        Upfront: {formatCurrencyAmount(upfront, currency)}
+                      </p>
+                    ) : (
+                      <p
+                        className="mt-0.5 text-xs"
+                        style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                      >
+                        No upfront charge
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 <div className="mt-auto pt-3">
                   <button
