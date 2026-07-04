@@ -7,9 +7,12 @@
 export const PROPOSAL_PUBLIC_META_LABEL_CLASSES =
   "text-xs font-medium uppercase tracking-wide text-muted-foreground";
 
-/** Agreement modal section + package summary labels (legacy density). */
-export const AGREEMENT_MODAL_META_LABEL_CLASSES =
-  "text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500";
+/** Agreement accept form + disclaimer ink (legacy proposal accent). */
+export const AGREEMENT_MODAL_INK_TEXT_CLASSES = "text-[#1a1a5e]";
+
+/** Accept form intro line under the “Accept” heading. */
+export const AGREEMENT_MODAL_ACCEPT_DESCRIPTION_CLASSES =
+  "mt-2 text-center text-sm leading-relaxed text-zinc-500";
 
 /** Card and panel titles in password gate / acceptance footer. */
 export const PROPOSAL_PUBLIC_PANEL_TITLE_CLASSES = "text-base font-semibold tracking-tight";

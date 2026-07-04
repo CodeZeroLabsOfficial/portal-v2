@@ -42,7 +42,6 @@ import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
 import {
-  AGREEMENT_MODAL_META_LABEL_CLASSES,
   AGREEMENT_MODAL_RICH_TEXT_CLASSES,
   PROPOSAL_PUBLIC_META_LABEL_CLASSES,
 } from "@/lib/proposal/public/public-typography";
@@ -235,82 +234,86 @@ function buildPackageSelectionSummary(
 
 function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <div>
-          <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{summary.blockTitle}</p>
-          <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">{summary.tierName}</p>
-          <p className="text-sm text-zinc-500">Term: {summary.termLabel}</p>
+    <Card className="gap-0 overflow-hidden rounded-2xl border-zinc-200 bg-white py-0 shadow-sm">
+      <CardContent className="space-y-5 pt-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <div>
+            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{summary.blockTitle}</p>
+            <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">{summary.tierName}</p>
+            <p className="text-sm text-zinc-500">Term: {summary.termLabel}</p>
+          </div>
+          <div className="text-right">
+            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Monthly subscription</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900">
+              {formatCurrencyAmount(summary.monthlyMinor, summary.currency)}
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Monthly subscription</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900">
-            {formatCurrencyAmount(summary.monthlyMinor, summary.currency)}
-          </p>
-        </div>
-      </div>
 
-      {summary.addonLines.length > 0 ? (
-        <div className="mt-5 border-t border-zinc-200 pt-4">
-          <p className={AGREEMENT_MODAL_META_LABEL_CLASSES}>Add-ons</p>
-          <ul className="mt-2 space-y-2">
-            {summary.addonLines.map((line) => (
-              <li
-                key={line.id}
-                className="flex items-baseline justify-between gap-3 text-sm text-zinc-900"
-              >
-                <span>
-                  {line.label}
-                  {line.quantity > 1 ? (
-                    <span className="text-zinc-500"> × {line.quantity}</span>
-                  ) : null}
-                </span>
-                <span className="tabular-nums text-zinc-900">
-                  {formatCurrencyAmount(line.lineTotalMinor, summary.currency)}
-                  {line.billingKind === "one_off" ? (
-                    <span className="text-zinc-500"> one-time</span>
-                  ) : (
-                    <span className="text-zinc-500">/mo</span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+        {summary.addonLines.length > 0 ? (
+          <div className="border-t border-zinc-200 pt-4">
+            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Add-ons</p>
+            <ul className="mt-2 space-y-2">
+              {summary.addonLines.map((line) => (
+                <li
+                  key={line.id}
+                  className="flex items-baseline justify-between gap-3 text-sm text-zinc-900"
+                >
+                  <span>
+                    {line.label}
+                    {line.quantity > 1 ? (
+                      <span className="text-zinc-500"> × {line.quantity}</span>
+                    ) : null}
+                  </span>
+                  <span className="tabular-nums text-zinc-900">
+                    {formatCurrencyAmount(line.lineTotalMinor, summary.currency)}
+                    {line.billingKind === "one_off" ? (
+                      <span className="text-zinc-500"> one-time</span>
+                    ) : (
+                      <span className="text-zinc-500">/mo</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
-      {summary.upfrontMinor > 0 ? (
-        <div className="mt-5 flex items-baseline justify-between border-t border-zinc-200 pt-4 text-sm">
-          <span className="font-medium text-zinc-900">Upfront fee</span>
-          <span className="tabular-nums font-semibold text-zinc-900">
-            {formatCurrencyAmount(summary.upfrontMinor, summary.currency)}
-            <span className="font-normal text-zinc-500"> one-time</span>
+        {summary.upfrontMinor > 0 ? (
+          <div className="flex items-baseline justify-between border-t border-zinc-200 pt-4 text-sm">
+            <span className="font-medium text-zinc-900">Upfront fee</span>
+            <span className="tabular-nums font-semibold text-zinc-900">
+              {formatCurrencyAmount(summary.upfrontMinor, summary.currency)}
+              <span className="font-normal text-zinc-500"> one-time</span>
+            </span>
+          </div>
+        ) : null}
+
+        <div className="flex items-baseline justify-between rounded-xl bg-zinc-100 px-4 py-3">
+          <span className="text-sm font-semibold text-zinc-900">Monthly subscription</span>
+          <span className="text-lg font-semibold tabular-nums text-zinc-900">
+            {formatCurrencyAmount(summary.monthlyTotalMinor, summary.currency)}
           </span>
         </div>
-      ) : null}
-
-      <div className="mt-5 flex items-baseline justify-between rounded-xl bg-zinc-100 px-4 py-3">
-        <span className="text-sm font-semibold text-zinc-900">Monthly subscription</span>
-        <span className="text-lg font-semibold tabular-nums text-zinc-900">
-          {formatCurrencyAmount(summary.monthlyTotalMinor, summary.currency)}
-        </span>
-      </div>
-      {summary.oneOffAddonsMinor > 0 ? (
-        <p className="mt-2 text-right text-xs text-zinc-500">
-          Plus {formatCurrencyAmount(summary.oneOffAddonsMinor, summary.currency)} in one-time add-ons due at
-          signing.
-        </p>
-      ) : null}
-    </div>
+        {summary.oneOffAddonsMinor > 0 ? (
+          <p className="text-right text-xs text-zinc-500">
+            Plus {formatCurrencyAmount(summary.oneOffAddonsMinor, summary.currency)} in one-time add-ons due at
+            signing.
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
 function NoPackageSelectionCard() {
   return (
-    <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-5 text-sm text-zinc-500">
-      No plan selected yet. Choose a plan in the proposal above before signing —
-      your selection will appear here automatically.
-    </div>
+    <Card className="rounded-2xl border-dashed border-zinc-200 bg-zinc-50 py-5 shadow-none">
+      <CardContent className="text-sm text-zinc-500">
+        No plan selected yet. Choose a plan in the proposal above before signing —
+        your selection will appear here automatically.
+      </CardContent>
+    </Card>
   );
 }
 
@@ -666,7 +669,7 @@ export function AgreementBlockPublic({
             >
               <div className="flex h-full min-h-0 w-[min(18rem,88vw)] flex-col">
                 <div className="shrink-0 border-b px-4 py-3">
-                  <p className={cn(AGREEMENT_MODAL_META_LABEL_CLASSES, "tracking-[0.16em]")}>Jump to</p>
+                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Jump to</p>
                 </div>
                 <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Agreement sections">
                   <ul className="space-y-0.5">
@@ -862,7 +865,7 @@ export function AgreementBlockPublic({
 }
 
 function AgreementSectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className={AGREEMENT_MODAL_META_LABEL_CLASSES}>{children}</p>;
+  return <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{children}</p>;
 }
 
 /** Shown only in print/PDF after the agreement is signed — mirrors the e-signature capture. */

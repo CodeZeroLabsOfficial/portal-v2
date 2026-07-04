@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronRight, CreditCard, Loader2, PenLine, Upload } from "lucide-react";
+import { ChevronRight, CreditCard, Loader2, PenLine, Upload } from "lucide-react";
+import { AgreementDisclaimerCheckbox } from "@/components/features/proposal/agreement/disclaimer-checkbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,6 +27,7 @@ import {
   todayIsoDateInTimeZone,
 } from "@/lib/proposal/public/locality-dates";
 import type { ProposalPublicSubscriptionBillingSnapshot } from "@/lib/schemas/proposal-public-subscription";
+import { AGREEMENT_MODAL_ACCEPT_DESCRIPTION_CLASSES, AGREEMENT_MODAL_INK_TEXT_CLASSES } from "@/lib/proposal/public/public-typography";
 import { AGREEMENT_MODAL_POPOVER_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 import { ProposalPublicSubscriptionFormPanel } from "@/components/proposal/proposal-public-subscription-form-panel";
@@ -714,12 +716,17 @@ export function AgreementSignatureForm({
         ) : null}
         <CardContent className={cn("pt-6 sm:pt-8", formLocked && "pointer-events-none opacity-60")}>
           <FieldSet className="mx-auto max-w-md gap-0">
-            <FieldLegend className="mb-0 w-full text-center text-2xl font-semibold tracking-tight sm:text-[26px]">
+            <h3
+              className={cn(
+                "text-center text-2xl font-semibold tracking-tight sm:text-[26px]",
+                AGREEMENT_MODAL_INK_TEXT_CLASSES,
+              )}
+            >
               Accept
-            </FieldLegend>
-            <FieldDescription className="text-center">
+            </h3>
+            <p className={AGREEMENT_MODAL_ACCEPT_DESCRIPTION_CLASSES}>
               To accept this document, fill out the form and click the button below.
-            </FieldDescription>
+            </p>
 
             <FieldGroup className="mt-8 gap-5">
               <Field>
@@ -1131,80 +1138,30 @@ export function AgreementSignatureForm({
 
           <div className="mx-auto mt-8 max-w-md space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/60 p-4">
             {electronicSignatureDisclaimerEnabled ? (
-              <label
-                className={cn(
-                  "group flex cursor-pointer items-start gap-3 text-sm leading-snug text-[#1a1a5e]",
-                  (disabled || formLocked) && "pointer-events-none cursor-not-allowed opacity-60",
-                )}
+              <AgreementDisclaimerCheckbox
+                checked={electronicAgreed}
+                onCheckedChange={(checked) => {
+                  onDismissError?.();
+                  setElectronicAgreed(checked);
+                }}
+                disabled={disabled || formLocked}
+                ctaColor={ctaColor}
               >
-                <span className="relative mt-0.5 size-8 shrink-0">
-                  <input
-                    type="checkbox"
-                    className="absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                    checked={electronicAgreed}
-                    onChange={(e) => {
-                      onDismissError?.();
-                      setElectronicAgreed(e.target.checked);
-                    }}
-                    disabled={disabled || formLocked}
-                  />
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex size-8 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition-colors",
-                      "group-focus-within:ring-2 group-focus-within:ring-slate-400/45 group-focus-within:ring-offset-2 group-focus-within:ring-offset-zinc-50",
-                    )}
-                    style={electronicAgreed ? { backgroundColor: ctaColor } : undefined}
-                  >
-                    <Check
-                      className="size-[15px] text-white opacity-0 transition-opacity duration-150 group-has-[:checked]:opacity-100"
-                      strokeWidth={2.75}
-                      aria-hidden
-                    />
-                  </span>
-                </span>
-                <span>
-                  I agree that my electronic signature is as valid and legally binding as a handwritten signature.
-                </span>
-              </label>
+                I agree that my electronic signature is as valid and legally binding as a handwritten signature.
+              </AgreementDisclaimerCheckbox>
             ) : null}
             {termsReadDisclaimerEnabled ? (
-              <label
-                className={cn(
-                  "group flex cursor-pointer items-start gap-3 text-sm leading-snug text-[#1a1a5e]",
-                  (disabled || formLocked) && "pointer-events-none cursor-not-allowed opacity-60",
-                )}
+              <AgreementDisclaimerCheckbox
+                checked={termsAgreed}
+                onCheckedChange={(checked) => {
+                  onDismissError?.();
+                  setTermsAgreed(checked);
+                }}
+                disabled={disabled || formLocked}
+                ctaColor={ctaColor}
               >
-                <span className="relative mt-0.5 size-8 shrink-0">
-                  <input
-                    type="checkbox"
-                    className="absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                    checked={termsAgreed}
-                    onChange={(e) => {
-                      onDismissError?.();
-                      setTermsAgreed(e.target.checked);
-                    }}
-                    disabled={disabled || formLocked}
-                  />
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex size-8 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition-colors",
-                      "group-focus-within:ring-2 group-focus-within:ring-slate-400/45 group-focus-within:ring-offset-2 group-focus-within:ring-offset-zinc-50",
-                    )}
-                    style={termsAgreed ? { backgroundColor: ctaColor } : undefined}
-                  >
-                    <Check
-                      className="size-[15px] text-white opacity-0 transition-opacity duration-150 group-has-[:checked]:opacity-100"
-                      strokeWidth={2.75}
-                      aria-hidden
-                    />
-                  </span>
-                </span>
-                <span>
-                  I have read and agree to the terms of this {agreementTitle.toLowerCase()}.
-                </span>
-              </label>
+                I have read and agree to the terms of this {agreementTitle.toLowerCase()}.
+              </AgreementDisclaimerCheckbox>
             ) : null}
           </div>
 
