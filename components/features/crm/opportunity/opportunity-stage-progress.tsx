@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import { OPPORTUNITY_STAGES, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
+import { opportunityStageChevronActiveClasses } from "@/lib/crm/opportunity-stage-chevron";
 import { opportunityStageBadgeDisplay } from "@/lib/crm/status-badges";
 import { cn } from "@/lib/utils";
 import { useOpportunityStageMutation } from "@/hooks/use-opportunity-stage-mutation";
@@ -28,9 +29,7 @@ function stageVariantClasses(
   variant: "active" | "completed" | "upcoming"
 ): string {
   if (variant === "active") {
-    if (stage === "lost") return "bg-destructive/15 text-destructive";
-    if (stage === "won") return "bg-emerald-500/15 text-emerald-500";
-    return "bg-primary/15 text-primary";
+    return opportunityStageChevronActiveClasses(stage);
   }
   if (variant === "completed") {
     return "bg-muted text-foreground/80";
