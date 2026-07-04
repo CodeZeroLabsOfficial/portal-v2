@@ -20,7 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProposalTemplatePickerState } from "@/hooks/use-proposal-template-picker-state";
-import { createDraftProposalFromCustomerAction } from "@/server/actions/proposals-crm";
+import {
+  createDraftProposalFromCustomerAction,
+  createDraftProposalFromOpportunityAction,
+} from "@/server/actions/proposals-crm";
 import type { ProposalTemplateRecord } from "@/types/proposal-template";
 
 export interface AddProposalDialogProps {
@@ -28,6 +31,8 @@ export interface AddProposalDialogProps {
   onOpenChange: (open: boolean) => void;
   customerId: string;
   templates: ProposalTemplateRecord[];
+  /** When set, creates a proposal linked to this opportunity (stage + activity side effects). */
+  opportunityId?: string;
 }
 
 export function AddProposalDialog({
@@ -35,6 +40,7 @@ export function AddProposalDialog({
   onOpenChange,
   customerId,
   templates,
+  opportunityId,
 }: AddProposalDialogProps) {
   const router = useRouter();
   const { proposalTemplateId, setProposalTemplateId } = useProposalTemplatePickerState(templates);
@@ -49,10 +55,10 @@ export function AddProposalDialog({
 
     setPending(true);
     try {
-      const res = await createDraftProposalFromCustomerAction(
-        customerId,
-        proposalTemplateId.trim() ? proposalTemplateId.trim() : undefined,
-      );
+      const templateId = proposalTemplateId.trim() ? proposalTemplateId.trim() : undefined;
+      const res = opportunityId
+        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId)
+        : await createDraftProposalFromCustomerAction(customerId, templateId);
       if (!res.ok) {
         toast.error(res.message);
         return;

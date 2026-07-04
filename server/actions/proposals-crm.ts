@@ -196,6 +196,24 @@ export async function createDraftProposalFromCustomerAction(
 
     await ref.set(payload);
 
+    try {
+      await db.collection(COLLECTIONS.customerActivities).add({
+        customerId: customer.id,
+        organizationId,
+        type: "proposal_created",
+        title: `Proposal created by ${staffDisplayNameForActivity(user)}`,
+        detail: document.title.trim(),
+        proposalId: ref.id,
+        actorUid: user.uid,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } catch (activityErr) {
+      logError("createDraftProposalFromCustomer_activity_failed", {
+        customerId: customer.id,
+        message: activityErr instanceof Error ? activityErr.message : String(activityErr),
+      });
+    }
+
     revalidatePath("/admin");
     revalidatePath("/admin/proposals");
     revalidatePath(`/admin/proposals/${ref.id}`);
@@ -289,6 +307,7 @@ export async function createDraftProposalFromOpportunityAction(
         type: "proposal_created",
         title: `Proposal created by ${staffDisplayNameForActivity(user)}`,
         detail: document.title.trim(),
+        proposalId: ref.id,
       });
       if (!activityRes.ok) {
         logError("createDraftProposalFromOpportunity_activity_failed", {

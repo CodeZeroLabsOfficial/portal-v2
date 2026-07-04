@@ -425,6 +425,7 @@ function parseOpportunityActivity(
     type,
     title: asString(data.title) ?? "Activity",
     detail: asString(data.detail),
+    proposalId: asString(data.proposalId),
     actorUid: asString(data.actorUid) ?? asString(data.authorUid),
     createdAt,
   };
@@ -539,6 +540,7 @@ export async function appendOpportunitySystemActivity(
     type: OpportunityActivityType;
     title: string;
     detail?: string;
+    proposalId?: string;
   },
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const db = getFirebaseAdminFirestore();
@@ -553,6 +555,7 @@ export async function appendOpportunitySystemActivity(
       type: input.type,
       title: input.title,
       detail: input.detail,
+      proposalId: input.proposalId,
       actorUid: user.uid,
       organizationId: opp.organizationId,
     });

@@ -2,9 +2,10 @@ import { CustomerLatestActivity } from "@/components/features/crm/customer/custo
 import type { CustomerActivityRecord } from "@/types/customer";
 
 export interface CustomerOverviewTabProps {
+  customerId: string;
   activities: CustomerActivityRecord[];
 }
 
-export function CustomerOverviewTab({ activities }: CustomerOverviewTabProps) {
-  return <CustomerLatestActivity activities={activities} />;
+export function CustomerOverviewTab({ customerId, activities }: CustomerOverviewTabProps) {
+  return <CustomerLatestActivity customerId={customerId} activities={activities} />;
 }

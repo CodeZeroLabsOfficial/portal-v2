@@ -12,7 +12,7 @@ export interface CrmActivityPanelShellProps {
 export function CrmActivityPanelShell({ title, action, children }: CrmActivityPanelShellProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
         <Typography variant="h3" className="text-base">
           {title}
         </Typography>

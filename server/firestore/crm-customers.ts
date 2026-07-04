@@ -701,7 +701,8 @@ function parseActivity(id: string, data: Record<string, unknown>): CustomerActiv
     typeRaw === "auth_linked" ||
     typeRaw === "archived" ||
     typeRaw === "lead_converted" ||
-    typeRaw === "opportunity_created"
+    typeRaw === "opportunity_created" ||
+    typeRaw === "proposal_created"
       ? typeRaw
       : "other";
   return {
@@ -711,6 +712,7 @@ function parseActivity(id: string, data: Record<string, unknown>): CustomerActiv
     type,
     title: asString(data.title) ?? "Activity",
     detail: asString(data.detail),
+    proposalId: asString(data.proposalId),
     actorUid: asString(data.actorUid),
     createdAt: coerceTimestampToMillis(data.createdAt),
   };

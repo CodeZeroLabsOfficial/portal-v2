@@ -5,15 +5,17 @@ import { Clock } from "lucide-react";
 
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
 import { CrmActivityPanelShell } from "@/components/shared/crm-activity-panel-shell";
+import { CrmActivityProposalLinkCard } from "@/components/shared/crm-activity-proposal-link-card";
 import { Badge } from "@/components/ui/badge";
 import { opportunityActivityIcon } from "@/lib/crm/opportunity-activity-display";
 import type { OpportunityActivityRecord } from "@/types/opportunity";
 
 export interface OpportunityActivitiesPanelProps {
+  customerId: string;
   activities: OpportunityActivityRecord[];
 }
 
-export function OpportunityActivitiesPanel({ activities }: OpportunityActivitiesPanelProps) {
+export function OpportunityActivitiesPanel({ customerId, activities }: OpportunityActivitiesPanelProps) {
   const timeline = React.useMemo(
     () => [...activities].sort((a, b) => b.createdAt - a.createdAt),
     [activities]
@@ -31,6 +33,11 @@ export function OpportunityActivitiesPanel({ activities }: OpportunityActivities
           {timeline.map((activity, index) => {
             const Icon = opportunityActivityIcon(activity.type);
             const isLast = index === timeline.length - 1;
+            const proposalHref =
+              activity.proposalId?.trim()
+                ? `/admin/proposals/${activity.proposalId}?customer=${encodeURIComponent(customerId)}`
+                : null;
+
             return (
               <li key={activity.id} className={`ms-6 space-y-2 ${isLast ? "" : "mb-10"}`}>
                 <span className="bg-muted absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full border">
@@ -44,20 +51,25 @@ export function OpportunityActivitiesPanel({ activities }: OpportunityActivities
                     </Badge>
                   ) : null}
                 </h3>
+                {activity.type === "proposal_created" && proposalHref ? (
+                  <CrmActivityProposalLinkCard
+                    href={proposalHref}
+                    title={activity.detail?.trim() || "Proposal"}
+                  />
+                ) : activity.detail || activity.type ? (
+                  <p className="text-muted-foreground text-sm">
+                    {activity.detail ?? activity.type.replaceAll("_", " ")}
+                  </p>
+                ) : null}
                 <time
                   dateTime={new Date(activity.createdAt).toISOString()}
                   className="text-muted-foreground flex items-center gap-1.5 text-sm leading-none">
                   <Clock className="size-3" aria-hidden />
                   {new Date(activity.createdAt).toLocaleString(undefined, {
                     dateStyle: "medium",
-                    timeStyle: "short"
+                    timeStyle: "short",
                   })}
                 </time>
-                {activity.detail || activity.type ? (
-                  <p className="text-muted-foreground text-sm">
-                    {activity.detail ?? activity.type.replaceAll("_", " ")}
-                  </p>
-                ) : null}
               </li>
             );
           })}

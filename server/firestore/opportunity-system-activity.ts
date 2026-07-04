@@ -8,6 +8,7 @@ export interface AppendOpportunitySystemActivityInput {
   type: OpportunityActivityType;
   title: string;
   detail?: string;
+  proposalId?: string;
   actorUid?: string;
   organizationId?: string;
 }
@@ -31,6 +32,9 @@ export async function appendOpportunitySystemActivityDb(
 
   const detail = input.detail?.trim();
   if (detail) payload.detail = detail;
+
+  const proposalId = input.proposalId?.trim();
+  if (proposalId) payload.proposalId = proposalId;
 
   const actorUid = input.actorUid?.trim();
   if (actorUid) payload.actorUid = actorUid;

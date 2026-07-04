@@ -73,6 +73,8 @@ export interface OpportunityActivityRecord {
   type: OpportunityActivityType;
   title: string;
   detail?: string;
+  /** Set on `proposal_created` rows for timeline link cards. */
+  proposalId?: string;
   actorUid?: string;
   /** Epoch millis — Firestore `createdAt`. */
   createdAt: number;

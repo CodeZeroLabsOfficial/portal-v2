@@ -1,5 +1,6 @@
 import { Clock } from "lucide-react";
 
+import { CrmActivityProposalLinkCard } from "@/components/shared/crm-activity-proposal-link-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,10 +16,11 @@ import type { CustomerActivityRecord } from "@/types/customer";
 const ACTIVITY_PREVIEW_LIMIT = 10;
 
 export interface CustomerLatestActivityProps {
+  customerId: string;
   activities: CustomerActivityRecord[];
 }
 
-export function CustomerLatestActivity({ activities }: CustomerLatestActivityProps) {
+export function CustomerLatestActivity({ customerId, activities }: CustomerLatestActivityProps) {
   const timeline = [...activities]
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, ACTIVITY_PREVIEW_LIMIT);
@@ -46,6 +48,11 @@ export function CustomerLatestActivity({ activities }: CustomerLatestActivityPro
             {timeline.map((activity, index) => {
               const Icon = customerActivityIcon(activity.type);
               const isLast = index === timeline.length - 1;
+              const proposalHref =
+                activity.proposalId?.trim()
+                  ? `/admin/proposals/${activity.proposalId}?customer=${encodeURIComponent(customerId)}`
+                  : null;
+
               return (
                 <li key={activity.id} className={`ms-6 space-y-2 ${isLast ? "" : "mb-10"}`}>
                   <span className="bg-muted absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full border">
@@ -59,6 +66,16 @@ export function CustomerLatestActivity({ activities }: CustomerLatestActivityPro
                       </Badge>
                     ) : null}
                   </h3>
+                  {activity.type === "proposal_created" && proposalHref ? (
+                    <CrmActivityProposalLinkCard
+                      href={proposalHref}
+                      title={activity.detail?.trim() || "Proposal"}
+                    />
+                  ) : activity.detail || activity.type ? (
+                    <p className="text-muted-foreground text-sm">
+                      {activity.detail ?? activity.type.replaceAll("_", " ")}
+                    </p>
+                  ) : null}
                   <time
                     dateTime={new Date(activity.createdAt).toISOString()}
                     className="text-muted-foreground flex items-center gap-1.5 text-sm leading-none">
@@ -68,11 +85,6 @@ export function CustomerLatestActivity({ activities }: CustomerLatestActivityPro
                       timeStyle: "short"
                     })}
                   </time>
-                  {activity.detail || activity.type ? (
-                    <p className="text-muted-foreground text-sm">
-                      {activity.detail ?? activity.type.replaceAll("_", " ")}
-                    </p>
-                  ) : null}
                 </li>
               );
             })}

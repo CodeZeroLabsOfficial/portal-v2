@@ -101,7 +101,7 @@ export function CustomerDetailView({
           </div>
         }
       panels={{
-        overview: <CustomerOverviewTab activities={activities} />,
+        overview: <CustomerOverviewTab customerId={customer.id} activities={activities} />,
         billing: <CustomerBillingTab customer={customer} invoices={invoices} />,
         subscriptions: (
           <CustomerSubscriptionsTab customer={customer} subscriptions={subscriptions} />

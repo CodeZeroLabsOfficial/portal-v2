@@ -3,6 +3,7 @@ import {
   Archive,
   CircleDot,
   CreditCard,
+  FileText,
   KeyRound,
   MessageSquare,
   Pencil,
@@ -22,6 +23,7 @@ const ACTIVITY_ICON_MAP: Record<CustomerActivityRecord["type"], LucideIcon> = {
   archived: Archive,
   lead_converted: Sparkles,
   opportunity_created: Briefcase,
+  proposal_created: FileText,
   other: CircleDot
 };
 
