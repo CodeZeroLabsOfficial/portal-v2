@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import { Edit, FileIcon, MessageSquare } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -61,6 +62,13 @@ export function TaskDetailSheet({
             <StatusBadge label={columnBadge.label} variant={columnBadge.variant} />
             <StatusBadge label={priorityBadge.label} variant={priorityBadge.variant} />
           </div>
+          <div className="w-full space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="task-progress">Task Progress</Label>
+              <span className="text-muted-foreground text-sm">{progress}%</span>
+            </div>
+            <Progress id="task-progress" value={progress} />
+          </div>
         </SheetHeader>
 
         <div className="space-y-6 p-4">
@@ -74,13 +82,9 @@ export function TaskDetailSheet({
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Assigned To</h4>
-              {assigneeName ? (
-                <Badge variant="outline" className="font-normal">
-                  {assigneeName}
-                </Badge>
-              ) : (
-                <p className="text-muted-foreground text-sm">Unassigned</p>
-              )}
+              <p className="text-muted-foreground text-sm">
+                {assigneeName || "Unassigned"}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -115,11 +119,6 @@ export function TaskDetailSheet({
                 )}
               </div>
             ) : null}
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Progress</h4>
-              <p className="text-muted-foreground text-sm">{progress}%</p>
-            </div>
           </div>
 
           {((task.commentCount ?? 0) > 0 || (task.attachmentCount ?? 0) > 0) ? (

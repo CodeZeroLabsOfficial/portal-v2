@@ -17,13 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -39,7 +32,7 @@ import {
   coerceTaskPriority,
   type TaskPriorityValue
 } from "@/lib/tasks/task-priority";
-import { clampProgressPercent, TASK_PROGRESS_PERCENT_OPTIONS } from "@/lib/tasks/task-progress-options";
+import { clampProgressPercent } from "@/lib/tasks/task-progress-options";
 import { deleteTaskAction, updateTaskAction } from "@/server/actions/tasks-crm";
 import type { TaskRecord } from "@/types/task";
 
@@ -132,7 +125,7 @@ export function TaskEditSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Edit To-Do</SheetTitle>
+            <SheetTitle>Edit Task</SheetTitle>
           </SheetHeader>
 
           <form onSubmit={onSubmit} className="space-y-6 p-4 pt-0" noValidate>
@@ -212,38 +205,19 @@ export function TaskEditSheet({
               disabled={busy || !task}
             />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-task-progress">Progress</Label>
-              <Select
-                value={String(progressPercent)}
-                onValueChange={(value) => setProgressPercent(Number(value))}
-                disabled={busy || !task}>
-                <SelectTrigger id="edit-task-progress" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_PROGRESS_PERCENT_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}%
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={busy || !task}
+                onClick={() => setConfirmDeleteOpen(true)}>
+                Delete task
+              </Button>
+              <Button type="submit" disabled={busy || !task || !title.trim()}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+                Save Changes
+              </Button>
             </div>
-
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full"
-              disabled={busy || !task}
-              onClick={() => setConfirmDeleteOpen(true)}>
-              Delete task
-            </Button>
-
-            <Button type="submit" className="w-full" disabled={busy || !task || !title.trim()}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              Save Changes
-            </Button>
           </form>
         </SheetContent>
       </Sheet>

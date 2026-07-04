@@ -1,20 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { listTaskAssigneeOptionsAction } from "@/server/actions/tasks-crm";
-
-const UNASSIGNED_VALUE = "__unassigned__";
 
 export interface TaskAssigneeFieldProps {
   id?: string;
@@ -26,19 +19,40 @@ export interface TaskAssigneeFieldProps {
   displayNameHint?: string;
 }
 
-/** Kit-style assignee field: removable outline badge + staff select. */
+function findAssigneeMatch(
+  query: string,
+  options: Array<{ uid: string; displayName: string; email: string }>
+) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  const exact = options.find(
+    (opt) =>
+      opt.displayName.toLowerCase() === normalized || opt.email.toLowerCase() === normalized
+  );
+  if (exact) return exact;
+
+  const partial = options.filter(
+    (opt) =>
+      opt.displayName.toLowerCase().includes(normalized) ||
+      opt.email.toLowerCase().includes(normalized)
+  );
+  return partial.length === 1 ? partial[0] : undefined;
+}
+
+/** Kit-style assignee field: removable outline badge + name input with add button. */
 export function TaskAssigneeField({
   id = "task-assignee",
   value,
   onValueChange,
   disabled,
-  allowUnassigned,
   displayNameHint
 }: TaskAssigneeFieldProps) {
   const [options, setOptions] = React.useState<
     Array<{ uid: string; displayName: string; email: string }>
   >([]);
   const [loading, setLoading] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   React.useEffect(() => {
     let cancelled = false;
@@ -53,14 +67,28 @@ export function TaskAssigneeField({
     };
   }, []);
 
+  React.useEffect(() => {
+    if (!value) setSearchQuery("");
+  }, [value]);
+
   const selectedOption = options.find((o) => o.uid === value);
   const badgeLabel = selectedOption?.displayName ?? displayNameHint;
 
-  function handleSelectChange(next: string) {
-    onValueChange(next === UNASSIGNED_VALUE ? "" : next);
+  function handleAddAssignee() {
+    if (disabled || loading) return;
+    const match = findAssigneeMatch(searchQuery, options);
+    if (!match) return;
+    onValueChange(match.uid);
+    setSearchQuery("");
   }
 
-  const selectValue = value || (allowUnassigned ? UNASSIGNED_VALUE : "");
+  function handleRemoveAssignee() {
+    if (disabled) return;
+    onValueChange("");
+    setSearchQuery("");
+  }
+
+  const inputDisabled = disabled || loading || options.length === 0;
 
   return (
     <div className="space-y-2">
@@ -70,39 +98,43 @@ export function TaskAssigneeField({
           <Badge
             variant="outline"
             className="cursor-pointer gap-1 font-normal"
-            onClick={() => !disabled && onValueChange("")}>
+            onClick={handleRemoveAssignee}>
             {badgeLabel}
             <X className="size-3" />
           </Badge>
         </div>
       ) : null}
-      <Select
-        value={selectValue}
-        onValueChange={handleSelectChange}
-        disabled={disabled || loading || (!allowUnassigned && options.length === 0)}>
-        <SelectTrigger id={id} className="w-full">
-          <SelectValue
-            placeholder={
-              loading
-                ? "Loading users…"
-                : options.length === 0
-                  ? "No assignable users"
-                  : "Select assignee"
+      <div className="flex items-center gap-2">
+        <Input
+          id={id}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={
+            loading
+              ? "Loading users…"
+              : options.length === 0
+                ? "No assignable users"
+                : "Enter user name"
+          }
+          disabled={inputDisabled}
+          autoComplete="off"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddAssignee();
             }
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {allowUnassigned ? (
-            <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
-          ) : null}
-          {options.map((opt) => (
-            <SelectItem key={opt.uid} value={opt.uid}>
-              {opt.displayName}
-              {opt.email ? ` (${opt.email})` : ""}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={inputDisabled || !searchQuery.trim()}
+          onClick={handleAddAssignee}
+          aria-label="Add assignee">
+          <Plus className="size-4" />
+        </Button>
+      </div>
     </div>
   );
 }
