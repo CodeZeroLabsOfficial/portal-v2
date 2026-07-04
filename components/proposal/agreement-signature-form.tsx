@@ -1,16 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronRight, CreditCard, Loader2, PenLine, Upload } from "lucide-react";
+import { ChevronRight, CreditCard, Loader2, PenLine, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   normalizeLocalityTimeZone,
   todayIsoDateInTimeZone,
@@ -192,20 +200,20 @@ function AgreementFlowAccordionTrigger({
       disabled={disabled}
       onClick={onToggle}
       className={cn(
-        "flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/90 p-4 text-left shadow-sm transition-colors",
-        "hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50",
+        "flex w-full items-center gap-4 rounded-xl border border-border bg-muted/50 p-4 text-left shadow-sm transition-colors",
+        "hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         disabled && "cursor-not-allowed opacity-60",
       )}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-800 [&>svg]:h-5 [&>svg]:w-5">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary [&>svg]:h-5 [&>svg]:w-5">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-medium text-slate-700">{title}</span>
-        {subtitle ? <span className="mt-0.5 block text-sm text-slate-500">{subtitle}</span> : null}
+        <span className="block text-[15px] font-medium text-foreground">{title}</span>
+        {subtitle ? <span className="mt-0.5 block text-sm text-muted-foreground">{subtitle}</span> : null}
       </span>
       <ChevronRight
-        className={cn("h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200", open && "rotate-90")}
+        className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")}
         aria-hidden
       />
     </button>
@@ -690,34 +698,32 @@ export function AgreementSignatureForm({
 
   return (
     <form className="space-y-5" onSubmit={handleFinalSubmit} noValidate aria-busy={formLocked}>
-      <div className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
+      <div className="relative rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-8">
         {formLocked ? (
           <div
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[1px]"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-background/85 backdrop-blur-[1px]"
             aria-live="polite"
           >
-            <Loader2 className="h-8 w-8 animate-spin text-[#1a1a5e]" aria-hidden />
-            <p className="mt-3 text-sm font-semibold text-zinc-800">Signing agreement…</p>
-            <p className="mt-1 max-w-[14rem] text-center text-xs text-zinc-500">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+            <p className="mt-3 text-sm font-semibold text-foreground">Signing agreement…</p>
+            <p className="mt-1 max-w-[14rem] text-center text-xs text-muted-foreground">
               Please wait while we record your acceptance
               {subscriptionBillingInModal ? " and set up your account." : "."}
             </p>
           </div>
         ) : null}
         <div className={cn(formLocked && "pointer-events-none opacity-60")}>
-          <div className="mx-auto max-w-md">
-            <h3 className="text-center text-2xl font-semibold tracking-tight text-[#1a1a5e] sm:text-[26px]">
+          <FieldSet className="mx-auto max-w-md gap-0">
+            <FieldLegend className="mb-0 w-full text-center text-2xl font-semibold tracking-tight sm:text-[26px]">
               Accept
-            </h3>
-            <p className="mt-2 text-center text-sm leading-relaxed text-zinc-500">
+            </FieldLegend>
+            <FieldDescription className="text-center">
               To accept this document, fill out the form and click the button below.
-            </p>
+            </FieldDescription>
 
-            <div className="mt-8 space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="agreement-accept-name" className="text-sm font-medium text-zinc-900">
-                  Name
-                </Label>
+            <FieldGroup className="mt-8 gap-5">
+              <Field>
+                <FieldLabel htmlFor="agreement-accept-name">Name</FieldLabel>
                 <Input
                   id="agreement-accept-name"
                   autoComplete="name"
@@ -728,14 +734,11 @@ export function AgreementSignatureForm({
                     setAcceptName(e.target.value);
                   }}
                   disabled={disabled || formLocked}
-                  className="h-11 border-zinc-200 bg-white text-base text-zinc-900"
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-2">
-                <Label htmlFor="agreement-accept-email" className="text-sm font-medium text-zinc-900">
-                  Email
-                </Label>
+              <Field>
+                <FieldLabel htmlFor="agreement-accept-email">Email</FieldLabel>
                 <Input
                   id="agreement-accept-email"
                   type="email"
@@ -747,14 +750,14 @@ export function AgreementSignatureForm({
                     setAcceptEmail(e.target.value);
                   }}
                   disabled={disabled || formLocked}
-                  className="h-11 border-zinc-200 bg-white text-base text-zinc-900"
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-2">
-                <Label htmlFor="agreement-accept-org" className="text-sm font-medium text-zinc-900">
-                  Organization <span className="font-normal text-zinc-500">(optional)</span>
-                </Label>
+              <Field>
+                <FieldLabel htmlFor="agreement-accept-org">
+                  Organization{" "}
+                  <span className="font-normal text-muted-foreground">(optional)</span>
+                </FieldLabel>
                 <Input
                   id="agreement-accept-org"
                   autoComplete="organization"
@@ -765,9 +768,8 @@ export function AgreementSignatureForm({
                     setAcceptOrg(e.target.value);
                   }}
                   disabled={disabled || formLocked}
-                  className="h-11 border-zinc-200 bg-white text-base text-zinc-900"
                 />
-              </div>
+              </Field>
 
               <div className="space-y-3 pt-1">
                 {eSignaturesEnabled ? (
@@ -788,8 +790,8 @@ export function AgreementSignatureForm({
                   />
                   <AgreementAccordionPanel open={signSectionOpen} className={signSectionOpen ? "mt-3" : undefined}>
                     <>
-                      <div className="space-y-2">
-                      <Label className="text-sm font-medium text-[#3e4756]">E-signature</Label>
+                      <Field>
+                      <FieldLabel>E-signature</FieldLabel>
                       {capturedDataUrl ? (
                         <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
@@ -797,16 +799,16 @@ export function AgreementSignatureForm({
                               type="button"
                               disabled={disabled || formLocked}
                               className={cn(
-                                "group w-full rounded-lg border border-zinc-300 bg-white text-left outline-none transition-colors",
-                                "hover:border-zinc-400 hover:bg-zinc-50/40 focus-visible:ring-2 focus-visible:ring-zinc-400/60",
+                                "group w-full rounded-md border border-input bg-background text-left outline-none transition-colors",
+                                "hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50",
                                 (disabled || formLocked) && "cursor-not-allowed opacity-60",
                               )}
                               aria-label="E-signature options"
                             >
                               <div className="relative px-3 pb-3.5 pt-3">
                                 <div className="mb-2 flex min-h-6 w-full items-center justify-between gap-3">
-                                  <span className="shrink-0 text-xs font-medium text-slate-600">Signed</span>
-                                  <span className="min-w-0 shrink truncate text-right text-xs font-medium tabular-nums text-slate-600">
+                                  <span className="shrink-0 text-xs font-medium text-muted-foreground">Signed</span>
+                                  <span className="min-w-0 shrink truncate text-right text-xs font-medium tabular-nums text-muted-foreground">
                                     {signatureBannerDate || "—"}
                                   </span>
                                 </div>
@@ -821,21 +823,8 @@ export function AgreementSignatureForm({
                               </div>
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            sideOffset={8}
-                            className={cn(
-                              "z-[100] min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white p-0",
-                              "shadow-[0_8px_32px_rgba(15,23,42,0.12),0_2px_8px_rgba(15,23,42,0.06)]",
-                              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-                              "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2",
-                            )}
-                          >
+                          <DropdownMenuContent align="start" sideOffset={8} className="z-[100] min-w-[11rem]">
                             <DropdownMenuItem
-                              className={cn(
-                                "cursor-pointer justify-start rounded-none px-5 py-3 text-left text-[15px] font-medium leading-snug text-[#2d334a]",
-                                "focus:bg-slate-50 focus:text-[#2d334a] data-[highlighted]:bg-slate-50 data-[highlighted]:text-[#2d334a]",
-                              )}
                               onSelect={() => {
                                 clearCapturedSignature();
                               }}
@@ -843,10 +832,6 @@ export function AgreementSignatureForm({
                               Clear
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className={cn(
-                                "cursor-pointer justify-start rounded-none px-5 py-3 text-left text-[15px] font-medium leading-snug text-[#2d334a]",
-                                "focus:bg-slate-50 focus:text-[#2d334a] data-[highlighted]:bg-slate-50 data-[highlighted]:text-[#2d334a]",
-                              )}
                               onSelect={() => {
                                 openAdoptPanelForEdit();
                               }}
@@ -861,29 +846,29 @@ export function AgreementSignatureForm({
                           disabled={disabled || formLocked}
                           onClick={openAdoptPanel}
                           className={cn(
-                            "w-full rounded-lg border border-zinc-300 bg-white outline-none transition-colors",
-                            "hover:border-zinc-400 hover:bg-zinc-50/40 focus-visible:ring-2 focus-visible:ring-zinc-400/60",
+                            "w-full rounded-md border border-input bg-background outline-none transition-colors",
+                            "hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50",
                             (disabled || formLocked) && "cursor-not-allowed opacity-60",
                           )}
                         >
                           <div className="flex min-h-[7.25rem] flex-col items-center justify-center px-4 py-6 sm:min-h-[7.75rem]">
-                            <span className="text-lg font-semibold tracking-tight text-[#1a1a5e]">Sign</span>
+                            <span className="text-lg font-semibold tracking-tight text-foreground">Sign</span>
                           </div>
                         </button>
                       )}
-                    </div>
+                    </Field>
 
                     {adoptOpen ? (
                       <div
                         ref={adoptPanelRef}
-                        className="mx-auto mt-6 max-w-md border-t border-zinc-200 pt-8"
+                        className="mx-auto mt-6 max-w-md border-t border-border pt-8"
                         role="region"
                         aria-label="Adopt your signature"
                       >
-                        <h4 className="text-xl font-semibold tracking-tight text-[#1a1a5e] sm:text-2xl">
+                        <FieldLegend className="mb-0 text-xl font-semibold tracking-tight sm:text-2xl">
                           Adopt your signature
-                        </h4>
-                        <div className="mt-5 flex rounded-lg bg-zinc-100 p-1">
+                        </FieldLegend>
+                        <div className="mt-5 flex rounded-lg bg-muted p-1">
                           {(["type", "draw", "upload"] as const).map((m) => (
                             <button
                               key={m}
@@ -897,8 +882,8 @@ export function AgreementSignatureForm({
                               className={cn(
                                 "flex-1 rounded-md py-2.5 text-sm font-semibold transition-all",
                                 adoptTab === m
-                                  ? "bg-white text-[#1a1a5e] shadow-sm"
-                                  : "text-zinc-600 hover:text-zinc-900",
+                                  ? "bg-background text-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground",
                               )}
                             >
                               {m === "type" ? "Type" : m === "draw" ? "Draw" : "Upload"}
@@ -907,19 +892,20 @@ export function AgreementSignatureForm({
                         </div>
 
                         {adoptTab === "draw" ? (
-                          <div className="mt-5 space-y-2">
+                          <Field className="mt-5">
                             <div className="flex items-center justify-between gap-3">
-                              <span className="text-sm font-medium text-zinc-900">Draw your signature</span>
-                              <button
+                              <FieldLabel>Draw your signature</FieldLabel>
+                              <Button
                                 type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={clearAdoptSignature}
                                 disabled={disabled || formLocked}
-                                className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-700"
                               >
                                 Clear
-                              </button>
+                              </Button>
                             </div>
-                            <div className="min-h-[min(200px,38svh)] overflow-hidden rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 sm:min-h-0">
+                            <div className="min-h-[min(200px,38svh)] overflow-hidden rounded-md border border-dashed border-input bg-muted/30 sm:min-h-0">
                               <canvas
                                 ref={canvasRef}
                                 className="block w-full cursor-crosshair touch-none"
@@ -934,29 +920,22 @@ export function AgreementSignatureForm({
                                 }}
                               />
                             </div>
-                          </div>
+                          </Field>
                         ) : adoptTab === "type" ? (
-                          <div className="mt-5 space-y-4">
-                            <div className="flex items-center justify-between gap-3">
-                              <Label htmlFor="agreement-typed-signature" className="text-sm font-medium text-zinc-900">
-                                Enter your signature
-                              </Label>
-                              <button
-                                type="button"
-                                onClick={clearAdoptSignature}
-                                disabled={disabled || formLocked}
-                                className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-700"
-                              >
-                                Clear
-                              </button>
-                            </div>
-                            <div
-                              className={cn(
-                                "rounded-lg border border-zinc-200 bg-white transition-colors",
-                                "focus-within:ring-2 focus-within:ring-zinc-400/60 focus-within:ring-offset-0",
-                                (disabled || formLocked) && "opacity-60",
-                              )}
-                            >
+                          <FieldGroup className="mt-5 gap-4">
+                            <Field>
+                              <div className="flex items-center justify-between gap-3">
+                                <FieldLabel htmlFor="agreement-typed-signature">Enter your signature</FieldLabel>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={clearAdoptSignature}
+                                  disabled={disabled || formLocked}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
                               <Input
                                 id="agreement-typed-signature"
                                 autoComplete="off"
@@ -967,39 +946,41 @@ export function AgreementSignatureForm({
                                   setTypedSignatureText(e.target.value);
                                 }}
                                 disabled={disabled || formLocked}
-                                className="h-12 border-0 bg-transparent text-base text-zinc-900 shadow-none placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                               />
-                            </div>
-                            <div className="rounded-xl border border-zinc-200 bg-white px-4 py-6 sm:px-6 sm:py-8">
-                              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Preview</p>
-                              <p
-                                className={cn(
-                                  "mt-2 break-words text-3xl leading-snug sm:text-4xl",
-                                  typedSignatureText.trim() ? "text-[#1a1a5e]" : "text-zinc-400",
-                                )}
-                                style={{
-                                  fontFamily: '"Segoe Script", "Brush Script MT", "Apple Chancery", cursive',
-                                  fontStyle: "italic",
-                                }}
-                              >
-                                {typedSignatureText.trim() || "Type your signature"}
-                              </p>
-                            </div>
-                          </div>
+                            </Field>
+                            <Field>
+                              <FieldDescription className="text-xs uppercase tracking-wider">
+                                Preview
+                              </FieldDescription>
+                              <div className="rounded-md border border-input bg-background px-4 py-6 sm:px-6 sm:py-8">
+                                <p
+                                  className={cn(
+                                    "break-words text-3xl leading-snug sm:text-4xl",
+                                    typedSignatureText.trim() ? "text-foreground" : "text-muted-foreground",
+                                  )}
+                                  style={{
+                                    fontFamily: '"Segoe Script", "Brush Script MT", "Apple Chancery", cursive',
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {typedSignatureText.trim() || "Type your signature"}
+                                </p>
+                              </div>
+                            </Field>
+                          </FieldGroup>
                         ) : (
-                          <div className="mt-5 space-y-2">
+                          <Field className="mt-5">
                             <div className="flex items-center justify-between gap-3">
-                              <span className="text-sm font-medium text-zinc-900">
-                                Upload an image of your signature
-                              </span>
-                              <button
+                              <FieldLabel>Upload an image of your signature</FieldLabel>
+                              <Button
                                 type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={clearAdoptSignature}
                                 disabled={disabled || formLocked}
-                                className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-700"
                               >
                                 Clear
-                              </button>
+                              </Button>
                             </div>
                             <input
                               ref={fileInputRef}
@@ -1026,7 +1007,7 @@ export function AgreementSignatureForm({
                                 e.preventDefault();
                                 void onUploadFiles(e.dataTransfer.files);
                               }}
-                              className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-zinc-300 bg-zinc-50/60 px-4 py-8 text-center transition-colors hover:border-zinc-400 hover:bg-zinc-50"
+                              className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-input bg-muted/30 px-4 py-8 text-center transition-colors hover:border-ring/50 hover:bg-muted/50"
                               onClick={() => fileInputRef.current?.click()}
                             >
                               {uploadPreview ? (
@@ -1038,27 +1019,28 @@ export function AgreementSignatureForm({
                                 />
                               ) : (
                                 <>
-                                  <Upload className="h-8 w-8 text-zinc-400" aria-hidden />
-                                  <p className="text-sm text-zinc-600">
+                                  <Upload className="h-8 w-8 text-muted-foreground" aria-hidden />
+                                  <p className="text-sm text-muted-foreground">
                                     Drag an image here, or{" "}
-                                    <span className="font-semibold text-[#1a1a5e] underline">browse</span>
+                                    <span className="font-semibold text-foreground underline">browse</span>
                                   </p>
                                 </>
                               )}
                             </div>
-                          </div>
+                          </Field>
                         )}
 
-                        <p className="mt-5 text-xs leading-relaxed text-zinc-600">
+                        <FieldDescription className="mt-5">
                           By selecting Adopt and sign, I agree that my electronic signature is as valid and legally
                           binding as a handwritten signature.
-                        </p>
+                        </FieldDescription>
 
                         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-3 sm:justify-stretch">
                           <Button
                             type="button"
                             variant="outline"
-                            className="h-11 flex-1 rounded-xl border border-zinc-300 bg-white text-base font-semibold text-zinc-900 shadow-md hover:bg-zinc-50 hover:opacity-95"
+                            size="lg"
+                            className="flex-1"
                             onClick={closeAdoptPanel}
                             disabled={disabled || formLocked}
                           >
@@ -1066,7 +1048,8 @@ export function AgreementSignatureForm({
                           </Button>
                           <Button
                             type="button"
-                            className="h-11 flex-1 rounded-xl border-0 text-base font-semibold shadow-md hover:opacity-95"
+                            size="lg"
+                            className="flex-1 hover:opacity-95"
                             style={{ backgroundColor: ctaColor, color: ctaForeground }}
                             onClick={handleAdoptAndSign}
                             disabled={!canAdopt}
@@ -1080,7 +1063,7 @@ export function AgreementSignatureForm({
                   </AgreementAccordionPanel>
                 </div>
                 ) : (
-                  <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 px-4 py-3 text-sm leading-relaxed text-zinc-700">
+                  <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
                     Electronic signatures are turned off for this proposal. Confirm your name and email below — no
                     drawn or typed signature is required.
                   </div>
@@ -1106,9 +1089,9 @@ export function AgreementSignatureForm({
                     >
                       <div
                         className={cn(
-                          "rounded-xl border bg-white transition-[padding,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none",
+                          "rounded-xl border bg-background transition-[padding,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none",
                           paymentSectionOpen
-                            ? "border-slate-200 p-4 shadow-sm"
+                            ? "border-border p-4 shadow-sm"
                             : "border-transparent p-0 shadow-none",
                         )}
                       >
@@ -1132,94 +1115,50 @@ export function AgreementSignatureForm({
                   </div>
                 ) : null}
               </div>
-            </div>
-          </div>
+            </FieldGroup>
+          </FieldSet>
 
-          <div className="mx-auto mt-8 max-w-md space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/60 p-4">
+          <FieldSet className="mx-auto mt-8 max-w-md gap-4 rounded-xl border border-border bg-muted/30 p-4">
             {electronicSignatureDisclaimerEnabled ? (
-            <label
-              className={cn(
-                "group flex cursor-pointer items-start gap-3 text-sm leading-snug text-[#1a1a5e]",
-                disabled && "pointer-events-none cursor-not-allowed opacity-60",
-              )}
-            >
-              <span className="relative mt-0.5 h-8 w-8 shrink-0">
-                <input
-                  type="checkbox"
-                  className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="agreement-electronic-disclaimer"
                   checked={electronicAgreed}
-                  onChange={(e) => {
+                  onCheckedChange={(checked) => {
                     onDismissError?.();
-                    setElectronicAgreed(e.target.checked);
+                    setElectronicAgreed(checked === true);
                   }}
                   disabled={disabled || formLocked}
                 />
-                <span
-                  aria-hidden
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition-colors",
-                    "group-focus-within:ring-2 group-focus-within:ring-slate-400/45 group-focus-within:ring-offset-2 group-focus-within:ring-offset-zinc-50",
-                  )}
-                  style={electronicAgreed ? { backgroundColor: ctaColor } : undefined}
-                >
-                  <Check
-                    className="h-[15px] w-[15px] text-white opacity-0 transition-opacity duration-150 group-has-[:checked]:opacity-100"
-                    strokeWidth={2.75}
-                    aria-hidden
-                  />
-                </span>
-              </span>
-              <span>
-                I agree that my electronic signature is as valid and legally binding as a handwritten signature.
-              </span>
-            </label>
+                <FieldLabel htmlFor="agreement-electronic-disclaimer" className="font-normal">
+                  I agree that my electronic signature is as valid and legally binding as a handwritten signature.
+                </FieldLabel>
+              </Field>
             ) : null}
             {termsReadDisclaimerEnabled ? (
-            <label
-                className={cn(
-                  "group flex cursor-pointer items-start gap-3 text-sm leading-snug text-[#1a1a5e]",
-                  disabled && "pointer-events-none cursor-not-allowed opacity-60",
-                )}
-              >
-                <span className="relative mt-0.5 h-8 w-8 shrink-0">
-                  <input
-                    type="checkbox"
-                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                    checked={termsAgreed}
-                    onChange={(e) => {
-                      onDismissError?.();
-                      setTermsAgreed(e.target.checked);
-                    }}
-                    disabled={disabled || formLocked}
-                  />
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition-colors",
-                      "group-focus-within:ring-2 group-focus-within:ring-slate-400/45 group-focus-within:ring-offset-2 group-focus-within:ring-offset-zinc-50",
-                    )}
-                    style={termsAgreed ? { backgroundColor: ctaColor } : undefined}
-                  >
-                    <Check
-                      className="h-[15px] w-[15px] text-white opacity-0 transition-opacity duration-150 group-has-[:checked]:opacity-100"
-                      strokeWidth={2.75}
-                      aria-hidden
-                    />
-                  </span>
-                </span>
-                <span>
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="agreement-terms-disclaimer"
+                  checked={termsAgreed}
+                  onCheckedChange={(checked) => {
+                    onDismissError?.();
+                    setTermsAgreed(checked === true);
+                  }}
+                  disabled={disabled || formLocked}
+                />
+                <FieldLabel htmlFor="agreement-terms-disclaimer" className="font-normal">
                   I have read and agree to the terms of this {agreementTitle.toLowerCase()}
                   {proposalTitle ? (
                     <>
                       {" "}
-                      for <span className="font-medium text-[#1a1a5e]">{proposalTitle}</span>
+                      for <span className="font-medium">{proposalTitle}</span>
                     </>
                   ) : null}
                   .
-                </span>
-              </label>
+                </FieldLabel>
+              </Field>
             ) : null}
-          </div>
+          </FieldSet>
 
           {showError ? (
             <p className="mx-auto mt-4 max-w-md text-sm text-destructive" role="alert">
@@ -1228,7 +1167,7 @@ export function AgreementSignatureForm({
           ) : null}
 
           {!disabled ? null : (
-            <p className="mx-auto mt-4 max-w-md text-xs text-zinc-500">
+            <p className="mx-auto mt-4 max-w-md text-xs text-muted-foreground">
               Signing is disabled in preview — the live proposal will accept your customer&apos;s signature here.
             </p>
           )}
@@ -1237,7 +1176,7 @@ export function AgreementSignatureForm({
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full gap-2 rounded-xl text-base font-semibold shadow-md hover:opacity-95"
+              className="h-11 w-full gap-2 hover:opacity-95"
               style={{ backgroundColor: ctaColor, color: ctaForeground }}
               disabled={!canFinalSubmit}
             >

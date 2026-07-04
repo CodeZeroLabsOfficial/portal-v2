@@ -591,6 +591,7 @@ export function AgreementBlockPublic({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
+          showCloseButton={false}
           onEscapeKeyDown={(e) => {
             if (sectionsSidebarOpen) {
               e.preventDefault();
@@ -608,8 +609,6 @@ export function AgreementBlockPublic({
             "print:static print:inset-auto print:h-auto print:max-h-none print:w-full print:max-w-none",
             "print:translate-x-0 print:translate-y-0 print:rounded-none print:shadow-none print:overflow-visible",
             "grid-rows-[auto,1fr] print:grid-rows-1",
-            // Hide the shadcn auto-render close X — our top bar renders its own.
-            "[&>button[aria-label='Close']]:hidden",
             "pt-[max(0px,env(safe-area-inset-top))] sm:pt-0",
           )}
         >
@@ -635,10 +634,10 @@ export function AgreementBlockPublic({
                 variant="outline"
                 size="sm"
                 onClick={onDownload}
-                className="hidden h-9 gap-1.5 border-zinc-200 bg-white px-3 text-zinc-900 hover:bg-zinc-50 sm:inline-flex"
+                className="aspect-square max-sm:p-0"
               >
-                <Download className="h-4 w-4" aria-hidden />
-                Download
+                <Download aria-hidden className="opacity-60 sm:-ms-1" size={16} />
+                <span className="max-sm:sr-only">Download</span>
               </Button>
               <Button
                 type="button"

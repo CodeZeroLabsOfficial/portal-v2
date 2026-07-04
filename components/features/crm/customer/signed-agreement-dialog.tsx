@@ -77,6 +77,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        showCloseButton={false}
         className={cn(
           "z-50 grid gap-0 overflow-hidden border-0 bg-white p-0 text-zinc-900 shadow-2xl",
           "h-dvh w-screen max-w-none top-0 left-0 translate-x-0 translate-y-0 rounded-none",
@@ -86,7 +87,6 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
           "print:static print:inset-auto print:h-auto print:max-h-none print:w-full print:max-w-none",
           "print:translate-x-0 print:translate-y-0 print:rounded-none print:shadow-none print:overflow-visible",
           "grid-rows-[auto,1fr] print:grid-rows-1",
-          "[&>button[aria-label='Close']]:hidden"
         )}>
         {data ? (
           <>
@@ -100,9 +100,9 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                   variant="outline"
                   size="sm"
                   onClick={printSignedAgreement}
-                  className="hidden h-9 gap-1.5 border-zinc-200 bg-white px-3 text-zinc-900 hover:bg-zinc-50 sm:inline-flex">
-                  <Download className="size-4" aria-hidden />
-                  Download
+                  className="aspect-square max-sm:p-0">
+                  <Download aria-hidden className="opacity-60 sm:-ms-1" size={16} />
+                  <span className="max-sm:sr-only">Download</span>
                 </Button>
                 <Button
                   type="button"

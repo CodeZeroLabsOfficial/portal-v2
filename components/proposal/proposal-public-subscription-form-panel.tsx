@@ -14,8 +14,14 @@ import { createProposalPublicSubscriptionAction } from "@/server/actions/proposa
 import { Button } from "@/components/ui/button";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { StripePublicPaymentsUnavailableAlert } from "@/components/shared/stripe-not-configured-alert";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { cn } from "@/lib/utils";
@@ -334,9 +340,9 @@ export function ProposalPublicSubscriptionFormPanel({
       typeof monthlyTotalMinor === "number" &&
       Number.isFinite(monthlyTotalMinor) &&
       monthlyCurrency ? (
-        <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-4">
-          <span className="text-sm font-semibold text-[#1a1a5e]">Monthly total</span>
-          <span className="text-lg font-semibold tabular-nums text-[#1a1a5e]">
+        <div className="flex items-baseline justify-between gap-3 border-b border-border pb-4">
+          <span className="text-sm font-semibold text-foreground">Monthly total</span>
+          <span className="text-lg font-semibold tabular-nums text-foreground">
             {formatCurrencyAmount(monthlyTotalMinor, monthlyCurrency)}
           </span>
         </div>
@@ -367,15 +373,16 @@ export function ProposalPublicSubscriptionFormPanel({
             </dl>
           </div>
         ) : (
-          <h4 className="text-lg font-semibold tracking-tight text-[#1a1a5e]">Payment details</h4>
+          <h4 className="text-lg font-semibold tracking-tight text-foreground">Payment details</h4>
         )}
 
+        <FieldSet className="gap-4">
         {mode === "manage_subscription" ? (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="proposal-public-collection">Collection method</Label>
+          <Field>
+            <FieldLabel htmlFor="proposal-public-collection">Collection method</FieldLabel>
             <select
               id="proposal-public-collection"
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
               disabled={busy}
               value={collectionMethod}
               onChange={(e) =>
@@ -389,12 +396,12 @@ export function ProposalPublicSubscriptionFormPanel({
               <option value="charge_automatically">Automatic charge</option>
               <option value="send_invoice">Send invoice</option>
             </select>
-          </div>
+          </Field>
         ) : null}
 
         {collectionMethod === "send_invoice" && mode === "manage_subscription" ? (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="proposal-public-due">Days until due</Label>
+          <Field>
+            <FieldLabel htmlFor="proposal-public-due">Days until due</FieldLabel>
             <Input
               id="proposal-public-due"
               type="number"
@@ -405,73 +412,71 @@ export function ProposalPublicSubscriptionFormPanel({
               onChange={(e) => form.setValue("daysUntilDue", Number(e.target.value), { shouldValidate: true })}
             />
             {form.formState.errors.daysUntilDue ? (
-              <p className="text-xs text-destructive">{form.formState.errors.daysUntilDue.message}</p>
+              <FieldError>{form.formState.errors.daysUntilDue.message}</FieldError>
             ) : null}
-          </div>
+          </Field>
         ) : (
-          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <Label className="text-sm font-medium text-[#1a1a5e]">
-              {mode === "save_card_only" ? "Payment method" : "Credit card details"}
-            </Label>
-            <select
-              className="flex h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm"
-              aria-label="Saved payment methods"
-              value={showAddCard ? "__add_new__" : effectivePmId ?? ""}
-              disabled={busy || cardLoading}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "__add_new__") {
-                  setShowAddCard(true);
-                  form.setValue("defaultPaymentMethodId", undefined, { shouldValidate: true });
-                  return;
-                }
-                setShowAddCard(false);
-                form.setValue("defaultPaymentMethodId", v || undefined, { shouldValidate: true });
-              }}
-            >
-              <option value="">Select card</option>
-              {savedCards.map((card) => (
-                <option key={card.id} value={card.id}>
-                  {card.summary}
-                </option>
-              ))}
-              <option value="__add_new__">+ Add new card</option>
-            </select>
+          <FieldGroup className="gap-3 rounded-xl border border-border bg-background p-4 shadow-sm">
+            <Field>
+              <FieldLabel htmlFor="proposal-public-payment-method">
+                {mode === "save_card_only" ? "Payment method" : "Credit card details"}
+              </FieldLabel>
+              <select
+                id="proposal-public-payment-method"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                value={showAddCard ? "__add_new__" : effectivePmId ?? ""}
+                disabled={busy || cardLoading}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "__add_new__") {
+                    setShowAddCard(true);
+                    form.setValue("defaultPaymentMethodId", undefined, { shouldValidate: true });
+                    return;
+                  }
+                  setShowAddCard(false);
+                  form.setValue("defaultPaymentMethodId", v || undefined, { shouldValidate: true });
+                }}
+              >
+                <option value="">Select card</option>
+                {savedCards.map((card) => (
+                  <option key={card.id} value={card.id}>
+                    {card.summary}
+                  </option>
+                ))}
+                <option value="__add_new__">+ Add new card</option>
+              </select>
+            </Field>
             {showAddCard ? (
-              <div className="space-y-3 pt-1">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="proposal-inline-cardholder" className="text-sm font-medium text-[#1a1a5e]">
-                      Name on card
-                    </Label>
-                    <Input
-                      id="proposal-inline-cardholder"
-                      placeholder="Full name on card"
-                      autoComplete="cc-name"
-                      disabled={busy || cardSaving}
-                      value={cardholderName}
-                      onChange={(e) => setCardholderName(e.target.value)}
-                      className="h-11 rounded-lg border-slate-200"
-                    />
-                  </div>
-                </div>
+              <FieldGroup className="gap-3 pt-1">
+                <Field>
+                  <FieldLabel htmlFor="proposal-inline-cardholder">Name on card</FieldLabel>
+                  <Input
+                    id="proposal-inline-cardholder"
+                    placeholder="Full name on card"
+                    autoComplete="cc-name"
+                    disabled={busy || cardSaving}
+                    value={cardholderName}
+                    onChange={(e) => setCardholderName(e.target.value)}
+                  />
+                </Field>
                 <div
                   id={cardElementId}
-                  className="min-h-[52px] rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm"
+                  className="min-h-[52px] rounded-md border border-input bg-background px-3 py-3 text-sm"
                 />
-              </div>
+              </FieldGroup>
             ) : null}
             {!publishableKey ? <StripePublicPaymentsUnavailableAlert /> : null}
-            {cardError ? <p className="text-xs text-destructive">{cardError}</p> : null}
+            {cardError ? <FieldError>{cardError}</FieldError> : null}
             {cardLoading ? <p className="text-xs text-muted-foreground">Checking saved cards…</p> : null}
             {mode === "save_card_only" && cardSummary && !showAddCard ? (
-              <p className="text-sm font-medium text-slate-700">Using: {cardSummary}</p>
+              <p className="text-sm font-medium text-muted-foreground">Using: {cardSummary}</p>
             ) : null}
-          </div>
+          </FieldGroup>
         )}
+        </FieldSet>
 
         {mode === "save_card_only" ? (
-          <p className="text-xs leading-relaxed text-slate-500">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             By providing your card information, you allow us to charge your card for future payments in accordance with
             the agreement and applicable terms.
           </p>
