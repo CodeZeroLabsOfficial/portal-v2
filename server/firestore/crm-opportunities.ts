@@ -3,6 +3,10 @@ import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
 import { logError } from "@/lib/common/logging";
 import { coerceTimestampToMillis } from "@/lib/firestore/timestamp";
+import {
+  opportunityStageChangeDetail,
+  type OpportunityStageChangeAttribution,
+} from "@/lib/crm/opportunity-stage-activity";
 import { normalizeOpportunityStage, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import { COLLECTIONS } from "@/server/firestore/collections";
@@ -300,10 +304,16 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
   return { ok: true, customerId };
 }
 
+export interface UpdateOpportunityStageOptions {
+  /** Who triggered the move — system for proposal side effects, user for manual pipeline edits. */
+  attribution?: OpportunityStageChangeAttribution;
+}
+
 export async function updateOpportunityStage(
   user: PortalUser,
   opportunityId: string,
   stage: import("@/types/opportunity").OpportunityStage,
+  options?: UpdateOpportunityStageOptions,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) return { ok: false, message: "Not allowed." };
@@ -322,6 +332,7 @@ export async function updateOpportunityStage(
       updatedAt: FieldValue.serverTimestamp(),
     });
 
+  const attribution = options?.attribution ?? "user";
   const activityType: OpportunityActivityType =
     stage === "won" ? "won" : stage === "lost" ? "lost" : "stage_changed";
   const activityTitle =
@@ -335,7 +346,8 @@ export async function updateOpportunityStage(
     await appendOpportunitySystemActivityDb(db, opportunityId, {
       type: activityType,
       title: activityTitle,
-      actorUid: user.uid,
+      detail: opportunityStageChangeDetail(attribution, user),
+      ...(attribution === "user" ? { actorUid: user.uid } : {}),
       organizationId: existing.organizationId,
     });
   } catch (error) {

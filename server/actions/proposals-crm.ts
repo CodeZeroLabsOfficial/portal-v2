@@ -16,23 +16,10 @@ import { applyProposalTokensToDocument } from "@/lib/proposal/rich-text/template
 import { hydrateAgreementBlocksInDocument } from "@/server/proposal/hydrate-agreement-contract-templates";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { logError } from "@/lib/common/logging";
+import { staffDisplayNameForActivity } from "@/lib/crm/staff-display-name";
 import type { CustomerRecord } from "@/types/customer";
 import type { OpportunityRecord } from "@/types/opportunity";
 import type { ProposalBlock, ProposalBranding, ProposalDocument } from "@/types/proposal";
-import type { PortalUser } from "@/types/user";
-
-/** Label for automated CRM copy — prefers display name, then first/last, then email. */
-function staffDisplayNameForActivity(user: PortalUser): string {
-  const fromDisplay = user.displayName?.trim();
-  if (fromDisplay) return fromDisplay;
-  const fn = user.firstName?.trim() ?? "";
-  const ln = user.lastName?.trim() ?? "";
-  const combined = [fn, ln].filter(Boolean).join(" ").trim();
-  if (combined) return combined;
-  const email = user.email?.trim();
-  if (email) return email;
-  return "Team member";
-}
 
 function formatAddressLine(c: CustomerRecord): string {
   const parts = [c.addressLine1, c.addressLine2, c.city, c.region, c.postalCode, c.country].filter(
@@ -323,7 +310,9 @@ export async function createDraftProposalFromOpportunityAction(
     }
 
     try {
-      const stageRes = await updateOpportunityStage(user, opportunityId, "proposal_sent");
+      const stageRes = await updateOpportunityStage(user, opportunityId, "proposal_sent", {
+        attribution: "system",
+      });
       if (!stageRes.ok) {
         logError("createDraftProposalFromOpportunity_stage_failed", {
           opportunityId,

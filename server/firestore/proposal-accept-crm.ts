@@ -1,5 +1,6 @@
 import { FieldValue, Timestamp, type Firestore } from "firebase-admin/firestore";
 import { logError } from "@/lib/common/logging";
+import { opportunityStageChangeDetail } from "@/lib/crm/opportunity-stage-activity";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { appendOpportunitySystemActivityDb } from "@/server/firestore/opportunity-system-activity";
 import type { ProposalRecord } from "@/types/proposal";
@@ -47,7 +48,7 @@ export async function applyProposalAcceptCrmSideEffects(
           await appendOpportunitySystemActivityDb(db, opportunityId, {
             type: "won",
             title: "Services Agreement signed",
-            detail: `Services agreement signed by ${signerName.trim()}`,
+            detail: opportunityStageChangeDetail("system"),
             organizationId: orgId,
           });
         }
