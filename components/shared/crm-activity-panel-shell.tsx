@@ -4,7 +4,7 @@ import { Typography } from "@/components/ui/typography";
 
 export interface CrmActivityPanelShellProps {
   title: string;
-  action: ReactNode;
+  action?: ReactNode;
   children: ReactNode;
 }
 
@@ -16,7 +16,7 @@ export function CrmActivityPanelShell({ title, action, children }: CrmActivityPa
         <Typography variant="h3" className="text-base">
           {title}
         </Typography>
-        {action}
+        {action ?? null}
       </div>
 
       <div className="bg-card px-4 py-5 sm:px-5">{children}</div>

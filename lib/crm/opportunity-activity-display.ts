@@ -1,22 +1,31 @@
 import type { LucideIcon } from "lucide-react";
-import { Mail, Phone, Pin, Users } from "lucide-react";
+import {
+  CircleDot,
+  FileText,
+  Flag,
+  Sparkles,
+  Trophy,
+  XCircle
+} from "lucide-react";
 
-import type { OpportunityActivityKind } from "@/types/opportunity";
+import type { OpportunityActivityType } from "@/types/opportunity";
 
-const ACTIVITY_KIND_META: Record<
-  OpportunityActivityKind,
+const ACTIVITY_TYPE_META: Record<
+  OpportunityActivityType,
   { label: string; icon: LucideIcon }
 > = {
-  meeting: { label: "Meeting", icon: Users },
-  call: { label: "Phone", icon: Phone },
-  email: { label: "Email", icon: Mail },
-  other: { label: "Other", icon: Pin }
+  created: { label: "Created", icon: Sparkles },
+  stage_changed: { label: "Stage changed", icon: Flag },
+  proposal_created: { label: "Proposal created", icon: FileText },
+  won: { label: "Won", icon: Trophy },
+  lost: { label: "Lost", icon: XCircle },
+  other: { label: "System", icon: CircleDot },
 };
 
-export function opportunityActivityKindMeta(kind: OpportunityActivityKind) {
-  return ACTIVITY_KIND_META[kind] ?? ACTIVITY_KIND_META.other;
+export function opportunityActivityTypeMeta(type: OpportunityActivityType) {
+  return ACTIVITY_TYPE_META[type] ?? ACTIVITY_TYPE_META.other;
 }
 
-export function opportunityActivityIcon(kind: OpportunityActivityKind): LucideIcon {
-  return opportunityActivityKindMeta(kind).icon;
+export function opportunityActivityIcon(type: OpportunityActivityType): LucideIcon {
+  return opportunityActivityTypeMeta(type).icon;
 }

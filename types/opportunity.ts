@@ -38,30 +38,42 @@ export interface OpportunityRecord {
   createdByUid?: string;
 }
 
+export type OpportunityNoteKind = "note" | "call" | "email";
+
+export type OpportunityNoteBodyFormat = "plain" | "html";
+
 /** Free-form note attached to a single opportunity; lives in `opportunity_notes/{noteId}`. */
 export interface OpportunityNoteRecord {
   id: string;
   opportunityId: string;
   organizationId?: string;
   authorUid: string;
+  title?: string;
   body: string;
+  /** Omitted on legacy rows — treat as `"plain"`. */
+  bodyFormat?: OpportunityNoteBodyFormat;
+  kind: OpportunityNoteKind;
   /** Epoch millis — Firestore `createdAt` (Timestamp or number). */
   createdAt: number;
 }
 
-export type OpportunityActivityKind = "meeting" | "call" | "email" | "other";
+export type OpportunityActivityType =
+  | "created"
+  | "stage_changed"
+  | "proposal_created"
+  | "won"
+  | "lost"
+  | "other";
 
-/** Logged interaction (meeting, call, email, etc.); lives in `opportunity_activities/{id}`. */
+/** Server-written audit event; lives in `opportunity_activities/{id}`. */
 export interface OpportunityActivityRecord {
   id: string;
   opportunityId: string;
   organizationId?: string;
-  kind: OpportunityActivityKind;
+  type: OpportunityActivityType;
   title: string;
   detail?: string;
-  /** When the interaction took place — epoch millis (`occurredAt`). */
-  occurredAt: number;
-  authorUid: string;
-  /** Epoch millis — Firestore `createdAt` (Timestamp or number). */
+  actorUid?: string;
+  /** Epoch millis — Firestore `createdAt`. */
   createdAt: number;
 }

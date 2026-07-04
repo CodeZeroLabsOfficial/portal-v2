@@ -3,17 +3,25 @@ import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
 import { logError } from "@/lib/common/logging";
 import { coerceTimestampToMillis } from "@/lib/firestore/timestamp";
-import { normalizeOpportunityStage } from "@/lib/crm/opportunity-stages";
+import { normalizeOpportunityStage, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
+import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { batchGetCustomerRecordsForStaff } from "@/server/firestore/crm-customers";
+import {
+  appendOpportunitySystemActivityDb,
+  parseOpportunityActivityType,
+} from "@/server/firestore/opportunity-system-activity";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import type { CustomerRecord } from "@/types/customer";
 import type {
-  OpportunityActivityKind,
   OpportunityActivityRecord,
+  OpportunityActivityType,
   OpportunityBoardCard,
+  OpportunityNoteBodyFormat,
+  OpportunityNoteKind,
   OpportunityNoteRecord,
   OpportunityRecord,
+  OpportunityStage,
 } from "@/types/opportunity";
 import type { PortalUser } from "@/types/user";
 
@@ -310,6 +318,29 @@ export async function updateOpportunityStage(
       updatedAt: FieldValue.serverTimestamp(),
     });
 
+  const activityType: OpportunityActivityType =
+    stage === "won" ? "won" : stage === "lost" ? "lost" : "stage_changed";
+  const activityTitle =
+    stage === "won"
+      ? "Deal won"
+      : stage === "lost"
+        ? "Deal lost"
+        : `Stage updated to ${opportunityStageLabel(stage)}`;
+
+  try {
+    await appendOpportunitySystemActivityDb(db, opportunityId, {
+      type: activityType,
+      title: activityTitle,
+      actorUid: user.uid,
+      organizationId: existing.organizationId,
+    });
+  } catch (error) {
+    logError("crm_opportunity_stage_activity_failed", {
+      opportunityId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+  }
+
   return { ok: true };
 }
 
@@ -347,16 +378,33 @@ export async function deleteOpportunitiesForCustomerDb(db: AdminDb, customerId: 
   if (snap.size >= 400) await deleteOpportunitiesForCustomerDb(db, customerId);
 }
 
+function parseOpportunityNoteKind(value: unknown): OpportunityNoteKind {
+  const raw = asString(value);
+  if (raw === "call" || raw === "email") return raw;
+  return "note";
+}
+
+function parseOpportunityNoteBodyFormat(value: unknown): OpportunityNoteBodyFormat | undefined {
+  const raw = asString(value);
+  if (raw === "html") return "html";
+  if (raw === "plain") return "plain";
+  return undefined;
+}
+
 function parseOpportunityNote(id: string, data: Record<string, unknown>): OpportunityNoteRecord | null {
   const opportunityId = asString(data.opportunityId);
   if (!opportunityId) return null;
   const organizationId = asString(data.organizationId);
+  const bodyFormat = parseOpportunityNoteBodyFormat(data.bodyFormat);
   return {
     id,
     opportunityId,
     ...(organizationId ? { organizationId } : {}),
     authorUid: asString(data.authorUid) ?? "",
+    title: asString(data.title),
     body: asString(data.body) ?? "",
+    ...(bodyFormat ? { bodyFormat } : {}),
+    kind: parseOpportunityNoteKind(data.kind),
     createdAt: coerceTimestampToMillis(data.createdAt),
   };
 }
@@ -368,22 +416,16 @@ function parseOpportunityActivity(
   const opportunityId = asString(data.opportunityId);
   if (!opportunityId) return null;
   const organizationId = asString(data.organizationId);
-  const kindRaw = asString(data.kind);
-  const kind: OpportunityActivityKind =
-    kindRaw === "meeting" || kindRaw === "call" || kindRaw === "email" || kindRaw === "other"
-      ? kindRaw
-      : "other";
   const createdAt = coerceTimestampToMillis(data.createdAt);
-  const occurredAt = coerceTimestampToMillis(data.occurredAt) || createdAt;
+  const type = parseOpportunityActivityType(data.type ?? data.kind);
   return {
     id,
     opportunityId,
     ...(organizationId ? { organizationId } : {}),
-    kind,
+    type,
     title: asString(data.title) ?? "Activity",
     detail: asString(data.detail),
-    occurredAt,
-    authorUid: asString(data.authorUid) ?? "",
+    actorUid: asString(data.actorUid) ?? asString(data.authorUid),
     createdAt,
   };
 }
@@ -434,7 +476,7 @@ export async function listOpportunityActivities(
     const rows = snap.docs
       .map((d) => parseOpportunityActivity(d.id, d.data() as Record<string, unknown>))
       .filter((a): a is OpportunityActivityRecord => a !== null);
-    return rows.sort((a, b) => b.occurredAt - a.occurredAt);
+    return rows.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
     logError("crm_list_opportunity_activities_failed", {
       opportunityId,
@@ -444,10 +486,17 @@ export async function listOpportunityActivities(
   }
 }
 
+export interface AppendOpportunityNoteInput {
+  title?: string;
+  body: string;
+  bodyFormat: OpportunityNoteBodyFormat;
+  kind: OpportunityNoteKind;
+}
+
 export async function appendOpportunityNote(
   user: PortalUser,
   opportunityId: string,
-  body: string,
+  input: AppendOpportunityNoteInput,
 ): Promise<{ ok: true; noteId: string } | { ok: false; message: string }> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) {
@@ -455,16 +504,24 @@ export async function appendOpportunityNote(
   }
   const opp = await getOpportunityForStaff(user, opportunityId);
   if (!opp) return { ok: false, message: "Opportunity not found." };
-  const trimmedBody = body.trim();
-  if (!trimmedBody) return { ok: false, message: "Note cannot be empty." };
+
+  const bodyFormat = input.bodyFormat === "html" ? "html" : "plain";
+  const body =
+    bodyFormat === "html"
+      ? sanitizeProposalHtmlServer(input.body.trim())
+      : input.body.trim();
+  if (!body) return { ok: false, message: "Note cannot be empty." };
 
   const now = Timestamp.now();
   const payload: Record<string, unknown> = {
     opportunityId,
     authorUid: user.uid,
-    body: trimmedBody,
+    body,
+    kind: input.kind,
     createdAt: now,
   };
+  if (input.title) payload.title = input.title;
+  if (bodyFormat === "html") payload.bodyFormat = "html";
   if (opp.organizationId) payload.organizationId = opp.organizationId;
 
   const ref = await db.collection(COLLECTIONS.opportunityNotes).add(payload);
@@ -475,16 +532,15 @@ export async function appendOpportunityNote(
   return { ok: true, noteId: ref.id };
 }
 
-export async function appendOpportunityActivity(
+export async function appendOpportunitySystemActivity(
   user: PortalUser,
   opportunityId: string,
   input: {
-    kind: OpportunityActivityKind;
+    type: OpportunityActivityType;
     title: string;
     detail?: string;
-    occurredAt?: number;
   },
-): Promise<{ ok: true; activityId: string } | { ok: false; message: string }> {
+): Promise<{ ok: true } | { ok: false; message: string }> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) {
     return { ok: false, message: "Not allowed." };
@@ -492,33 +548,22 @@ export async function appendOpportunityActivity(
   const opp = await getOpportunityForStaff(user, opportunityId);
   if (!opp) return { ok: false, message: "Opportunity not found." };
 
-  const trimmedTitle = input.title.trim();
-  if (!trimmedTitle) return { ok: false, message: "Title is required." };
-
-  const occurredAt =
-    typeof input.occurredAt === "number" && Number.isFinite(input.occurredAt)
-      ? Timestamp.fromMillis(input.occurredAt)
-      : Timestamp.now();
-  const now = Timestamp.now();
-
-  const payload: Record<string, unknown> = {
-    opportunityId,
-    kind: input.kind,
-    title: trimmedTitle,
-    actorUid: user.uid,
-    authorUid: user.uid,
-    occurredAt,
-    createdAt: now,
-  };
-  if (input.detail?.trim()) payload.detail = input.detail.trim();
-  if (opp.organizationId) payload.organizationId = opp.organizationId;
-
-  const ref = await db.collection(COLLECTIONS.opportunityActivities).add(payload);
-  await db
-    .collection(COLLECTIONS.opportunities)
-    .doc(opportunityId)
-    .update({ updatedAt: FieldValue.serverTimestamp() });
-  return { ok: true, activityId: ref.id };
+  try {
+    await appendOpportunitySystemActivityDb(db, opportunityId, {
+      type: input.type,
+      title: input.title,
+      detail: input.detail,
+      actorUid: user.uid,
+      organizationId: opp.organizationId,
+    });
+    return { ok: true };
+  } catch (error) {
+    logError("crm_append_opportunity_system_activity_failed", {
+      opportunityId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return { ok: false, message: "Could not record activity." };
+  }
 }
 
 /** Merge latest customer custom fields into the opportunity snapshot (optional upkeep). */

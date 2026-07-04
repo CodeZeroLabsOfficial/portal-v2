@@ -8,7 +8,7 @@ import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
 import { omitUndefinedDeep } from "@/lib/common/omit-undefined-deep";
-import { getOpportunityForStaff, appendOpportunityActivity, updateOpportunityStage } from "@/server/firestore/crm-opportunities";
+import { getOpportunityForStaff, appendOpportunitySystemActivity, updateOpportunityStage } from "@/server/firestore/crm-opportunities";
 import { getProposalTemplateForStaff } from "@/server/firestore/proposal-templates";
 import { cloneBrandingFromTemplate, cloneProposalDocument } from "@/lib/proposal/clone-document";
 import { encodeProposalDocumentForFirestore } from "@/lib/proposal/firestore-document";
@@ -285,8 +285,8 @@ export async function createDraftProposalFromOpportunityAction(
     await ref.set(payload);
 
     try {
-      const activityRes = await appendOpportunityActivity(user, opportunityId, {
-        kind: "other",
+      const activityRes = await appendOpportunitySystemActivity(user, opportunityId, {
+        type: "proposal_created",
         title: `Proposal created by ${staffDisplayNameForActivity(user)}`,
         detail: document.title.trim(),
       });

@@ -3,14 +3,20 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Loader2 } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { CRM_ADD_NEW_BUTTON_CLASS } from "@/components/shared/crm-add-new-button";
 import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
 import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
 import { CUSTOMER_NOTE_KINDS, customerNoteKindMeta } from "@/lib/crm/customer-note-display";
@@ -84,20 +90,22 @@ export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps
           <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-screen max-w-(--breakpoint-sm) gap-0 overflow-y-auto p-0 lg:overflow-y-auto">
-        <VisuallyHidden>
-          <DialogTitle>Add Note</DialogTitle>
-        </VisuallyHidden>
-        <form onSubmit={submit} className="p-6">
+      <DialogContent className="max-h-screen overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add note</DialogTitle>
+          <DialogDescription>
+            Log a note, phone call, or email for this contact.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
           <FilterPillGroup
             options={NOTE_KIND_OPTIONS}
             value={kind}
             onChange={setKind}
             disabled={busy}
-            className="mb-6"
           />
 
-          <FormServerError message={error} className="mb-4" />
+          <FormServerError message={error} />
 
           <div className="space-y-6">
             <Input

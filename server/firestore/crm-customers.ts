@@ -1056,8 +1056,24 @@ export async function createCustomerDocument(
       if (user.organizationId) {
         opportunityPayload.organizationId = user.organizationId;
       }
-      await db.collection(COLLECTIONS.opportunities).add(opportunityPayload);
+      const oppRef = await db.collection(COLLECTIONS.opportunities).add(opportunityPayload);
       leadOpportunityCreated = true;
+      try {
+        const { appendOpportunitySystemActivityDb } = await import(
+          "@/server/firestore/opportunity-system-activity"
+        );
+        await appendOpportunitySystemActivityDb(db, oppRef.id, {
+          type: "created",
+          title: "Deal created",
+          actorUid: user.uid,
+          organizationId: user.organizationId,
+        });
+      } catch (activityErr) {
+        logError("create_customer_lead_opportunity_activity_failed", {
+          opportunityId: oppRef.id,
+          message: activityErr instanceof Error ? activityErr.message : String(activityErr),
+        });
+      }
     } catch (err) {
       logError("create_customer_lead_opportunity_failed", {
         customerId: docRef.id,

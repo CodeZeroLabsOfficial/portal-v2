@@ -4,14 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireStaffSession } from "@/lib/auth/server-session";
 import { OPPORTUNITY_STAGES } from "@/lib/crm/opportunity-stages";
-import {
-  addOpportunityActivitySchema,
-  addOpportunityNoteSchema,
-} from "@/lib/schemas/opportunity-notes";
+import { addOpportunityNoteSchema } from "@/lib/schemas/opportunity-notes";
 import { zodFirstMessage } from "@/lib/common/zod-error";
 import type { OpportunityStage } from "@/types/opportunity";
 import {
-  appendOpportunityActivity,
   appendOpportunityNote,
   convertLeadToContact,
   deleteOpportunityForStaff,
@@ -112,30 +108,11 @@ export async function addOpportunityNoteAction(
     return { ok: false, message: zodFirstMessage(parsed.error) };
   }
 
-  const result = await appendOpportunityNote(user, parsed.data.opportunityId, parsed.data.body);
-  if (!result.ok) return { ok: false, message: result.message };
-
-  revalidatePath("/admin/opportunities");
-  revalidatePath(`/admin/opportunities/${parsed.data.opportunityId}`);
-  return { ok: true };
-}
-
-export async function addOpportunityActivityAction(
-  raw: unknown,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-
-  const parsed = addOpportunityActivitySchema.safeParse(raw);
-  if (!parsed.success) {
-    return { ok: false, message: zodFirstMessage(parsed.error) };
-  }
-
-  const result = await appendOpportunityActivity(user, parsed.data.opportunityId, {
-    kind: parsed.data.kind,
+  const result = await appendOpportunityNote(user, parsed.data.opportunityId, {
     title: parsed.data.title,
-    detail: parsed.data.detail,
-    occurredAt: parsed.data.occurredAt,
+    body: parsed.data.body,
+    bodyFormat: parsed.data.bodyFormat,
+    kind: parsed.data.kind,
   });
   if (!result.ok) return { ok: false, message: result.message };
 

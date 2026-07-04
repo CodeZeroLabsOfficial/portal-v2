@@ -13,7 +13,7 @@ export function zodErrorToMessage(error: ZodError): string {
 
 /**
  * Same as {@link zodErrorToMessage} but substitutes `"input"` when the path is
- * empty. Used by opportunity-note / activity actions.
+ * empty. Used by opportunity-note actions.
  */
 export function zodFirstMessage(error: ZodError): string {
   const first = error.errors[0];

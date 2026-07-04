@@ -1,6 +1,7 @@
 import { FieldValue, Timestamp, type Firestore } from "firebase-admin/firestore";
 import { logError } from "@/lib/common/logging";
 import { COLLECTIONS } from "@/server/firestore/collections";
+import { appendOpportunitySystemActivityDb } from "@/server/firestore/opportunity-system-activity";
 import type { ProposalRecord } from "@/types/proposal";
 
 /**
@@ -43,16 +44,11 @@ export async function applyProposalAcceptCrmSideEffects(
             stage: "won",
             updatedAt: FieldValue.serverTimestamp(),
           });
-          await db.collection(COLLECTIONS.opportunityActivities).add({
-            opportunityId,
-            ...(orgId ? { organizationId: orgId } : {}),
-            kind: "other",
+          await appendOpportunitySystemActivityDb(db, opportunityId, {
+            type: "won",
             title: "Services Agreement signed",
             detail: `Services agreement signed by ${signerName.trim()}`,
-            authorUid: "",
-            actorUid: "",
-            occurredAt: now,
-            createdAt: now,
+            organizationId: orgId,
           });
         }
       }

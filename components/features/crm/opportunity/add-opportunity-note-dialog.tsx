@@ -2,22 +2,33 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 import { CRM_ADD_NEW_BUTTON_CLASS } from "@/components/shared/crm-add-new-button";
+import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
+import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
+import { CUSTOMER_NOTE_KINDS, customerNoteKindMeta } from "@/lib/crm/customer-note-display";
 import { addOpportunityNoteAction } from "@/server/actions/opportunities-crm";
+import type { OpportunityNoteKind } from "@/types/opportunity";
+
+const EMPTY_EDITOR_VALUE = "<p></p>";
+
+const NOTE_KIND_OPTIONS = CUSTOMER_NOTE_KINDS.map((value) => {
+  const meta = customerNoteKindMeta(value);
+  return { value, label: meta.label, icon: meta.icon };
+});
 
 export interface AddOpportunityNoteDialogProps {
   opportunityId: string;
@@ -25,24 +36,41 @@ export interface AddOpportunityNoteDialogProps {
 
 export function AddOpportunityNoteDialog({ opportunityId }: AddOpportunityNoteDialogProps) {
   const router = useRouter();
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [body, setBody] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const [title, setTitle] = React.useState("");
+  const [body, setBody] = React.useState(EMPTY_EDITOR_VALUE);
+  const [kind, setKind] = React.useState<OpportunityNoteKind>("note");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!body.trim()) return;
+  const canSubmit = !isNoteBodyEmpty(body, "html");
+
+  function resetForm() {
+    setTitle("");
+    setBody(EMPTY_EDITOR_VALUE);
+    setKind("note");
+    setError(null);
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canSubmit) return;
     setBusy(true);
     setError(null);
     try {
-      const result = await addOpportunityNoteAction({ opportunityId, body });
+      const result = await addOpportunityNoteAction({
+        opportunityId,
+        title: title.trim() || undefined,
+        body,
+        bodyFormat: "html",
+        kind
+      });
       if (!result.ok) {
         setError(result.message);
         return;
       }
-      setBody("");
-      setAddOpen(false);
+      resetForm();
+      setOpen(false);
       router.refresh();
     } finally {
       setBusy(false);
@@ -50,43 +78,53 @@ export function AddOpportunityNoteDialog({ opportunityId }: AddOpportunityNoteDi
   }
 
   return (
-    <Dialog open={addOpen} onOpenChange={setAddOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) resetForm();
+      }}>
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm" className={CRM_ADD_NEW_BUTTON_CLASS}>
           Add new
           <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-screen overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add note</DialogTitle>
           <DialogDescription>
-            Save context, decisions, or follow-ups for this opportunity.
+            Log a note, phone call, or email for this opportunity.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
-          <FormServerError message={error} />
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Write a note…"
-            rows={5}
-            className="resize-y"
+        <form onSubmit={submit} className="space-y-4">
+          <FilterPillGroup
+            options={NOTE_KIND_OPTIONS}
+            value={kind}
+            onChange={setKind}
             disabled={busy}
           />
-          <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => setAddOpen(false)}>
-              Cancel
+
+          <FormServerError message={error} />
+
+          <div className="space-y-6">
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Title"
+              disabled={busy}
+              maxLength={200}
+              className="h-auto min-h-0 rounded-none border-0 bg-transparent! px-0 py-0 text-2xl! font-normal leading-tight shadow-none placeholder:text-muted-foreground focus-visible:border-0 focus-visible:ring-0"
+            />
+
+            <CrmNoteEditor value={body} onChange={setBody} disabled={busy} className="w-full" />
+          </div>
+
+          <div className="mt-4 flex items-center justify-end">
+            <Button type="submit" disabled={busy || !canSubmit}>
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Add Note"}
             </Button>
-            <Button type="submit" disabled={busy || !body.trim()} className="gap-1.5">
-              {busy ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              ) : (
-                <Plus className="h-3.5 w-3.5" aria-hidden />
-              )}
-              Save
-            </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

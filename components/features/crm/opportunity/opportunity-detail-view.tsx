@@ -3,21 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, FileText, Loader2, MessageSquare, Plus } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { OpportunityActivitiesPanel } from "@/components/features/crm/opportunity/opportunity-activities-panel";
 import { OpportunityNotesPanel } from "@/components/features/crm/opportunity/opportunity-notes-panel";
 import { OpportunityStageProgress } from "@/components/features/crm/opportunity/opportunity-stage-progress";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator
-} from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -77,28 +69,12 @@ export function OpportunityDetailView({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/admin/opportunities" aria-label="Back to Pipeline">
-            <ChevronLeft className="size-4" aria-hidden />
-          </Link>
-        </Button>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/opportunities">Pipeline</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="max-w-[min(100%,28rem)] truncate">
-                {opportunity.name}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+      <Button variant="ghost" size="sm" className="-ml-2 gap-1.5" asChild>
+        <Link href="/admin/opportunities">
+          <ArrowLeft className="size-4" aria-hidden />
+          Pipeline
+        </Link>
+      </Button>
 
       <OpportunityStageProgress opportunity={opportunity} customer={customer} />
 
@@ -163,7 +139,7 @@ export function OpportunityDetailView({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <OpportunityNotesPanel opportunityId={opportunity.id} notes={notes} />
-        <OpportunityActivitiesPanel opportunityId={opportunity.id} activities={activities} />
+        <OpportunityActivitiesPanel activities={activities} />
       </div>
     </div>
   );
