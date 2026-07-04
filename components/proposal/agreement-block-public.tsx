@@ -36,6 +36,7 @@ import {
   packagesSelectionTermLabel,
 } from "@/lib/proposal/commerce/packages-totals";
 import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
+import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
 import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
 import { isDocumentPackageSelectionComplete } from "@/lib/proposal/commerce/package-selection";
@@ -599,7 +600,8 @@ export function AgreementBlockPublic({
             }
           }}
           className={cn(
-            "z-50 grid gap-0 overflow-hidden border-0 bg-white p-0 text-zinc-900 shadow-2xl",
+            AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES,
+            "z-50 grid gap-0 overflow-hidden border-0 p-0 shadow-2xl",
             // Mobile: fills viewport, no rounding.
             "h-[100dvh] w-screen max-w-none left-0 top-0 translate-x-0 translate-y-0 rounded-none",
             // Desktop: near-full-screen with subtle rounding to match Qwilr's modal proportions.

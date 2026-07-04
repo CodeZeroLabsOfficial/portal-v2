@@ -12,6 +12,7 @@ import {
   useAgreementPrintMode
 } from "@/hooks/use-agreement-print-mode";
 import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
@@ -79,7 +80,8 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
       <DialogContent
         showCloseButton={false}
         className={cn(
-          "z-50 grid gap-0 overflow-hidden border-0 bg-white p-0 text-zinc-900 shadow-2xl",
+          AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES,
+          "z-50 grid gap-0 overflow-hidden border-0 p-0 shadow-2xl",
           "h-dvh w-screen max-w-none top-0 left-0 translate-x-0 translate-y-0 rounded-none",
           "sm:top-1/2 sm:left-1/2 sm:h-[min(96dvh,960px)] sm:max-h-[96dvh]",
           "sm:w-[min(1536px,calc(100vw-3rem))] sm:max-w-[min(1536px,calc(100vw-3rem))]",

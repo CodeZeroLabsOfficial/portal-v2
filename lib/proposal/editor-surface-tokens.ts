@@ -57,6 +57,27 @@ export const PROPOSAL_ACCORDION_LIGHT_SURFACE_CLASSES = cn(
 );
 
 /**
+ * Buyer-facing View Agreement modal — fixed light surface when the staff portal is in dark mode.
+ * Remaps semantic tokens and neutralizes `dark:` utilities on shadcn primitives inside the dialog.
+ */
+export const AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES = cn(
+  "bg-white text-zinc-900",
+  PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
+  "[&_[data-slot=button][data-variant=outline]]:bg-white",
+  "[&_[data-slot=button][data-variant=outline]]:dark:bg-white",
+  "[&_[data-slot=button][data-variant=outline]]:dark:hover:bg-accent",
+  "[&_[data-slot=button][data-variant=ghost]]:dark:hover:bg-accent",
+  "[&_[data-slot=input]]:dark:bg-transparent",
+  "[&_[data-slot=checkbox]]:dark:bg-transparent",
+);
+
+/** Portaled menus (e-signature dropdown) — same light tokens as the agreement modal shell. */
+export const AGREEMENT_MODAL_POPOVER_LIGHT_SURFACE_CLASSES = cn(
+  PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
+  "bg-popover text-popover-foreground",
+);
+
+/**
  * Restores readable copy inside accordion bodies when the parent section uses
  * light-on-dark chrome (same pattern as tier cards on `bg-card`).
  */

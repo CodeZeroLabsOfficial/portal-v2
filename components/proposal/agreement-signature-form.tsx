@@ -24,6 +24,7 @@ import {
   todayIsoDateInTimeZone,
 } from "@/lib/proposal/public/locality-dates";
 import type { ProposalPublicSubscriptionBillingSnapshot } from "@/lib/schemas/proposal-public-subscription";
+import { AGREEMENT_MODAL_POPOVER_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 import { ProposalPublicSubscriptionFormPanel } from "@/components/proposal/proposal-public-subscription-form-panel";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
@@ -823,7 +824,11 @@ export function AgreementSignatureForm({
                               </div>
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" sideOffset={8} className="z-[100] min-w-[11rem]">
+                          <DropdownMenuContent
+                            align="start"
+                            sideOffset={8}
+                            className={cn("z-[100] min-w-[11rem]", AGREEMENT_MODAL_POPOVER_LIGHT_SURFACE_CLASSES)}
+                          >
                             <DropdownMenuItem
                               onSelect={() => {
                                 clearCapturedSignature();
