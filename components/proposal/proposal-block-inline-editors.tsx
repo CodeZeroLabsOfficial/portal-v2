@@ -516,7 +516,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
       <div
         className={cn(
           "grid gap-3 sm:grid-cols-2 md:gap-3 lg:grid-cols-3 xl:grid-cols-4",
-          isVisual ? "mt-5" : "mt-4",
+          isVisual ? "mt-8" : "mt-4",
         )}
       >
         {tiers.map((tier) => (
@@ -1023,7 +1023,7 @@ function TierCard({
         </button>
 
         {tierNameReadOnly ? (
-          <p className="text-base font-semibold">{tier.name}</p>
+          <p className="text-center text-base font-semibold">{tier.name}</p>
         ) : (
           <InlineText
             tone={inlineTone}
@@ -1031,31 +1031,13 @@ function TierCard({
             placeholder="Tier name"
             onChange={(v) => onChange({ name: v })}
             ariaLabel="Tier name"
-            className="text-base font-semibold"
-            inputClassName="w-full text-base font-semibold"
+            className="text-center text-base font-semibold"
+            inputClassName="w-full text-center text-base font-semibold"
           />
         )}
 
-        <ul
-          className="mt-2 space-y-1 text-sm leading-snug"
-          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
-        >
-          <li>
-            <span className="font-medium">Included users</span>:{" "}
-            {formatPackageTierIncluded(tier.includedUsers)}
-          </li>
-          <li>
-            <span className="font-medium">Included locations</span>:{" "}
-            {formatPackageTierIncluded(tier.includedLocations)}
-          </li>
-          <li>
-            <span className="font-medium">Included admins</span>:{" "}
-            {formatPackageTierIncluded(tier.includedAdmins)}
-          </li>
-        </ul>
-
-        <div className="mt-3 border-t border-dashed pt-3" style={dashedBorderStyle}>
-          <div className="flex items-baseline gap-1">
+        <div className="mt-3 border-t border-dashed pt-3 text-center" style={dashedBorderStyle}>
+          <div className="flex items-baseline justify-center gap-1">
             {pricingReadOnly ? (
               <TierPriceAmount
                 minor={monthlyMinor}
@@ -1109,7 +1091,7 @@ function TierCard({
 
           {term === "12_months" ? (
             <div
-              className="mt-2.5 rounded-md border border-dashed px-2.5 py-2 text-left"
+              className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
               style={dashedBorderStyle}
             >
               <p
@@ -1143,6 +1125,24 @@ function TierCard({
             </p>
           ) : null}
         </div>
+
+        <ul
+          className="mt-3 space-y-1 text-center text-sm leading-snug"
+          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+        >
+          <li>
+            <span className="font-medium">Included users</span>:{" "}
+            {formatPackageTierIncluded(tier.includedUsers)}
+          </li>
+          <li>
+            <span className="font-medium">Included locations</span>:{" "}
+            {formatPackageTierIncluded(tier.includedLocations)}
+          </li>
+          <li>
+            <span className="font-medium">Included admins</span>:{" "}
+            {formatPackageTierIncluded(tier.includedAdmins)}
+          </li>
+        </ul>
 
         {catalogServices.length > 0 ? (
           <div

@@ -265,7 +265,7 @@ export function PackagesBlockPublic({
       <div
         className={cn(
           "grid gap-3 sm:grid-cols-2 md:gap-3 lg:grid-cols-3 xl:grid-cols-4",
-          isVisual ? "mt-5" : "mt-4",
+          isVisual ? "mt-8" : "mt-4",
         )}
       >
         {tiers.length === 0 ? (
@@ -325,27 +325,12 @@ export function PackagesBlockPublic({
                   </div>
                 ) : null}
 
-                <h3 className="text-base font-semibold">{tier.name}</h3>
+                <h3 className="text-center text-base font-semibold">{tier.name}</h3>
 
-                <ul
-                  className="mt-2 space-y-1 text-[13px] leading-snug"
-                  style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+                <div
+                  className="mt-3 border-t border-dashed pt-3 text-center"
+                  style={dashedBorderStyle}
                 >
-                  <li>
-                    <span className="font-medium">Included users</span>:{" "}
-                    {formatPackageTierIncluded(tier.includedUsers)}
-                  </li>
-                  <li>
-                    <span className="font-medium">Included locations</span>:{" "}
-                    {formatPackageTierIncluded(tier.includedLocations)}
-                  </li>
-                  <li>
-                    <span className="font-medium">Included admins</span>:{" "}
-                    {formatPackageTierIncluded(tier.includedAdmins)}
-                  </li>
-                </ul>
-
-                <div className="mt-3 border-t border-dashed pt-3" style={dashedBorderStyle}>
                   <p className="text-xl font-semibold tabular-nums sm:text-2xl">
                     {formatCurrencyAmount(mm, currency)}
                   </p>
@@ -358,7 +343,7 @@ export function PackagesBlockPublic({
 
                   {term === "12_months" ? (
                     <div
-                      className="mt-2.5 rounded-md border border-dashed px-2.5 py-2 text-left"
+                      className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
                       style={dashedBorderStyle}
                     >
                       <p
@@ -389,6 +374,24 @@ export function PackagesBlockPublic({
                     </p>
                   )}
                 </div>
+
+                <ul
+                  className="mt-3 space-y-1 text-center text-[13px] leading-snug"
+                  style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+                >
+                  <li>
+                    <span className="font-medium">Included users</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedUsers)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Included locations</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedLocations)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Included admins</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedAdmins)}
+                  </li>
+                </ul>
 
                 <div className="mt-auto pt-3">
                   <button
