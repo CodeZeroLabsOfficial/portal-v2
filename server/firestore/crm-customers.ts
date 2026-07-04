@@ -1,6 +1,7 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 import { noteBodyPlainText } from "@/lib/crm/customer-note-body";
+import { enrichTaskRecordsForStaff } from "@/lib/tasks/enrich-task-records";
 import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
 import { logError } from "@/lib/common/logging";
@@ -936,6 +937,24 @@ export async function getSignedAgreementForCustomerContext(
   }
 }
 
+export interface CustomerPickerOption {
+  id: string;
+  label: string;
+}
+
+/** Active CRM customers as `{ id, label }` for task/subscription pickers. */
+export async function listCustomerPickerOptionsForOrg(
+  user: PortalUser,
+): Promise<CustomerPickerOption[]> {
+  const rows = await getAdminCustomerListRows(user);
+  return rows
+    .filter((c) => c.status === "active")
+    .map((c) => ({
+      id: c.id,
+      label: [c.company?.trim(), c.name?.trim(), c.email?.trim()].filter(Boolean).join(" · "),
+    }));
+}
+
 export async function listTasksForCustomer(user: PortalUser, customerId: string): Promise<TaskRecord[]> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) return [];
@@ -945,7 +964,10 @@ export async function listTasksForCustomer(user: PortalUser, customerId: string)
       .where("customerId", "==", customerId)
       .limit(80)
       .get();
-    return snap.docs.map((d) => parseTaskRecord(d.id, d.data() as Record<string, unknown>));
+    const rows = snap.docs
+      .map((d) => parseTaskRecord(d.id, d.data() as Record<string, unknown>))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+    return enrichTaskRecordsForStaff(user, rows);
   } catch {
     return [];
   }

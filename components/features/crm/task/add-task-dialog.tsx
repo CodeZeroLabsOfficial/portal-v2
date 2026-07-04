@@ -4,7 +4,13 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { DateTimePicker } from "@/components/date-time-picker";
 import { FormServerError } from "@/components/shared/form-server-error";
+import { TaskAssigneeSelect } from "@/components/shared/task-assignee-select";
+import {
+  TaskCustomerSelect,
+  type TaskCustomerOption
+} from "@/components/shared/task-customer-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,43 +42,53 @@ import {
   type TaskPriorityValue
 } from "@/lib/tasks/task-priority";
 import { TASK_PROGRESS_PERCENT_OPTIONS } from "@/lib/tasks/task-progress-options";
-import { createTaskAction, listTaskAssigneeOptionsAction } from "@/server/actions/tasks-crm";
+import { createTaskAction } from "@/server/actions/tasks-crm";
 
 export interface AddTaskDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** When the user opens from a column footer, that column is pre-selected. */
-  defaultColumn: TaskBoardColumnId;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** When the user opens from a status tab, that status is pre-selected. */
+  defaultColumn?: TaskBoardColumnId;
+  defaultCustomerId?: string;
+  lockCustomer?: boolean;
+  customerOptions?: TaskCustomerOption[];
   disabled?: boolean;
   disabledReason?: string;
 }
 
 export function AddTaskDialog({
-  open,
-  onOpenChange,
-  defaultColumn,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  defaultColumn = "todo",
+  defaultCustomerId,
+  lockCustomer,
+  customerOptions = [],
   disabled,
   disabledReason
 }: AddTaskDialogProps) {
   const router = useRouter();
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const onOpenChange = controlledOnOpenChange ?? setInternalOpen;
+
   const [column, setColumn] = React.useState<TaskBoardColumnId>(defaultColumn);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [priority, setPriority] = React.useState<TaskPriorityValue>(DEFAULT_TASK_PRIORITY);
   const [progressPercent, setProgressPercent] = React.useState(0);
   const [assignedToUid, setAssignedToUid] = React.useState("");
-  const [assigneeOptions, setAssigneeOptions] = React.useState<
-    Array<{ uid: string; displayName: string; email: string }>
-  >([]);
-  const [loadingAssignees, setLoadingAssignees] = React.useState(false);
+  const [customerId, setCustomerId] = React.useState("");
+  const [dueDate, setDueDate] = React.useState<Date | undefined>();
+  const [reminderDate, setReminderDate] = React.useState<Date | undefined>();
   const [pending, setPending] = React.useState(false);
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (open) {
       setColumn(defaultColumn);
+      setCustomerId(defaultCustomerId ?? (lockCustomer ? "" : ""));
     }
-  }, [open, defaultColumn]);
+  }, [open, defaultColumn, defaultCustomerId, lockCustomer]);
 
   React.useEffect(() => {
     if (!open) {
@@ -81,58 +97,51 @@ export function AddTaskDialog({
       setPriority(DEFAULT_TASK_PRIORITY);
       setProgressPercent(0);
       setAssignedToUid("");
+      setCustomerId("");
+      setDueDate(undefined);
+      setReminderDate(undefined);
       setServerError(null);
     }
   }, [open]);
 
   React.useEffect(() => {
-    let cancelled = false;
-    if (!open || disabled) return;
-    setLoadingAssignees(true);
-    void listTaskAssigneeOptionsAction().then((res) => {
-      if (cancelled) return;
-      setLoadingAssignees(false);
-      if (!res.ok) {
-        setServerError(res.message);
-        setAssigneeOptions([]);
-        return;
-      }
-      setAssigneeOptions(res.options);
-      setAssignedToUid((current) => {
-        if (current && res.options.some((o) => o.uid === current)) return current;
-        return res.options[0]?.uid ?? "";
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, disabled]);
+    if (open && lockCustomer && defaultCustomerId) {
+      setCustomerId(defaultCustomerId);
+    }
+  }, [open, lockCustomer, defaultCustomerId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (disabled) return;
     setServerError(null);
     setPending(true);
+
+    const resolvedCustomerId = lockCustomer
+      ? defaultCustomerId
+      : customerId.trim() || undefined;
+
     const res = await createTaskAction({
       title,
       description: description.trim() || undefined,
       column,
       priority,
       progressPercent,
-      assignedToUid: assignedToUid || undefined
+      assignedToUid: assignedToUid || undefined,
+      customerId: resolvedCustomerId,
+      dueAt: dueDate ? dueDate.getTime() : undefined,
+      reminderAt: reminderDate ? reminderDate.getTime() : undefined
     });
     setPending(false);
     if (!res.ok) {
       setServerError(res.message);
       return;
     }
-    setTitle("");
-    setDescription("");
     onOpenChange(false);
     router.refresh();
   }
 
   const busy = pending;
+  const effectiveCustomerId = lockCustomer ? (defaultCustomerId ?? "") : customerId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,7 +199,7 @@ export function AddTaskDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="task-column">Column</Label>
+              <Label htmlFor="task-column">Status</Label>
               <Select
                 value={column}
                 onValueChange={(value) => setColumn(value as TaskBoardColumnId)}
@@ -227,32 +236,28 @@ export function AddTaskDialog({
               </Select>
             </div>
 
+            <TaskAssigneeSelect
+              value={assignedToUid}
+              onValueChange={setAssignedToUid}
+              disabled={busy || disabled}
+            />
+
+            <TaskCustomerSelect
+              options={customerOptions}
+              value={effectiveCustomerId}
+              onValueChange={setCustomerId}
+              disabled={busy || disabled}
+              lockedCustomerId={lockCustomer ? defaultCustomerId : undefined}
+            />
+
             <div className="space-y-1.5">
-              <Label htmlFor="task-assignee">Assign to</Label>
-              <Select
-                value={assignedToUid}
-                onValueChange={setAssignedToUid}
-                disabled={busy || disabled || loadingAssignees || assigneeOptions.length === 0}>
-                <SelectTrigger id="task-assignee" className="w-full">
-                  <SelectValue
-                    placeholder={
-                      loadingAssignees
-                        ? "Loading users…"
-                        : assigneeOptions.length === 0
-                          ? "No assignable users"
-                          : "Select assignee"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {assigneeOptions.map((opt) => (
-                    <SelectItem key={opt.uid} value={opt.uid}>
-                      {opt.displayName}
-                      {opt.email ? ` (${opt.email})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Due date (optional)</Label>
+              <DateTimePicker date={dueDate} setDate={setDueDate} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Reminder (optional)</Label>
+              <DateTimePicker date={reminderDate} setDate={setReminderDate} />
             </div>
 
             <div className="space-y-1.5">
@@ -275,9 +280,7 @@ export function AddTaskDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={busy || disabled || !title.trim() || (!loadingAssignees && assigneeOptions.length === 0)}>
+            <Button type="submit" disabled={busy || disabled || !title.trim()}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               Create
             </Button>

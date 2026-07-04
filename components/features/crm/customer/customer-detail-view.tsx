@@ -117,7 +117,7 @@ export function CustomerDetailView({
         documents: (
           <CustomerDocumentsTab customer={customer} signedAgreements={signedAgreements} />
         ),
-        tasks: <CustomerTasksTab tasks={tasks} />,
+        tasks: <CustomerTasksTab customer={customer} tasks={tasks} />,
         vault: <CustomerVaultTab />
       }}
       />

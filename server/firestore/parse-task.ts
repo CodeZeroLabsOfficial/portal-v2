@@ -18,6 +18,8 @@ export function parseTaskRecord(id: string, data: Record<string, unknown>): Task
     status: asString(data.status) ?? "open",
     dueAt: asNumber(data.dueAt),
     startAt: asNumber(data.startAt),
+    reminderAt: asNumber(data.reminderAt),
+    reminderSentAt: asNumber(data.reminderSentAt),
     updatedAt: millisFromFirestore(data, "updatedAt") || Date.now(),
     description: asString(data.description),
     priority: asString(data.priority),

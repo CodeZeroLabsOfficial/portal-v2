@@ -23,6 +23,9 @@ const taskBoardColumnZodEnum = TASK_BOARD_COLUMNS as unknown as [
   ...TaskBoardColumnId[],
 ];
 
+const optionalEpochMs = z.number().int().optional();
+const clearableEpochMs = z.union([z.number().int(), z.literal(null)]).optional();
+
 const updateTaskStatusSchema = z.object({
   taskId: z.string().min(1),
   column: z.enum(taskBoardColumnZodEnum),
@@ -53,6 +56,9 @@ const createTaskSchema = z.object({
   description: z.string().trim().max(8000).optional(),
   column: z.enum(taskBoardColumnZodEnum),
   assignedToUid: z.string().min(1).optional(),
+  customerId: z.string().min(1).optional(),
+  dueAt: optionalEpochMs,
+  reminderAt: optionalEpochMs,
   priority: z.enum(taskPriorityZodEnum),
   progressPercent: z.number().int().min(0).max(100),
 });
@@ -74,6 +80,9 @@ export async function createTaskAction(
     description: parsed.data.description || undefined,
     column: parsed.data.column,
     assignedToUid: parsed.data.assignedToUid,
+    customerId: parsed.data.customerId,
+    dueAt: parsed.data.dueAt,
+    reminderAt: parsed.data.reminderAt,
     priority: parsed.data.priority,
     progressPercent: parsed.data.progressPercent,
   });
@@ -89,7 +98,10 @@ const updateTaskSchema = z.object({
   title: z.string().trim().min(1, "Title is required.").max(500),
   description: z.string().trim().max(8000).optional(),
   column: z.enum(taskBoardColumnZodEnum),
-  assignedToUid: z.string().min(1).optional(),
+  assignedToUid: z.string().optional(),
+  customerId: z.union([z.string().min(1), z.literal(""), z.literal(null)]).optional(),
+  dueAt: clearableEpochMs,
+  reminderAt: clearableEpochMs,
   priority: z.enum(taskPriorityZodEnum),
   progressPercent: z.number().int().min(0).max(100),
 });
@@ -106,11 +118,21 @@ export async function updateTaskAction(
     return { ok: false, message: first ? first.message : "Invalid input" };
   }
 
+  const customerId =
+    parsed.data.customerId === undefined
+      ? undefined
+      : parsed.data.customerId === "" || parsed.data.customerId === null
+        ? null
+        : parsed.data.customerId;
+
   const res = await updateTaskForStaff(user, parsed.data.taskId, {
     title: parsed.data.title,
     description: parsed.data.description || undefined,
     column: parsed.data.column,
     assignedToUid: parsed.data.assignedToUid,
+    customerId,
+    dueAt: parsed.data.dueAt,
+    reminderAt: parsed.data.reminderAt,
     priority: parsed.data.priority,
     progressPercent: parsed.data.progressPercent,
   });

@@ -4,8 +4,14 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { DateTimePicker } from "@/components/date-time-picker";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
+import { TaskAssigneeSelect } from "@/components/shared/task-assignee-select";
+import {
+  TaskCustomerSelect,
+  type TaskCustomerOption
+} from "@/components/shared/task-customer-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -45,15 +51,25 @@ export interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: TaskRecord | null;
+  customerOptions?: TaskCustomerOption[];
 }
 
-export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps) {
+export function EditTaskDialog({
+  open,
+  onOpenChange,
+  task,
+  customerOptions = []
+}: EditTaskDialogProps) {
   const router = useRouter();
   const [column, setColumn] = React.useState<TaskBoardColumnId>("todo");
   const [title, setTitle] = React.useState("");
   const [priority, setPriority] = React.useState<TaskPriorityValue>(DEFAULT_TASK_PRIORITY);
   const [progressPercent, setProgressPercent] = React.useState(0);
   const [description, setDescription] = React.useState("");
+  const [assignedToUid, setAssignedToUid] = React.useState("");
+  const [customerId, setCustomerId] = React.useState("");
+  const [dueDate, setDueDate] = React.useState<Date | undefined>();
+  const [reminderDate, setReminderDate] = React.useState<Date | undefined>();
   const [pending, setPending] = React.useState(false);
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
@@ -65,6 +81,10 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
     setProgressPercent(clampProgressPercent(task.progressPercent));
     setDescription(task.description ?? "");
     setColumn(statusToBoardColumn(task.status));
+    setAssignedToUid(task.assignedToUid ?? "");
+    setCustomerId(task.customerId ?? "");
+    setDueDate(typeof task.dueAt === "number" ? new Date(task.dueAt) : undefined);
+    setReminderDate(typeof task.reminderAt === "number" ? new Date(task.reminderAt) : undefined);
     setServerError(null);
   }, [open, task]);
 
@@ -86,7 +106,11 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
       description: description.trim() || undefined,
       column,
       priority,
-      progressPercent
+      progressPercent,
+      assignedToUid,
+      customerId: customerId || null,
+      dueAt: dueDate ? dueDate.getTime() : null,
+      reminderAt: reminderDate ? reminderDate.getTime() : null
     });
     setPending(false);
     if (!res.ok) {
@@ -155,7 +179,7 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-task-column">Column</Label>
+                <Label htmlFor="edit-task-column">Status</Label>
                 <Select
                   value={column}
                   onValueChange={(value) => setColumn(value as TaskBoardColumnId)}
@@ -190,6 +214,32 @@ export function EditTaskDialog({ open, onOpenChange, task }: EditTaskDialogProps
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <TaskAssigneeSelect
+                id="edit-task-assignee"
+                value={assignedToUid}
+                onValueChange={setAssignedToUid}
+                disabled={busy || !task}
+                allowUnassigned
+              />
+
+              <TaskCustomerSelect
+                id="edit-task-customer"
+                options={customerOptions}
+                value={customerId}
+                onValueChange={setCustomerId}
+                disabled={busy || !task}
+              />
+
+              <div className="space-y-1.5">
+                <Label>Due date (optional)</Label>
+                <DateTimePicker date={dueDate} setDate={setDueDate} />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Reminder (optional)</Label>
+                <DateTimePicker date={reminderDate} setDate={setReminderDate} />
               </div>
 
               <div className="space-y-1.5">

@@ -6,9 +6,14 @@ export interface TaskRecord {
   customerId?: string;
   title: string;
   status: string;
+  /** Deadline (epoch ms). */
   dueAt?: number;
   /** Optional schedule start (epoch ms) for board display. */
   startAt?: number;
+  /** When to nudge assignee (epoch ms); notifications-ready, no sender yet. */
+  reminderAt?: number;
+  /** Idempotency marker for future scheduled reminder jobs. */
+  reminderSentAt?: number;
   updatedAt: number;
   description?: string;
   priority?: string;
@@ -19,4 +24,10 @@ export interface TaskRecord {
   assigneeCount?: number;
   /** When set, “My Tasks” can filter to the signed-in staff member. */
   assignedToUid?: string;
+  /** Hydrated on read — not persisted. */
+  customerDisplayName?: string;
+  /** Hydrated on read — not persisted. */
+  assignedToDisplayName?: string;
+  /** Hydrated on read — not persisted. */
+  assignedToPhotoUrl?: string;
 }

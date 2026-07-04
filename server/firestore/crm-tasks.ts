@@ -1,7 +1,9 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { isStaff } from "@/lib/auth/server-session";
 import { logError } from "@/lib/common/logging";
+import { enrichTaskRecordsForStaff } from "@/lib/tasks/enrich-task-records";
 import { COLLECTIONS } from "@/server/firestore/collections";
+import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
 import { parseTaskRecord } from "@/server/firestore/parse-task";
 import type { TaskBoardColumnId } from "@/lib/tasks/task-board-columns";
 import { boardColumnToStatus } from "@/lib/tasks/task-board-columns";
@@ -41,6 +43,30 @@ function normalizeTaskPriority(raw: string | undefined): string {
     : DEFAULT_TASK_PRIORITY;
 }
 
+function applyOptionalEpochField(
+  payload: Record<string, unknown>,
+  key: "dueAt" | "reminderAt",
+  value: number | undefined | null,
+): void {
+  if (value === undefined) return;
+  if (value === null || !Number.isFinite(value)) {
+    payload[key] = FieldValue.delete();
+  } else {
+    payload[key] = Math.round(value);
+  }
+}
+
+async function validateTaskCustomerId(
+  user: PortalUser,
+  customerId: string | undefined,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const trimmed = customerId?.trim();
+  if (!trimmed) return { ok: true };
+  const customer = await getCustomerRecordForOrg(user, trimmed);
+  if (!customer) return { ok: false, message: "Customer not found." };
+  return { ok: true };
+}
+
 async function getTaskForStaff(user: PortalUser, taskId: string): Promise<TaskRecord | null> {
   const db = getFirebaseAdminFirestore();
   if (!db || !isStaff(user)) return null;
@@ -60,9 +86,10 @@ export async function listTasksForStaff(user: PortalUser): Promise<TaskRecord[]>
       .where("organizationId", "==", user.organizationId)
       .limit(200)
       .get();
-    return snap.docs
+    const rows = snap.docs
       .map((d) => parseTaskRecord(d.id, d.data() as Record<string, unknown>))
       .sort((a, b) => b.updatedAt - a.updatedAt);
+    return enrichTaskRecordsForStaff(user, rows);
   } catch (error) {
     logError("crm_list_tasks_failed", {
       message: error instanceof Error ? error.message : "unknown",
@@ -100,6 +127,9 @@ export async function updateTaskForStaff(
     description?: string;
     column: TaskBoardColumnId;
     assignedToUid?: string;
+    customerId?: string | null;
+    dueAt?: number | null;
+    reminderAt?: number | null;
     priority?: string;
     progressPercent?: number;
   },
@@ -111,6 +141,11 @@ export async function updateTaskForStaff(
 
   const title = input.title.trim();
   if (!title) return { ok: false, message: "Title is required." };
+
+  if (input.customerId !== undefined && input.customerId) {
+    const customerCheck = await validateTaskCustomerId(user, input.customerId);
+    if (!customerCheck.ok) return customerCheck;
+  }
 
   const descTrimmed = input.description?.trim() ?? "";
 
@@ -129,12 +164,20 @@ export async function updateTaskForStaff(
   if (input.assignedToUid !== undefined) {
     if (input.assignedToUid) {
       payload.assignedToUid = input.assignedToUid;
-      payload.assigneeCount = 1;
     } else {
       payload.assignedToUid = FieldValue.delete();
-      payload.assigneeCount = 0;
     }
   }
+  if (input.customerId !== undefined) {
+    const trimmed = input.customerId?.trim();
+    if (trimmed) {
+      payload.customerId = trimmed;
+    } else {
+      payload.customerId = FieldValue.delete();
+    }
+  }
+  applyOptionalEpochField(payload, "dueAt", input.dueAt);
+  applyOptionalEpochField(payload, "reminderAt", input.reminderAt);
 
   await db.collection(COLLECTIONS.tasks).doc(taskId).update(payload);
 
@@ -148,6 +191,9 @@ export async function createTaskForStaff(
     description?: string;
     column: TaskBoardColumnId;
     assignedToUid?: string;
+    customerId?: string;
+    dueAt?: number;
+    reminderAt?: number;
     priority?: string;
     progressPercent?: number;
   },
@@ -165,10 +211,13 @@ export async function createTaskForStaff(
     return { ok: false, message: "Title is required." };
   }
 
-  const description = input.description?.trim();
-  const now = Date.now();
+  if (input.customerId) {
+    const customerCheck = await validateTaskCustomerId(user, input.customerId);
+    if (!customerCheck.ok) return customerCheck;
+  }
 
-  const docRef = await db.collection(COLLECTIONS.tasks).add({
+  const description = input.description?.trim();
+  const docPayload: Record<string, unknown> = {
     organizationId: user.organizationId,
     title,
     description: description || undefined,
@@ -176,10 +225,20 @@ export async function createTaskForStaff(
     priority: normalizeTaskPriority(input.priority),
     progressPercent: clampProgressPercent(input.progressPercent),
     assignedToUid: input.assignedToUid || user.uid,
-    assigneeCount: 1,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
-  });
+  };
+
+  const customerId = input.customerId?.trim();
+  if (customerId) docPayload.customerId = customerId;
+  if (typeof input.dueAt === "number" && Number.isFinite(input.dueAt)) {
+    docPayload.dueAt = Math.round(input.dueAt);
+  }
+  if (typeof input.reminderAt === "number" && Number.isFinite(input.reminderAt)) {
+    docPayload.reminderAt = Math.round(input.reminderAt);
+  }
+
+  const docRef = await db.collection(COLLECTIONS.tasks).add(docPayload);
 
   return { ok: true, taskId: docRef.id };
 }
