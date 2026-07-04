@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, FileSearchIcon, MessageSquare } from "lucide-react";
+import { FileSearchIcon, MessageSquare } from "lucide-react";
 
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -59,24 +59,25 @@ export function CustomerNotesList({
 
         return (
           <li key={note.id} className="rounded-lg border border-border/70 bg-muted/10 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Badge variant="outline" className="gap-1.5 font-normal">
-                <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                {label}
-              </Badge>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <Badge variant="outline" className="shrink-0 gap-1.5 font-normal">
+                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {label}
+                </Badge>
+                {note.title ? (
+                  <span className="text-sm font-medium text-foreground">{note.title}</span>
+                ) : null}
+              </div>
               <time
                 dateTime={new Date(note.createdAt).toISOString()}
-                className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                <Clock className="size-3" aria-hidden />
+                className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
                 {new Date(note.createdAt).toLocaleString(undefined, {
                   dateStyle: "medium",
                   timeStyle: "short"
                 })}
               </time>
             </div>
-            {note.title ? (
-              <p className="mt-2 text-sm font-medium text-foreground">{note.title}</p>
-            ) : null}
             {isHtml ? (
               <div
                 className={cn(
