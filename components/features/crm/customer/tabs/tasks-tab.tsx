@@ -4,8 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import { ListChecks, Plus } from "lucide-react";
 
-import { AddTaskDialog } from "@/components/features/crm/task/add-task-dialog";
-import { EditTaskDialog } from "@/components/features/crm/task/edit-task-dialog";
+import { TaskAddSheet } from "@/components/features/crm/task/task-add-sheet";
+import { TaskDetailSheet } from "@/components/features/crm/task/task-detail-sheet";
+import { TaskEditSheet } from "@/components/features/crm/task/task-edit-sheet";
 import { TaskTodoItem } from "@/components/features/crm/task/task-todo-item";
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
 import { CustomerTabSectionCard } from "@/components/features/crm/customer/customer-tab-section-card";
@@ -30,6 +31,7 @@ function customerOptionFromRecord(customer: CustomerRecord): TaskCustomerOption 
 
 export function CustomerTasksTab({ customer, tasks }: CustomerTasksTabProps) {
   const [addOpen, setAddOpen] = React.useState(false);
+  const [detailTask, setDetailTask] = React.useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = React.useState<TaskRecord | null>(null);
 
   const customerOptions = React.useMemo(
@@ -69,26 +71,39 @@ export function CustomerTasksTab({ customer, tasks }: CustomerTasksTabProps) {
             <TaskTodoItem
               key={task.id}
               task={task}
+              viewMode="list"
               showCustomerLink={false}
-              onEdit={(t) => setEditingTask(t)}
+              onSelect={(t) => setDetailTask(t)}
             />
           ))
         )}
       </CustomerTabSectionCard>
 
-      <AddTaskDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        defaultCustomerId={customer.id}
-        lockCustomer
-        customerOptions={customerOptions}
+      <TaskDetailSheet
+        open={detailTask !== null}
+        onOpenChange={(next) => {
+          if (!next) setDetailTask(null);
+        }}
+        task={detailTask}
+        showCustomerLink={false}
+        onEditClick={(task) => {
+          setDetailTask(null);
+          setEditingTask(task);
+        }}
       />
-      <EditTaskDialog
+      <TaskEditSheet
         open={editingTask !== null}
         onOpenChange={(next) => {
           if (!next) setEditingTask(null);
         }}
         task={editingTask}
+        customerOptions={customerOptions}
+      />
+      <TaskAddSheet
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        defaultCustomerId={customer.id}
+        lockCustomer
         customerOptions={customerOptions}
       />
     </>

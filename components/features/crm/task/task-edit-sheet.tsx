@@ -13,13 +13,6 @@ import {
   type TaskCustomerOption
 } from "@/components/shared/task-customer-select";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,6 +22,13 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
   TASK_BOARD_COLUMNS,
@@ -47,19 +47,19 @@ import { clampProgressPercent, TASK_PROGRESS_PERCENT_OPTIONS } from "@/lib/tasks
 import { deleteTaskAction, updateTaskAction } from "@/server/actions/tasks-crm";
 import type { TaskRecord } from "@/types/task";
 
-export interface EditTaskDialogProps {
+export interface TaskEditSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: TaskRecord | null;
   customerOptions?: TaskCustomerOption[];
 }
 
-export function EditTaskDialog({
+export function TaskEditSheet({
   open,
   onOpenChange,
   task,
   customerOptions = []
-}: EditTaskDialogProps) {
+}: TaskEditSheetProps) {
   const router = useRouter();
   const [column, setColumn] = React.useState<TaskBoardColumnId>("todo");
   const [title, setTitle] = React.useState("");
@@ -133,13 +133,13 @@ export function EditTaskDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex max-h-[90vh] max-w-lg flex-col overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Edit task</DialogTitle>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Edit task</SheetTitle>
+          </SheetHeader>
           <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
               <FormServerError message={serverError} />
 
               <div className="space-y-1.5">
@@ -258,7 +258,7 @@ export function EditTaskDialog({
               </div>
             </div>
 
-            <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            <SheetFooter className="flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"
@@ -275,10 +275,10 @@ export function EditTaskDialog({
                   Save
                 </Button>
               </div>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <ConfirmDialog
         open={confirmDeleteOpen}

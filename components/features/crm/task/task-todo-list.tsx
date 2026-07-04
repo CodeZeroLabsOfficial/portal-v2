@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ListTodo, Search, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, ListTodo, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { TaskTodoItem } from "@/components/features/crm/task/task-todo-item";
 import {
@@ -11,13 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-  CommandSeparator
-} from "@/components/ui/command";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -26,55 +23,67 @@ import {
   EmptyTitle
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { coerceTaskPriority } from "@/lib/tasks/task-priority";
-import { statusToBoardColumn, type TaskBoardColumnId } from "@/lib/tasks/task-board-columns";
+import { Toggle } from "@/components/ui/toggle";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  coerceTaskPriority,
+  TASK_PRIORITY_DOT_CLASSES,
+  TASK_PRIORITY_VALUES,
+  taskPriorityLabel,
+  type TaskPriorityValue
+} from "@/lib/tasks/task-priority";
+import { statusToBoardColumn } from "@/lib/tasks/task-board-columns";
+import { cn } from "@/lib/utils";
 import type { TaskRecord } from "@/types/task";
-
-export type TaskHubFilterTab = "all" | "my" | "high_priority" | "closing_soon";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const FILTER_TABS: { id: TaskHubFilterTab; label: string }[] = [
-  { id: "all", label: "All tasks" },
-  { id: "my", label: "My tasks" },
-  { id: "high_priority", label: "High priority" },
-  { id: "closing_soon", label: "Closing soon" }
-];
+interface TaskAssigneeOption {
+  uid: string;
+  displayName: string;
+}
 
-const PRIORITY_FILTERS = ["high", "medium", "low"] as const;
-type TaskPriorityFilter = (typeof PRIORITY_FILTERS)[number];
-
-function filterTasksForHubTab(
-  tasks: TaskRecord[],
-  tab: TaskHubFilterTab,
-  viewerUid: string
-): TaskRecord[] {
-  const now = Date.now();
-  const weekMs = 7 * 24 * 60 * 60 * 1000;
-
-  switch (tab) {
-    case "all":
-      return tasks;
-    case "my":
-      return tasks.filter((t) => t.assignedToUid === viewerUid);
-    case "high_priority":
-      return tasks.filter((t) => coerceTaskPriority(t.priority) === "high");
-    case "closing_soon":
-      return tasks.filter((t) => {
-        const col = statusToBoardColumn(t.status);
-        const dueSoon =
-          typeof t.dueAt === "number" && t.dueAt <= now + weekMs && t.dueAt >= now - DAY_MS;
-        return col === "review" || dueSoon;
-      });
-    default:
-      return tasks;
+function collectAssigneeOptions(tasks: TaskRecord[]): TaskAssigneeOption[] {
+  const map = new Map<string, string>();
+  for (const task of tasks) {
+    const uid = task.assignedToUid?.trim();
+    if (!uid) continue;
+    const label = task.assignedToDisplayName?.trim() || uid;
+    map.set(uid, label);
   }
+  return [...map.entries()]
+    .map(([uid, displayName]) => ({ uid, displayName }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }));
 }
 
 function filterTasksByStatusTab(tasks: TaskRecord[], tab: TaskStatusFilterTab): TaskRecord[] {
   if (tab === "all") return tasks;
   return tasks.filter((t) => statusToBoardColumn(t.status) === tab);
+}
+
+function filterTasksByAssignees(tasks: TaskRecord[], uids: string[] | null): TaskRecord[] {
+  if (!uids || uids.length === 0) return tasks;
+  return tasks.filter((t) => t.assignedToUid && uids.includes(t.assignedToUid));
+}
+
+function filterTasksByPriority(
+  tasks: TaskRecord[],
+  priority: TaskPriorityValue | null
+): TaskRecord[] {
+  if (!priority) return tasks;
+  return tasks.filter((t) => coerceTaskPriority(t.priority) === priority);
+}
+
+function filterTasksClosingSoon(tasks: TaskRecord[], enabled: boolean): TaskRecord[] {
+  if (!enabled) return tasks;
+  const now = Date.now();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  return tasks.filter((t) => {
+    const col = statusToBoardColumn(t.status);
+    const dueSoon =
+      typeof t.dueAt === "number" && t.dueAt <= now + weekMs && t.dueAt >= now - DAY_MS;
+    return col === "review" || dueSoon;
+  });
 }
 
 function filterTasksBySearch(tasks: TaskRecord[], query: string): TaskRecord[] {
@@ -96,108 +105,185 @@ function filterTasksBySearch(tasks: TaskRecord[], query: string): TaskRecord[] {
   });
 }
 
-function filterTasksByPriority(
-  tasks: TaskRecord[],
-  priority: TaskPriorityFilter | null
-): TaskRecord[] {
-  if (!priority) return tasks;
-  return tasks.filter((t) => coerceTaskPriority(t.priority) === priority);
-}
-
 export interface TaskTodoListProps {
   tasks: TaskRecord[];
   viewerUid: string;
-  onRequestEditTask?: (task: TaskRecord) => void;
+  onSelectTask?: (task: TaskRecord) => void;
   defaultStatusTab?: TaskStatusFilterTab;
+  showViewToggle?: boolean;
 }
 
 export function TaskTodoList({
   tasks,
   viewerUid,
-  onRequestEditTask,
-  defaultStatusTab = "all"
+  onSelectTask,
+  defaultStatusTab = "all",
+  showViewToggle = true
 }: TaskTodoListProps) {
   const [statusTab, setStatusTab] = React.useState<TaskStatusFilterTab>(defaultStatusTab);
-  const [hubFilterTab, setHubFilterTab] = React.useState<TaskHubFilterTab>("all");
-  const [priorityFilter, setPriorityFilter] = React.useState<TaskPriorityFilter | null>(null);
+  const [viewMode, setViewMode] = React.useState<"list" | "grid">("list");
+  const [filterAssigneeUids, setFilterAssigneeUids] = React.useState<string[] | null>(null);
+  const [filterPriority, setFilterPriority] = React.useState<TaskPriorityValue | null>(null);
+  const [closingSoonOnly, setClosingSoonOnly] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  const assigneeOptions = React.useMemo(() => collectAssigneeOptions(tasks), [tasks]);
+
   const filtered = React.useMemo(() => {
-    let result = filterTasksForHubTab(tasks, hubFilterTab, viewerUid);
+    let result = tasks;
     result = filterTasksByStatusTab(result, statusTab);
-    result = filterTasksByPriority(result, priorityFilter);
+    result = filterTasksByAssignees(result, filterAssigneeUids);
+    result = filterTasksByPriority(result, filterPriority);
+    result = filterTasksClosingSoon(result, closingSoonOnly);
     result = filterTasksBySearch(result, searchQuery);
     return result;
-  }, [tasks, hubFilterTab, viewerUid, statusTab, priorityFilter, searchQuery]);
+  }, [tasks, statusTab, filterAssigneeUids, filterPriority, closingSoonOnly, searchQuery]);
 
   const activeFilterCount =
-    (hubFilterTab !== "all" ? 1 : 0) + (priorityFilter ? 1 : 0);
+    (filterAssigneeUids?.length ?? 0) +
+    (filterPriority ? 1 : 0) +
+    (closingSoonOnly ? 1 : 0);
+
+  function handleAssigneeToggle(uid: string, pressed: boolean) {
+    setFilterAssigneeUids((current) => {
+      const existing = current ?? [];
+      if (pressed) {
+        return [...existing, uid];
+      }
+      const next = existing.filter((id) => id !== uid);
+      return next.length > 0 ? next : null;
+    });
+  }
 
   function clearFilters() {
-    setHubFilterTab("all");
-    setPriorityFilter(null);
+    setFilterAssigneeUids(null);
+    setFilterPriority(null);
+    setClosingSoonOnly(false);
+    setSearchQuery("");
   }
 
   const filterContent = (
-    <Command>
-      <CommandList>
-        <CommandEmpty>No filters found.</CommandEmpty>
-        <CommandGroup heading="View">
-          {FILTER_TABS.map((tab) => (
-            <CommandItem key={tab.id} onSelect={() => setHubFilterTab(tab.id)}>
-              <span>{tab.label}</span>
-            </CommandItem>
+    <div className="space-y-6 p-4">
+      {assigneeOptions.length > 0 ? (
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">Assigned users</h4>
+          <div className="flex flex-wrap gap-2">
+            {assigneeOptions.map((opt) => (
+              <Toggle
+                key={opt.uid}
+                variant="outline"
+                size="sm"
+                pressed={filterAssigneeUids?.includes(opt.uid) ?? false}
+                onPressedChange={(pressed) => handleAssigneeToggle(opt.uid, pressed)}
+                className="px-3 text-xs">
+                {opt.displayName}
+              </Toggle>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium">Quick filters</h4>
+        <Toggle
+          variant="outline"
+          size="sm"
+          pressed={filterAssigneeUids?.length === 1 && filterAssigneeUids[0] === viewerUid}
+          onPressedChange={(pressed) =>
+            setFilterAssigneeUids(pressed ? [viewerUid] : null)
+          }
+          className="px-3 text-xs">
+          My tasks
+        </Toggle>
+        <Toggle
+          variant="outline"
+          size="sm"
+          pressed={closingSoonOnly}
+          onPressedChange={setClosingSoonOnly}
+          className="ms-2 px-3 text-xs">
+          Closing soon
+        </Toggle>
+      </div>
+
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium">Priority</h4>
+        <div className="flex gap-2 *:grow">
+          {TASK_PRIORITY_VALUES.map((priority) => (
+            <Toggle
+              key={priority}
+              variant="outline"
+              size="sm"
+              pressed={filterPriority === priority}
+              onPressedChange={() =>
+                setFilterPriority((current) => (current === priority ? null : priority))
+              }
+              className="px-3 text-xs capitalize">
+              <span className={cn("size-2 rounded-full", TASK_PRIORITY_DOT_CLASSES[priority])} />
+              {taskPriorityLabel(priority)}
+            </Toggle>
           ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Priority">
-          {PRIORITY_FILTERS.map((p) => (
-            <CommandItem key={p} onSelect={() => setPriorityFilter(p)}>
-              <span className="capitalize">{p}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup>
-          <CommandItem onSelect={clearFilters} className="justify-center text-center">
-            Clear filters
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+        </div>
+
+        {activeFilterCount > 0 ? (
+          <div className="text-end">
+            <Button variant="link" size="sm" className="px-0!" onClick={clearFilters}>
+              Clear filters
+              <X className="size-4" />
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <TaskStatusTabs activeTab={statusTab} onTabChange={setStatusTab} />
 
-        <div className="flex items-center gap-2">
-          <div className="relative w-full sm:w-64">
-            <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+        <div className="flex w-full items-center gap-2 lg:w-auto">
+          <div className="relative w-auto flex-1 lg:flex-none">
+            <Search className="absolute top-2.5 left-3 size-4 opacity-50" />
             <Input
-              placeholder="Search tasks…"
+              placeholder="Search tasks..."
+              className="ps-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8"
             />
           </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="relative shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="outline" className="relative shrink-0">
                 <SlidersHorizontal className="size-4" />
                 {activeFilterCount > 0 ? (
-                  <Badge className="absolute -top-1 -right-1 size-4 rounded-full p-0 text-[10px]">
+                  <Badge
+                    variant="secondary"
+                    className="absolute -end-1.5 -top-1.5 size-4 rounded-full p-0 text-[10px]">
                     {activeFilterCount}
                   </Badge>
                 ) : null}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-0" align="end">
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 p-0" align="end">
               {filterContent}
-            </PopoverContent>
-          </Popover>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {showViewToggle ? (
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={viewMode}
+              onValueChange={(value) => value && setViewMode(value as "list" | "grid")}>
+              <ToggleGroupItem value="list" aria-label="List view">
+                <List className="size-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="grid" aria-label="Grid view">
+                <LayoutGrid className="size-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          ) : null}
         </div>
       </div>
 
@@ -207,20 +293,33 @@ export function TaskTodoList({
             <EmptyMedia variant="icon">
               <ListTodo />
             </EmptyMedia>
-            <EmptyTitle>No tasks match</EmptyTitle>
+            <EmptyTitle>No tasks found</EmptyTitle>
             <EmptyDescription>
               Try a different status tab, search term, or filter — or add a new task.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      ) : (
-        <div className="space-y-3">
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((task) => (
             <TaskTodoItem
               key={task.id}
               task={task}
+              viewMode="grid"
               showCustomerLink
-              onEdit={onRequestEditTask}
+              onSelect={onSelectTask}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 space-y-4">
+          {filtered.map((task) => (
+            <TaskTodoItem
+              key={task.id}
+              task={task}
+              viewMode="list"
+              showCustomerLink
+              onSelect={onSelectTask}
             />
           ))}
         </div>

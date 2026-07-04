@@ -26,3 +26,10 @@ export function coerceTaskPriority(raw: string | undefined): TaskPriorityValue {
   if (s === "premium") return "high";
   return DEFAULT_TASK_PRIORITY;
 }
+
+/** Colored dots for priority filter toggles (UI kit todo list pattern). */
+export const TASK_PRIORITY_DOT_CLASSES: Record<TaskPriorityValue, string> = {
+  high: "bg-red-500",
+  medium: "bg-yellow-500",
+  low: "bg-gray-400",
+};

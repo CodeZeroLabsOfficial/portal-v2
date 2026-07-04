@@ -1,0 +1,142 @@
+"use client";
+
+import Link from "next/link";
+import { format } from "date-fns";
+import { Edit, FileIcon, MessageSquare } from "lucide-react";
+
+import { StatusBadge } from "@/components/shared/status-badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
+import { taskColumnBadgeDisplay, taskPriorityBadgeDisplay } from "@/lib/crm/status-badges";
+import { clampProgressPercent } from "@/lib/tasks/task-progress-options";
+import type { TaskRecord } from "@/types/task";
+
+export interface TaskDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  task: TaskRecord | null;
+  onEditClick?: (task: TaskRecord) => void;
+  showCustomerLink?: boolean;
+}
+
+export function TaskDetailSheet({
+  open,
+  onOpenChange,
+  task,
+  onEditClick,
+  showCustomerLink = true
+}: TaskDetailSheetProps) {
+  if (!task) return null;
+
+  const columnBadge = taskColumnBadgeDisplay(task.status);
+  const priorityBadge = taskPriorityBadgeDisplay(task.priority);
+  const progress = clampProgressPercent(task.progressPercent);
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <div className="flex items-start justify-between pe-6">
+            <SheetTitle className="text-left">{task.title}</SheetTitle>
+            {onEditClick ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onEditClick(task)}>
+                <Edit className="size-4" />
+                Edit
+              </Button>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2 capitalize">
+            <StatusBadge label={columnBadge.label} variant={columnBadge.variant} />
+            <StatusBadge label={priorityBadge.label} variant={priorityBadge.variant} />
+          </div>
+        </SheetHeader>
+
+        <div className="space-y-6 px-4 pb-6">
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Description</h4>
+            <p className="text-muted-foreground text-sm">
+              {task.description?.trim() || "No description provided."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">Assigned to</h4>
+              <p className="text-muted-foreground text-sm">
+                {task.assignedToDisplayName ?? "Unassigned"}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">Due date</h4>
+              <p className="text-muted-foreground text-sm">
+                {typeof task.dueAt === "number"
+                  ? format(new Date(task.dueAt), "PPP")
+                  : "—"}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">Reminder</h4>
+              <p className="text-muted-foreground text-sm">
+                {typeof task.reminderAt === "number"
+                  ? format(new Date(task.reminderAt), "PPP p")
+                  : "—"}
+              </p>
+            </div>
+
+            {showCustomerLink ? (
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium">Customer</h4>
+                {task.customerId ? (
+                  <Link
+                    href={`/admin/customers/${task.customerId}`}
+                    className="text-muted-foreground text-sm underline-offset-4 hover:underline">
+                    {task.customerDisplayName ?? "View customer"}
+                  </Link>
+                ) : (
+                  <p className="text-muted-foreground text-sm">—</p>
+                )}
+              </div>
+            ) : null}
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">Progress</h4>
+              <p className="text-muted-foreground text-sm">{progress}%</p>
+            </div>
+          </div>
+
+          {((task.commentCount ?? 0) > 0 || (task.attachmentCount ?? 0) > 0) ? (
+            <>
+              <Separator />
+              <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">
+                {(task.commentCount ?? 0) > 0 ? (
+                  <span className="flex items-center gap-1.5">
+                    <MessageSquare className="size-4" />
+                    {task.commentCount} comment{(task.commentCount ?? 0) === 1 ? "" : "s"}
+                  </span>
+                ) : null}
+                {(task.attachmentCount ?? 0) > 0 ? (
+                  <span className="flex items-center gap-1.5">
+                    <FileIcon className="size-4" />
+                    {task.attachmentCount} attachment{(task.attachmentCount ?? 0) === 1 ? "" : "s"}
+                  </span>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}

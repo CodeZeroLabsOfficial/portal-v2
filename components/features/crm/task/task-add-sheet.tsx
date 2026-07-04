@@ -11,14 +11,8 @@ import {
   TaskCustomerSelect,
   type TaskCustomerOption
 } from "@/components/shared/task-customer-select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,8 +22,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   TASK_BOARD_COLUMNS,
   taskBoardColumnLabel,
@@ -44,10 +44,9 @@ import {
 import { TASK_PROGRESS_PERCENT_OPTIONS } from "@/lib/tasks/task-progress-options";
 import { createTaskAction } from "@/server/actions/tasks-crm";
 
-export interface AddTaskDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** When the user opens from a status tab, that status is pre-selected. */
+export interface TaskAddSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   defaultColumn?: TaskBoardColumnId;
   defaultCustomerId?: string;
   lockCustomer?: boolean;
@@ -56,21 +55,17 @@ export interface AddTaskDialogProps {
   disabledReason?: string;
 }
 
-export function AddTaskDialog({
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
+export function TaskAddSheet({
+  open,
+  onOpenChange,
   defaultColumn = "todo",
   defaultCustomerId,
   lockCustomer,
   customerOptions = [],
   disabled,
   disabledReason
-}: AddTaskDialogProps) {
+}: TaskAddSheetProps) {
   const router = useRouter();
-  const [internalOpen, setInternalOpen] = React.useState(false);
-  const open = controlledOpen ?? internalOpen;
-  const onOpenChange = controlledOnOpenChange ?? setInternalOpen;
-
   const [column, setColumn] = React.useState<TaskBoardColumnId>(defaultColumn);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -144,13 +139,13 @@ export function AddTaskDialog({
   const effectiveCustomerId = lockCustomer ? (defaultCustomerId ?? "") : customerId;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-lg flex-col overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>New task</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>New task</SheetTitle>
+        </SheetHeader>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
             <FormServerError message={serverError} />
 
             {disabled ? (
@@ -276,7 +271,7 @@ export function AddTaskDialog({
             </div>
           </div>
 
-          <DialogFooter>
+          <SheetFooter className="border-t pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
               Cancel
             </Button>
@@ -284,9 +279,9 @@ export function AddTaskDialog({
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               Create
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

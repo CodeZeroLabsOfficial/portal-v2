@@ -3,8 +3,9 @@
 import * as React from "react";
 import { ListTodo, Plus } from "lucide-react";
 
-import { AddTaskDialog } from "@/components/features/crm/task/add-task-dialog";
-import { EditTaskDialog } from "@/components/features/crm/task/edit-task-dialog";
+import { TaskAddSheet } from "@/components/features/crm/task/task-add-sheet";
+import { TaskDetailSheet } from "@/components/features/crm/task/task-detail-sheet";
+import { TaskEditSheet } from "@/components/features/crm/task/task-edit-sheet";
 import { TaskTodoList } from "@/components/features/crm/task/task-todo-list";
 import type { TaskCustomerOption } from "@/components/shared/task-customer-select";
 import { PageHeader } from "@/components/shared/page-header";
@@ -32,6 +33,7 @@ export function TasksPanel({
   customerOptions
 }: TasksPanelProps) {
   const [addOpen, setAddOpen] = React.useState(false);
+  const [detailTask, setDetailTask] = React.useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = React.useState<TaskRecord | null>(null);
 
   const canCreateTasks = Boolean(organizationId);
@@ -80,24 +82,35 @@ export function TasksPanel({
       <TaskTodoList
         tasks={tasks}
         viewerUid={viewerUid}
-        onRequestEditTask={(t) => setEditingTask(t)}
+        onSelectTask={(t) => setDetailTask(t)}
       />
 
-      <AddTaskDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        defaultColumn="todo"
-        customerOptions={customerOptions}
-        disabled={!canCreateTasks}
-        disabledReason="Your user profile must include an organization id before you can add tasks."
+      <TaskDetailSheet
+        open={detailTask !== null}
+        onOpenChange={(next) => {
+          if (!next) setDetailTask(null);
+        }}
+        task={detailTask}
+        onEditClick={(task) => {
+          setDetailTask(null);
+          setEditingTask(task);
+        }}
       />
-      <EditTaskDialog
+      <TaskEditSheet
         open={editingTask !== null}
         onOpenChange={(next) => {
           if (!next) setEditingTask(null);
         }}
         task={editingTask}
         customerOptions={customerOptions}
+      />
+      <TaskAddSheet
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        defaultColumn="todo"
+        customerOptions={customerOptions}
+        disabled={!canCreateTasks}
+        disabledReason="Your user profile must include an organization id before you can add tasks."
       />
     </div>
   );
