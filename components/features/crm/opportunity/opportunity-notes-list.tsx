@@ -1,50 +1,22 @@
 "use client";
 
-import { Clock, FileSearchIcon, MessageSquare, StickyNote } from "lucide-react";
+import { Clock, MessageSquare, StickyNote } from "lucide-react";
 
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { OpportunityNoteRecord } from "@/types/opportunity";
 
 export interface OpportunityNotesListProps {
   notes: OpportunityNoteRecord[];
-  hasAnyNotes: boolean;
-  searchQuery: string;
-  onClearSearch: () => void;
 }
 
-export function OpportunityNotesList({
-  notes,
-  hasAnyNotes,
-  searchQuery,
-  onClearSearch
-}: OpportunityNotesListProps) {
-  if (!hasAnyNotes) {
+export function OpportunityNotesList({ notes }: OpportunityNotesListProps) {
+  if (notes.length === 0) {
     return (
       <CustomerTabEmptyState icon={MessageSquare} embedded>
         <p>Nothing logged yet.</p>
         <p>Add a note using the button above.</p>
       </CustomerTabEmptyState>
-    );
-  }
-
-  if (notes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="bg-muted/30 mb-4 rounded-full p-6">
-          <FileSearchIcon className="text-muted-foreground h-10 w-10" aria-hidden />
-        </div>
-        <h3 className="mb-2 text-lg font-medium">No matching notes</h3>
-        <p className="text-muted-foreground max-w-md text-sm">
-          {searchQuery.trim()
-            ? `Nothing matches "${searchQuery.trim()}".`
-            : "Nothing matches your search."}
-        </p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={onClearSearch}>
-          Clear search
-        </Button>
-      </div>
     );
   }
 

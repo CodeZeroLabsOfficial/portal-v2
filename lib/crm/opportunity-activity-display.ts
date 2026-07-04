@@ -8,7 +8,7 @@ const ACTIVITY_KIND_META: Record<
   { label: string; icon: LucideIcon }
 > = {
   meeting: { label: "Meeting", icon: Users },
-  call: { label: "Phone call", icon: Phone },
+  call: { label: "Phone", icon: Phone },
   email: { label: "Email", icon: Mail },
   other: { label: "Other", icon: Pin }
 };
