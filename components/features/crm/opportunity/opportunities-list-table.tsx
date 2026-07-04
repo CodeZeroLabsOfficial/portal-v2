@@ -210,16 +210,16 @@ export function OpportunitiesListTable({ opportunities }: OpportunitiesListTable
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href={`/admin/opportunities/${opp.id}`}>Edit</Link>
+                  <Link href={`/admin/opportunities/${opp.id}`}>Open</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href={`/admin/customers/${opp.customerId}`}>View Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer text-destructive focus:text-destructive"
                   onSelect={() => requestDelete(opp)}>
                   Delete deal
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={`/admin/customers/${opp.customerId}`}>View Profile</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
