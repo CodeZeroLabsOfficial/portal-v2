@@ -6,13 +6,11 @@ import { Plus } from "lucide-react";
 
 import { AddProposalDialog } from "@/components/features/crm/customer/add-proposal-dialog";
 import { CRM_DETAIL_LABEL_CLASS } from "@/components/shared/crm-detail-label";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import { OPPORTUNITY_STAGES, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
 import { opportunityStageChevronActiveClasses } from "@/lib/crm/opportunity-stage-chevron";
-import { opportunityStageBadgeDisplay } from "@/lib/crm/status-badges";
 import { cn } from "@/lib/utils";
 import { useOpportunityStageMutation } from "@/hooks/use-opportunity-stage-mutation";
 import type { CustomerRecord } from "@/types/customer";
@@ -51,7 +49,6 @@ export function OpportunityStageProgress({
   const { moveStage, pendingId } = useOpportunityStageMutation();
   const busy = pendingId === opportunity.id;
   const currentIndex = OPPORTUNITY_STAGES.indexOf(opportunity.stage);
-  const stageBadge = opportunityStageBadgeDisplay(opportunity.stage);
   const [addProposalOpen, setAddProposalOpen] = React.useState(false);
 
   const startDate = opportunity.createdAt
@@ -68,10 +65,7 @@ export function OpportunityStageProgress({
         <div className="border-b border-border/60 bg-gradient-to-br from-card via-card to-muted/20 px-4 py-5 sm:px-6 md:px-8 md:py-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <Typography variant="h1">{opportunity.name}</Typography>
-                <StatusBadge label={stageBadge.label} variant={stageBadge.variant} />
-              </div>
+              <Typography variant="h1">{opportunity.name}</Typography>
               <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 <Link
                   href={`/admin/customers/${customer.id}`}
