@@ -38,16 +38,18 @@ export function subscriptionRollupBadgeDisplay(
 export function opportunityStageBadgeDisplay(stage: OpportunityStage): StatusBadgeDisplay {
   const label = opportunityStageLabel(stage);
   switch (stage) {
+    case "lead_in":
+      return { label, variant: "neutral" };
+    case "discovery":
+      return { label, variant: "warning" };
+    case "proposal_sent":
+      return { label, variant: "purple" };
+    case "negotiation":
+      return { label, variant: "info" };
     case "won":
       return { label, variant: "success" };
     case "lost":
       return { label, variant: "destructive" };
-    case "negotiation":
-      return { label, variant: "warning" };
-    case "proposal_sent":
-      return { label, variant: "info" };
-    case "discovery":
-      return { label, variant: "warning" };
     default:
       return { label, variant: "secondary" };
   }
