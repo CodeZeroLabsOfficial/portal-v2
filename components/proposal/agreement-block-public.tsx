@@ -235,7 +235,7 @@ function buildPackageSelectionSummary(
 function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
   return (
     <Card className="gap-0 overflow-hidden rounded-2xl border-zinc-200 bg-white py-0 shadow-sm">
-      <CardContent className="space-y-5 pt-5">
+      <CardContent className="space-y-5 p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <div>
             <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{summary.blockTitle}</p>
@@ -296,7 +296,7 @@ function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
           </span>
         </div>
         {summary.oneOffAddonsMinor > 0 ? (
-          <p className="text-right text-xs text-zinc-500">
+          <p className="!mt-2 text-right text-xs text-zinc-500">
             Plus {formatCurrencyAmount(summary.oneOffAddonsMinor, summary.currency)} in one-time add-ons due at
             signing.
           </p>
