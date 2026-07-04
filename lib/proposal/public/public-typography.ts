@@ -7,6 +7,10 @@
 export const PROPOSAL_PUBLIC_META_LABEL_CLASSES =
   "text-xs font-medium uppercase tracking-wide text-muted-foreground";
 
+/** Agreement modal section + package summary labels (legacy density). */
+export const AGREEMENT_MODAL_META_LABEL_CLASSES =
+  "text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500";
+
 /** Card and panel titles in password gate / acceptance footer. */
 export const PROPOSAL_PUBLIC_PANEL_TITLE_CLASSES = "text-base font-semibold tracking-tight";
 

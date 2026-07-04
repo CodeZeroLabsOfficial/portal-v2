@@ -50,7 +50,6 @@ export interface ProposalRenderContext {
   allBlocks: ProposalBlock[];
   brandingLogoUrl?: string;
   firstRootSplashBlockId?: string | null;
-  proposalTitle?: string;
   proposalStatus?: ProposalStatus;
   acceptedByName?: string;
   acceptedSignatureDataUrl?: string;
@@ -433,7 +432,6 @@ function renderAgreementBlock({
       allBlocks={proposalContext?.allBlocks ?? []}
       shareToken={shareToken}
       publicSelections={publicSelections}
-      proposalTitle={proposalContext?.proposalTitle}
       proposalStatus={proposalContext?.proposalStatus}
       acceptedByName={proposalContext?.acceptedByName}
       acceptedSignatureDataUrl={proposalContext?.acceptedSignatureDataUrl}
