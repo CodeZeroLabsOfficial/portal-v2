@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
+import { CRM_ADD_NEW_BUTTON_CLASS } from "@/components/shared/crm-add-new-button";
 import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
 import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { FormServerError } from "@/components/shared/form-server-error";
@@ -15,9 +16,6 @@ import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
 import { CUSTOMER_NOTE_KINDS, customerNoteKindMeta } from "@/lib/crm/customer-note-display";
 import { addCustomerNoteAction } from "@/server/actions/customers-crm";
 import type { CustomerNoteKind } from "@/types/customer";
-
-const ADD_NEW_BUTTON_CLASS =
-  "shrink-0 gap-1.5 border-primary/40 bg-primary/5 text-primary shadow-none hover:bg-primary/10 hover:text-primary";
 
 const EMPTY_EDITOR_VALUE = "<p></p>";
 
@@ -81,7 +79,7 @@ export function AddCustomerNoteDialog({ customerId }: AddCustomerNoteDialogProps
         if (!next) resetForm();
       }}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className={ADD_NEW_BUTTON_CLASS}>
+        <Button type="button" variant="outline" size="sm" className={CRM_ADD_NEW_BUTTON_CLASS}>
           Add new
           <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>

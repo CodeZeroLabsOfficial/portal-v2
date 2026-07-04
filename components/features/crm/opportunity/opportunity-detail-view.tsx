@@ -3,35 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ChevronDown,
-  FileText,
-  Loader2,
-  Mail,
-  MessageSquare,
-  Phone,
-  Pin,
-  Plus,
-  StickyNote,
-  Users
-} from "lucide-react";
+import { ChevronLeft, FileText, Loader2, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { FormServerError } from "@/components/shared/form-server-error";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { OpportunityActivitiesPanel } from "@/components/features/crm/opportunity/opportunity-activities-panel";
+import { OpportunityNotesPanel } from "@/components/features/crm/opportunity/opportunity-notes-panel";
+import { OpportunityStageProgress } from "@/components/features/crm/opportunity/opportunity-stage-progress";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -39,26 +26,13 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Typography } from "@/components/ui/typography";
-import { formatCurrencyAmount } from "@/lib/common/format";
-import { OPPORTUNITY_STAGES, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
-import { opportunityStageBadgeDisplay } from "@/lib/crm/status-badges";
-import { cn } from "@/lib/utils";
-import { useOpportunityStageMutation } from "@/hooks/use-opportunity-stage-mutation";
 import { useProposalTemplatePickerState } from "@/hooks/use-proposal-template-picker-state";
-import {
-  addOpportunityActivityAction,
-  addOpportunityNoteAction
-} from "@/server/actions/opportunities-crm";
 import { createDraftProposalFromOpportunityAction } from "@/server/actions/proposals-crm";
 import type { CustomerRecord } from "@/types/customer";
 import type {
-  OpportunityActivityKind,
   OpportunityActivityRecord,
   OpportunityNoteRecord,
-  OpportunityRecord,
-  OpportunityStage
+  OpportunityRecord
 } from "@/types/opportunity";
 import type { ProposalTemplateRecord } from "@/types/proposal-template";
 
@@ -68,448 +42,6 @@ export interface OpportunityDetailViewProps {
   notes: OpportunityNoteRecord[];
   activities: OpportunityActivityRecord[];
   templates: ProposalTemplateRecord[];
-}
-
-const CHEVRON_CLIP =
-  "[clip-path:polygon(0_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,0_100%,14px_50%)]";
-const CHEVRON_CLIP_FIRST =
-  "[clip-path:polygon(0_0,calc(100%-14px)_0,100%_50%,calc(100%-14px)_100%,0_100%)]";
-
-const ACTIVITY_KINDS: { value: OpportunityActivityKind; label: string; Icon: typeof Phone }[] = [
-  { value: "meeting", label: "Meeting", Icon: Users },
-  { value: "call", label: "Phone call", Icon: Phone },
-  { value: "email", label: "Email", Icon: Mail },
-  { value: "other", label: "Other", Icon: Pin }
-];
-
-function activityKindMeta(kind: OpportunityActivityKind) {
-  return ACTIVITY_KINDS.find((k) => k.value === kind) ?? ACTIVITY_KINDS[3];
-}
-
-const ADD_NEW_BUTTON_CLASS =
-  "shrink-0 gap-1.5 border-primary/40 bg-primary/5 text-primary shadow-none hover:bg-primary/10 hover:text-primary";
-
-function stageVariantClasses(
-  stage: OpportunityStage,
-  variant: "active" | "completed" | "upcoming"
-): string {
-  if (variant === "active") {
-    if (stage === "lost") return "bg-destructive/15 text-destructive";
-    if (stage === "won") return "bg-emerald-500/15 text-emerald-500";
-    return "bg-primary/15 text-primary";
-  }
-  if (variant === "completed") {
-    return "bg-muted text-foreground/80";
-  }
-  return "bg-muted/40 text-muted-foreground";
-}
-
-interface OpportunityStageProgressProps {
-  opportunity: OpportunityRecord;
-  customer: CustomerRecord;
-}
-
-function OpportunityStageProgress({ opportunity, customer }: OpportunityStageProgressProps) {
-  const { moveStage, pendingId } = useOpportunityStageMutation();
-  const busy = pendingId === opportunity.id;
-  const currentIndex = OPPORTUNITY_STAGES.indexOf(opportunity.stage);
-  const stageBadge = opportunityStageBadgeDisplay(opportunity.stage);
-
-  const startDate = opportunity.createdAt
-    ? new Date(opportunity.createdAt).toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      })
-    : null;
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/60 shadow-sm backdrop-blur-sm">
-      <div className="border-b border-border/60 bg-gradient-to-br from-card via-card to-muted/20 px-4 py-5 sm:px-6 md:px-8 md:py-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Typography variant="h1" className="text-2xl md:text-3xl">
-                {opportunity.name}
-              </Typography>
-              <StatusBadge label={stageBadge.label} variant={stageBadge.variant} />
-            </div>
-            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <Link href={`/admin/customers/${customer.id}`} className="font-medium text-primary hover:underline">
-                {customer.name || customer.email}
-              </Link>
-              {customer.phone ? (
-                <>
-                  <span aria-hidden className="text-muted-foreground/60">
-                    ·
-                  </span>
-                  <a href={`tel:${customer.phone}`} className="hover:text-foreground hover:underline">
-                    {customer.phone}
-                  </a>
-                </>
-              ) : null}
-              {customer.email ? (
-                <>
-                  <span aria-hidden className="text-muted-foreground/60">
-                    ·
-                  </span>
-                  <a href={`mailto:${customer.email}`} className="hover:text-foreground hover:underline">
-                    {customer.email}
-                  </a>
-                </>
-              ) : null}
-            </div>
-            {typeof opportunity.amountMinor === "number" ? (
-              <p className="text-lg tabular-nums text-foreground">
-                {formatCurrencyAmount(opportunity.amountMinor, opportunity.currency)}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-4 sm:px-6 md:px-8">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Start</p>
-            {startDate ? (
-              <p className="text-[13px] tabular-nums text-foreground">{startDate}</p>
-            ) : (
-              <p className="text-[13px] text-muted-foreground">—</p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Current stage
-            </p>
-            <p className="text-[13px] font-medium text-foreground">{opportunityStageLabel(opportunity.stage)}</p>
-          </div>
-        </div>
-
-        <div className="flex w-full min-w-0 items-stretch pb-1 pt-1">
-          {OPPORTUNITY_STAGES.map((stage, i) => {
-            const active = stage === opportunity.stage;
-            const completed = i < currentIndex;
-            const variant: "active" | "completed" | "upcoming" = active
-              ? "active"
-              : completed
-                ? "completed"
-                : "upcoming";
-            return (
-              <button
-                key={stage}
-                type="button"
-                disabled={busy || active}
-                onClick={() => {
-                  if (stage !== opportunity.stage) void moveStage(opportunity.id, stage);
-                }}
-                aria-current={active ? "step" : undefined}
-                aria-label={`Move stage to ${opportunityStageLabel(stage)}`}
-                className={cn(
-                  "relative flex min-h-10 min-w-0 flex-1 items-center justify-center px-1 text-center text-[11px] font-semibold leading-tight transition-colors sm:px-2 sm:text-[12px] md:px-4",
-                  i === 0 ? CHEVRON_CLIP_FIRST : cn("-ml-[14px]", CHEVRON_CLIP),
-                  stageVariantClasses(stage, variant),
-                  !active && !busy && "hover:brightness-110",
-                  busy && "opacity-60"
-                )}>
-                {opportunityStageLabel(stage)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface NotesSectionProps {
-  opportunityId: string;
-  notes: OpportunityNoteRecord[];
-}
-
-function NotesSection({ opportunityId, notes }: NotesSectionProps) {
-  const router = useRouter();
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [body, setBody] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!body.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await addOpportunityNoteAction({ opportunityId, body });
-      if (!result.ok) {
-        setError(result.message);
-        return;
-      }
-      setBody("");
-      setAddOpen(false);
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const sorted = React.useMemo(() => [...notes].sort((a, b) => b.createdAt - a.createdAt), [notes]);
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
-        <Typography variant="h3" className="text-base">
-          Notes
-        </Typography>
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className={ADD_NEW_BUTTON_CLASS}>
-              Add new
-              <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add note</DialogTitle>
-              <DialogDescription>Save context, decisions, or follow-ups for this opportunity.</DialogDescription>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={submit}>
-              <FormServerError message={error} />
-              <Textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Write a note…"
-                rows={5}
-                className="resize-y"
-                disabled={busy}
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" disabled={busy} onClick={() => setAddOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={busy || !body.trim()} className="gap-1.5">
-                  {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" aria-hidden />
-                  )}
-                  Save
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="bg-card px-4 py-5 sm:px-5">
-        {sorted.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No records found</p>
-        ) : (
-          <ul className="space-y-3">
-            {sorted.map((n) => (
-              <li key={n.id} className="rounded-lg border border-border/70 bg-muted/10 p-4">
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 font-medium">
-                    <StickyNote className="h-3.5 w-3.5" aria-hidden />
-                    Note
-                  </span>
-                  <time dateTime={new Date(n.createdAt).toISOString()}>
-                    {new Date(n.createdAt).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short"
-                    })}
-                  </time>
-                </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{n.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface ActivitySectionProps {
-  opportunityId: string;
-  activities: OpportunityActivityRecord[];
-}
-
-function toLocalDateTimeInputValue(ms: number): string {
-  const d = new Date(ms);
-  const tzOffsetMs = d.getTimezoneOffset() * 60_000;
-  return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 16);
-}
-
-function ActivitySection({ opportunityId, activities }: ActivitySectionProps) {
-  const router = useRouter();
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [kind, setKind] = React.useState<OpportunityActivityKind>("meeting");
-  const [title, setTitle] = React.useState("");
-  const [detail, setDetail] = React.useState("");
-  const [occurredAt, setOccurredAt] = React.useState(() => toLocalDateTimeInputValue(Date.now()));
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const occurredAtMs = occurredAt ? new Date(occurredAt).getTime() : undefined;
-      const result = await addOpportunityActivityAction({
-        opportunityId,
-        kind,
-        title,
-        detail: detail.trim() ? detail : undefined,
-        occurredAt:
-          typeof occurredAtMs === "number" && Number.isFinite(occurredAtMs) ? occurredAtMs : undefined
-      });
-      if (!result.ok) {
-        setError(result.message);
-        return;
-      }
-      setTitle("");
-      setDetail("");
-      setOccurredAt(toLocalDateTimeInputValue(Date.now()));
-      setKind("meeting");
-      setAddOpen(false);
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const sorted = React.useMemo(
-    () => [...activities].sort((a, b) => b.occurredAt - a.occurredAt),
-    [activities]
-  );
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
-        <Typography variant="h3" className="text-base">
-          Open activities
-        </Typography>
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className={ADD_NEW_BUTTON_CLASS}>
-              Add new
-              <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add activity</DialogTitle>
-              <DialogDescription>
-                Log a meeting, phone call, email, or other touchpoint with this contact.
-              </DialogDescription>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={submit}>
-              <FormServerError message={error} />
-
-              <div className="flex flex-wrap gap-2">
-                {ACTIVITY_KINDS.map(({ value, label, Icon }) => {
-                  const active = kind === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setKind(value)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                        active
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border/60 text-muted-foreground hover:bg-muted/50"
-                      )}
-                      aria-pressed={active}>
-                      <Icon className="h-3.5 w-3.5" aria-hidden />
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-[1fr_minmax(0,11rem)]">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Title"
-                  disabled={busy}
-                  maxLength={240}
-                />
-                <Input
-                  type="datetime-local"
-                  value={occurredAt}
-                  onChange={(e) => setOccurredAt(e.target.value)}
-                  disabled={busy}
-                  aria-label="When"
-                />
-              </div>
-
-              <Textarea
-                value={detail}
-                onChange={(e) => setDetail(e.target.value)}
-                placeholder="Optional details…"
-                rows={3}
-                className="resize-y"
-                disabled={busy}
-                maxLength={4000}
-              />
-
-              <DialogFooter>
-                <Button type="button" variant="outline" disabled={busy} onClick={() => setAddOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={busy || !title.trim()} className="gap-1.5">
-                  {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" aria-hidden />
-                  )}
-                  Save
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="bg-card px-4 py-5 sm:px-5">
-        {sorted.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No records found</p>
-        ) : (
-          <ul className="space-y-0 border-l border-border/70 pl-6">
-            {sorted.map((a) => {
-              const meta = activityKindMeta(a.kind);
-              const Icon = meta.Icon;
-              return (
-                <li key={a.id} className="relative mb-5 last:mb-0">
-                  <span className="absolute -left-[27px] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground ring-2 ring-muted">
-                    <Icon className="h-3 w-3" aria-hidden />
-                  </span>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span className="font-medium uppercase tracking-wide">{meta.label}</span>
-                    <time dateTime={new Date(a.occurredAt).toISOString()}>
-                      {new Date(a.occurredAt).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short"
-                      })}
-                    </time>
-                  </div>
-                  <p className="mt-1 text-sm font-medium text-foreground">{a.title}</p>
-                  {a.detail ? (
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{a.detail}</p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export function OpportunityDetailView({
@@ -545,12 +77,28 @@ export function OpportunityDetailView({
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" className="-ml-2 gap-1.5 text-muted-foreground hover:text-foreground" asChild>
-        <Link href="/admin/opportunities">
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Pipeline
-        </Link>
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/admin/opportunities" aria-label="Back to Pipeline">
+            <ChevronLeft className="size-4" aria-hidden />
+          </Link>
+        </Button>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/admin/opportunities">Pipeline</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="max-w-[min(100%,28rem)] truncate">
+                {opportunity.name}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
       <OpportunityStageProgress opportunity={opportunity} customer={customer} />
 
@@ -558,7 +106,7 @@ export function OpportunityDetailView({
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" aria-hidden />
-            <CardTitle className="text-base">Add proposal</CardTitle>
+            <CardTitle>Add proposal</CardTitle>
           </div>
           <CardDescription>
             Creates a draft linked to this opportunity so when the buyer signs the agreement, this deal can move to
@@ -604,7 +152,7 @@ export function OpportunityDetailView({
           <CardHeader>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" aria-hidden />
-              <CardTitle className="text-base">Opportunity summary</CardTitle>
+              <CardTitle>Opportunity summary</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -614,8 +162,8 @@ export function OpportunityDetailView({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <NotesSection opportunityId={opportunity.id} notes={notes} />
-        <ActivitySection opportunityId={opportunity.id} activities={activities} />
+        <OpportunityNotesPanel opportunityId={opportunity.id} notes={notes} />
+        <OpportunityActivitiesPanel opportunityId={opportunity.id} activities={activities} />
       </div>
     </div>
   );
