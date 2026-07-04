@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Edit, FileIcon, MessageSquare } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -37,10 +38,11 @@ export function TaskDetailSheet({
   const columnBadge = taskColumnBadgeDisplay(task.status);
   const priorityBadge = taskPriorityBadgeDisplay(task.priority);
   const progress = clampProgressPercent(task.progressPercent);
+  const assigneeName = task.assignedToDisplayName?.trim();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <div className="flex items-start justify-between pe-6">
             <SheetTitle className="text-left">{task.title}</SheetTitle>
@@ -61,7 +63,7 @@ export function TaskDetailSheet({
           </div>
         </SheetHeader>
 
-        <div className="space-y-6 px-4 pb-6">
+        <div className="space-y-6 p-4">
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Description</h4>
             <p className="text-muted-foreground text-sm">
@@ -70,15 +72,19 @@ export function TaskDetailSheet({
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Assigned to</h4>
-              <p className="text-muted-foreground text-sm">
-                {task.assignedToDisplayName ?? "Unassigned"}
-              </p>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Assigned To</h4>
+              {assigneeName ? (
+                <Badge variant="outline" className="font-normal">
+                  {assigneeName}
+                </Badge>
+              ) : (
+                <p className="text-muted-foreground text-sm">Unassigned</p>
+              )}
             </div>
 
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Due date</h4>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Due Date</h4>
               <p className="text-muted-foreground text-sm">
                 {typeof task.dueAt === "number"
                   ? format(new Date(task.dueAt), "PPP")
@@ -86,17 +92,17 @@ export function TaskDetailSheet({
               </p>
             </div>
 
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Reminder</h4>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Reminder Date</h4>
               <p className="text-muted-foreground text-sm">
                 {typeof task.reminderAt === "number"
-                  ? format(new Date(task.reminderAt), "PPP p")
+                  ? format(new Date(task.reminderAt), "PPP")
                   : "—"}
               </p>
             </div>
 
             {showCustomerLink ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <h4 className="text-sm font-medium">Customer</h4>
                 {task.customerId ? (
                   <Link
@@ -110,7 +116,7 @@ export function TaskDetailSheet({
               </div>
             ) : null}
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <h4 className="text-sm font-medium">Progress</h4>
               <p className="text-muted-foreground text-sm">{progress}%</p>
             </div>

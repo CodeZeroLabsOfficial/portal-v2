@@ -2,6 +2,14 @@ export const TASK_BOARD_COLUMNS = ["todo", "in_progress", "review", "done"] as c
 
 export type TaskBoardColumnId = (typeof TASK_BOARD_COLUMNS)[number];
 
+/** Colored dots for status selects (UI kit todo list pattern). */
+export const TASK_STATUS_DOT_CLASSES: Record<TaskBoardColumnId, string> = {
+  todo: "bg-blue-500",
+  in_progress: "bg-purple-500",
+  review: "bg-yellow-500",
+  done: "bg-green-500",
+};
+
 export function taskBoardColumnLabel(id: TaskBoardColumnId): string {
   switch (id) {
     case "todo":

@@ -4,14 +4,15 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { DateTimePicker } from "@/components/date-time-picker";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
-import { TaskAssigneeSelect } from "@/components/shared/task-assignee-select";
+import { TaskAssigneeField } from "@/components/shared/task-assignee-field";
 import {
   TaskCustomerSelect,
   type TaskCustomerOption
 } from "@/components/shared/task-customer-select";
+import { TaskDatePicker } from "@/components/shared/task-date-picker";
+import { TaskStatusPriorityFields } from "@/components/shared/task-status-priority-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,22 +26,17 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  TASK_BOARD_COLUMNS,
   statusToBoardColumn,
-  taskBoardColumnLabel,
   type TaskBoardColumnId
 } from "@/lib/tasks/task-board-columns";
 import {
   DEFAULT_TASK_PRIORITY,
-  TASK_PRIORITY_VALUES,
   coerceTaskPriority,
-  taskPriorityLabel,
   type TaskPriorityValue
 } from "@/lib/tasks/task-priority";
 import { clampProgressPercent, TASK_PROGRESS_PERCENT_OPTIONS } from "@/lib/tasks/task-progress-options";
@@ -134,148 +130,120 @@ export function TaskEditSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-lg">
+        <SheetContent className="overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Edit task</SheetTitle>
+            <SheetTitle>Edit To-Do</SheetTitle>
           </SheetHeader>
-          <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-4" noValidate>
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
-              <FormServerError message={serverError} />
 
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-task-title">
-                  Title <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="edit-task-title"
-                  name="title"
-                  required
-                  maxLength={500}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Design new landing page"
-                  autoComplete="off"
-                  disabled={busy || !task}
-                />
-              </div>
+          <form onSubmit={onSubmit} className="space-y-6 p-4 pt-0" noValidate>
+            <FormServerError message={serverError} />
 
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-task-priority">Priority</Label>
-                <Select
-                  value={priority}
-                  onValueChange={(value) => setPriority(value as TaskPriorityValue)}
-                  disabled={busy || !task}>
-                  <SelectTrigger id="edit-task-priority" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TASK_PRIORITY_VALUES.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {taskPriorityLabel(p)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-task-column">Status</Label>
-                <Select
-                  value={column}
-                  onValueChange={(value) => setColumn(value as TaskBoardColumnId)}
-                  disabled={busy || !task}>
-                  <SelectTrigger id="edit-task-column" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TASK_BOARD_COLUMNS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {taskBoardColumnLabel(c)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-task-progress">Progress</Label>
-                <Select
-                  value={String(progressPercent)}
-                  onValueChange={(value) => setProgressPercent(Number(value))}
-                  disabled={busy || !task}>
-                  <SelectTrigger id="edit-task-progress" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TASK_PROGRESS_PERCENT_OPTIONS.map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <TaskAssigneeSelect
-                id="edit-task-assignee"
-                value={assignedToUid}
-                onValueChange={setAssignedToUid}
-                disabled={busy || !task}
-                allowUnassigned
-              />
-
-              <TaskCustomerSelect
-                id="edit-task-customer"
-                options={customerOptions}
-                value={customerId}
-                onValueChange={setCustomerId}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-task-title">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="edit-task-title"
+                name="title"
+                required
+                maxLength={500}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter title"
+                autoComplete="off"
                 disabled={busy || !task}
               />
-
-              <div className="space-y-1.5">
-                <Label>Due date (optional)</Label>
-                <DateTimePicker date={dueDate} setDate={setDueDate} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Reminder (optional)</Label>
-                <DateTimePicker date={reminderDate} setDate={setReminderDate} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-task-description">Description (optional)</Label>
-                <Textarea
-                  id="edit-task-description"
-                  name="description"
-                  maxLength={8000}
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Short summary for the card…"
-                  disabled={busy || !task}
-                  className="min-h-[100px] resize-y"
-                />
-              </div>
             </div>
 
-            <SheetFooter className="flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-task-description">Description</Label>
+              <Textarea
+                id="edit-task-description"
+                name="description"
+                maxLength={8000}
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter description"
                 disabled={busy || !task}
-                onClick={() => setConfirmDeleteOpen(true)}>
-                Delete
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={busy || !task || !title.trim()}>
-                  {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                  Save
-                </Button>
-              </div>
-            </SheetFooter>
+              />
+            </div>
+
+            <TaskAssigneeField
+              id="edit-task-assignee"
+              value={assignedToUid}
+              onValueChange={setAssignedToUid}
+              disabled={busy || !task}
+              allowUnassigned
+              displayNameHint={task?.assignedToDisplayName}
+            />
+
+            <TaskDatePicker
+              id="edit-task-due"
+              label="Due Date"
+              date={dueDate}
+              onDateChange={setDueDate}
+              disabled={busy || !task}
+            />
+
+            <TaskDatePicker
+              id="edit-task-reminder"
+              label="Reminder Date"
+              date={reminderDate}
+              onDateChange={setReminderDate}
+              disabled={busy || !task}
+            />
+
+            <TaskStatusPriorityFields
+              status={column}
+              onStatusChange={setColumn}
+              priority={priority}
+              onPriorityChange={setPriority}
+              disabled={busy || !task}
+              statusId="edit-task-status"
+              priorityId="edit-task-priority"
+            />
+
+            <TaskCustomerSelect
+              id="edit-task-customer"
+              options={customerOptions}
+              value={customerId}
+              onValueChange={setCustomerId}
+              disabled={busy || !task}
+            />
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-task-progress">Progress</Label>
+              <Select
+                value={String(progressPercent)}
+                onValueChange={(value) => setProgressPercent(Number(value))}
+                disabled={busy || !task}>
+                <SelectTrigger id="edit-task-progress" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TASK_PROGRESS_PERCENT_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}%
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full"
+              disabled={busy || !task}
+              onClick={() => setConfirmDeleteOpen(true)}>
+              Delete task
+            </Button>
+
+            <Button type="submit" className="w-full" disabled={busy || !task || !title.trim()}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+              Save Changes
+            </Button>
           </form>
         </SheetContent>
       </Sheet>
