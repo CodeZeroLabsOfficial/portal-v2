@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   CreditCard,
   FileText,
   FolderOpen,
@@ -15,8 +13,8 @@ import {
   Sparkles
 } from "lucide-react";
 
+import { PageBackButton } from "@/components/shared/page-back-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { type CustomerDetailTab, isCustomerDetailTab } from "@/lib/crm/customer-detail-tabs";
 import { cn } from "@/lib/utils";
 
@@ -69,12 +67,7 @@ export function CustomerDetailShell({
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" size="sm" className="-ml-2 gap-1.5" asChild>
-        <Link href="/admin/customers">
-          <ArrowLeft className="size-4" aria-hidden />
-          Customers
-        </Link>
-      </Button>
+      <PageBackButton href="/admin/customers" label="Customers" />
 
       <Tabs value={tab} onValueChange={handleTabChange} className="gap-4">
         <TabsList className="[&_[data-slot=tabs-trigger]]:flex-none">

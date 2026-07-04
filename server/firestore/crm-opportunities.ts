@@ -310,6 +310,10 @@ export async function updateOpportunityStage(
   const existing = await getOpportunityForStaff(user, opportunityId);
   if (!existing) return { ok: false, message: "Opportunity not found." };
 
+  if (existing.stage === stage) {
+    return { ok: true };
+  }
+
   await db
     .collection(COLLECTIONS.opportunities)
     .doc(opportunityId)

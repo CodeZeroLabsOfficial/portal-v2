@@ -5,8 +5,7 @@ import { Clock } from "lucide-react";
 
 import { CustomerTabEmptyState } from "@/components/features/crm/customer/customer-tab-empty-state";
 import { CrmActivityPanelShell } from "@/components/shared/crm-activity-panel-shell";
-import { CrmActivityProposalLinkCard } from "@/components/shared/crm-activity-proposal-link-card";
-import { Badge } from "@/components/ui/badge";
+import { CrmActivityTimelineItem } from "@/components/shared/crm-activity-timeline-item";
 import { opportunityActivityIcon } from "@/lib/crm/opportunity-activity-display";
 import type { OpportunityActivityRecord } from "@/types/opportunity";
 
@@ -31,46 +30,24 @@ export function OpportunityActivitiesPanel({ customerId, activities }: Opportuni
       ) : (
         <ol className="relative border-s ps-8">
           {timeline.map((activity, index) => {
-            const Icon = opportunityActivityIcon(activity.type);
-            const isLast = index === timeline.length - 1;
             const proposalHref =
-              activity.proposalId?.trim()
+              activity.type === "proposal_created" && activity.proposalId?.trim()
                 ? `/admin/proposals/${activity.proposalId}?customer=${encodeURIComponent(customerId)}`
                 : null;
 
             return (
-              <li key={activity.id} className={`ms-6 space-y-2 ${isLast ? "" : "mb-10"}`}>
-                <span className="bg-muted absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full border">
-                  <Icon className="text-primary size-3" aria-hidden />
-                </span>
-                <h3 className="flex flex-wrap items-center font-semibold">
-                  {activity.title}
-                  {index === 0 ? (
-                    <Badge variant="outline" className="ms-2">
-                      Latest
-                    </Badge>
-                  ) : null}
-                </h3>
-                {activity.type === "proposal_created" && proposalHref ? (
-                  <CrmActivityProposalLinkCard
-                    href={proposalHref}
-                    title={activity.detail?.trim() || "Proposal"}
-                  />
-                ) : activity.detail || activity.type ? (
-                  <p className="text-muted-foreground text-sm">
-                    {activity.detail ?? activity.type.replaceAll("_", " ")}
-                  </p>
-                ) : null}
-                <time
-                  dateTime={new Date(activity.createdAt).toISOString()}
-                  className="text-muted-foreground flex items-center gap-1.5 text-sm leading-none">
-                  <Clock className="size-3" aria-hidden />
-                  {new Date(activity.createdAt).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </time>
-              </li>
+              <CrmActivityTimelineItem
+                key={activity.id}
+                title={activity.title}
+                createdAt={activity.createdAt}
+                icon={opportunityActivityIcon(activity.type)}
+                isLatest={index === 0}
+                isLast={index === timeline.length - 1}
+                proposalHref={proposalHref}
+                proposalTitle={activity.detail}
+                detail={proposalHref ? undefined : activity.detail}
+                typeSlug={proposalHref ? undefined : activity.type}
+              />
             );
           })}
         </ol>

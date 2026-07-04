@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { ChevronLeft, PanelLeftClose, PanelRightClose } from "lucide-react";
+import { PanelLeftClose, PanelRightClose } from "lucide-react";
 
 import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
+import { PageBackButton } from "@/components/shared/page-back-button";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -33,11 +33,7 @@ export function BuilderTopBar({
       )}
     >
       <div className="flex flex-wrap items-center gap-3 px-4 py-3 lg:px-6">
-        <Button variant="outline" size="icon-sm" className="shrink-0" asChild>
-          <Link href={backHref} aria-label={backLabel}>
-            <ChevronLeft className="size-4" />
-          </Link>
-        </Button>
+        <PageBackButton href={backHref} label={backLabel} />
         <div className="flex h-8 min-w-0 max-w-[min(36rem,calc(100vw-16rem))] items-center pl-2 sm:pl-3">
           <BuilderTopBarTitle fallbackLabel={titleFallback} />
         </div>
