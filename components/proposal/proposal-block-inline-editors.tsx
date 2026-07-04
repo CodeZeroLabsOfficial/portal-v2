@@ -579,7 +579,13 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
         </div>
       ) : (
         <TooltipProvider delayDuration={300}>
-          <div className="mt-8 overflow-hidden rounded-xl border border-border/70 bg-card text-left shadow-sm">
+          <div
+            className="mt-8 overflow-hidden rounded-xl border text-left shadow-sm"
+            style={{
+              backgroundColor: tableSurface.background,
+              borderColor: tableSurface.borderColor,
+            }}
+          >
             <div
               className={cn(
                 "flex flex-wrap items-center gap-3 rounded-t-xl px-4 py-3",
