@@ -12,6 +12,7 @@ import { CustomerTabEmptyState } from "@/components/features/crm/customer/custom
 import { CustomerTabSectionCard } from "@/components/features/crm/customer/customer-tab-section-card";
 import type { TaskCustomerOption } from "@/components/shared/task-customer-select";
 import { Button } from "@/components/ui/button";
+import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
 import type { CustomerRecord } from "@/types/customer";
 import type { TaskRecord } from "@/types/task";
 
@@ -23,9 +24,7 @@ export interface CustomerTasksTabProps {
 function customerOptionFromRecord(customer: CustomerRecord): TaskCustomerOption {
   return {
     id: customer.id,
-    label: [customer.company?.trim(), customer.name?.trim(), customer.email?.trim()]
-      .filter(Boolean)
-      .join(" · ")
+    label: taskCustomerContactLabel(customer),
   };
 }
 

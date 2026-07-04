@@ -1,4 +1,5 @@
 import { isStaff } from "@/lib/auth/server-session";
+import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
 import { asString } from "@/lib/firestore/coerce";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { batchGetCustomerRecordsForStaff } from "@/server/firestore/crm-customers";
@@ -15,16 +16,6 @@ function userSummaryFromDoc(
   const displayName = dn || email || id;
   const photoURL = asString(data.photoURL);
   return { displayName, ...(photoURL ? { photoURL } : {}) };
-}
-
-function customerPickerLabel(customer: {
-  company?: string;
-  name?: string;
-  email?: string;
-}): string {
-  return [customer.company?.trim(), customer.name?.trim(), customer.email?.trim()]
-    .filter(Boolean)
-    .join(" · ");
 }
 
 /** Batch-hydrate assignee and customer display fields for task list UIs. */
@@ -60,7 +51,7 @@ export async function enrichTaskRecordsForStaff(
 
   return tasks.map((task): TaskRecord => {
     const customer = task.customerId ? customers.get(task.customerId) : undefined;
-    const customerDisplayName = customer ? customerPickerLabel(customer) : undefined;
+    const customerDisplayName = customer ? taskCustomerContactLabel(customer) : undefined;
     const su = task.assignedToUid ? userSummaries.get(task.assignedToUid) : undefined;
 
     return {

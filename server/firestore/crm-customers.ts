@@ -15,6 +15,7 @@ import { normalizeAddressFields } from "@/lib/common/format";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import type { AccountListRow } from "@/lib/account/list";
 import type { CustomerListRow } from "@/lib/customer/list";
+import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
 import type { CreateAccountFormInput, UpdateAccountFormInput } from "@/lib/schemas/account";
 import type { CreateCustomerInput, UpdateCustomerFormInput } from "@/lib/schemas/customer";
 import type { InvoiceRecord } from "@/types/invoice";
@@ -942,7 +943,7 @@ export interface CustomerPickerOption {
   label: string;
 }
 
-/** Active CRM customers as `{ id, label }` for task/subscription pickers. */
+/** Active CRM leads and contacts as `{ id, label }` for task customer pickers. */
 export async function listCustomerPickerOptionsForOrg(
   user: PortalUser,
 ): Promise<CustomerPickerOption[]> {
@@ -951,7 +952,7 @@ export async function listCustomerPickerOptionsForOrg(
     .filter((c) => c.status === "active")
     .map((c) => ({
       id: c.id,
-      label: [c.company?.trim(), c.name?.trim(), c.email?.trim()].filter(Boolean).join(" · "),
+      label: taskCustomerContactLabel(c),
     }));
 }
 

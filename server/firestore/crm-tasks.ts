@@ -64,6 +64,9 @@ async function validateTaskCustomerId(
   if (!trimmed) return { ok: true };
   const customer = await getCustomerRecordForOrg(user, trimmed);
   if (!customer) return { ok: false, message: "Customer not found." };
+  if (customer.accountOnly) {
+    return { ok: false, message: "Tasks can only be linked to leads or contacts." };
+  }
   return { ok: true };
 }
 
