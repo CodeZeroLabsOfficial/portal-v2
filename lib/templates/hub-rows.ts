@@ -1,24 +1,20 @@
+import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
 import type { ContractTemplateRecord } from "@/types/contract-template";
-import type {
-  ProposalTemplateRecord,
-  ProposalTemplateStage,
-  ProposalTemplateType
-} from "@/types/proposal-template";
+import type { ProposalTemplateRecord, ProposalTemplateStage } from "@/types/proposal-template";
 
 export type TemplateHubKind = "proposal" | "contract";
 
-/** Unified row for the templates hub DataTable (proposal + contract templates). */
+/** Unified row for the templates hub card grid (proposal + contract templates). */
 export interface TemplateHubRow {
   key: string;
   kind: TemplateHubKind;
   id: string;
   name: string;
   description?: string;
-  /** Filter/display category — proposal templates may be typed `contract` for agreement-only layouts. */
-  typeLabel: "proposal" | "contract";
   stage: ProposalTemplateStage;
   lastEditedMs: number;
   agreementTitle?: string;
+  coverImageUrl?: string;
   editHref: string;
   previewHref: string;
 }
@@ -33,11 +29,7 @@ function lastEditedMsContract(template: ContractTemplateRecord): number {
   return Math.max(template.updatedAt ?? 0, template.createdAt ?? 0);
 }
 
-function proposalTypeLabel(templateType: ProposalTemplateType): "proposal" | "contract" {
-  return templateType === "contract" ? "contract" : "proposal";
-}
-
-/** Merges proposal and contract templates into one sorted list for the hub table. */
+/** Merges proposal and contract templates into one sorted list for the hub grid. */
 export function buildTemplateHubRows(
   proposalTemplates: ProposalTemplateRecord[],
   contractTemplates: ContractTemplateRecord[]
@@ -48,11 +40,11 @@ export function buildTemplateHubRows(
     id: row.id,
     name: row.name,
     description: row.description,
-    typeLabel: proposalTypeLabel(row.templateType),
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
+    coverImageUrl: resolveTemplateCoverImageUrl(row.document),
     editHref: `/admin/templates/${row.id}`,
-    previewHref: `/admin/templates/${row.id}/preview`
+    previewHref: `/admin/templates/${row.id}/preview`,
   }));
 
   const contractRows: TemplateHubRow[] = contractTemplates.map((row) => ({
@@ -61,12 +53,12 @@ export function buildTemplateHubRows(
     id: row.id,
     name: row.name,
     description: row.description,
-    typeLabel: "contract",
     stage: row.stage,
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
+    coverImageUrl: resolveTemplateCoverImageUrl(row.document),
     editHref: `/admin/templates/contracts/${row.id}`,
-    previewHref: `/admin/templates/contracts/${row.id}/preview`
+    previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));
 
   return [...proposalRows, ...contractRows].sort((a, b) => b.lastEditedMs - a.lastEditedMs);

@@ -14,10 +14,3 @@ export function templateStageBadgeTitle(stage: ProposalTemplateStage): string {
   }
   return "Still in progress — publish when the template is ready to use.";
 }
-
-export function templateTypeBadgeDisplay(typeLabel: "proposal" | "contract"): StatusBadgeDisplay {
-  if (typeLabel === "contract") {
-    return { label: "Contract", variant: "secondary" };
-  }
-  return { label: "Proposal", variant: "secondary" };
-}
