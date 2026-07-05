@@ -1,8 +1,17 @@
 import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
+import { buildTemplateCardMeta, type TemplateCardMeta } from "@/lib/templates/template-card-meta";
 import type { ContractTemplateRecord } from "@/types/contract-template";
 import type { ProposalTemplateRecord, ProposalTemplateStage } from "@/types/proposal-template";
 
 export type TemplateHubKind = "proposal" | "contract";
+
+export type TemplateHubTab = "all" | TemplateHubKind;
+
+export const TEMPLATE_HUB_TABS = [
+  { id: "all", label: "All" },
+  { id: "proposal", label: "Proposals" },
+  { id: "contract", label: "Contracts" },
+] as const satisfies ReadonlyArray<{ id: TemplateHubTab; label: string }>;
 
 /** Unified row for the templates hub card grid (proposal + contract templates). */
 export interface TemplateHubRow {
@@ -15,6 +24,7 @@ export interface TemplateHubRow {
   lastEditedMs: number;
   agreementTitle?: string;
   coverImageUrl?: string;
+  cardMeta: TemplateCardMeta;
   editHref: string;
   previewHref: string;
 }
@@ -43,6 +53,7 @@ export function buildTemplateHubRows(
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
+    cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document),
     editHref: `/admin/templates/${row.id}`,
     previewHref: `/admin/templates/${row.id}/preview`,
   }));
@@ -57,6 +68,7 @@ export function buildTemplateHubRows(
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
+    cardMeta: buildTemplateCardMeta(row.id, "contract", row.document),
     editHref: `/admin/templates/contracts/${row.id}`,
     previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));

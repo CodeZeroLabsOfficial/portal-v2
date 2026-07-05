@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Clock } from "lucide-react";
 
 import { TemplateCardActionsMenu } from "@/components/features/templates/template-card-actions-menu";
 import { TemplateCover } from "@/components/features/templates/template-cover";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import {
   templateStageBadgeDisplay,
@@ -30,6 +28,22 @@ function templateExcerpt(row: TemplateHubRow): string {
   return row.description?.trim() || row.agreementTitle?.trim() || "No description";
 }
 
+function formatUpdatedDate(ms: number, timeZone?: string): string {
+  if (!ms) return "—";
+  const opts: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  };
+  const tz = timeZone?.trim();
+  if (tz) opts.timeZone = tz;
+  try {
+    return new Intl.DateTimeFormat(undefined, opts).format(new Date(ms));
+  } catch {
+    return new Date(ms).toLocaleDateString(undefined, opts);
+  }
+}
+
 export function TemplateCard({
   row,
   localityTimeZone,
@@ -39,54 +53,82 @@ export function TemplateCard({
   onRequestDelete,
 }: TemplateCardProps) {
   const stageBadge = templateStageBadgeDisplay(row.stage);
-  const editLabel = row.kind === "contract" ? "Edit contract" : "Edit template";
+  const { cardMeta } = row;
+  const updatedLabel = formatUpdatedDate(row.lastEditedMs, localityTimeZone);
 
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-md">
-      <Link href={row.editHref} className="block">
-        <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
-      </Link>
+      <div className="relative">
+        <Link href={row.editHref} className="block">
+          <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
+        </Link>
 
-      <CardContent className="flex flex-1 flex-col space-y-4">
-        <div className="flex items-start justify-between gap-2">
+        <div className="absolute top-3 left-3 z-10">
           <StatusBadge
             label={stageBadge.label}
             variant={stageBadge.variant}
             title={templateStageBadgeTitle(row.stage)}
+            className="shadow-sm"
           />
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground flex items-center text-xs">
-              <Clock className="me-1 size-3" aria-hidden />
-              <time
-                dateTime={
-                  row.lastEditedMs > 0 ? new Date(row.lastEditedMs).toISOString() : undefined
-                }>
-                {formatLastEditedInLocality(row.lastEditedMs, localityTimeZone)}
-              </time>
-            </span>
-            <TemplateCardActionsMenu
-              row={row}
-              disabled={disabled}
-              onUpdateStage={onUpdateStage}
-              onClone={onClone}
-              onRequestDelete={onRequestDelete}
-            />
-          </div>
         </div>
 
+        <div
+          className="absolute top-2 right-2 z-10"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}>
+          <TemplateCardActionsMenu
+            row={row}
+            disabled={disabled}
+            overlay
+            onUpdateStage={onUpdateStage}
+            onClone={onClone}
+            onRequestDelete={onRequestDelete}
+          />
+        </div>
+      </div>
+
+      <CardContent className="flex flex-1 flex-col space-y-3">
         <Link href={row.editHref} className="hover:underline">
           <Typography variant="h3" className="line-clamp-2">
             {row.name}
           </Typography>
         </Link>
 
-        <Typography variant="muted" className="line-clamp-3">
+        <Typography variant="muted" className="text-sm">
+          {cardMeta.categoryLabel}
+        </Typography>
+
+        <Typography variant="muted" className="line-clamp-3 text-sm">
           {templateExcerpt(row)}
         </Typography>
 
-        <Button variant="outline" size="sm" className="mt-auto w-full" asChild>
-          <Link href={row.editHref}>{editLabel}</Link>
-        </Button>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Updated</p>
+            <p className="font-medium">
+              <time
+                dateTime={
+                  row.lastEditedMs > 0 ? new Date(row.lastEditedMs).toISOString() : undefined
+                }>
+                {updatedLabel}
+              </time>
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Used</p>
+            <p className="font-medium">{cardMeta.usageLabel}</p>
+          </div>
+        </div>
+
+        {cardMeta.featureTags.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {cardMeta.featureTags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="font-normal">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

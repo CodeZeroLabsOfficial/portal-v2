@@ -1,99 +1,57 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, Plus, Search } from "lucide-react";
-import { toast } from "sonner";
+import { Search } from "lucide-react";
 
+import { NewTemplateButtonGroup } from "@/components/features/templates/new-template-button-group";
 import { TemplatesGrid } from "@/components/features/templates/templates-grid";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { TemplateHubKind, TemplateHubRow } from "@/lib/templates/hub-rows";
-import { createContractTemplateAction } from "@/server/actions/contract-templates";
-import { createProposalTemplateAction } from "@/server/actions/proposal-templates";
+import {
+  TEMPLATE_HUB_TABS,
+  type TemplateHubRow,
+  type TemplateHubTab,
+} from "@/lib/templates/hub-rows";
 
 export interface TemplatesHubPanelProps {
   rows: TemplateHubRow[];
   localityTimeZone?: string;
 }
 
-function NewProposalTemplateButton() {
-  const router = useRouter();
-  const [busy, setBusy] = React.useState(false);
-
-  async function handleCreate() {
-    setBusy(true);
-    const res = await createProposalTemplateAction();
-    setBusy(false);
-    if (!res.ok) {
-      toast.error(res.message);
-      return;
-    }
-    router.push(`/admin/templates/${res.templateId}`);
-    router.refresh();
-  }
-
-  return (
-    <Button type="button" size="sm" disabled={busy} onClick={() => void handleCreate()}>
-      {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus />}
-      New template
-    </Button>
-  );
-}
-
-function NewContractTemplateButton() {
-  const router = useRouter();
-  const [busy, setBusy] = React.useState(false);
-
-  async function handleCreate() {
-    setBusy(true);
-    const res = await createContractTemplateAction();
-    setBusy(false);
-    if (!res.ok) {
-      toast.error(res.message);
-      return;
-    }
-    router.push(`/admin/templates/contracts/${res.contractTemplateId}`);
-    router.refresh();
-  }
-
-  return (
-    <Button type="button" size="sm" disabled={busy} onClick={() => void handleCreate()}>
-      {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus />}
-      New contract template
-    </Button>
-  );
-}
-
 export function TemplatesHubPanel({ rows, localityTimeZone }: TemplatesHubPanelProps) {
-  const [activeTab, setActiveTab] = React.useState<TemplateHubKind>("proposal");
+  const [activeTab, setActiveTab] = React.useState<TemplateHubTab>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  const defaultCreateKind = activeTab === "all" ? "proposal" : activeTab;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Templates"
         description="Reusable proposal layouts and contract agreement templates for your team."
-        actions={
-          activeTab === "proposal" ? <NewProposalTemplateButton /> : <NewContractTemplateButton />
-        }
+        actions={<NewTemplateButtonGroup defaultKind={defaultCreateKind} />}
       />
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as TemplateHubKind)}>
-          <TabsList>
-            <TabsTrigger value="proposal">Proposals</TabsTrigger>
-            <TabsTrigger value="contract">Contracts</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <nav className="flex flex-wrap gap-1" aria-label="Template type">
+          {TEMPLATE_HUB_TABS.map((tab) => (
+            <Button
+              key={tab.id}
+              type="button"
+              variant={activeTab === tab.id ? "default" : "ghost"}
+              size="sm"
+              className="rounded-lg"
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              onClick={() => setActiveTab(tab.id)}>
+              {tab.label}
+            </Button>
+          ))}
+        </nav>
 
         <div className="relative w-full lg:w-auto">
           <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
             aria-hidden
           />
           <Input

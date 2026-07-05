@@ -1,9 +1,9 @@
 import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
-import type { TemplateHubKind, TemplateHubRow } from "@/lib/templates/hub-rows";
+import type { TemplateHubRow, TemplateHubTab } from "@/lib/templates/hub-rows";
 import { templateStageBadgeDisplay } from "@/lib/templates/status-badges";
 
 export interface FilterTemplateHubRowsOptions {
-  kind: TemplateHubKind;
+  tab: TemplateHubTab;
   searchQuery: string;
   localityTimeZone?: string;
 }
@@ -11,12 +11,12 @@ export interface FilterTemplateHubRowsOptions {
 /** Tab + search filter for the templates hub card grid. */
 export function filterTemplateHubRows(
   rows: TemplateHubRow[],
-  { kind, searchQuery, localityTimeZone }: FilterTemplateHubRowsOptions
+  { tab, searchQuery, localityTimeZone }: FilterTemplateHubRowsOptions
 ): TemplateHubRow[] {
   const q = searchQuery.trim().toLowerCase();
 
   return rows
-    .filter((row) => row.kind === kind)
+    .filter((row) => tab === "all" || row.kind === tab)
     .filter((row) => {
       if (!q) return true;
       const stage = templateStageBadgeDisplay(row.stage);

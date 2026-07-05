@@ -14,13 +14,23 @@ import {
 } from "@/components/ui/empty";
 import { useTemplateRowActions } from "@/hooks/use-template-row-actions";
 import { filterTemplateHubRows } from "@/lib/templates/filter-hub-rows";
-import type { TemplateHubKind, TemplateHubRow } from "@/lib/templates/hub-rows";
+import type { TemplateHubRow, TemplateHubTab } from "@/lib/templates/hub-rows";
 
 export interface TemplatesGridProps {
   rows: TemplateHubRow[];
-  activeTab: TemplateHubKind;
+  activeTab: TemplateHubTab;
   searchQuery: string;
   localityTimeZone?: string;
+}
+
+function emptyTabDescription(activeTab: TemplateHubTab): string {
+  if (activeTab === "all") {
+    return "Use New Template to create proposal or contract templates.";
+  }
+  if (activeTab === "proposal") {
+    return "Use New Template to create reusable content for proposals.";
+  }
+  return "Use New Template to create reusable agreement copy.";
 }
 
 export function TemplatesGrid({
@@ -41,11 +51,14 @@ export function TemplatesGrid({
   } = useTemplateRowActions();
 
   const filteredRows = React.useMemo(
-    () => filterTemplateHubRows(rows, { kind: activeTab, searchQuery, localityTimeZone }),
+    () => filterTemplateHubRows(rows, { tab: activeTab, searchQuery, localityTimeZone }),
     [rows, activeTab, searchQuery, localityTimeZone]
   );
 
-  const tabRows = React.useMemo(() => rows.filter((row) => row.kind === activeTab), [rows, activeTab]);
+  const tabRows = React.useMemo(
+    () => (activeTab === "all" ? rows : rows.filter((row) => row.kind === activeTab)),
+    [rows, activeTab]
+  );
   const total = filteredRows.length;
   const from = total === 0 ? 0 : 1;
   const to = total;
@@ -61,11 +74,7 @@ export function TemplatesGrid({
             </EmptyMedia>
             <EmptyTitle>{isEmptyTab ? "No templates yet" : "No templates found"}</EmptyTitle>
             <EmptyDescription>
-              {isEmptyTab
-                ? activeTab === "proposal"
-                  ? "Use New template to create reusable content for proposals."
-                  : "Use New contract template to create reusable agreement copy."
-                : "Try a different search term."}
+              {isEmptyTab ? emptyTabDescription(activeTab) : "Try a different search term."}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
