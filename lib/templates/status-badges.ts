@@ -2,11 +2,8 @@ import type { StatusBadgeDisplay } from "@/lib/crm/status-badges";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
-export function templateKindBadgeDisplay(kind: TemplateHubKind): StatusBadgeDisplay {
-  if (kind === "contract") {
-    return { label: "Contract", variant: "secondary" };
-  }
-  return { label: "Proposal", variant: "secondary" };
+export function templateKindLabel(kind: TemplateHubKind): string {
+  return kind === "contract" ? "Contract" : "Proposal";
 }
 
 export function templateStageBadgeDisplay(stage: ProposalTemplateStage): StatusBadgeDisplay {

@@ -12,7 +12,7 @@ import { Typography } from "@/components/ui/typography";
 import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import {
-  templateKindBadgeDisplay,
+  templateKindLabel,
   templateStageBadgeDisplay,
   templateStageBadgeTitle,
 } from "@/lib/templates/status-badges";
@@ -39,7 +39,6 @@ export function TemplateCard({
   onClone,
   onRequestDelete,
 }: TemplateCardProps) {
-  const kindBadge = templateKindBadgeDisplay(row.kind);
   const stageBadge = templateStageBadgeDisplay(row.stage);
   const { cardMeta } = row;
 
@@ -50,9 +49,22 @@ export function TemplateCard({
           <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
         </Link>
 
-        <Badge variant="secondary" className="absolute top-3 left-3 z-10">
-          {kindBadge.label}
-        </Badge>
+        <div className="absolute top-3 left-3 z-10">
+          <Badge variant="outline">{templateKindLabel(row.kind)}</Badge>
+        </div>
+
+        <div
+          className="absolute top-3 right-3 z-10"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}>
+          <TemplateCardActionsMenu
+            row={row}
+            disabled={disabled}
+            onUpdateStage={onUpdateStage}
+            onClone={onClone}
+            onRequestDelete={onRequestDelete}
+          />
+        </div>
       </div>
 
       <CardContent className="flex flex-1 flex-col space-y-4">
@@ -125,25 +137,12 @@ export function TemplateCard({
         {cardMeta.featureTags.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {cardMeta.featureTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="font-normal">
+              <Badge key={tag} variant="outline">
                 {tag}
               </Badge>
             ))}
           </div>
         ) : null}
-
-        <div
-          className="mt-auto flex items-center justify-end border-t pt-3"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}>
-          <TemplateCardActionsMenu
-            row={row}
-            disabled={disabled}
-            onUpdateStage={onUpdateStage}
-            onClone={onClone}
-            onRequestDelete={onRequestDelete}
-          />
-        </div>
       </CardContent>
     </Card>
   );

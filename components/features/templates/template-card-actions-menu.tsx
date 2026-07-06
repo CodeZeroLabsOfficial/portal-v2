@@ -34,9 +34,9 @@ export function TemplateCardActionsMenu({
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="size-8 shrink-0"
+          className="size-8 shrink-0 bg-background/80 shadow-sm backdrop-blur-sm"
           disabled={disabled}
           aria-label={`Actions for ${row.name}`}
           onPointerDown={(e) => e.stopPropagation()}
