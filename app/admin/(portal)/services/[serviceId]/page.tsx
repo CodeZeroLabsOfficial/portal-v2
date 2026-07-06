@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { CatalogServiceEditForm } from "@/components/features/catalog/catalog-service-edit-form";
+import { CatalogServiceDetailView } from "@/components/features/catalog/catalog-service-detail-view";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { getCatalogServiceForStaff } from "@/server/firestore/catalog-services";
 
@@ -22,5 +22,5 @@ export default async function AdminServiceDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  return <CatalogServiceEditForm service={service} />;
+  return <CatalogServiceDetailView service={service} />;
 }
