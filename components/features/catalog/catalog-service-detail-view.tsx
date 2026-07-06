@@ -79,10 +79,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
   );
   const specRows = buildSpecRows(service);
 
-  const metaParts = [catalogBillingLabel(service), catalogServiceTypeLabel(service)].filter(
-    (part) => part !== "—"
-  );
-
   return (
     <div className="space-y-6">
       <PageBackButton href="/admin/services" label="Services" />
@@ -94,13 +90,14 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
               {service.name}
             </Typography>
 
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
+              <StatusBadge label={stripeDisplay.label} variant={stripeDisplay.variant} />
+            </div>
+
             <p className="text-muted-foreground max-w-xl text-sm">
               {service.description?.trim() || "—"}
             </p>
-
-            {metaParts.length > 0 ? (
-              <p className="text-muted-foreground text-sm">{metaParts.join(" · ")}</p>
-            ) : null}
 
             {isPlan ? (
               <div className="grid grid-cols-3 gap-3 text-sm *:space-y-1 *:rounded-md *:border *:p-3 *:text-center">
@@ -120,11 +117,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
                 })}
               </div>
             ) : null}
-
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
-              <StatusBadge label={stripeDisplay.label} variant={stripeDisplay.variant} />
-            </div>
           </div>
 
           <Separator />
