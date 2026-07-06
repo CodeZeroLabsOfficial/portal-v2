@@ -84,6 +84,18 @@ export function TemplateCard({
           />
         </div>
 
+        {cardMeta.subtitleLabel ? (
+          <Typography variant="muted" className="line-clamp-2 text-sm">
+            {cardMeta.subtitleLabel}
+          </Typography>
+        ) : null}
+
+        {cardMeta.taxonomyLabel ? (
+          <Typography variant="muted" className="line-clamp-2 text-sm">
+            {cardMeta.taxonomyLabel}
+          </Typography>
+        ) : null}
+
         <Typography variant="muted" className="line-clamp-3 text-sm">
           {templateExcerpt(row)}
         </Typography>

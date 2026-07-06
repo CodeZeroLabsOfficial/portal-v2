@@ -71,11 +71,9 @@ export function normalizeTemplateCatalogMeta(
   return hasValue ? normalized : undefined;
 }
 
-/** Hub category line from catalog meta. */
-export function templateCatalogCategoryLabel(meta?: TemplateCatalogMeta): string | undefined {
+/** Classification • category line for hub cards (excludes subtitle). */
+export function templateCatalogTaxonomyLabel(meta?: TemplateCatalogMeta): string | undefined {
   if (!meta) return undefined;
-  const subtitle = meta.subtitle?.trim();
-  if (subtitle) return subtitle;
 
   const classification = meta.classification?.trim() || meta.useCase?.trim();
   const category = meta.category?.trim();
@@ -83,6 +81,15 @@ export function templateCatalogCategoryLabel(meta?: TemplateCatalogMeta): string
   if (classification) return classification;
   if (category) return category;
   return undefined;
+}
+
+/** @deprecated Prefer `subtitle` + `templateCatalogTaxonomyLabel` on hub cards. */
+export function templateCatalogCategoryLabel(meta?: TemplateCatalogMeta): string | undefined {
+  if (!meta) return undefined;
+  const subtitle = meta.subtitle?.trim();
+  if (subtitle) return subtitle;
+
+  return templateCatalogTaxonomyLabel(meta);
 }
 
 export function templateCatalogVersionLabel(meta?: TemplateCatalogMeta): string | undefined {

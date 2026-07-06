@@ -1,6 +1,6 @@
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import {
-  templateCatalogCategoryLabel,
+  templateCatalogTaxonomyLabel,
   templateCatalogVersionLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
@@ -16,14 +16,18 @@ const AUTHOR_NAMES = [
 
 /** Card metadata for templates hub — catalog fields when set, placeholders otherwise. */
 export interface TemplateCardMeta {
-  /** e.g. "Mobile Development • SaaS" */
+  /** From Properties subtitle — shown under the card title when set. */
+  subtitleLabel?: string;
+  /** Classification • category from saved catalog meta. */
+  taxonomyLabel?: string;
+  /** Placeholder taxonomy when catalog fields are unset. */
   categoryLabel: string;
   /** Placeholder until `createdByUid` is resolved to staff display name. */
   authorName: string;
   authorInitials: string;
   /** e.g. "27 times" */
   usageLabel: string;
-  /** e.g. "8 sections • ~12 pages" — omitted when document empty */
+  /** e.g. "8 sections" — omitted when document empty */
   lengthLabel?: string;
   /** e.g. "v2.3" */
   versionLabel: string;
@@ -80,9 +84,8 @@ function deriveLengthLabel(document?: ProposalDocument): string | undefined {
   const sectionCount = blocks.filter((b) => b.type === "section").length;
   const topLevelCount = blocks.length;
   const sections = sectionCount > 0 ? sectionCount : topLevelCount;
-  const pages = Math.max(1, Math.ceil(sections * 1.5));
 
-  return `${sections} section${sections === 1 ? "" : "s"} • ~${pages} page${pages === 1 ? "" : "s"}`;
+  return `${sections} section${sections === 1 ? "" : "s"}`;
 }
 
 /** Builds card metadata — saved catalog fields plus document-derived length/tags fallbacks. */
@@ -108,9 +111,10 @@ export function buildTemplateCardMeta(
     .join("")
     .slice(0, 2);
 
-  const savedCategory = templateCatalogCategoryLabel(catalogMeta);
+  const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
   const savedVersion = templateCatalogVersionLabel(catalogMeta);
   const savedFeatures = catalogMeta?.keyFeatures?.filter((tag) => tag.trim().length > 0) ?? [];
+  const subtitleLabel = catalogMeta?.subtitle?.trim() || undefined;
 
   const derivedTags = deriveFeatureTags(document);
   const featureTags =
@@ -124,7 +128,9 @@ export function buildTemplateCardMeta(
         })();
 
   return {
-    categoryLabel: savedCategory ?? `${useCase} • ${subcategory}`,
+    subtitleLabel,
+    taxonomyLabel: savedTaxonomy,
+    categoryLabel: savedTaxonomy ?? `${useCase} • ${subcategory}`,
     authorName,
     authorInitials,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
