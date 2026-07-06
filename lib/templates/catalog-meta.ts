@@ -83,15 +83,6 @@ export function templateCatalogTaxonomyLabel(meta?: TemplateCatalogMeta): string
   return undefined;
 }
 
-/** @deprecated Prefer `subtitle` + `templateCatalogTaxonomyLabel` on hub cards. */
-export function templateCatalogCategoryLabel(meta?: TemplateCatalogMeta): string | undefined {
-  if (!meta) return undefined;
-  const subtitle = meta.subtitle?.trim();
-  if (subtitle) return subtitle;
-
-  return templateCatalogTaxonomyLabel(meta);
-}
-
 export function templateCatalogVersionLabel(meta?: TemplateCatalogMeta): string | undefined {
   const version = meta?.version?.trim();
   if (!version) return undefined;

@@ -3,21 +3,18 @@ import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import { countOutlineSections } from "@/lib/proposal/outline-labels";
 import {
   templateCatalogTaxonomyLabel,
-  templateCatalogVersionLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
 import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalDocument } from "@/types/proposal";
 
-/** Card metadata for templates hub — catalog fields when set, placeholders otherwise. */
+/** Card metadata for templates hub — catalog fields when set, document-derived fallbacks otherwise. */
 export interface TemplateCardMeta {
   /** From Properties subtitle — shown under the card title when set. */
   subtitleLabel?: string;
   /** Classification • category from saved catalog meta. */
   taxonomyLabel?: string;
-  /** Placeholder taxonomy when catalog fields are unset. */
-  categoryLabel: string;
   authorName: string;
   authorInitials: string;
   authorPhotoUrl?: string;
@@ -25,23 +22,8 @@ export interface TemplateCardMeta {
   usageLabel: string;
   /** e.g. "8 sections" — omitted when document empty */
   lengthLabel?: string;
-  /** e.g. "v2.3" */
-  versionLabel: string;
   featureTags: string[];
 }
-
-const PROPOSAL_USE_CASES = [
-  "Mobile Development",
-  "Web Design",
-  "Consulting",
-  "SaaS Onboarding",
-  "Managed Services",
-] as const;
-
-const CONTRACT_USE_CASES = ["Legal", "Consulting", "Enterprise Sales", "HR & Compliance"] as const;
-
-const PROPOSAL_SUBCATEGORIES = ["SaaS", "Mobile App Services", "Web Design", "Consulting"] as const;
-const CONTRACT_SUBCATEGORIES = ["NDA", "MSA", "SOW", "Privacy Policy"] as const;
 
 function hashString(input: string): number {
   let hash = 0;
@@ -50,10 +32,6 @@ function hashString(input: string): number {
     hash |= 0;
   }
   return Math.abs(hash);
-}
-
-function pick<T>(items: readonly T[], seed: number): T {
-  return items[seed % items.length]!;
 }
 
 function deriveFeatureTags(document?: ProposalDocument): string[] {
@@ -93,19 +71,11 @@ export function buildTemplateCardMeta(
   usageCount = 0,
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
-  const useCases = kind === "contract" ? CONTRACT_USE_CASES : PROPOSAL_USE_CASES;
-  const subcategories = kind === "contract" ? CONTRACT_SUBCATEGORIES : PROPOSAL_SUBCATEGORIES;
-  const useCase = pick(useCases, seed);
-  const subcategory = pick(subcategories, seed >> 3);
-
-  const major = 1 + (seed % 3);
-  const minor = seed % 10;
   const authorName = author?.displayName ?? "Team member";
   const authorInitials = initialsFromName(authorName);
   const authorPhotoUrl = author?.photoURL;
 
   const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
-  const savedVersion = templateCatalogVersionLabel(catalogMeta);
   const savedFeatures = catalogMeta?.keyFeatures?.filter((tag) => tag.trim().length > 0) ?? [];
   const subtitleLabel = catalogMeta?.subtitle?.trim() || undefined;
 
@@ -123,13 +93,11 @@ export function buildTemplateCardMeta(
   return {
     subtitleLabel,
     taxonomyLabel: savedTaxonomy,
-    categoryLabel: savedTaxonomy ?? `${useCase} • ${subcategory}`,
     authorName,
     authorInitials,
     authorPhotoUrl,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
     lengthLabel: deriveLengthLabel(document),
-    versionLabel: savedVersion ?? `v${major}.${minor}`,
     featureTags,
   };
 }

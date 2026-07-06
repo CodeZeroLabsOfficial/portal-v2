@@ -49,14 +49,13 @@ export function TemplateCard({
           <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
         </Link>
 
-        <div className="absolute top-3 left-3 z-10">
-          <Badge variant="outline">{templateKindLabel(row.kind)}</Badge>
-        </div>
+        <Badge
+          variant="outline"
+          className="absolute top-3 left-3 z-10 bg-card shadow-sm">
+          {templateKindLabel(row.kind)}
+        </Badge>
 
-        <div
-          className="absolute top-3 right-3 z-10"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}>
+        <div className="absolute top-3 right-3 z-10">
           <TemplateCardActionsMenu
             row={row}
             disabled={disabled}

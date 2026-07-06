@@ -33,10 +33,6 @@ export function useTemplateRowActions() {
     destructive: true,
   });
 
-  React.useEffect(() => {
-    router.refresh();
-  }, [router]);
-
   function openConfirm(
     meta: { title: string; description: string; destructive?: boolean },
     action: () => Promise<void>
@@ -85,7 +81,6 @@ export function useTemplateRowActions() {
       if (!res.ok) throw new Error(res.message);
       router.push(`/admin/templates/contracts/${res.contractTemplateId}`);
     }
-    router.refresh();
   }
 
   function requestDelete(row: TemplateHubRow) {

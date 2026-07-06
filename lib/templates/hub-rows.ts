@@ -94,5 +94,5 @@ export function buildTemplateHubRows(
     previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));
 
-  return [...proposalRows, ...contractRows].sort(compareTemplateHubRowsByTitle);
+  return [...proposalRows, ...contractRows];
 }
