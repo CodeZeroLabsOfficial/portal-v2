@@ -1,6 +1,5 @@
 import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
 import { buildTemplateCardMeta, type TemplateCardMeta } from "@/lib/templates/template-card-meta";
-import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ContractTemplateRecord } from "@/types/contract-template";
 import type { ProposalTemplateRecord, ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -49,7 +48,6 @@ export function compareTemplateHubRowsByTitle(a: TemplateHubRow, b: TemplateHubR
 export function buildTemplateHubRows(
   proposalTemplates: ProposalTemplateRecord[],
   contractTemplates: ContractTemplateRecord[],
-  authorByUid: ReadonlyMap<string, UserSummary> = new Map(),
 ): TemplateHubRow[] {
   const proposalRows: TemplateHubRow[] = proposalTemplates.map((row) => ({
     key: `proposal:${row.id}`,
@@ -60,14 +58,7 @@ export function buildTemplateHubRows(
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(
-      row.id,
-      "proposal",
-      row.document,
-      row.catalogMeta,
-      authorByUid.get(row.createdByUid.trim()),
-      row.usageCount,
-    ),
+    cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document, row.catalogMeta),
     editHref: `/admin/templates/${row.id}`,
     previewHref: `/admin/templates/${row.id}/preview`,
   }));
@@ -82,14 +73,7 @@ export function buildTemplateHubRows(
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(
-      row.id,
-      "contract",
-      row.document,
-      row.catalogMeta,
-      authorByUid.get(row.createdByUid.trim()),
-      row.usageCount,
-    ),
+    cardMeta: buildTemplateCardMeta(row.id, "contract", row.document, row.catalogMeta),
     editHref: `/admin/templates/contracts/${row.id}`,
     previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));

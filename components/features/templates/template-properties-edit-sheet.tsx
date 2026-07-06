@@ -17,8 +17,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -103,15 +101,12 @@ export function TemplatePropertiesEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Edit properties</SheetTitle>
-          <SheetDescription>
-            Catalog metadata shown on template cards in the hub. Save the template to persist changes.
-          </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 px-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-6 p-4 pt-0" noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="template-version">Version</Label>
             <Input
@@ -187,7 +182,7 @@ export function TemplatePropertiesEditSheet({
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="template-feature-draft">Key features</Label>
             {(draftCatalogMeta.keyFeatures?.length ?? 0) > 0 ? (
               <div className="flex flex-wrap gap-1.5">
@@ -231,12 +226,12 @@ export function TemplatePropertiesEditSheet({
             </div>
           </div>
 
-          <SheetFooter className="px-0">
+          <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit">Save changes</Button>
-          </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

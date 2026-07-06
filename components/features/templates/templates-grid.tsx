@@ -95,7 +95,6 @@ export function TemplatesGrid({
           <TemplateCard
             key={row.key}
             row={row}
-            localityTimeZone={localityTimeZone}
             disabled={pendingKey === row.key}
             onUpdateStage={(r, stage) => void updateStage(r, stage)}
             onClone={(r) => void cloneRow(r)}

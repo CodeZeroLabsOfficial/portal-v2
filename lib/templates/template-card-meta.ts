@@ -1,25 +1,17 @@
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
-import { countOutlineSections } from "@/lib/proposal/outline-labels";
 import {
   templateCatalogTaxonomyLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
-import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalDocument } from "@/types/proposal";
 
-/** Card metadata for templates hub — catalog fields when set, document-derived fallbacks otherwise. */
+/** Card metadata for templates hub — catalog fields when set, document-derived tag fallbacks otherwise. */
 export interface TemplateCardMeta {
   /** From Properties subtitle — shown under the card title when set. */
   subtitleLabel?: string;
   /** Classification • category from saved catalog meta. */
   taxonomyLabel?: string;
-  authorName: string;
-  authorPhotoUrl?: string;
-  /** e.g. "27 times" */
-  usageLabel: string;
-  /** e.g. "8 sections" — omitted when document empty */
-  lengthLabel?: string;
   featureTags: string[];
 }
 
@@ -49,28 +41,14 @@ function deriveFeatureTags(document?: ProposalDocument): string[] {
   return tags;
 }
 
-function deriveLengthLabel(document?: ProposalDocument): string | undefined {
-  const blocks = document?.blocks;
-  if (!blocks?.length) return undefined;
-
-  const sections = countOutlineSections(blocks);
-  if (sections === 0) return undefined;
-
-  return `${sections} section${sections === 1 ? "" : "s"}`;
-}
-
-/** Builds card metadata — saved catalog fields plus document-derived length/tags fallbacks. */
+/** Builds card metadata — saved catalog fields plus document-derived tag fallbacks. */
 export function buildTemplateCardMeta(
   id: string,
   kind: TemplateHubKind,
   document?: ProposalDocument,
   catalogMeta?: TemplateCatalogMeta,
-  author?: UserSummary,
-  usageCount = 0,
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
-  const authorName = author?.displayName ?? "Team member";
-  const authorPhotoUrl = author?.photoURL;
 
   const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
   const savedFeatures = catalogMeta?.keyFeatures?.filter((tag) => tag.trim().length > 0) ?? [];
@@ -90,10 +68,6 @@ export function buildTemplateCardMeta(
   return {
     subtitleLabel,
     taxonomyLabel: savedTaxonomy,
-    authorName,
-    authorPhotoUrl,
-    usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
-    lengthLabel: deriveLengthLabel(document),
     featureTags,
   };
 }

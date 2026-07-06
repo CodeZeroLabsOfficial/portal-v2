@@ -34,16 +34,17 @@ interface PropertyFieldProps {
 
 function PropertyField({ label, children }: PropertyFieldProps) {
   return (
-    <div className="space-y-1">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <div className="text-sm">{children}</div>
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium">{label}</h4>
+      {children}
     </div>
   );
 }
 
-function emptyText(value: string | undefined): React.ReactNode {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : <span className="text-muted-foreground">—</span>;
+function mutedText(value: string | undefined): React.ReactNode {
+  return (
+    <p className="text-muted-foreground text-sm">{value?.trim() || "—"}</p>
+  );
 }
 
 export function TemplatePropertiesPanel({
@@ -61,35 +62,42 @@ export function TemplatePropertiesPanel({
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="flex justify-end">
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-2">
+          <StatusBadge
+            label={stageBadge.label}
+            variant={stageBadge.variant}
+            title={templateStageBadgeTitle(stage)}
+          />
           <SettingsEditButton
             onClick={() => setEditOpen(true)}
             ariaLabel="Edit template properties"
           />
         </div>
 
-        <PropertyField label="Author">
-          <TemplateAuthorDisplay author={author} />
-        </PropertyField>
+        <div className="grid grid-cols-2 gap-4">
+          <PropertyField label="Author">
+            <TemplateAuthorDisplay author={author} muted />
+          </PropertyField>
 
-        <PropertyField label="Version">
-          {versionLabel ? versionLabel : <span className="text-muted-foreground">—</span>}
-        </PropertyField>
+          <PropertyField label="Version">
+            <p className="text-muted-foreground text-sm">{versionLabel ?? "—"}</p>
+          </PropertyField>
 
-        <PropertyField label="Subtitle">{emptyText(catalogMeta.subtitle)}</PropertyField>
+          <PropertyField label="Classification">
+            {mutedText(catalogMeta.classification)}
+          </PropertyField>
+
+          <PropertyField label="Category">{mutedText(catalogMeta.category)}</PropertyField>
+        </div>
+
+        <PropertyField label="Subtitle">{mutedText(catalogMeta.subtitle)}</PropertyField>
 
         <PropertyField label="Description">
-          {descriptionText ? (
-            <p className="text-muted-foreground whitespace-pre-wrap">{descriptionText}</p>
-          ) : (
-            <span className="text-muted-foreground">No description provided.</span>
-          )}
+          <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+            {descriptionText || "No description provided."}
+          </p>
         </PropertyField>
-
-        <PropertyField label="Classification">{emptyText(catalogMeta.classification)}</PropertyField>
-
-        <PropertyField label="Category">{emptyText(catalogMeta.category)}</PropertyField>
 
         <PropertyField label="Key features">
           {(catalogMeta.keyFeatures?.length ?? 0) > 0 ? (
@@ -101,16 +109,8 @@ export function TemplatePropertiesPanel({
               ))}
             </div>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <p className="text-muted-foreground text-sm">—</p>
           )}
-        </PropertyField>
-
-        <PropertyField label="Status">
-          <StatusBadge
-            label={stageBadge.label}
-            variant={stageBadge.variant}
-            title={templateStageBadgeTitle(stage)}
-          />
         </PropertyField>
       </div>
 

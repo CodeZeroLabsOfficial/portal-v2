@@ -3,13 +3,11 @@
 import Link from "next/link";
 
 import { TemplateCardActionsMenu } from "@/components/features/templates/template-card-actions-menu";
-import { TemplateAuthorDisplay } from "@/components/features/templates/template-author-display";
 import { TemplateCover } from "@/components/features/templates/template-cover";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import {
   templateKindLabel,
@@ -20,7 +18,6 @@ import type { ProposalTemplateStage } from "@/types/proposal-template";
 
 export interface TemplateCardProps {
   row: TemplateHubRow;
-  localityTimeZone?: string;
   disabled: boolean;
   onUpdateStage: (row: TemplateHubRow, stage: ProposalTemplateStage) => void;
   onClone: (row: TemplateHubRow) => void;
@@ -33,7 +30,6 @@ function templateExcerpt(row: TemplateHubRow): string {
 
 export function TemplateCard({
   row,
-  localityTimeZone,
   disabled,
   onUpdateStage,
   onClone,
@@ -69,9 +65,7 @@ export function TemplateCard({
       <CardContent className="flex flex-1 flex-col space-y-4">
         <div className="flex items-start justify-between gap-3">
           <Link href={row.editHref} className="min-w-0 hover:underline">
-            <Typography variant="h3" className="line-clamp-2">
-              {row.name}
-            </Typography>
+            <h4 className="line-clamp-2 text-xl">{row.name}</h4>
           </Link>
           <StatusBadge
             label={stageBadge.label}
@@ -96,37 +90,6 @@ export function TemplateCard({
         <Typography variant="muted" className="line-clamp-3 text-sm">
           {templateExcerpt(row)}
         </Typography>
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Author</p>
-            <TemplateAuthorDisplay
-              author={{
-                displayName: cardMeta.authorName,
-                photoURL: cardMeta.authorPhotoUrl,
-              }}
-            />
-          </div>
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Updated</p>
-            <p className="font-medium">
-              <time
-                dateTime={
-                  row.lastEditedMs > 0 ? new Date(row.lastEditedMs).toISOString() : undefined
-                }>
-                {formatLastEditedInLocality(row.lastEditedMs, localityTimeZone)}
-              </time>
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Length</p>
-            <p className="font-medium">{cardMeta.lengthLabel ?? "—"}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Usage</p>
-            <p className="font-medium">{cardMeta.usageLabel}</p>
-          </div>
-        </div>
 
         {cardMeta.featureTags.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
