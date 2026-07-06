@@ -54,7 +54,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-accordion-expand-surface";
-import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
 import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";

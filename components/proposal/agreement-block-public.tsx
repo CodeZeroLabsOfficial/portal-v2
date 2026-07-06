@@ -41,11 +41,16 @@ import {
 import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
+import { AgreementDocumentTitle } from "@/components/features/proposal/agreement/agreement-document-title";
+import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
+import { AgreementLegalContent, defaultAgreementLegalNavItems } from "@/components/features/proposal/agreement/agreement-legal-content";
+import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
+import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
 import {
-  AGREEMENT_MODAL_RICH_TEXT_CLASSES,
-  PROPOSAL_PUBLIC_META_LABEL_CLASSES,
-} from "@/lib/proposal/public/public-typography";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+  AGREEMENT_MODAL_HEADER_TITLE_CLASSES,
+  AGREEMENT_NAV_CHILD_LINK_CLASSES,
+  AGREEMENT_NAV_LINK_CLASSES,
+} from "@/lib/proposal/agreement/chrome-typography";
 import { isDocumentPackageSelectionComplete } from "@/lib/proposal/commerce/package-selection";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -105,42 +110,6 @@ type AgreementJumpGroup = {
   children: Array<{ id: string; label: string }>;
 };
 type AgreementJumpItem = AgreementJumpLink | AgreementJumpGroup;
-
-/** Sensible placeholder body used when the editor hasn't supplied custom legal text. */
-const DEFAULT_LEGAL_SECTIONS: Array<{ heading: string; body: string }> = [
-  {
-    heading: "1. Parties",
-    body: "This Services Agreement (this “Agreement”) is entered into between the service provider issuing this proposal (the “Provider”) and the customer identified on the proposal cover (the “Client”). Capitalised terms used herein have the meanings ascribed to them throughout this document.",
-  },
-  {
-    heading: "2. Scope of Services",
-    body: "The Provider agrees to deliver the products, services, and deliverables described in the proposal above, including any selected plan, add-ons, and statements of work. Changes to the scope require written agreement from both parties.",
-  },
-  {
-    heading: "3. Pricing & Payment",
-    body: "Fees are payable in the amounts and on the schedule described in the proposal, including any monthly recurring subscription fees and one-time upfront amounts. Invoices are due within fourteen (14) days of issue unless otherwise specified. Overdue amounts may accrue interest at the lesser of 1.5% per month or the maximum rate permitted by law.",
-  },
-  {
-    heading: "4. Term",
-    body: "The initial term begins on the date this Agreement is signed by the Client and continues for the commitment period selected in the proposal. The Agreement renews automatically for successive periods of the same length unless either party gives written notice of non-renewal at least thirty (30) days prior to the end of the then-current term.",
-  },
-  {
-    heading: "5. Termination",
-    body: "Either party may terminate this Agreement for material breach if the other party fails to cure such breach within thirty (30) days of written notice. Upon termination, the Client remains responsible for all fees accrued through the effective date of termination.",
-  },
-  {
-    heading: "6. Confidentiality",
-    body: "Each party will treat the other party's non-public information as confidential and use it solely to perform its obligations under this Agreement. This obligation survives termination for a period of three (3) years.",
-  },
-  {
-    heading: "7. Warranties & Liability",
-    body: "The services are provided on an “as is” basis except where expressly warranted in the proposal. Neither party will be liable for indirect, incidental, or consequential damages. Each party's aggregate liability arising out of this Agreement will not exceed the fees paid by the Client in the twelve (12) months preceding the claim.",
-  },
-  {
-    heading: "8. Governing Law",
-    body: "This Agreement is governed by the laws of the jurisdiction in which the Provider is established, without regard to its conflict of laws principles. The parties consent to the exclusive jurisdiction of the courts in that jurisdiction for any dispute arising out of this Agreement.",
-  },
-];
 
 interface PackageSelectionSummary {
   blockId: string;
@@ -238,12 +207,12 @@ function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
       <CardContent className="space-y-5 p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <div>
-            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{summary.blockTitle}</p>
+            <AgreementSectionLabel>{summary.blockTitle}</AgreementSectionLabel>
             <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">{summary.tierName}</p>
             <p className="text-sm text-zinc-500">Term: {summary.termLabel}</p>
           </div>
           <div className="text-right">
-            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Monthly subscription</p>
+            <AgreementSectionLabel>Monthly subscription</AgreementSectionLabel>
             <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900">
               {formatCurrencyAmount(summary.monthlyMinor, summary.currency)}
             </p>
@@ -252,7 +221,7 @@ function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
 
         {summary.addonLines.length > 0 ? (
           <div className="border-t border-zinc-200 pt-4">
-            <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Add-ons</p>
+            <AgreementSectionLabel>Add-ons</AgreementSectionLabel>
             <ul className="mt-2 space-y-2">
               {summary.addonLines.map((line) => (
                 <li
@@ -314,36 +283,6 @@ function NoPackageSelectionCard() {
         your selection will appear here automatically.
       </CardContent>
     </Card>
-  );
-}
-
-function LegalSections({ legalHtmlWithIds }: { legalHtmlWithIds?: string }) {
-  const sanitizedHtml = React.useMemo(() => {
-    if (!legalHtmlWithIds?.trim()) return null;
-    return sanitizeProposalHtml(legalHtmlWithIds);
-  }, [legalHtmlWithIds]);
-
-  if (sanitizedHtml) {
-    return (
-      <div
-        className={AGREEMENT_MODAL_RICH_TEXT_CLASSES}
-        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-      />
-    );
-  }
-  return (
-    <div className="space-y-8">
-      {DEFAULT_LEGAL_SECTIONS.map((s, i) => (
-        <section
-          key={s.heading}
-          id={`agreement-section-${i}`}
-          className="space-y-2"
-        >
-          <Typography variant="h3">{s.heading}</Typography>
-          <Typography className="text-[15px] leading-relaxed text-muted-foreground">{s.body}</Typography>
-        </section>
-      ))}
-    </div>
   );
 }
 
@@ -426,10 +365,7 @@ export function AgreementBlockPublic({
     const intro = introWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label }));
     const legal = hasCustomLegal
       ? legalWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label }))
-      : DEFAULT_LEGAL_SECTIONS.map((s, i) => ({
-          id: `agreement-section-${i}`,
-          label: s.heading,
-        }));
+      : defaultAgreementLegalNavItems();
     return [...intro, ...legal];
   }, [hasCustomLegal, introWithHeadingIds.headings, legalWithHeadingIds.headings]);
 
@@ -615,7 +551,7 @@ export function AgreementBlockPublic({
               >
                 <Menu className="size-5" aria-hidden />
               </Button>
-              <DialogTitle className="truncate text-sm font-semibold tracking-tight sm:text-base">
+              <DialogTitle className={AGREEMENT_MODAL_HEADER_TITLE_CLASSES}>
                 {agreementTitle}
               </DialogTitle>
             </div>
@@ -669,7 +605,7 @@ export function AgreementBlockPublic({
             >
               <div className="flex h-full min-h-0 w-[min(18rem,88vw)] flex-col">
                 <div className="shrink-0 border-b px-4 py-3">
-                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Jump to</p>
+                  <AgreementSectionLabel>Jump to</AgreementSectionLabel>
                 </div>
                 <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Agreement sections">
                   <ul className="space-y-0.5">
@@ -679,7 +615,7 @@ export function AgreementBlockPublic({
                           <Button
                             type="button"
                             variant="ghost"
-                            className="h-auto w-full justify-start px-3 py-2.5 font-medium"
+                            className={AGREEMENT_NAV_LINK_CLASSES}
                             onClick={() => jumpToSection(item.id)}
                           >
                             {item.label}
@@ -690,7 +626,7 @@ export function AgreementBlockPublic({
                           <Button
                             type="button"
                             variant="ghost"
-                            className="h-auto w-full justify-start px-3 py-2.5 font-medium"
+                            className={AGREEMENT_NAV_LINK_CLASSES}
                             onClick={() => jumpToSection(item.id)}
                           >
                             {item.label}
@@ -702,7 +638,7 @@ export function AgreementBlockPublic({
                                   <Button
                                     type="button"
                                     variant="ghost"
-                                    className="h-auto w-full justify-start py-2 pl-4 pr-3 font-normal text-muted-foreground hover:text-foreground"
+                                    className={AGREEMENT_NAV_CHILD_LINK_CLASSES}
                                     onClick={() => jumpToSection(child.id)}
                                   >
                                     {child.label}
@@ -729,23 +665,9 @@ export function AgreementBlockPublic({
             >
               <div id="agreement-top" aria-hidden />
 
-              <header className="text-center">
-                <h1 className="font-serif text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-                  {agreementTitle}
-                </h1>
-              </header>
+              <AgreementDocumentTitle title={agreementTitle} />
 
-              {introWithHeadingIds.html ? (
-                <section className="mx-auto mt-10 max-w-2xl">
-                  <div
-                    className={cn(
-                      AGREEMENT_MODAL_RICH_TEXT_CLASSES,
-                      "text-muted-foreground [&_em]:italic",
-                    )}
-                    dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(introWithHeadingIds.html) }}
-                  />
-                </section>
-              ) : null}
+              <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
 
               {packageSummaries.length > 0 ? (
                 <section
@@ -771,7 +693,7 @@ export function AgreementBlockPublic({
               <section id="agreement-legal" className="mt-12">
                 <AgreementSectionLabel>The agreement</AgreementSectionLabel>
                 <div className="mt-6">
-                  <LegalSections legalHtmlWithIds={legalWithHeadingIds.html} />
+                  <AgreementLegalContent legalHtml={legalWithHeadingIds.html} />
                 </div>
               </section>
 
@@ -861,57 +783,6 @@ export function AgreementBlockPublic({
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function AgreementSectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>{children}</p>;
-}
-
-/** Shown only in print/PDF after the agreement is signed — mirrors the e-signature capture. */
-export function AgreementPrintSignatureBlock({
-  signatureSrc,
-  signerName,
-  signedAt,
-}: {
-  signatureSrc: string | null | undefined;
-  signerName?: string | null;
-  signedAt?: number | null;
-}) {
-  if (!signatureSrc?.trim()) return null;
-
-  const signedLabel =
-    signedAt && signedAt > 0
-      ? new Date(signedAt).toLocaleString(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      : null;
-
-  return (
-    <section className="mt-12 hidden print:block">
-      <AgreementSectionLabel>Signature</AgreementSectionLabel>
-      <div className="mt-6 border-t pt-8">
-        {signerName?.trim() ? (
-          <Typography variant="small" className="text-sm font-semibold text-foreground">
-            {signerName.trim()}
-          </Typography>
-        ) : null}
-        {signedLabel ? (
-          <Typography variant="muted" className="mt-1 text-xs">
-            Signed {signedLabel}
-          </Typography>
-        ) : null}
-        <div className="mt-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={signatureSrc}
-            alt={signerName?.trim() ? `Signature of ${signerName.trim()}` : "Signature"}
-            className="max-h-36 max-w-full object-contain object-left"
-          />
-        </div>
-      </div>
-    </section>
   );
 }
 

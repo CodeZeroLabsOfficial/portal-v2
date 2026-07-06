@@ -28,9 +28,8 @@ import {
 import { saveProposalPackageSelectionAction } from "@/server/actions/proposal-builder";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProposalAccordionExpandSurface } from "@/components/proposal/proposal-accordion-expand-surface";
-import { PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS } from "@/lib/proposal/rich-text/inline-heading-rich-display";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
 import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
 
 export interface PackagesBlockPublicProps {
   block: PackagesBlock;
@@ -191,13 +190,10 @@ export function PackagesBlockPublic({
     >
       <div className={cn(isVisual ? "text-center" : "text-left")}>
         {(block.titleHtml ?? "").trim() ? (
-          <div
-            className={cn(
-              PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS,
-              "scroll-mt-20",
-              isVisual && "text-center",
-            )}
-            dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(block.titleHtml!) }}
+          <ProposalRichTextHtml
+            html={block.titleHtml!}
+            layout="heading"
+            className={cn("scroll-mt-20", isVisual && "text-center")}
           />
         ) : (
           <h1

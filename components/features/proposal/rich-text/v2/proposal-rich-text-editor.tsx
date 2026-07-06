@@ -36,7 +36,7 @@ import {
   proposalToolbarShellClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
 import { cn } from "@/lib/utils";
-import { PROPOSAL_RICH_HEADING_LEVEL_CLASSES } from "@/lib/proposal/rich-text/rich-heading-typography";
+import { proposalRichTextDisplayClasses } from "@/lib/proposal/rich-text/display-typography";
 import { PROPOSAL_MERGE_TOKEN_CHOICES } from "@/lib/proposal/rich-text/merge-token-choices";
 import {
   PROPOSAL_FONT_MENU_SECTIONS,
@@ -946,11 +946,6 @@ export interface ProposalRichTextProps {
 const TEXT_EDITOR_RESIZE_MIN_PX = 52;
 const TEXT_EDITOR_RESIZE_MAX_PX = 1600;
 
-const TIPTAP_PROSE_TYPOGRAPHY = cn(
-  "outline-none [&_p]:mb-1.5 [&_p:last-child]:mb-0 [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:pl-5",
-  PROPOSAL_RICH_HEADING_LEVEL_CLASSES,
-);
-
 function TextEditorResizeHandle({
   shellRef,
   onHeightChange,
@@ -1048,23 +1043,22 @@ export function ProposalRichText({
   // (toolbar + outline) already conveys selection. Browser-default outline is
   // suppressed via `focus-within:outline-none` so removing the ring doesn't
   // expose it.
+  const displayTone = seamless && prefersLight ? "on-dark" : "default";
+  const displayLayout = headerVariant ? "heading" : "body";
+
   const editorRootClass = cn(
-    TIPTAP_PROSE_TYPOGRAPHY,
+    "outline-none",
+    proposalRichTextDisplayClasses({ tone: displayTone, layout: displayLayout }),
     seamless
       ? cn(
-          "proposal-rich-text max-w-none rounded-none border-0 bg-transparent px-2.5 py-1.5 text-sm leading-relaxed shadow-none focus-within:outline-none",
-          // Stay visually merged with the section band (no hover/focus panel tint).
+          "rounded-none border-0 bg-transparent px-2.5 py-1.5 shadow-none focus-within:outline-none",
           "!bg-transparent hover:!bg-transparent focus:!bg-transparent focus-within:!bg-transparent active:!bg-transparent",
           "dark:!bg-transparent dark:hover:!bg-transparent dark:focus:!bg-transparent dark:focus-within:!bg-transparent",
           resolvedMinHeightPx == null ? autoMinHeightClass : null,
-          prefersLight
-            ? "text-white/[0.92] [&_a]:text-sky-200 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-white/25 [&_blockquote]:pl-4 [&_blockquote]:italic"
-            : "text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic",
         )
       : cn(
-          "proposal-rich-text max-w-none rounded-lg border-0 bg-background px-2.5 py-1.5 text-sm leading-relaxed text-foreground focus-within:outline-none",
+          "rounded-lg border-0 bg-background px-2.5 py-1.5 focus-within:outline-none",
           resolvedMinHeightPx == null ? autoMinHeightClass : null,
-          "[&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_a]:text-primary [&_a]:underline",
         ),
     className,
   );

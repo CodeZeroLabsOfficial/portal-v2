@@ -20,7 +20,7 @@ import {
   useSplashBackgroundPickerBranding,
   useSplashCompanyLogoUrl,
 } from "@/components/proposal/proposal-branding-context";
-import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalSplashBlockCanvas } from "@/components/proposal/proposal-splash-block";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { Button } from "@/components/ui/button";

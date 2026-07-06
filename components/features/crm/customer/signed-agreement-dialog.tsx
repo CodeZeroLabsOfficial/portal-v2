@@ -7,18 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Typography } from "@/components/ui/typography";
+import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
+import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
 import {
   AGREEMENT_PRINT_EXCLUDE_ATTR,
   AGREEMENT_PRINT_TARGET_ATTR,
   printAgreementDocument,
   useAgreementPrintMode
 } from "@/hooks/use-agreement-print-mode";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+import { AGREEMENT_MODAL_HEADER_TITLE_CLASSES } from "@/lib/proposal/agreement/chrome-typography";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
-import {
-  AGREEMENT_MODAL_RICH_TEXT_CLASSES,
-  PROPOSAL_PUBLIC_META_LABEL_CLASSES,
-} from "@/lib/proposal/public/public-typography";
 import { cn } from "@/lib/utils";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
@@ -26,52 +25,6 @@ interface SignedAgreementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data: { record: SignedAgreementRecord; signatureSrc: string | null } | null;
-}
-
-function AgreementPrintSignatureBlock({
-  signatureSrc,
-  signerName,
-  signedAt
-}: {
-  signatureSrc: string | null | undefined;
-  signerName?: string | null;
-  signedAt?: number | null;
-}) {
-  if (!signatureSrc?.trim()) return null;
-
-  const signedLabel =
-    signedAt && signedAt > 0
-      ? new Date(signedAt).toLocaleString(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short"
-        })
-      : null;
-
-  return (
-    <section className="mt-12 hidden print:block">
-      <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Signature</p>
-      <div className="mt-6 border-t pt-8">
-        {signerName?.trim() ? (
-          <Typography variant="small" className="text-sm font-semibold text-foreground">
-            {signerName.trim()}
-          </Typography>
-        ) : null}
-        {signedLabel ? (
-          <Typography variant="muted" className="mt-1 text-xs">
-            Signed {signedLabel}
-          </Typography>
-        ) : null}
-        <div className="mt-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={signatureSrc}
-            alt={signerName?.trim() ? `Signature of ${signerName.trim()}` : "Signature"}
-            className="max-h-36 max-w-full object-contain object-left"
-          />
-        </div>
-      </div>
-    </section>
-  );
 }
 
 export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreementDialogProps) {
@@ -105,7 +58,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
         {data ? (
           <>
             <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6 print:hidden">
-              <DialogTitle className="truncate text-sm font-semibold tracking-tight sm:text-base">
+              <DialogTitle className={AGREEMENT_MODAL_HEADER_TITLE_CLASSES}>
                 {data.record.proposalTitle}
               </DialogTitle>
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -160,7 +113,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                 </header>
 
                 <section className="mt-10">
-                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Agreement</p>
+                  <AgreementSectionLabel>Agreement</AgreementSectionLabel>
                   {(() => {
                     const rawBody = data.record.fullAgreementText?.trim() ?? "";
                     const bodyIsHtml = rawBody.includes("<");
@@ -173,9 +126,11 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                     }
                     if (bodyIsHtml) {
                       return (
-                        <div
-                          className={cn(AGREEMENT_MODAL_RICH_TEXT_CLASSES, "mt-4")}
-                          dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(rawBody) }}
+                        <ProposalRichTextHtml
+                          html={rawBody}
+                          tone="muted"
+                          layout="body"
+                          className="mt-4"
                         />
                       );
                     }
@@ -197,7 +152,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                   ref={signatureRef}
                   id="customer-signed-agreement-signature"
                   className="mt-12 scroll-mt-24 print:hidden">
-                  <p className={PROPOSAL_PUBLIC_META_LABEL_CLASSES}>Signature</p>
+                  <AgreementSectionLabel>Signature</AgreementSectionLabel>
                   {data.signatureSrc ? (
                     <Card className="mt-4 border-dashed bg-muted/30 py-4 shadow-none">
                       <CardContent>

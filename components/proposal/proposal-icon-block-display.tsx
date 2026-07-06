@@ -2,11 +2,8 @@ import type { MouseEvent, PointerEvent, ReactNode } from "react";
 import type { IconBlock } from "@/types/proposal";
 import { cn } from "@/lib/utils";
 import { resolveProposalPresetIcon } from "@/lib/proposal/icon-presets";
-import {
-  PROPOSAL_CAPTION_PLAIN_CLASS,
-  PROPOSAL_CAPTION_RICH_DISPLAY_CLASS,
-} from "@/lib/proposal/rich-text/inline-caption-rich-display";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
+import { PROPOSAL_CAPTION_PLAIN_CLASS } from "@/lib/proposal/rich-text/display-typography";
 
 export type ProposalIconBlockDisplayProps = {
   block: IconBlock;
@@ -48,9 +45,10 @@ export function ProposalIconBlockDisplay({
   const captionEl = labelSlot ? (
     <div className="min-w-0 flex-1">{labelSlot}</div>
   ) : rich ? (
-    <div
-      className={cn(PROPOSAL_CAPTION_RICH_DISPLAY_CLASS, hasGlyph && "flex-1")}
-      dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(block.labelHtml!) }}
+    <ProposalRichTextHtml
+      html={block.labelHtml!}
+      layout="caption"
+      className={cn(hasGlyph && "flex-1")}
     />
   ) : label ? (
     <span className={cn(PROPOSAL_CAPTION_PLAIN_CLASS, "min-w-0", hasGlyph && "flex-1")}>

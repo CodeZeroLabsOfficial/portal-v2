@@ -13,6 +13,7 @@ import { DEFAULT_BRANDING_FONT, isBrandingFontId } from "@/lib/fonts-config";
 import { DEFAULT_THEME } from "@/lib/themes";
 import { getPortalAppearanceSettings } from "@/server/firestore/appearance-settings";
 import { Toaster } from "@/components/ui/sonner";
+import { PROPOSAL_GOOGLE_FONTS_STYLESHEET_HREF } from "@/lib/proposal/rich-text/fonts";
 
 export async function generateMetadata(): Promise<Metadata> {
   const appearance = await getPortalAppearanceSettings();
@@ -59,6 +60,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href={PROPOSAL_GOOGLE_FONTS_STYLESHEET_HREF} />
+      </head>
       <body
         suppressHydrationWarning
         className={cn("bg-background group/layout font-sans", fontVariables)}

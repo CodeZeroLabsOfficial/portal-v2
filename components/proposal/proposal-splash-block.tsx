@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
 import { cn } from "@/lib/utils";
 import { withAlpha } from "@/lib/proposal/block-style";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
 import type { SplashBlock } from "@/types/proposal";
 import {
   mergeSplashBackground,
@@ -20,8 +20,10 @@ import {
 } from "@/lib/proposal/splash-branding";
 import { PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES } from "@/lib/proposal/public/public-layout";
 
-const RICH_PUBLIC =
-  "proposal-rich-text max-w-none text-sm leading-relaxed [&_a]:text-sky-200 [&_a]:underline [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-white/35 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/75 [&_h1]:ml-0 [&_h1]:mt-0 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mt-2 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h4]:mt-2 [&_h4]:text-base [&_h4]:font-semibold [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p]:ml-0 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_img]:max-h-32 [&_img]:rounded-lg [&_img]:object-contain";
+/** Splash-specific layout tweaks on top of shared rich-text scale. */
+const SPLASH_RICH_CONTENT_CLASS = cn(
+  "[&_h1]:ml-0 [&_h1]:mt-0 [&_p]:ml-0 [&_img]:max-h-32",
+);
 
 /** `flex-col`: main axis is vertical → `justify-*` controls vertical placement. */
 function columnJustifyFromVertical(v: SplashBlock["alignment"]["vertical"]): string {
@@ -259,15 +261,16 @@ export function ProposalSplashBlockCanvas({
       {children}
     </div>
   ) : publicHtml?.trim() ? (
-    <div
+    <ProposalRichTextHtml
+      html={publicHtml}
+      tone={prefersLight ? "on-dark" : "default"}
+      layout="body"
       className={cn(
-        RICH_PUBLIC,
         "w-full min-w-0",
         !publicEdge && "max-w-[40rem]",
-        prefersLight && "text-white/[0.92]",
         railTextClasses,
+        SPLASH_RICH_CONTENT_CLASS,
       )}
-      dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(publicHtml) }}
     />
   ) : null;
 
@@ -323,11 +326,6 @@ export function ProposalSplashBlockCanvas({
       <div
         className={cn(
           "relative z-10 flex h-full min-h-[inherit] w-full flex-col py-10 sm:py-14 md:py-16",
-          prefersLight &&
-            cn(
-              "[&_.proposal-rich-text]:!text-white/[0.92] [&_.proposal-rich-text_a]:text-sky-200",
-              "[&_.proposal-rich-text_h1]:!text-white [&_.proposal-rich-text_h2]:!text-white",
-            ),
         )}
       >
         <div

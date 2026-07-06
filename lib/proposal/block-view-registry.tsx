@@ -33,19 +33,12 @@ import {
 import { isProposalImagePlaceholderUrl } from "@/lib/proposal/media/image-placeholder";
 import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
 import { splashShowsCompanyLogo } from "@/lib/proposal/splash-branding";
-import {
-  PROPOSAL_CAPTION_PLAIN_CLASS,
-  PROPOSAL_CAPTION_RICH_DISPLAY_CLASS,
-} from "@/lib/proposal/rich-text/inline-caption-rich-display";
-import { PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS } from "@/lib/proposal/rich-text/inline-heading-rich-display";
-import { sanitizeProposalHtml } from "@/lib/proposal/sanitize";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
+import { headerBlockEditorHtml } from "@/lib/proposal/rich-text/header-block-html";
+import { PROPOSAL_CAPTION_PLAIN_CLASS } from "@/lib/proposal/rich-text/display-typography";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { cn } from "@/lib/utils";
 
-const PROPOSAL_HEADER_PLAIN_TITLE_CLASS =
-  "text-2xl font-semibold tracking-tight text-foreground md:text-3xl";
-
-/** Full top-level block list — used by the agreement modal to summarise selections. */
 export interface ProposalRenderContext {
   allBlocks: ProposalBlock[];
   brandingLogoUrl?: string;
@@ -92,9 +85,10 @@ function AccordionPublicView({ block }: { block: AccordionBlock }) {
               onClick={() => setOpenById((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
             >
               {(p.titleHtml ?? "").trim() ? (
-                <div
-                  className={cn(PROPOSAL_CAPTION_RICH_DISPLAY_CLASS, "min-w-0 flex-1 text-left")}
-                  dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(p.titleHtml!) }}
+                <ProposalRichTextHtml
+                  html={p.titleHtml!}
+                  layout="caption"
+                  className="min-w-0 flex-1 text-left"
                 />
               ) : (
                 <span className={cn("min-w-0 flex-1 text-left", PROPOSAL_CAPTION_PLAIN_CLASS)}>
@@ -121,13 +115,10 @@ function AccordionPublicView({ block }: { block: AccordionBlock }) {
               )}
             >
               {p.html?.trim() ? (
-                <div
-                  className={cn(
-                    "proposal-rich-text max-w-none text-sm leading-relaxed text-zinc-900",
-                    "[&_a]:text-cyan-700 [&_a]:underline",
-                    "[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0",
-                  )}
-                  dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(p.html) }}
+                <ProposalRichTextHtml
+                  html={p.html}
+                  layout="body"
+                  className="text-zinc-900 [&_a]:text-cyan-700"
                 />
               ) : (
                 <div className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-900">{p.body ?? ""}</div>
@@ -165,19 +156,7 @@ function renderSplashBlock({
 
 function renderHeaderBlock({ block }: ProposalBlockViewProps): React.ReactNode {
   if (block.type !== "header") return null;
-  if (block.html?.trim()) {
-    return (
-      <div
-        className={PROPOSAL_INLINE_HEADING_RICH_DISPLAY_CLASS}
-        dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(block.html) }}
-      />
-    );
-  }
-  return (
-    <h2 className={cn("scroll-mt-20", PROPOSAL_HEADER_PLAIN_TITLE_CLASS)}>
-      {block.text}
-    </h2>
-  );
+  return <ProposalRichTextHtml html={headerBlockEditorHtml(block)} layout="heading" />;
 }
 
 function renderTextBlock({ block }: ProposalBlockViewProps): React.ReactNode {
@@ -191,20 +170,7 @@ function renderTextBlock({ block }: ProposalBlockViewProps): React.ReactNode {
       : undefined;
   if (block.html?.trim()) {
     return (
-      <div
-        style={editorMinStyle}
-        className={cn(
-          "proposal-rich-text max-w-none text-sm leading-relaxed text-foreground",
-          "[&_a]:text-primary [&_a]:underline",
-          "[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground",
-          "[&_h1]:mt-8 [&_h1]:text-3xl [&_h1]:font-semibold",
-          "[&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold",
-          "[&_h3]:mt-4 [&_h3]:text-xl [&_h3]:font-semibold",
-          "[&_h4]:mt-4 [&_h4]:text-base [&_h4]:font-semibold",
-          "[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5",
-        )}
-        dangerouslySetInnerHTML={{ __html: sanitizeProposalHtml(block.html) }}
-      />
+      <ProposalRichTextHtml html={block.html} layout="body" style={editorMinStyle} />
     );
   }
   return (
@@ -528,7 +494,6 @@ export { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolb
 export { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
 export { ProposalIconBlockEditorRow } from "@/components/proposal/proposal-icon-block-editor";
 export { ProposalImageBlockEditor } from "@/components/proposal/proposal-image-block-editor";
-export { ProposalRichText } from "@/components/proposal/proposal-rich-text";
 export {
   PackagesInlineEditor,
   PricingInlineEditor,

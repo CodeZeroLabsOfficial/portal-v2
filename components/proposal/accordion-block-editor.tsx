@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import type { AccordionBlock, AccordionPanel } from "@/types/proposal";
-import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";

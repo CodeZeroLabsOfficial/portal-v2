@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { IconBlock } from "@/types/proposal";
 import { ProposalIconBlockDisplay } from "@/components/proposal/proposal-icon-block-display";
-import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { escapeHtml } from "@/lib/common/escape-html";
 import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
 

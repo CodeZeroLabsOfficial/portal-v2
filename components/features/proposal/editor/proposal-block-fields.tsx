@@ -71,7 +71,7 @@ import type {
   SplashBlock,
   TextBlock,
 } from "@/types/proposal";
-import { ProposalRichText } from "@/components/proposal/proposal-rich-text";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
 import { PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import {
