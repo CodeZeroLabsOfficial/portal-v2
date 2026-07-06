@@ -2,10 +2,20 @@ import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
 import type { ProposalDocument } from "@/types/proposal";
 
+const AUTHOR_NAMES = [
+  "Sarah Chen",
+  "Michael Rodriguez",
+  "Alex Kim",
+  "Jordan Lee",
+] as const;
+
 /** Placeholder + derived metadata for templates hub cards until Firestore/analytics fields exist. */
 export interface TemplateCardMeta {
   /** e.g. "Mobile Development • SaaS" */
   categoryLabel: string;
+  /** Placeholder until `createdByUid` is resolved to staff display name. */
+  authorName: string;
+  authorInitials: string;
   /** e.g. "27 times" */
   usageLabel: string;
   /** e.g. "8 sections • ~12 pages" — omitted when document empty */
@@ -85,6 +95,12 @@ export function buildTemplateCardMeta(
   const usageCount = 8 + (seed % 42);
   const major = 1 + (seed % 3);
   const minor = seed % 10;
+  const authorName = pick(AUTHOR_NAMES, seed >> 5);
+  const authorInitials = authorName
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .slice(0, 2);
 
   const derivedTags = deriveFeatureTags(document);
   const featureTags = [...derivedTags];
@@ -97,6 +113,8 @@ export function buildTemplateCardMeta(
 
   return {
     categoryLabel: `${useCase} • ${subcategory}`,
+    authorName,
+    authorInitials,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
     lengthLabel: deriveLengthLabel(document),
     versionLabel: `v${major}.${minor}`,
