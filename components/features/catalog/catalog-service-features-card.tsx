@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, Minus, Plus } from "lucide-react";
+import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -115,20 +115,20 @@ export function CatalogServiceFeaturesCard({
                   }}
                 />
                 {!disabled ? (
-                  <Button
+                  <button
                     type="button"
-                    size="icon"
-                    variant="outline"
                     disabled={saving}
                     aria-label={`Remove feature ${index + 1}`}
                     className={cn(
-                      "size-8 shrink-0",
-                      "opacity-0 transition-opacity group-hover/feat:opacity-100 focus-visible:opacity-100",
+                      "shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity",
+                      "hover:bg-destructive/10 hover:text-destructive",
+                      "focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "group-hover/feat:opacity-100",
                     )}
                     onClick={() => void persist(features.filter((_, featureIndex) => featureIndex !== index))}
                   >
-                    <Minus className="size-4" aria-hidden />
-                  </Button>
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
                 ) : null}
               </li>
             ))}
