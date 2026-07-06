@@ -7,6 +7,10 @@ import { BlockOutlinePanel } from "@/components/features/proposal/editor/block-o
 import { BuilderCanvasNavigationProvider } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { BuilderTopBarTitleProvider } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { BuilderInspectorPanel } from "@/components/features/proposal/editor/builder-inspector-panel";
+import {
+  BuilderPropertiesDetailsProvider,
+  BuilderPropertiesDetailsSlot,
+} from "@/components/features/proposal/editor/builder-properties-details-slot";
 import { BuilderShell } from "@/components/features/proposal/editor/builder-shell";
 import {
   BuilderTopBarActionsProvider,
@@ -50,6 +54,7 @@ export function ProposalBuilderWorkspace({
         <BuilderTopBarTitleProvider>
           <BuilderCanvasNavigationProvider>
             <BuilderSidePanelProvider>
+              <BuilderPropertiesDetailsProvider>
               <BuilderShell
                 topBar={
                   <BuilderTopBar
@@ -76,10 +81,10 @@ export function ProposalBuilderWorkspace({
                   </div>
                 }
                 inspector={
-                  <BuilderPanel title="Inspector" side="right">
+                  <BuilderPanel title="Properties" side="right">
                     {inspectorContent ?? (
                       <BuilderInspectorPanel
-                        details={detailsSlot}
+                        details={detailsSlot ?? <BuilderPropertiesDetailsSlot />}
                         share={shareSlot}
                         branding={brandingSlot}
                       />
@@ -87,6 +92,7 @@ export function ProposalBuilderWorkspace({
                   </BuilderPanel>
                 }
               />
+              </BuilderPropertiesDetailsProvider>
             </BuilderSidePanelProvider>
           </BuilderCanvasNavigationProvider>
         </BuilderTopBarTitleProvider>

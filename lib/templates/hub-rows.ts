@@ -53,7 +53,7 @@ export function buildTemplateHubRows(
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document),
+    cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document, row.catalogMeta),
     editHref: `/admin/templates/${row.id}`,
     previewHref: `/admin/templates/${row.id}/preview`,
   }));
@@ -68,7 +68,7 @@ export function buildTemplateHubRows(
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(row.id, "contract", row.document),
+    cardMeta: buildTemplateCardMeta(row.id, "contract", row.document, row.catalogMeta),
     editHref: `/admin/templates/contracts/${row.id}`,
     previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));

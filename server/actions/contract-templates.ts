@@ -7,6 +7,8 @@ import { requireStaffSession } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
+import { templateCatalogMetaSchema } from "@/lib/schemas/template-catalog-meta";
+import { normalizeTemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getContractTemplateForStaff } from "@/server/firestore/contract-templates";
 import type { ProposalDocument } from "@/types/proposal";
@@ -24,6 +26,7 @@ const saveContractSchema = z.object({
   document: z.unknown().optional(),
   introHtml: z.string().max(20_000).optional(),
   legalHtml: z.string().max(HTML_MAX),
+  catalogMeta: templateCatalogMetaSchema,
 });
 
 export async function createContractTemplateAction(): Promise<
@@ -98,6 +101,7 @@ export async function cloneContractTemplateAction(
     updatedAt: FieldValue.serverTimestamp(),
   };
   if (source.document) payload.document = source.document;
+  if (source.catalogMeta) payload.catalogMeta = source.catalogMeta;
 
   const write = await runAdminWrite(
     "contract_template_clone_failed",
@@ -147,6 +151,10 @@ export async function saveContractTemplateAction(
   if (document) patch.document = document;
   if (descTrim) patch.description = descTrim;
   else patch.description = FieldValue.delete();
+
+  const catalogMetaNormalized = normalizeTemplateCatalogMeta(parsed.data.catalogMeta ?? {});
+  if (catalogMetaNormalized) patch.catalogMeta = catalogMetaNormalized;
+  else patch.catalogMeta = FieldValue.delete();
 
   const write = await runAdminWrite(
     "contract_template_save_failed",

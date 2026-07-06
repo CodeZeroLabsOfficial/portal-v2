@@ -2,6 +2,7 @@ import { isStaff } from "@/lib/auth/server-session";
 import { asString } from "@/lib/firestore/coerce";
 import { millisFromFirestore } from "@/lib/firestore/timestamp";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
+import { parseTemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import type { ContractTemplateRecord } from "@/types/contract-template";
@@ -33,6 +34,7 @@ export function parseContractTemplateRecord(id: string, data: Record<string, unk
     document,
     introHtml: asString(data.introHtml),
     legalHtml: asString(data.legalHtml) ?? "",
+    catalogMeta: parseTemplateCatalogMeta(data.catalogMeta),
     createdAt: millisFromFirestore(data, "createdAt"),
     updatedAt: millisFromFirestore(data, "updatedAt"),
   };

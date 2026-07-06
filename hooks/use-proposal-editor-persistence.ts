@@ -19,7 +19,8 @@ export interface UseProposalEditorPersistenceOptions {
   documentTitle: string;
   doc: ProposalDocument;
   templateName: string;
-  initialTemplateDescription?: string;
+  templateDescription: string;
+  catalogMeta: import("@/lib/templates/catalog-meta").TemplateCatalogMeta;
   agreementTitle: string;
   branding?: ProposalBranding;
 }
@@ -46,7 +47,8 @@ export function useProposalEditorPersistence({
   documentTitle,
   doc,
   templateName,
-  initialTemplateDescription,
+  templateDescription,
+  catalogMeta,
   agreementTitle,
   branding,
 }: UseProposalEditorPersistenceOptions): ProposalEditorPersistence {
@@ -98,11 +100,12 @@ export function useProposalEditorPersistence({
       const res = await saveContractTemplateAction({
         contractTemplateId,
         name: templateName.trim() || "Untitled contract",
-        description: initialTemplateDescription?.trim() || undefined,
+        description: templateDescription.trim() || undefined,
         agreementTitle: agreementTitle.trim() || "Services Agreement",
         document: doc,
         introHtml,
         legalHtml,
+        catalogMeta,
       });
       setSaving(false);
       setMessage(res.ok ? "Contract template saved." : res.message);
@@ -117,10 +120,11 @@ export function useProposalEditorPersistence({
       const res = await saveProposalTemplateAction({
         templateId,
         name: templateName.trim() || "Untitled template",
-        description: initialTemplateDescription?.trim() || undefined,
+        description: templateDescription.trim() || undefined,
         title: documentTitle,
         document: doc,
         branding,
+        catalogMeta,
       });
       setSaving(false);
       setMessage(res.ok ? null : res.message);
@@ -151,7 +155,8 @@ export function useProposalEditorPersistence({
     contractTemplateId,
     doc,
     documentTitle,
-    initialTemplateDescription,
+    templateDescription,
+    catalogMeta,
     isContractTemplate,
     isTemplate,
     markSaveSucceeded,
@@ -181,10 +186,11 @@ export function useProposalEditorPersistence({
     const saved = await saveProposalTemplateAction({
       templateId,
       name: templateName.trim() || "Untitled template",
-      description: initialTemplateDescription?.trim() || undefined,
+      description: templateDescription.trim() || undefined,
       title: documentTitle,
       document: doc,
       branding,
+      catalogMeta,
     });
     if (!saved.ok) {
       setSending(false);
@@ -203,7 +209,8 @@ export function useProposalEditorPersistence({
     branding,
     doc,
     documentTitle,
-    initialTemplateDescription,
+    templateDescription,
+    catalogMeta,
     isTemplate,
     markPublishSucceeded,
     templateId,

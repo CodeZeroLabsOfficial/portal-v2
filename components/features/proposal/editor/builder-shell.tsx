@@ -48,7 +48,7 @@ function BuilderDesktopLayout({
       <main className="relative min-h-0 min-w-0 overflow-hidden">
         <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12">{canvas}</div>
       </main>
-      <BuilderSidePanel side="right" label="Inspector" open={inspectorOpen}>
+      <BuilderSidePanel side="right" label="Properties" open={inspectorOpen}>
         {inspector}
       </BuilderSidePanel>
     </div>
@@ -79,12 +79,12 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">
-                Inspector
+                Properties
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[min(100vw-2rem,24rem)] p-0">
               <SheetHeader className="border-b px-4 py-3">
-                <SheetTitle>Inspector</SheetTitle>
+                <SheetTitle>Properties</SheetTitle>
               </SheetHeader>
               <div className="overflow-y-auto p-4">{inspector}</div>
             </SheetContent>

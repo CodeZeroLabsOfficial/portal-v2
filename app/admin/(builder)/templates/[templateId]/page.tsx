@@ -42,6 +42,7 @@ export default async function EditProposalTemplateBuilderPage({ params }: PagePr
       templateId={template.id}
       initialTemplateName={template.name}
       initialTemplateDescription={template.description ?? ""}
+      initialCatalogMeta={template.catalogMeta}
       initialTemplateStage={template.stage}
       initialDocument={template.document}
       initialBranding={template.branding}

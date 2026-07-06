@@ -10,6 +10,8 @@ import { omitUndefinedDeep } from "@/lib/common/omit-undefined-deep";
 import { encodeProposalDocumentForFirestore } from "@/lib/proposal/firestore-document";
 import { syncProposalDocumentPackageTiersFromCatalog } from "@/lib/proposal/commerce/package-catalog-sync";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
+import { templateCatalogMetaSchema } from "@/lib/schemas/template-catalog-meta";
+import { normalizeTemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import { listCatalogServicePickerOptionsForOrganizationId } from "@/server/firestore/catalog-services";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getProposalTemplateForStaff } from "@/server/firestore/proposal-templates";
@@ -30,6 +32,7 @@ const saveTemplateSchema = z.object({
   title: z.string().trim().min(1).max(500),
   document: z.unknown(),
   branding: proposalBrandingSchema,
+  catalogMeta: templateCatalogMetaSchema,
 });
 
 export async function createProposalTemplateAction(): Promise<
@@ -105,6 +108,9 @@ export async function cloneProposalTemplateAction(
   if (source.branding && Object.keys(source.branding).length > 0) {
     payload.branding = source.branding;
   }
+  if (source.catalogMeta) {
+    payload.catalogMeta = source.catalogMeta;
+  }
 
   const write = await runAdminWrite(
     "proposal_template_clone_failed",
@@ -158,6 +164,12 @@ export async function saveProposalTemplateAction(
     return b;
   })();
 
+  const catalogMetaPayload = (() => {
+    const normalized = normalizeTemplateCatalogMeta(parsed.data.catalogMeta ?? {});
+    if (!normalized) return FieldValue.delete();
+    return omitUndefinedDeep(normalized) as Record<string, unknown>;
+  })();
+
   const write = await runAdminWrite(
     "proposal_template_save_failed",
     { templateId: parsed.data.templateId },
@@ -175,6 +187,7 @@ export async function saveProposalTemplateAction(
             encodeProposalDocumentForFirestore(syncedDocument),
           ) as Record<string, unknown>,
           branding: brandingPayload,
+          catalogMeta: catalogMetaPayload,
           updatedAt: FieldValue.serverTimestamp(),
         }),
   );

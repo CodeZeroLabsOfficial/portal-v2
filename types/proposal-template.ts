@@ -1,4 +1,5 @@
 import type { ProposalBranding, ProposalDocument } from "@/types/proposal";
+import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 
 /** Lifecycle for staff-facing template rows (CRM can still reference draft templates if desired). */
 export type ProposalTemplateStage = "draft" | "published";
@@ -19,6 +20,7 @@ export interface ProposalTemplateRecord {
   stage: ProposalTemplateStage;
   document: ProposalDocument;
   branding?: ProposalBranding;
+  catalogMeta?: TemplateCatalogMeta;
   createdAt: number;
   updatedAt: number;
 }

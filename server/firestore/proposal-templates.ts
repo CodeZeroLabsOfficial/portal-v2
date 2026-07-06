@@ -5,6 +5,7 @@ import { millisFromFirestore } from "@/lib/firestore/timestamp";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
+import { parseTemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import { parseBranding } from "@/server/firestore/parse-proposal";
 import type {
   ProposalTemplateRecord,
@@ -44,6 +45,7 @@ export function parseProposalTemplateRecord(id: string, data: Record<string, unk
     stage,
     document,
     branding: parseBranding(data.branding),
+    catalogMeta: parseTemplateCatalogMeta(data.catalogMeta),
     createdAt: millisFromFirestore(data, "createdAt"),
     updatedAt: millisFromFirestore(data, "updatedAt"),
   };

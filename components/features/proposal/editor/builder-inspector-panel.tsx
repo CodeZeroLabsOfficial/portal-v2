@@ -25,7 +25,7 @@ export function BuilderInspectorPanel({
   ].filter(Boolean) as { id: string; label: string; content: React.ReactNode }[];
 
   if (tabs.length === 0) {
-    return <p className="text-muted-foreground text-sm">No inspector panels for this document.</p>;
+    return <p className="text-muted-foreground text-sm">No property panels for this document.</p>;
   }
 
   return (

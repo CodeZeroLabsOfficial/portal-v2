@@ -1,4 +1,9 @@
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
+import {
+  templateCatalogCategoryLabel,
+  templateCatalogVersionLabel,
+  type TemplateCatalogMeta,
+} from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
 import type { ProposalDocument } from "@/types/proposal";
 
@@ -9,7 +14,7 @@ const AUTHOR_NAMES = [
   "Jordan Lee",
 ] as const;
 
-/** Placeholder + derived metadata for templates hub cards until Firestore/analytics fields exist. */
+/** Card metadata for templates hub — catalog fields when set, placeholders otherwise. */
 export interface TemplateCardMeta {
   /** e.g. "Mobile Development • SaaS" */
   categoryLabel: string;
@@ -80,11 +85,12 @@ function deriveLengthLabel(document?: ProposalDocument): string | undefined {
   return `${sections} section${sections === 1 ? "" : "s"} • ~${pages} page${pages === 1 ? "" : "s"}`;
 }
 
-/** Builds card metadata — deterministic placeholders plus document-derived tags/length. */
+/** Builds card metadata — saved catalog fields plus document-derived length/tags fallbacks. */
 export function buildTemplateCardMeta(
   id: string,
   kind: TemplateHubKind,
-  document?: ProposalDocument
+  document?: ProposalDocument,
+  catalogMeta?: TemplateCatalogMeta,
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
   const useCases = kind === "contract" ? CONTRACT_USE_CASES : PROPOSAL_USE_CASES;
@@ -102,22 +108,28 @@ export function buildTemplateCardMeta(
     .join("")
     .slice(0, 2);
 
+  const savedCategory = templateCatalogCategoryLabel(catalogMeta);
+  const savedVersion = templateCatalogVersionLabel(catalogMeta);
+  const savedFeatures = catalogMeta?.keyFeatures?.filter((tag) => tag.trim().length > 0) ?? [];
+
   const derivedTags = deriveFeatureTags(document);
-  const featureTags = [...derivedTags];
-  if (seed % 3 === 0 && !featureTags.includes("Popular")) {
-    featureTags.unshift("Popular");
-  }
-  if (seed % 5 === 0 && !featureTags.includes("AI Ready")) {
-    featureTags.push("AI Ready");
-  }
+  const featureTags =
+    savedFeatures.length > 0
+      ? savedFeatures.slice(0, 4)
+      : (() => {
+          const tags = [...derivedTags];
+          if (seed % 3 === 0 && !tags.includes("Popular")) tags.unshift("Popular");
+          if (seed % 5 === 0 && !tags.includes("AI Ready")) tags.push("AI Ready");
+          return tags.slice(0, 4);
+        })();
 
   return {
-    categoryLabel: `${useCase} • ${subcategory}`,
+    categoryLabel: savedCategory ?? `${useCase} • ${subcategory}`,
     authorName,
     authorInitials,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
     lengthLabel: deriveLengthLabel(document),
-    versionLabel: `v${major}.${minor}`,
-    featureTags: featureTags.slice(0, 4),
+    versionLabel: savedVersion ?? `v${major}.${minor}`,
+    featureTags,
   };
 }

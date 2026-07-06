@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
 import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
+import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { contractTemplateRecordToDocument } from "@/lib/contract-template/document";
 import { getContractTemplateForStaff } from "@/server/firestore/contract-templates";
@@ -34,10 +35,17 @@ export default async function EditContractTemplateBuilderPage({ params }: PagePr
       backHref="/admin/templates"
       backLabel="Templates"
       titleFallback={row.name?.trim() || "Untitled contract"}
+      brandingSlot={
+        <Typography variant="muted" className="text-sm">
+          Agreement layout and copy are edited on blocks in the canvas.
+        </Typography>
+      }
       variant="contract-template"
       contractTemplateId={row.id}
       initialTemplateName={row.name}
       initialTemplateDescription={row.description ?? ""}
+      initialCatalogMeta={row.catalogMeta}
+      initialTemplateStage={row.stage}
       initialAgreementTitle={row.agreementTitle}
       initialDocument={document}
       localityTimeZone={user.timeZone?.trim() || undefined}

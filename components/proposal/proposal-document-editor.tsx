@@ -20,7 +20,10 @@ import {
 import { useRegisterBuilderTopBarTitle } from "@/components/features/proposal/editor/builder-top-bar-title";
 import { useBuilderTopBarActions } from "@/components/features/proposal/editor/builder-top-bar-actions";
 import { RootBlockCanvas } from "@/components/features/proposal/editor/root-block-canvas";
-import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
+import { TemplatePropertiesPanel } from "@/components/features/templates/template-properties-panel";
+import {
+  useRegisterBuilderPropertiesDetails,
+} from "@/components/features/proposal/editor/builder-properties-details-slot";
 import { ProposalBrandingProvider } from "@/components/proposal/proposal-branding-context";
 import { EditorCatalogServicesContext, EditorTemplatePricingReadOnlyContext } from "@/components/proposal/editor-catalog-services-context";
 import { ProposalEditorLibraryScope } from "@/components/proposal/proposal-editor-library-scope";
@@ -35,6 +38,10 @@ import { syncProposalBlocksPackageTiersFromCatalog } from "@/lib/proposal/commer
 import { PROPOSAL_PUBLIC_DOCUMENT_OUTER_CLASSES } from "@/lib/proposal/public/public-layout";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
 import type { BlockStyle, ProposalBlock, ProposalBranding, ProposalDocument } from "@/types/proposal";
+import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
+import { EMPTY_TEMPLATE_CATALOG_META } from "@/lib/templates/catalog-meta";
+import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
+import type { ProposalTemplateStage } from "@/types/proposal-template";
 
 export type { ProposalEditShellToolbarProps };
 
@@ -45,7 +52,8 @@ export interface ProposalDocumentEditorProps {
   contractTemplateId?: string;
   initialTemplateName?: string;
   initialTemplateDescription?: string;
-  initialTemplateStage?: import("@/types/proposal-template").ProposalTemplateStage;
+  initialCatalogMeta?: TemplateCatalogMeta;
+  initialTemplateStage?: ProposalTemplateStage;
   initialAgreementTitle?: string;
   initialDocument: ProposalDocument;
   initialStatus?: string;
@@ -64,9 +72,11 @@ export function ProposalDocumentEditor({
   contractTemplateId,
   initialTemplateName = "",
   initialTemplateDescription = "",
+  initialCatalogMeta,
   initialAgreementTitle = "",
   initialDocument,
   initialStatus = "draft",
+  initialTemplateStage = "draft",
   proposalEditShellToolbar,
   proposalEditMiddleSlot,
   localityTimeZone,
@@ -80,6 +90,11 @@ export function ProposalDocumentEditor({
   const blockMenuProfile: BlockMenuProfile = isContractTemplate ? "contract-template" : "proposal";
 
   const [templateName, setTemplateName] = React.useState(initialTemplateName);
+  const [templateDescription, setTemplateDescription] = React.useState(initialTemplateDescription);
+  const [catalogMeta, setCatalogMeta] = React.useState<TemplateCatalogMeta>(
+    initialCatalogMeta ?? EMPTY_TEMPLATE_CATALOG_META,
+  );
+  const [templateStage, setTemplateStage] = React.useState<ProposalTemplateStage>(initialTemplateStage);
   const [agreementTitle, setAgreementTitle] = React.useState(initialAgreementTitle);
   const [templateNameEditing, setTemplateNameEditing] = React.useState(false);
   const templateNameSnapshotRef = React.useRef(initialTemplateName);
@@ -137,10 +152,17 @@ export function ProposalDocumentEditor({
     documentTitle,
     doc,
     templateName,
-    initialTemplateDescription,
+    templateDescription,
+    catalogMeta,
     agreementTitle,
     branding,
   });
+
+  React.useEffect(() => {
+    if (publishJustSucceeded && isTemplate) {
+      setTemplateStage("published");
+    }
+  }, [isTemplate, publishJustSucceeded]);
 
   React.useEffect(() => {
     if (rootColumnsLayoutEditingId && !blocks.some((b) => b.id === rootColumnsLayoutEditingId)) {
@@ -224,6 +246,19 @@ export function ProposalDocumentEditor({
   useBuilderTopBarActions(() => {
     if (!embeddedInBuilder) return null;
     return <BuilderEmbeddedChromeActions {...editorChromeProps} />;
+  });
+
+  useRegisterBuilderPropertiesDetails(() => {
+    if (!embeddedInBuilder || !isNamedTemplateShell) return null;
+    return (
+      <TemplatePropertiesPanel
+        description={templateDescription}
+        onDescriptionChange={setTemplateDescription}
+        catalogMeta={catalogMeta}
+        onCatalogMetaChange={setCatalogMeta}
+        stage={templateStage}
+      />
+    );
   });
 
   useRegisterBuilderTopBarTitle(

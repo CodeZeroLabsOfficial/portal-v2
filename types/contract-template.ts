@@ -1,5 +1,6 @@
 import type { ProposalDocument } from "@/types/proposal";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
+import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 
 /**
  * Firestore `contract_templates/{id}` — reusable legal copy for Accept (agreement) blocks.
@@ -19,6 +20,7 @@ export interface ContractTemplateRecord {
   document?: ProposalDocument;
   introHtml?: string;
   legalHtml: string;
+  catalogMeta?: TemplateCatalogMeta;
   createdAt: number;
   updatedAt: number;
 }

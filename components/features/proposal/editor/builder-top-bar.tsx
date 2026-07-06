@@ -56,7 +56,7 @@ export function BuilderPanel({ title, side, children, className }: BuilderPanelP
   const isLeft = side === "left";
   const onCollapse = isLeft ? toggleOutline : toggleInspector;
   const CollapseIcon = isLeft ? PanelLeftClose : PanelRightClose;
-  const collapseLabel = isLeft ? "Hide outline" : "Hide inspector";
+  const collapseLabel = isLeft ? "Hide outline" : "Hide properties";
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>

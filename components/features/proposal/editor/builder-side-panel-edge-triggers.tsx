@@ -51,7 +51,7 @@ export function BuilderSidePanelEdgeTriggers() {
         <BuilderSidePanelEdgeTrigger side="left" label="Show outline" onClick={toggleOutline} />
       ) : null}
       {!inspectorOpen ? (
-        <BuilderSidePanelEdgeTrigger side="right" label="Show inspector" onClick={toggleInspector} />
+        <BuilderSidePanelEdgeTrigger side="right" label="Show properties" onClick={toggleInspector} />
       ) : null}
     </>
   );
