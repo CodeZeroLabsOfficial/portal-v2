@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { requireStaffSession } from "@/lib/auth/server-session";
-import { slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
 import { logError } from "@/lib/common/logging";
@@ -12,8 +11,6 @@ import {
   createCatalogServiceSchema,
   createInputToServiceTerms,
   resolveCreateCatalogSlug,
-  saveCatalogServiceSchema,
-  saveInputToCatalogTerms,
 } from "@/lib/schemas/catalog-service";
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { COLLECTIONS } from "@/server/firestore/collections";
@@ -119,74 +116,6 @@ export async function createCatalogServiceAction(
   return { ok: true, serviceId: ref.id };
 }
 
-export async function saveCatalogServiceAction(
-  raw: unknown,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-
-  const parsed = saveCatalogServiceSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { ok: false, message: zodErrorToMessage(parsed.error) };
-  }
-
-  const db = getFirebaseAdminFirestore();
-  if (!db) return { ok: false, message: "Database unavailable." };
-
-  const serviceId = parsed.data.serviceId?.trim();
-  if (!serviceId) return { ok: false, message: "Service id is required." };
-
-  const existing = await getCatalogServiceForStaff(user, serviceId);
-  if (!existing) return { ok: false, message: "Service not found." };
-
-  const slug =
-    parsed.data.slug?.trim() ||
-    existing.slug ||
-    slugifyCatalogServiceName(parsed.data.name);
-  const terms = saveInputToCatalogTerms(existing, parsed.data, slug);
-
-  const features = parsed.data.features.map((f) => f.trim()).filter(Boolean);
-  const isAddon = existing.serviceType === "addon";
-  const description = parsed.data.description?.trim() ?? "";
-
-  const write = await runAdminWrite(
-    "catalog_service_save_failed",
-    { serviceId, uid: user.uid },
-    "Could not save the service.",
-    () =>
-      db
-        .collection(COLLECTIONS.services)
-        .doc(serviceId)
-        .set(
-          {
-            name: parsed.data.name.trim(),
-            description,
-            slug,
-            currency: parsed.data.currency.toLowerCase(),
-            sortOrder: FieldValue.delete(),
-            ...(isAddon
-              ? deletePlanOnlyCatalogFirestoreFields()
-              : planOnlyCatalogFirestoreFields("plan", {
-                  includedUsers: parsed.data.includedUsers,
-                  includedLocations: parsed.data.includedLocations,
-                  includedAdmins: parsed.data.includedAdmins,
-                  features,
-                })),
-            ...(typeof parsed.data.upfrontCost12Minor === "number"
-              ? { upfrontCost12Minor: Math.round(parsed.data.upfrontCost12Minor) }
-              : {}),
-            terms,
-            updatedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true },
-        ),
-  );
-  if (!write.ok) return write;
-
-  revalidateCatalogPaths(serviceId);
-  return { ok: true };
-}
-
 async function pushCatalogServiceToStripe(
   user: NonNullable<Awaited<ReturnType<typeof requireStaffSession>>>,
   serviceId: string,
@@ -230,44 +159,6 @@ async function pushCatalogServiceToStripe(
 
   revalidateCatalogPaths(id);
   return { ok: true };
-}
-
-/** Persists the form, then activates and syncs the saved record to Stripe. */
-export async function saveAndActivateCatalogServiceAction(
-  raw: unknown,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const save = await saveCatalogServiceAction(raw);
-  if (!save.ok) return save;
-
-  const parsed = saveCatalogServiceSchema.safeParse(raw);
-  const serviceId = parsed.success ? parsed.data.serviceId?.trim() : "";
-  if (!serviceId) {
-    return { ok: false, message: "Service id is required." };
-  }
-
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-
-  return pushCatalogServiceToStripe(user, serviceId, { setActive: true });
-}
-
-/** Persists the form, then re-syncs the saved record to Stripe. */
-export async function saveAndSyncCatalogServiceStripeAction(
-  raw: unknown,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const save = await saveCatalogServiceAction(raw);
-  if (!save.ok) return save;
-
-  const parsed = saveCatalogServiceSchema.safeParse(raw);
-  const serviceId = parsed.success ? parsed.data.serviceId?.trim() : "";
-  if (!serviceId) {
-    return { ok: false, message: "Service id is required." };
-  }
-
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-
-  return pushCatalogServiceToStripe(user, serviceId, { setActive: false });
 }
 
 export async function activateCatalogServiceAction(

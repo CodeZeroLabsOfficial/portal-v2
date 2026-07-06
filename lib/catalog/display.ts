@@ -33,32 +33,37 @@ export function catalogAvailableTermMonths(
   return ([12, 24] as const).filter((months) => catalogTermAmountMinor(service, months) > 0);
 }
 
+function formatCatalogPriceAmount(service: CatalogServiceRecord, amountMinor: number): string | null {
+  if (amountMinor <= 0) return null;
+  const formatted = formatCurrencyAmount(amountMinor, service.currency);
+  if (service.billingType === "one_off") return formatted;
+  return `${formatted}/mo`;
+}
+
 export function catalogPricingDetailLines(service: CatalogServiceRecord): string | string[] {
   const terms = service.terms;
   if (terms.length === 0) return "—";
 
-  const currency = service.currency;
   const isByTerm = service.pricingModel === "by_term";
   const term12 = terms.find((t) => t.months === 12);
   const term24 = terms.find((t) => t.months === 24);
 
   if (isByTerm && (term12 || term24)) {
     const lines: string[] = [];
-    if (term12 && term12.monthlyAmountMinor > 0) {
-      lines.push(`12 mo · ${formatCurrencyAmount(term12.monthlyAmountMinor, currency)}/mo`);
+    if (term12) {
+      const line = formatCatalogPriceAmount(service, term12.monthlyAmountMinor);
+      if (line) lines.push(`12 mo · ${line}`);
     }
-    if (term24 && term24.monthlyAmountMinor > 0) {
-      lines.push(`24 mo · ${formatCurrencyAmount(term24.monthlyAmountMinor, currency)}/mo`);
+    if (term24) {
+      const line = formatCatalogPriceAmount(service, term24.monthlyAmountMinor);
+      if (line) lines.push(`24 mo · ${line}`);
     }
     if (lines.length === 0) return "—";
     return lines.length === 1 ? lines[0]! : lines;
   }
 
-  const amount = terms[0]?.monthlyAmountMinor ?? 0;
-  if (amount <= 0) return "—";
-  const formatted = formatCurrencyAmount(amount, currency);
-  if (service.billingType === "one_off") return formatted;
-  return `${formatted}/mo`;
+  const flat = formatCatalogPriceAmount(service, terms[0]?.monthlyAmountMinor ?? 0);
+  return flat ?? "—";
 }
 
 export function catalogHeroPriceLabel(
@@ -68,32 +73,16 @@ export function catalogHeroPriceLabel(
   const terms = service.terms;
   if (terms.length === 0) return "—";
 
-  const currency = service.currency;
-
   if (service.pricingModel === "by_term" && selectedTermMonths) {
-    const amount = catalogTermAmountMinor(service, selectedTermMonths);
-    if (amount > 0) {
-      return `${formatCurrencyAmount(amount, currency)}/mo`;
-    }
+    const byTerm = formatCatalogPriceAmount(
+      service,
+      catalogTermAmountMinor(service, selectedTermMonths)
+    );
+    if (byTerm) return byTerm;
   }
 
-  const amount = terms[0]?.monthlyAmountMinor ?? 0;
-  if (amount <= 0) return "—";
-  const formatted = formatCurrencyAmount(amount, currency);
-  if (service.billingType === "one_off") return formatted;
-  return `${formatted}/mo`;
-}
-
-export function formatCatalogStripeSyncedAt(ms: number | undefined): string {
-  if (typeof ms !== "number" || !Number.isFinite(ms)) return "—";
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short"
-    }).format(new Date(ms));
-  } catch {
-    return "—";
-  }
+  const flat = formatCatalogPriceAmount(service, terms[0]?.monthlyAmountMinor ?? 0);
+  return flat ?? "—";
 }
 
 export function catalogPricingLabel(service: CatalogServiceRecord): string {

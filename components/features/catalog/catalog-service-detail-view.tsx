@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ExternalLink, ListChecks, Loader2, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ListChecks, MapPin, Shield, Users } from "lucide-react";
 
 import { PageBackButton } from "@/components/shared/page-back-button";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -24,42 +22,14 @@ import {
   catalogPricingDetailLines,
   catalogPricingModelLabel,
   catalogServiceTypeLabel,
-  formatCatalogStripeSyncedAt,
   formatCatalogTableDate
 } from "@/lib/catalog/display";
 import {
   catalogServiceStatusBadgeDisplay,
   catalogStripeSyncBadgeDisplay
 } from "@/lib/catalog/status-badges";
-import {
-  saveAndActivateCatalogServiceAction,
-  saveAndSyncCatalogServiceStripeAction
-} from "@/server/actions/catalog-services";
 import type { CatalogServiceRecord, CatalogServiceTermMonths } from "@/types/catalog-service";
 import { cn } from "@/lib/utils";
-
-function buildSavePayload(service: CatalogServiceRecord) {
-  const term12 =
-    service.terms.find((t) => t.months === 12)?.monthlyAmountMinor ?? 0;
-  const term24 =
-    service.terms.find((t) => t.months === 24)?.monthlyAmountMinor ?? 0;
-
-  return {
-    serviceId: service.id,
-    name: service.name.trim(),
-    description: service.description?.trim() || undefined,
-    currency: service.currency,
-    includedUsers: service.includedUsers,
-    includedLocations: service.includedLocations,
-    includedAdmins: service.includedAdmins,
-    monthlyCost12Minor: term12,
-    monthlyCost24Minor: term24,
-    ...(typeof service.upfrontCost12Minor === "number"
-      ? { upfrontCost12Minor: service.upfrontCost12Minor }
-      : {}),
-    features: service.features
-  };
-}
 
 function renderPricingDetail(value: string | string[]) {
   if (Array.isArray(value)) {
@@ -74,49 +44,18 @@ function renderPricingDetail(value: string | string[]) {
   return value;
 }
 
-interface CatalogServiceSpecRow {
-  key: string;
-  value: React.ReactNode;
-}
+const ENTITLEMENT_STATS = [
+  { key: "users", label: "users", icon: Users, field: "includedUsers" },
+  { key: "locations", label: "locations", icon: MapPin, field: "includedLocations" },
+  { key: "admins", label: "admins", icon: Shield, field: "includedAdmins" }
+] as const;
 
-function buildSpecRows(service: CatalogServiceRecord): CatalogServiceSpecRow[] {
-  const status = catalogServiceStatusBadgeDisplay(service.status);
-  const stripe = catalogStripeSyncBadgeDisplay(
-    service.stripeProductId,
-    service.stripeSyncedAt
-  );
-  const isPlan = service.serviceType !== "addon";
-
+function buildSpecRows(service: CatalogServiceRecord) {
   return [
-    {
-      key: "Status",
-      value: <StatusBadge label={status.label} variant={status.variant} />
-    },
     { key: "Type", value: catalogServiceTypeLabel(service) },
     { key: "Billing", value: catalogBillingLabel(service) },
     { key: "Pricing model", value: catalogPricingModelLabel(service) },
     { key: "Price", value: renderPricingDetail(catalogPricingDetailLines(service)) },
-    { key: "Slug", value: service.slug },
-    ...(isPlan
-      ? [
-          { key: "Users", value: String(service.includedUsers) },
-          { key: "Locations", value: String(service.includedLocations) },
-          { key: "Admins", value: String(service.includedAdmins) }
-        ]
-      : []),
-    {
-      key: "Stripe",
-      value: <StatusBadge label={stripe.label} variant={stripe.variant} />
-    },
-    {
-      key: "Product ID",
-      value: service.stripeProductId?.trim() ? (
-        <span className="font-mono text-xs">{service.stripeProductId}</span>
-      ) : (
-        "—"
-      )
-    },
-    { key: "Last sync", value: formatCatalogStripeSyncedAt(service.stripeSyncedAt) },
     { key: "Updated", value: formatCatalogTableDate(service.updatedAt) }
   ];
 }
@@ -126,13 +65,10 @@ export interface CatalogServiceDetailViewProps {
 }
 
 export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewProps) {
-  const router = useRouter();
   const availableTerms = catalogAvailableTermMonths(service);
   const defaultTerm = availableTerms[0] ?? 12;
   const [selectedTermMonths, setSelectedTermMonths] =
     React.useState<CatalogServiceTermMonths>(defaultTerm);
-  const [busy, setBusy] = React.useState(false);
-  const [message, setMessage] = React.useState<string | null>(null);
 
   const isPlan = service.serviceType !== "addon";
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
@@ -141,30 +77,15 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
     service.stripeProductId,
     service.stripeSyncedAt
   );
-  const readOnly = service.status === "archived" || busy;
   const specRows = buildSpecRows(service);
 
   const metaParts = [catalogBillingLabel(service), catalogServiceTypeLabel(service)].filter(
     (part) => part !== "—"
   );
 
-  async function runAction(fn: () => Promise<{ ok: boolean; message?: string }>) {
-    setBusy(true);
-    setMessage(null);
-    const res = await fn();
-    setBusy(false);
-    if (!res.ok) {
-      setMessage(res.message ?? "Something went wrong.");
-      return;
-    }
-    router.refresh();
-  }
-
   return (
     <div className="space-y-6">
       <PageBackButton href="/admin/services" label="Services" />
-
-      {message ? <p className="text-destructive text-sm">{message}</p> : null}
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
         <div className="space-y-6">
@@ -181,6 +102,25 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
               <p className="text-muted-foreground text-sm">{metaParts.join(" · ")}</p>
             ) : null}
 
+            {isPlan ? (
+              <div className="grid grid-cols-3 gap-3 text-sm *:space-y-1 *:rounded-md *:border *:p-3 *:text-center">
+                {ENTITLEMENT_STATS.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={stat.key}>
+                      <p className="text-2xl font-semibold tabular-nums">
+                        {service[stat.field]}
+                      </p>
+                      <p className="text-muted-foreground inline-flex items-center justify-center gap-1">
+                        <Icon className="size-4" aria-hidden />
+                        {stat.label}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
               <StatusBadge label={stripeDisplay.label} variant={stripeDisplay.variant} />
@@ -189,89 +129,31 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
 
           <Separator />
 
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <p className="text-2xl font-bold sm:text-3xl">
-                {catalogHeroPriceLabel(
-                  service,
-                  isByTerm ? selectedTermMonths : undefined
-                )}
-              </p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <p className="text-2xl font-bold sm:text-3xl">
+              {catalogHeroPriceLabel(service, isByTerm ? selectedTermMonths : undefined)}
+            </p>
 
-              {isByTerm ? (
-                <div className="flex items-center gap-3">
-                  <p className="text-muted-foreground text-sm">Term</p>
-                  <div className="flex gap-2">
-                    {availableTerms.map((months) => (
-                      <button
-                        key={months}
-                        type="button"
-                        onClick={() => setSelectedTermMonths(months)}
-                        className={cn(
-                          "focus-visible:ring-ring rounded-full border px-3 py-1 text-sm transition-colors focus-visible:ring-1 focus-visible:outline-none",
-                          selectedTermMonths === months
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border text-muted-foreground hover:text-foreground"
-                        )}
-                        aria-pressed={selectedTermMonths === months}>
-                        {months} mo
-                      </button>
-                    ))}
-                  </div>
+            {isByTerm ? (
+              <div className="flex items-center gap-3">
+                <p className="text-muted-foreground text-sm">Term</p>
+                <div className="flex gap-2">
+                  {availableTerms.map((months) => (
+                    <button
+                      key={months}
+                      type="button"
+                      onClick={() => setSelectedTermMonths(months)}
+                      className={cn(
+                        "focus-visible:ring-ring rounded-full border px-3 py-1 text-sm transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                        selectedTermMonths === months
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border text-muted-foreground hover:text-foreground"
+                      )}
+                      aria-pressed={selectedTermMonths === months}>
+                      {months} mo
+                    </button>
+                  ))}
                 </div>
-              ) : null}
-            </div>
-
-            {service.status === "draft" ? (
-              <Button
-                type="button"
-                className="rounded-full"
-                disabled={readOnly}
-                onClick={() =>
-                  void runAction(() =>
-                    saveAndActivateCatalogServiceAction(buildSavePayload(service))
-                  )
-                }>
-                {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                Activate & sync
-              </Button>
-            ) : null}
-
-            {service.status === "active" ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full"
-                  disabled={readOnly}
-                  onClick={() =>
-                    void runAction(() =>
-                      saveAndSyncCatalogServiceStripeAction(buildSavePayload(service))
-                    )
-                  }>
-                  {busy ? (
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                  ) : (
-                    <RefreshCw className="size-4" aria-hidden />
-                  )}
-                  Resync Stripe
-                </Button>
-                {service.stripeProductId?.trim() ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={busy}
-                    onClick={() =>
-                      window.open(
-                        `https://dashboard.stripe.com/products/${service.stripeProductId}`,
-                        "_blank"
-                      )
-                    }>
-                    <ExternalLink className="size-4" aria-hidden />
-                    Open in Stripe
-                  </Button>
-                ) : null}
               </div>
             ) : null}
           </div>

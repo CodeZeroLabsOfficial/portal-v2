@@ -4,7 +4,7 @@ import {
   normalizeLookupKeyBase,
   slugifyCatalogServiceName,
 } from "@/lib/catalog/service-slug";
-import type { CatalogServiceRecord, CatalogServiceTerm } from "@/types/catalog-service";
+import type { CatalogServiceTerm } from "@/types/catalog-service";
 
 const trimmed = z.string().trim();
 const lookupKeyBaseField = trimmed
@@ -13,26 +13,6 @@ const lookupKeyBaseField = trimmed
   .regex(/^[a-z0-9_]+$/, "Use lowercase letters, numbers, and underscores only");
 
 const STRIPE_MIN_MINOR = 50;
-
-export const saveCatalogServiceSchema = z.object({
-  serviceId: trimmed.min(1).optional(),
-  name: trimmed.min(1, "Name is required").max(120),
-  description: trimmed.max(500).optional(),
-  slug: trimmed
-    .max(40)
-    .regex(/^[a-z0-9_]+$/, "Slug must be lowercase letters, numbers, and underscores")
-    .optional(),
-  currency: trimmed.min(3).max(3).default("aud"),
-  includedUsers: z.number().int().min(0).max(1_000_000),
-  includedLocations: z.number().int().min(0).max(1_000_000),
-  includedAdmins: z.number().int().min(0).max(1_000_000),
-  upfrontCost12Minor: z.number().finite().min(0).optional(),
-  features: z.array(trimmed.max(200)).max(40).default([]),
-  monthlyCost12Minor: z.number().finite().min(0),
-  monthlyCost24Minor: z.number().finite().min(0),
-});
-
-export type SaveCatalogServiceInput = z.infer<typeof saveCatalogServiceSchema>;
 
 export const createCatalogServiceSchema = z
   .object({
@@ -109,16 +89,6 @@ export const createCatalogServiceSchema = z
 
 export type CreateCatalogServiceInput = z.infer<typeof createCatalogServiceSchema>;
 
-export function saveInputToServiceTerms(input: SaveCatalogServiceInput): Array<{
-  months: 12 | 24;
-  monthlyAmountMinor: number;
-}> {
-  return [
-    { months: 12, monthlyAmountMinor: Math.round(input.monthlyCost12Minor) },
-    { months: 24, monthlyAmountMinor: Math.round(input.monthlyCost24Minor) },
-  ];
-}
-
 export function createInputToServiceTerms(input: CreateCatalogServiceInput): CatalogServiceTerm[] {
   const slug = resolveCreateCatalogSlug(input);
   const pricingModel = input.billingType === "one_off" ? "flat" : input.pricingModel;
@@ -146,34 +116,6 @@ export function createInputToServiceTerms(input: CreateCatalogServiceInput): Cat
       slug,
       serviceType: input.serviceType,
       billingType: input.billingType,
-      pricingModel,
-    },
-    terms,
-  );
-}
-
-export function saveInputToCatalogTerms(
-  existing: Pick<
-    CatalogServiceRecord,
-    "slug" | "serviceType" | "billingType" | "pricingModel" | "terms"
-  >,
-  input: SaveCatalogServiceInput,
-  slug: string,
-): CatalogServiceTerm[] {
-  const pricingModel = existing.pricingModel ?? "by_term";
-  const terms = saveInputToServiceTerms(input).map((t) => {
-    const prev = existing.terms.find((p) => p.months === t.months);
-    return {
-      ...t,
-      ...(prev?.stripePriceId ? { stripePriceId: prev.stripePriceId } : {}),
-    };
-  });
-
-  return applyCatalogServiceTermLookupKeys(
-    {
-      slug,
-      serviceType: existing.serviceType ?? "plan",
-      billingType: existing.billingType ?? "recurring",
       pricingModel,
     },
     terms,
