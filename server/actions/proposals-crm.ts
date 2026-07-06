@@ -17,6 +17,10 @@ import { hydrateAgreementBlocksInDocument } from "@/server/proposal/hydrate-agre
 import { escapeHtml } from "@/lib/common/escape-html";
 import { logError } from "@/lib/common/logging";
 import { staffDisplayNameForActivity } from "@/lib/crm/staff-display-name";
+import {
+  commitNewProposalWithTemplateUsage,
+  proposalTemplateUsageSnapshot,
+} from "@/lib/templates/template-usage";
 import type { CustomerRecord } from "@/types/customer";
 import type { OpportunityRecord } from "@/types/opportunity";
 import type { ProposalBlock, ProposalBranding, ProposalDocument } from "@/types/proposal";
@@ -158,8 +162,10 @@ export async function createDraftProposalFromCustomerAction(
     document = buildCustomerOnlyProposalDocument(customer);
   }
 
+  const organizationId = user.organizationId ?? "default";
+  document = await hydrateAgreementBlocksInDocument(document, organizationId);
+
   try {
-    const organizationId = user.organizationId ?? "default";
     const shareToken = randomUUID().replace(/-/g, "");
 
     const ref = db.collection(COLLECTIONS.proposals).doc();
@@ -181,7 +187,12 @@ export async function createDraftProposalFromCustomerAction(
     }
     if (sourceTemplateId) payload.sourceTemplateId = sourceTemplateId;
 
-    await ref.set(payload);
+    await commitNewProposalWithTemplateUsage(
+      db,
+      ref,
+      payload,
+      proposalTemplateUsageSnapshot(sourceTemplateId, document),
+    );
 
     try {
       await db.collection(COLLECTIONS.customerActivities).add({
@@ -203,6 +214,7 @@ export async function createDraftProposalFromCustomerAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/proposals");
+    revalidatePath("/admin/templates");
     revalidatePath(`/admin/proposals/${ref.id}`);
     revalidatePath(`/admin/customers/${customer.id}`);
 
@@ -287,7 +299,12 @@ export async function createDraftProposalFromOpportunityAction(
     }
     if (sourceTemplateId) payload.sourceTemplateId = sourceTemplateId;
 
-    await ref.set(payload);
+    await commitNewProposalWithTemplateUsage(
+      db,
+      ref,
+      payload,
+      proposalTemplateUsageSnapshot(sourceTemplateId, document),
+    );
 
     try {
       const activityRes = await appendOpportunitySystemActivity(user, opportunityId, {
@@ -328,6 +345,7 @@ export async function createDraftProposalFromOpportunityAction(
 
     revalidatePath("/admin");
     revalidatePath("/admin/proposals");
+    revalidatePath("/admin/templates");
     revalidatePath(`/admin/proposals/${ref.id}`);
     revalidatePath(`/admin/customers/${customer.id}`);
     revalidatePath(`/admin/opportunities/${opportunityId}`);

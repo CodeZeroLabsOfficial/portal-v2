@@ -54,6 +54,7 @@ export async function createContractTemplateAction(): Promise<
         document: { title: "Services Agreement", blocks: [] },
         introHtml: "",
         legalHtml: "",
+        usageCount: 0,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       }),

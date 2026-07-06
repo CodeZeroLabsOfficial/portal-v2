@@ -1,4 +1,9 @@
-import type { HeaderBlock, SectionBlock } from "@/types/proposal";
+import type { HeaderBlock, ProposalBlock, SectionBlock } from "@/types/proposal";
+
+/** Top-level section bands — same units the builder Outline lists with section headings. */
+export function countOutlineSections(blocks: ProposalBlock[]): number {
+  return blocks.filter((block) => block.type === "section").length;
+}
 
 function htmlToPlainText(fragment: string): string {
   return fragment

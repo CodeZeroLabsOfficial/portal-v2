@@ -1,5 +1,5 @@
 import { isStaff } from "@/lib/auth/server-session";
-import { asString } from "@/lib/firestore/coerce";
+import { asNumber, asString } from "@/lib/firestore/coerce";
 import { millisFromFirestore } from "@/lib/firestore/timestamp";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
 import { parseTemplateCatalogMeta } from "@/lib/templates/catalog-meta";
@@ -35,6 +35,7 @@ export function parseContractTemplateRecord(id: string, data: Record<string, unk
     introHtml: asString(data.introHtml),
     legalHtml: asString(data.legalHtml) ?? "",
     catalogMeta: parseTemplateCatalogMeta(data.catalogMeta),
+    usageCount: asNumber(data.usageCount) ?? 0,
     createdAt: millisFromFirestore(data, "createdAt"),
     updatedAt: millisFromFirestore(data, "updatedAt"),
   };

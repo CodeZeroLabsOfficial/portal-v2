@@ -5,7 +5,7 @@ import Link from "next/link";
 import { TemplateCardActionsMenu } from "@/components/features/templates/template-card-actions-menu";
 import { TemplateCover } from "@/components/features/templates/template-cover";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
@@ -53,20 +53,6 @@ export function TemplateCard({
         <Badge variant="secondary" className="absolute top-3 left-3 z-10">
           {kindBadge.label}
         </Badge>
-
-        <div
-          className="absolute top-3 right-3 z-10"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}>
-          <TemplateCardActionsMenu
-            row={row}
-            disabled={disabled}
-            overlay
-            onUpdateStage={onUpdateStage}
-            onClone={onClone}
-            onRequestDelete={onRequestDelete}
-          />
-        </div>
       </div>
 
       <CardContent className="flex flex-1 flex-col space-y-4">
@@ -104,7 +90,10 @@ export function TemplateCard({
           <div className="space-y-1">
             <p className="text-muted-foreground text-xs">Author</p>
             <div className="flex items-center gap-2">
-              <Avatar className="size-6 shrink-0">
+              <Avatar className="size-6 shrink-0" title={cardMeta.authorName}>
+                {cardMeta.authorPhotoUrl ? (
+                  <AvatarImage src={cardMeta.authorPhotoUrl} alt="" />
+                ) : null}
                 <AvatarFallback className="text-[10px] font-semibold">
                   {cardMeta.authorInitials}
                 </AvatarFallback>
@@ -142,6 +131,19 @@ export function TemplateCard({
             ))}
           </div>
         ) : null}
+
+        <div
+          className="mt-auto flex items-center justify-end border-t pt-3"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}>
+          <TemplateCardActionsMenu
+            row={row}
+            disabled={disabled}
+            onUpdateStage={onUpdateStage}
+            onClone={onClone}
+            onRequestDelete={onRequestDelete}
+          />
+        </div>
       </CardContent>
     </Card>
   );

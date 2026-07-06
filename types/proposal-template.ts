@@ -21,6 +21,8 @@ export interface ProposalTemplateRecord {
   document: ProposalDocument;
   branding?: ProposalBranding;
   catalogMeta?: TemplateCatalogMeta;
+  /** Denormalized count of proposals referencing this template. */
+  usageCount: number;
   createdAt: number;
   updatedAt: number;
 }

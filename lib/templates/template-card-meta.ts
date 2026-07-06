@@ -1,18 +1,14 @@
+import { initialsFromName } from "@/lib/common/format";
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
+import { countOutlineSections } from "@/lib/proposal/outline-labels";
 import {
   templateCatalogTaxonomyLabel,
   templateCatalogVersionLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
+import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalDocument } from "@/types/proposal";
-
-const AUTHOR_NAMES = [
-  "Sarah Chen",
-  "Michael Rodriguez",
-  "Alex Kim",
-  "Jordan Lee",
-] as const;
 
 /** Card metadata for templates hub — catalog fields when set, placeholders otherwise. */
 export interface TemplateCardMeta {
@@ -22,9 +18,9 @@ export interface TemplateCardMeta {
   taxonomyLabel?: string;
   /** Placeholder taxonomy when catalog fields are unset. */
   categoryLabel: string;
-  /** Placeholder until `createdByUid` is resolved to staff display name. */
   authorName: string;
   authorInitials: string;
+  authorPhotoUrl?: string;
   /** e.g. "27 times" */
   usageLabel: string;
   /** e.g. "8 sections" — omitted when document empty */
@@ -81,9 +77,8 @@ function deriveLengthLabel(document?: ProposalDocument): string | undefined {
   const blocks = document?.blocks;
   if (!blocks?.length) return undefined;
 
-  const sectionCount = blocks.filter((b) => b.type === "section").length;
-  const topLevelCount = blocks.length;
-  const sections = sectionCount > 0 ? sectionCount : topLevelCount;
+  const sections = countOutlineSections(blocks);
+  if (sections === 0) return undefined;
 
   return `${sections} section${sections === 1 ? "" : "s"}`;
 }
@@ -94,6 +89,8 @@ export function buildTemplateCardMeta(
   kind: TemplateHubKind,
   document?: ProposalDocument,
   catalogMeta?: TemplateCatalogMeta,
+  author?: UserSummary,
+  usageCount = 0,
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
   const useCases = kind === "contract" ? CONTRACT_USE_CASES : PROPOSAL_USE_CASES;
@@ -101,15 +98,11 @@ export function buildTemplateCardMeta(
   const useCase = pick(useCases, seed);
   const subcategory = pick(subcategories, seed >> 3);
 
-  const usageCount = 8 + (seed % 42);
   const major = 1 + (seed % 3);
   const minor = seed % 10;
-  const authorName = pick(AUTHOR_NAMES, seed >> 5);
-  const authorInitials = authorName
-    .split(" ")
-    .map((part) => part[0] ?? "")
-    .join("")
-    .slice(0, 2);
+  const authorName = author?.displayName ?? "Team member";
+  const authorInitials = initialsFromName(authorName);
+  const authorPhotoUrl = author?.photoURL;
 
   const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
   const savedVersion = templateCatalogVersionLabel(catalogMeta);
@@ -133,6 +126,7 @@ export function buildTemplateCardMeta(
     categoryLabel: savedTaxonomy ?? `${useCase} • ${subcategory}`,
     authorName,
     authorInitials,
+    authorPhotoUrl,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
     lengthLabel: deriveLengthLabel(document),
     versionLabel: savedVersion ?? `v${major}.${minor}`,

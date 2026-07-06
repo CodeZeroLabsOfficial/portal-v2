@@ -1,16 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Copy,
-  EllipsisVertical,
-  ExternalLink,
-  FilePenLine,
-  Loader2,
-  Pencil,
-  Send,
-  Trash2,
-} from "lucide-react";
+import { Loader2, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -30,8 +20,6 @@ export interface TemplateCardActionsMenuProps {
   onUpdateStage: (row: TemplateHubRow, stage: ProposalTemplateStage) => void;
   onClone: (row: TemplateHubRow) => void;
   onRequestDelete: (row: TemplateHubRow) => void;
-  /** Outline trigger for cover overlay placement. */
-  overlay?: boolean;
 }
 
 export function TemplateCardActionsMenu({
@@ -40,69 +28,52 @@ export function TemplateCardActionsMenu({
   onUpdateStage,
   onClone,
   onRequestDelete,
-  overlay = false,
 }: TemplateCardActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={overlay ? "outline" : "ghost"}
+          type="button"
+          variant="ghost"
           size="icon"
-          className={cn("size-8 shrink-0", overlay && "bg-background/80 shadow-sm backdrop-blur-sm")}
+          className="size-8 shrink-0"
           disabled={disabled}
           aria-label={`Actions for ${row.name}`}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}>
           {disabled ? (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
-            <EllipsisVertical className="size-4 text-muted-foreground" />
+            <MoreHorizontal className="size-4" aria-hidden />
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={row.editHref}>
-            <Pencil aria-hidden />
-            Edit
-          </Link>
+        <DropdownMenuItem asChild>
+          <Link href={row.editHref}>Edit</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
+        <DropdownMenuItem asChild>
           <Link href={row.previewHref} target="_blank" rel="noopener noreferrer">
-            <ExternalLink aria-hidden />
             Preview
           </Link>
         </DropdownMenuItem>
         {row.stage === "draft" ? (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            disabled={disabled}
-            onSelect={() => void onUpdateStage(row, "published")}>
-            <Send aria-hidden />
+          <DropdownMenuItem disabled={disabled} onSelect={() => void onUpdateStage(row, "published")}>
             Publish
           </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            disabled={disabled}
-            onSelect={() => void onUpdateStage(row, "draft")}>
-            <FilePenLine aria-hidden />
+          <DropdownMenuItem disabled={disabled} onSelect={() => void onUpdateStage(row, "draft")}>
             Mark as draft
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          className="cursor-pointer"
-          disabled={disabled}
-          onSelect={() => void onClone(row)}>
-          <Copy aria-hidden />
+        <DropdownMenuItem disabled={disabled} onSelect={() => void onClone(row)}>
           Duplicate
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer text-destructive focus:text-destructive"
+          className="text-destructive focus:text-destructive"
           disabled={disabled}
           onSelect={() => onRequestDelete(row)}>
-          <Trash2 aria-hidden />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

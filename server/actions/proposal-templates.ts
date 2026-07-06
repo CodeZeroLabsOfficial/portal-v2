@@ -61,7 +61,9 @@ export async function createProposalTemplateAction(): Promise<
         document: {
           title: "Untitled proposal",
           blocks: [],
-        },        createdAt: FieldValue.serverTimestamp(),
+        },
+        usageCount: 0,
+        createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       }),
   );

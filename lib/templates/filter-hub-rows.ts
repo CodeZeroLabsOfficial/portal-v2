@@ -1,5 +1,9 @@
 import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
-import type { TemplateHubRow, TemplateHubTab } from "@/lib/templates/hub-rows";
+import {
+  compareTemplateHubRowsByTitle,
+  type TemplateHubRow,
+  type TemplateHubTab,
+} from "@/lib/templates/hub-rows";
 import { templateStageBadgeDisplay } from "@/lib/templates/status-badges";
 
 export interface FilterTemplateHubRowsOptions {
@@ -31,5 +35,5 @@ export function filterTemplateHubRows(
         .toLowerCase();
       return hay.includes(q);
     })
-    .sort((a, b) => b.lastEditedMs - a.lastEditedMs);
+    .sort(compareTemplateHubRowsByTitle);
 }

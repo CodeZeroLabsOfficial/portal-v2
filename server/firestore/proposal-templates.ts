@@ -46,6 +46,7 @@ export function parseProposalTemplateRecord(id: string, data: Record<string, unk
     document,
     branding: parseBranding(data.branding),
     catalogMeta: parseTemplateCatalogMeta(data.catalogMeta),
+    usageCount: asNumber(data.usageCount) ?? 0,
     createdAt: millisFromFirestore(data, "createdAt"),
     updatedAt: millisFromFirestore(data, "updatedAt"),
   };

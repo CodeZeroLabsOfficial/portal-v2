@@ -1,5 +1,6 @@
 import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
 import { buildTemplateCardMeta, type TemplateCardMeta } from "@/lib/templates/template-card-meta";
+import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ContractTemplateRecord } from "@/types/contract-template";
 import type { ProposalTemplateRecord, ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -39,10 +40,16 @@ function lastEditedMsContract(template: ContractTemplateRecord): number {
   return Math.max(template.updatedAt ?? 0, template.createdAt ?? 0);
 }
 
+/** Sorts hub rows by template title (A–Z, case-insensitive). */
+export function compareTemplateHubRowsByTitle(a: TemplateHubRow, b: TemplateHubRow): number {
+  return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+}
+
 /** Merges proposal and contract templates into one sorted list for the hub grid. */
 export function buildTemplateHubRows(
   proposalTemplates: ProposalTemplateRecord[],
-  contractTemplates: ContractTemplateRecord[]
+  contractTemplates: ContractTemplateRecord[],
+  authorByUid: ReadonlyMap<string, UserSummary> = new Map(),
 ): TemplateHubRow[] {
   const proposalRows: TemplateHubRow[] = proposalTemplates.map((row) => ({
     key: `proposal:${row.id}`,
@@ -53,7 +60,14 @@ export function buildTemplateHubRows(
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document, row.catalogMeta),
+    cardMeta: buildTemplateCardMeta(
+      row.id,
+      "proposal",
+      row.document,
+      row.catalogMeta,
+      authorByUid.get(row.createdByUid.trim()),
+      row.usageCount,
+    ),
     editHref: `/admin/templates/${row.id}`,
     previewHref: `/admin/templates/${row.id}/preview`,
   }));
@@ -68,10 +82,17 @@ export function buildTemplateHubRows(
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
-    cardMeta: buildTemplateCardMeta(row.id, "contract", row.document, row.catalogMeta),
+    cardMeta: buildTemplateCardMeta(
+      row.id,
+      "contract",
+      row.document,
+      row.catalogMeta,
+      authorByUid.get(row.createdByUid.trim()),
+      row.usageCount,
+    ),
     editHref: `/admin/templates/contracts/${row.id}`,
     previewHref: `/admin/templates/contracts/${row.id}/preview`,
   }));
 
-  return [...proposalRows, ...contractRows].sort((a, b) => b.lastEditedMs - a.lastEditedMs);
+  return [...proposalRows, ...contractRows].sort(compareTemplateHubRowsByTitle);
 }

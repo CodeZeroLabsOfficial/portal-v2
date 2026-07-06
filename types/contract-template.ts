@@ -21,6 +21,8 @@ export interface ContractTemplateRecord {
   introHtml?: string;
   legalHtml: string;
   catalogMeta?: TemplateCatalogMeta;
+  /** Denormalized count of proposals referencing this template via agreement blocks. */
+  usageCount: number;
   createdAt: number;
   updatedAt: number;
 }

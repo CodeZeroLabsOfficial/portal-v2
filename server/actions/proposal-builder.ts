@@ -34,6 +34,13 @@ import { loadBillingCatalogForOrganization } from "@/server/catalog/billing-cata
 import { resolveSubscriptionStripePriceIdForProposalWithStripe } from "@/server/stripe/resolve-proposal-subscription-with-catalog";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
 import { uploadSignedAgreementSignaturePng } from "@/lib/firebase/admin-storage";
+import { diffNewContractTemplateIds } from "@/lib/templates/collect-contract-template-ids";
+import {
+  commitNewProposalWithTemplateUsage,
+  deleteProposalWithTemplateUsageDecrement,
+  incrementContractTemplateUsageIds,
+  proposalTemplateUsageSnapshot,
+} from "@/lib/templates/template-usage";
 import {
   buildFullAgreementTextSnapshot,
   buildSignedAgreementCommerceSnapshot,
@@ -115,25 +122,29 @@ export async function saveProposalDocumentAction(
   const db = getFirebaseAdminFirestore();
   if (!db) return { ok: false, message: "Database unavailable." };
 
+  const newContractTemplateIds = diffNewContractTemplateIds(existing.document, hydrated);
+
   const write = await runAdminWrite(
     "proposal_save_failed",
     { proposalId: parsed.data.proposalId },
     "Could not save proposal.",
-    () =>
-      db
-        .collection(COLLECTIONS.proposals)
-        .doc(parsed.data.proposalId)
-        .update({
-          title: parsed.data.title,
-          document: omitUndefinedDeep(encodeProposalDocumentForFirestore(hydrated)) as Record<string, unknown>,
-          documentVersion: FieldValue.increment(1),
-          updatedAt: FieldValue.serverTimestamp(),
-        }),
+    async () => {
+      const batch = db.batch();
+      batch.update(db.collection(COLLECTIONS.proposals).doc(parsed.data.proposalId), {
+        title: parsed.data.title,
+        document: omitUndefinedDeep(encodeProposalDocumentForFirestore(hydrated)) as Record<string, unknown>,
+        documentVersion: FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      incrementContractTemplateUsageIds(batch, db, newContractTemplateIds);
+      await batch.commit();
+    },
   );
   if (!write.ok) return write;
 
   revalidatePath("/admin");
   revalidatePath("/admin/proposals");
+  revalidatePath("/admin/templates");
   revalidatePath(`/admin/proposals/${parsed.data.proposalId}`);
   return { ok: true };
 }
@@ -617,16 +628,22 @@ export async function deleteProposalAction(
   const db = getFirebaseAdminFirestore();
   if (!db) return { ok: false, message: "Database unavailable." };
 
+  const usageSnapshot = proposalTemplateUsageSnapshot(
+    existing.sourceTemplateId,
+    existing.document,
+  );
+
   const write = await runAdminWrite(
     "proposal_delete_failed",
     { proposalId: trimmed },
     "Could not delete the proposal.",
-    () => db.collection(COLLECTIONS.proposals).doc(trimmed).delete(),
+    () => deleteProposalWithTemplateUsageDecrement(db, trimmed, usageSnapshot),
   );
   if (!write.ok) return write;
 
   revalidatePath("/admin");
   revalidatePath("/admin/proposals");
+  revalidatePath("/admin/templates");
   revalidatePath(`/admin/proposals/${trimmed}`);
   if (existing.customerId) {
     revalidatePath(`/admin/customers/${existing.customerId}`);
@@ -688,16 +705,19 @@ export async function cloneProposalAction(
   }
   if (existing.sourceTemplateId) payload.sourceTemplateId = existing.sourceTemplateId;
 
+  const usageSnapshot = proposalTemplateUsageSnapshot(existing.sourceTemplateId, clonedDoc);
+
   const write = await runAdminWrite(
     "proposal_clone_failed",
     { sourceProposalId: trimmed, proposalId: ref.id },
     "Could not clone the proposal.",
-    () => ref.set(payload),
+    () => commitNewProposalWithTemplateUsage(db, ref, payload, usageSnapshot),
   );
   if (!write.ok) return write;
 
   revalidatePath("/admin");
   revalidatePath("/admin/proposals");
+  revalidatePath("/admin/templates");
   revalidatePath(`/admin/proposals/${ref.id}`);
   if (existing.customerId) {
     revalidatePath(`/admin/customers/${existing.customerId}`);
