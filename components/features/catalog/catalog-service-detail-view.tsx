@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { CatalogServiceEditSheet } from "@/components/features/catalog/catalog-service-edit-sheet";
+import { CatalogServiceEntitlementStats } from "@/components/features/catalog/catalog-service-entitlement-stats";
 import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalog-service-features-card";
 import { CatalogServiceSummaryCard } from "@/components/features/catalog/catalog-service-summary-card";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -85,7 +86,8 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
       </div>
 
       <div className="grid gap-4 lg:grid-cols-6">
-        <div className={cn(isPlan ? "lg:col-span-4" : "lg:col-span-6")}>
+        <div className={cn("space-y-4", isPlan ? "lg:col-span-4" : "lg:col-span-6")}>
+          {isPlan ? <CatalogServiceEntitlementStats service={service} /> : null}
           <CatalogServiceSummaryCard service={service} />
         </div>
 
