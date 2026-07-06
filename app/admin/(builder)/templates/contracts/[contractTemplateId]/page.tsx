@@ -5,6 +5,7 @@ import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/
 import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { contractTemplateRecordToDocument } from "@/lib/contract-template/document";
+import { batchGetUserSummaries } from "@/lib/users/user-summaries";
 import { getContractTemplateForStaff } from "@/server/firestore/contract-templates";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,8 @@ export default async function EditContractTemplateBuilderPage({ params }: PagePr
   }
 
   const document = contractTemplateRecordToDocument(row);
+  const authorByUid = await batchGetUserSummaries([row.createdByUid]);
+  const templateAuthor = authorByUid.get(row.createdByUid.trim());
 
   return (
     <ProposalBuilderWorkspace
@@ -45,6 +48,7 @@ export default async function EditContractTemplateBuilderPage({ params }: PagePr
       initialTemplateName={row.name}
       initialTemplateDescription={row.description ?? ""}
       initialCatalogMeta={row.catalogMeta}
+      initialTemplateAuthor={templateAuthor}
       initialTemplateStage={row.stage}
       initialAgreementTitle={row.agreementTitle}
       initialDocument={document}

@@ -41,6 +41,7 @@ import type { BlockStyle, ProposalBlock, ProposalBranding, ProposalDocument } fr
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
 import { EMPTY_TEMPLATE_CATALOG_META } from "@/lib/templates/catalog-meta";
 import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
+import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
 export type { ProposalEditShellToolbarProps };
@@ -53,6 +54,7 @@ export interface ProposalDocumentEditorProps {
   initialTemplateName?: string;
   initialTemplateDescription?: string;
   initialCatalogMeta?: TemplateCatalogMeta;
+  initialTemplateAuthor?: UserSummary;
   initialTemplateStage?: ProposalTemplateStage;
   initialAgreementTitle?: string;
   initialDocument: ProposalDocument;
@@ -73,6 +75,7 @@ export function ProposalDocumentEditor({
   initialTemplateName = "",
   initialTemplateDescription = "",
   initialCatalogMeta,
+  initialTemplateAuthor,
   initialAgreementTitle = "",
   initialDocument,
   initialStatus = "draft",
@@ -252,6 +255,7 @@ export function ProposalDocumentEditor({
     if (!embeddedInBuilder || !isNamedTemplateShell) return null;
     return (
       <TemplatePropertiesPanel
+        author={initialTemplateAuthor}
         description={templateDescription}
         onDescriptionChange={setTemplateDescription}
         catalogMeta={catalogMeta}

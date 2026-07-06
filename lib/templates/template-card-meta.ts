@@ -1,4 +1,3 @@
-import { initialsFromName } from "@/lib/common/format";
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import { countOutlineSections } from "@/lib/proposal/outline-labels";
 import {
@@ -16,7 +15,6 @@ export interface TemplateCardMeta {
   /** Classification • category from saved catalog meta. */
   taxonomyLabel?: string;
   authorName: string;
-  authorInitials: string;
   authorPhotoUrl?: string;
   /** e.g. "27 times" */
   usageLabel: string;
@@ -72,7 +70,6 @@ export function buildTemplateCardMeta(
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
   const authorName = author?.displayName ?? "Team member";
-  const authorInitials = initialsFromName(authorName);
   const authorPhotoUrl = author?.photoURL;
 
   const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
@@ -94,7 +91,6 @@ export function buildTemplateCardMeta(
     subtitleLabel,
     taxonomyLabel: savedTaxonomy,
     authorName,
-    authorInitials,
     authorPhotoUrl,
     usageLabel: `${usageCount} time${usageCount === 1 ? "" : "s"}`,
     lengthLabel: deriveLengthLabel(document),

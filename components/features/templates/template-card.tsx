@@ -3,9 +3,9 @@
 import Link from "next/link";
 
 import { TemplateCardActionsMenu } from "@/components/features/templates/template-card-actions-menu";
+import { TemplateAuthorDisplay } from "@/components/features/templates/template-author-display";
 import { TemplateCover } from "@/components/features/templates/template-cover";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
@@ -100,17 +100,12 @@ export function TemplateCard({
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div className="space-y-1">
             <p className="text-muted-foreground text-xs">Author</p>
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6 shrink-0" title={cardMeta.authorName}>
-                {cardMeta.authorPhotoUrl ? (
-                  <AvatarImage src={cardMeta.authorPhotoUrl} alt="" />
-                ) : null}
-                <AvatarFallback className="text-[10px] font-semibold">
-                  {cardMeta.authorInitials}
-                </AvatarFallback>
-              </Avatar>
-              <p className="truncate font-medium leading-none">{cardMeta.authorName}</p>
-            </div>
+            <TemplateAuthorDisplay
+              author={{
+                displayName: cardMeta.authorName,
+                photoURL: cardMeta.authorPhotoUrl,
+              }}
+            />
           </div>
           <div className="space-y-1">
             <p className="text-muted-foreground text-xs">Updated</p>

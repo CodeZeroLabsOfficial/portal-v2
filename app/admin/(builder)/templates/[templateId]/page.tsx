@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
 import { Typography } from "@/components/ui/typography";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
+import { batchGetUserSummaries } from "@/lib/users/user-summaries";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
 import { getProposalTemplateForStaff } from "@/server/firestore/proposal-templates";
 
@@ -27,6 +28,8 @@ export default async function EditProposalTemplateBuilderPage({ params }: PagePr
   }
 
   const catalogServiceOptions = await listCatalogServicePickerOptionsForOrg(user);
+  const authorByUid = await batchGetUserSummaries([template.createdByUid]);
+  const templateAuthor = authorByUid.get(template.createdByUid.trim());
 
   return (
     <ProposalBuilderWorkspace
@@ -43,6 +46,7 @@ export default async function EditProposalTemplateBuilderPage({ params }: PagePr
       initialTemplateName={template.name}
       initialTemplateDescription={template.description ?? ""}
       initialCatalogMeta={template.catalogMeta}
+      initialTemplateAuthor={templateAuthor}
       initialTemplateStage={template.stage}
       initialDocument={template.document}
       initialBranding={template.branding}
