@@ -43,7 +43,10 @@ export function CatalogServiceSummaryCard({ service }: CatalogServiceSummaryCard
   return (
     <Card className="py-5">
       <CardContent className="space-y-6 px-5">
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <div>
+          <h3 className="mb-2 font-semibold">Description</h3>
+          <p className="text-muted-foreground text-sm">{description}</p>
+        </div>
 
         <Separator />
 
