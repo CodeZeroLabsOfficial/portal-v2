@@ -71,18 +71,6 @@ export function normalizeTemplateCatalogMeta(
   return hasValue ? normalized : undefined;
 }
 
-/** Classification • category line for hub cards (excludes subtitle). */
-export function templateCatalogTaxonomyLabel(meta?: TemplateCatalogMeta): string | undefined {
-  if (!meta) return undefined;
-
-  const classification = meta.classification?.trim() || meta.useCase?.trim();
-  const category = meta.category?.trim();
-  if (classification && category) return `${classification} • ${category}`;
-  if (classification) return classification;
-  if (category) return category;
-  return undefined;
-}
-
 export function templateCatalogVersionLabel(meta?: TemplateCatalogMeta): string | undefined {
   const version = meta?.version?.trim();
   if (!version) return undefined;

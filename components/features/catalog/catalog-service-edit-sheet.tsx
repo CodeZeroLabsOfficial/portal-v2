@@ -15,6 +15,12 @@ import {
 import { CatalogServiceStripePanel } from "@/components/features/catalog/catalog-service-stripe-panel";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetActionsRowClass,
+  sheetContentWideClass,
+  sheetFormClass,
+  sheetTabsClass,
+} from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -186,15 +192,15 @@ export function CatalogServiceEditSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+        <SheetContent className={sheetContentWideClass}>
           <SheetHeader>
             <SheetTitle>Edit service</SheetTitle>
           </SheetHeader>
 
-          <form onSubmit={handleFormSubmit} className="mt-6 space-y-4 px-4" noValidate>
+          <form onSubmit={handleFormSubmit} className={sheetFormClass} noValidate>
             <FormServerError message={serverError} />
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className={sheetTabsClass}>
               <TabsList
                 variant="line"
                 className="h-auto w-full justify-start gap-6 rounded-none bg-transparent p-0"
@@ -225,7 +231,6 @@ export function CatalogServiceEditSheet({
                   setMonthly12={setMonthly12}
                   monthly24={monthly24}
                   setMonthly24={setMonthly24}
-                  hideStripeLookupPreview
                   idPrefix="edit-catalog"
                 />
               </TabsContent>
@@ -239,7 +244,7 @@ export function CatalogServiceEditSheet({
               </TabsContent>
             </Tabs>
 
-            <div className="flex items-center justify-between gap-2 pt-2">
+            <div className={sheetActionsRowClass}>
               <Button
                 type="button"
                 variant="destructive"

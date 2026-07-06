@@ -4,8 +4,10 @@ import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
 
+import { DecimalStepper } from "@/components/ui/decimal-stepper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumericStepper } from "@/components/ui/numeric-stepper";
 import { Textarea } from "@/components/ui/textarea";
 import {
   normalizeLookupKeyBase,
@@ -66,6 +68,49 @@ function PricingRow({
   );
 }
 
+function PricingStepperRow({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  required,
+  error,
+  placeholder = "0.00",
+  allowEmpty = false,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  required?: boolean;
+  error?: string;
+  placeholder?: string;
+  allowEmpty?: boolean;
+}) {
+  return (
+    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+      <Label htmlFor={id} className="font-normal">
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </Label>
+      <div className="flex flex-col items-end gap-1">
+        <DecimalStepper
+          id={id}
+          value={value}
+          disabled={disabled}
+          placeholder={placeholder}
+          allowEmpty={allowEmpty}
+          aria-label={label}
+          onChange={onChange}
+        />
+        {error ? <p className="text-xs leading-tight text-destructive">{error}</p> : null}
+      </div>
+    </li>
+  );
+}
+
 function EntitlementRow({
   id,
   label,
@@ -84,20 +129,13 @@ function EntitlementRow({
       <Label htmlFor={id} className="font-normal">
         {label}
       </Label>
-      <Input
+      <NumericStepper
         id={id}
-        type="number"
-        min={0}
-        max={1_000_000}
-        step={1}
         value={value}
+        max={1_000_000}
         disabled={disabled}
         aria-label={label}
-        className="h-9 w-[8.5rem] shrink-0 text-right"
-        onChange={(event) => {
-          const n = Number.parseInt(event.target.value, 10);
-          onChange(Number.isFinite(n) && n >= 0 ? Math.min(n, 1_000_000) : 0);
-        }}
+        onChange={onChange}
       />
     </li>
   );
@@ -120,7 +158,6 @@ export interface CatalogServiceFormFieldsProps {
   setMonthly12: React.Dispatch<React.SetStateAction<string>>;
   monthly24: string;
   setMonthly24: React.Dispatch<React.SetStateAction<string>>;
-  hideStripeLookupPreview?: boolean;
   idPrefix?: string;
 }
 
@@ -141,7 +178,6 @@ export function CatalogServiceFormFields({
   setMonthly12,
   monthly24,
   setMonthly24,
-  hideStripeLookupPreview = false,
   idPrefix = "catalog",
 }: CatalogServiceFormFieldsProps) {
   const name = form.watch("name");
@@ -183,55 +219,96 @@ export function CatalogServiceFormFields({
   }, [isOneOff, pricingModel, form]);
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-service-name`}>
-          Service or product name <span className="text-destructive">*</span>
-        </Label>
-        {mode === "create" ? (
-          <div className="flex overflow-hidden rounded-md border border-input focus-within:ring-2 focus-within:ring-ring">
-            <div className="relative shrink-0 border-r border-input">
-              <select
-                id={`${idPrefix}-service-type`}
-                className="h-9 appearance-none bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Label htmlFor={`${idPrefix}-service-name`}>
+            Service or product name <span className="text-destructive">*</span>
+          </Label>
+          {mode === "create" ? (
+            <div className="flex overflow-hidden rounded-md border border-input focus-within:ring-2 focus-within:ring-ring">
+              <div className="relative shrink-0 border-r border-input">
+                <select
+                  id={`${idPrefix}-service-type`}
+                  className="h-9 appearance-none bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={busy}
+                  value={serviceType}
+                  aria-label="Service type"
+                  onChange={(event) =>
+                    form.setValue("serviceType", event.target.value as CatalogServiceKind, {
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  <option value="plan">Plan</option>
+                  <option value="addon">Add-on</option>
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+              </div>
+              <Input
+                id={`${idPrefix}-service-name`}
+                autoComplete="off"
+                className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+                placeholder="Service or product name"
                 disabled={busy}
-                value={serviceType}
-                aria-label="Service type"
-                onChange={(event) =>
-                  form.setValue("serviceType", event.target.value as CatalogServiceKind, {
-                    shouldDirty: true,
-                  })
-                }
-              >
-                <option value="plan">Plan</option>
-                <option value="addon">Add-on</option>
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
+                {...form.register("name")}
               />
             </div>
+          ) : (
             <Input
               id={`${idPrefix}-service-name`}
               autoComplete="off"
-              className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-              placeholder="Service or product name"
               disabled={busy}
+              placeholder="Service or product name"
               {...form.register("name")}
             />
-          </div>
-        ) : (
+          )}
+          {typeof errors.name?.message === "string" ? (
+            <p className="text-xs leading-tight text-destructive">{errors.name.message}</p>
+          ) : null}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Label htmlFor={`${idPrefix}-lookup-key`}>
+            Lookup key <span className="text-destructive">*</span>
+          </Label>
           <Input
-            id={`${idPrefix}-service-name`}
+            id={`${idPrefix}-lookup-key`}
             autoComplete="off"
+            className="font-mono"
+            placeholder="e.g. premium_monthly"
+            value={lookupKeyBase}
             disabled={busy}
-            placeholder="Service or product name"
-            {...form.register("name")}
+            onChange={(event) => {
+              setLookupTouched(true);
+              setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+            }}
           />
-        )}
-        {typeof errors.name?.message === "string" ? (
-          <p className="text-xs leading-tight text-destructive">{errors.name.message}</p>
-        ) : null}
+          {typeof errors.lookupKeyBase?.message === "string" ? (
+            <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
+          ) : null}
+          {mode === "create" && resolvedLookupBase ? (
+            <p className="text-xs leading-snug text-muted-foreground">
+              Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
+              <span className="font-mono">{lookupPreview.join(" · ")}</span>
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
+        <Textarea
+          id={`${idPrefix}-service-description`}
+          rows={2}
+          disabled={busy}
+          className="min-h-[3.25rem] resize-none"
+          placeholder="Provide a brief description of the product or service"
+          {...form.register("description")}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -275,45 +352,6 @@ export function CatalogServiceFormFields({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
-        <Textarea
-          id={`${idPrefix}-service-description`}
-          rows={2}
-          disabled={busy}
-          className="min-h-[3.25rem] resize-none"
-          placeholder="Provide a brief description of the product or service"
-          {...form.register("description")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idPrefix}-lookup-key`}>
-          Lookup key <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id={`${idPrefix}-lookup-key`}
-          autoComplete="off"
-          className="font-mono"
-          placeholder="Enter unique lookup key (e.g. premium_monthly)"
-          value={lookupKeyBase}
-          disabled={busy}
-          onChange={(event) => {
-            setLookupTouched(true);
-            setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-          }}
-        />
-        {typeof errors.lookupKeyBase?.message === "string" ? (
-          <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
-        ) : null}
-        {!hideStripeLookupPreview && resolvedLookupBase ? (
-          <p className="text-xs leading-snug text-muted-foreground">
-            Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
-            <span className="font-mono">{lookupPreview.join(" · ")}</span>
-          </p>
-        ) : null}
-      </div>
-
       <div className={cn("grid gap-4", isPlan ? "md:grid-cols-2" : "md:grid-cols-1")}>
         <div className="overflow-hidden rounded-lg border">
           <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">Pricing</p>
@@ -335,16 +373,17 @@ export function CatalogServiceFormFields({
             ) : (
               <>
                 {showUpfront ? (
-                  <PricingRow
+                  <PricingStepperRow
                     id={`${idPrefix}-upfront-price`}
                     label="Upfront price (AUD)"
                     value={upfrontPrice}
                     disabled={busy}
                     placeholder="0.00"
+                    allowEmpty
                     onChange={setUpfrontPrice}
                   />
                 ) : null}
-                <PricingRow
+                <PricingStepperRow
                   id={`${idPrefix}-m12`}
                   label="12-month price (AUD)"
                   value={monthly12}
@@ -357,7 +396,7 @@ export function CatalogServiceFormFields({
                   }
                   onChange={setMonthly12}
                 />
-                <PricingRow
+                <PricingStepperRow
                   id={`${idPrefix}-m24`}
                   label="24-month price (AUD)"
                   value={monthly24}

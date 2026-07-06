@@ -31,10 +31,8 @@ import {
   catalogStripeSyncBadgeDisplay
 } from "@/lib/catalog/status-badges";
 import {
-  activateCatalogServiceAction,
   archiveCatalogServiceAction,
   deleteCatalogServiceAction,
-  syncCatalogServiceStripeAction
 } from "@/server/actions/catalog-services";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 
@@ -138,20 +136,6 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
     });
     setConfirmAction(() => opts.action);
     setConfirmOpen(true);
-  }
-
-  async function runRowAction(
-    id: string,
-    fn: () => Promise<{ ok: boolean; message?: string }>
-  ) {
-    setPendingId(id);
-    const res = await fn();
-    setPendingId(null);
-    if (!res.ok) {
-      window.alert(res.message ?? "Something went wrong.");
-      return;
-    }
-    router.refresh();
   }
 
   function handleArchive(id: string) {
@@ -339,36 +323,6 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
                 <DropdownMenuItem asChild>
                   <Link href={`/admin/services/${id}`}>Edit</Link>
                 </DropdownMenuItem>
-                {service.stripeProductId ? (
-                  <DropdownMenuItem
-                    onSelect={() =>
-                      window.open(
-                        `https://dashboard.stripe.com/products/${service.stripeProductId}`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    Open in Stripe
-                  </DropdownMenuItem>
-                ) : null}
-                {service.status === "draft" ? (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      void runRowAction(id, () => activateCatalogServiceAction(id))
-                    }
-                  >
-                    Activate & sync
-                  </DropdownMenuItem>
-                ) : null}
-                {service.status === "active" ? (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      void runRowAction(id, () => syncCatalogServiceStripeAction(id))
-                    }
-                  >
-                    Re-sync prices
-                  </DropdownMenuItem>
-                ) : null}
                 <DropdownMenuSeparator />
                 {service.status !== "archived" ? (
                   <DropdownMenuItem onClick={() => handleArchive(id)}>Archive</DropdownMenuItem>

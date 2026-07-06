@@ -8,6 +8,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetContentMediumClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +19,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -105,14 +108,14 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Edit company</SheetTitle>
           <SheetDescription>
             Update how your organization appears on invoices and proposals.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
           <FormServerError message={serverError} />
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -196,18 +199,16 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
             </div>
           </div>
 
-          <SheetFooter className="px-0">
-            <Button type="submit" disabled={busy}>
-              {busy ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </SheetFooter>
+          <Button type="submit" disabled={busy}>
+            {busy ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                Saving…
+              </>
+            ) : (
+              "Save changes"
+            )}
+          </Button>
         </form>
       </SheetContent>
     </Sheet>

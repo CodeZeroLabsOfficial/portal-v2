@@ -9,11 +9,15 @@ import { toast } from "sonner";
 
 import { CustomerProfileFormFields } from "@/components/features/crm/customer/customer-profile-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetActionsEndClass,
+  sheetContentWideClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
@@ -92,11 +96,11 @@ export function AddCustomerSheet({ open, onOpenChange }: AddCustomerSheetProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+      <SheetContent className={sheetContentWideClass}>
         <SheetHeader>
           <SheetTitle>Add customer</SheetTitle>
         </SheetHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
           <FormServerError message={serverError} />
           <CustomerProfileFormFields
             form={form}
@@ -109,7 +113,7 @@ export function AddCustomerSheet({ open, onOpenChange }: AddCustomerSheetProps) 
             tagInput={tagInput}
             onTagInputChange={setTagInput}
           />
-          <SheetFooter className="px-0">
+          <div className={sheetActionsEndClass}>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
               Cancel
             </Button>
@@ -123,7 +127,7 @@ export function AddCustomerSheet({ open, onOpenChange }: AddCustomerSheetProps) 
                 "Create"
               )}
             </Button>
-          </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

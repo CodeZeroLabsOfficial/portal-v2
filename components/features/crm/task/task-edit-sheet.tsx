@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetContentClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { TaskAssigneeField } from "@/components/shared/task-assignee-field";
 import {
   TaskCustomerSelect,
@@ -123,12 +127,12 @@ export function TaskEditSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto">
+        <SheetContent className={sheetContentClass}>
           <SheetHeader>
             <SheetTitle>Edit Task</SheetTitle>
           </SheetHeader>
 
-          <form onSubmit={onSubmit} className="space-y-6 p-4 pt-0" noValidate>
+          <form onSubmit={onSubmit} className={sheetFormClass} noValidate>
             <FormServerError message={serverError} />
 
             <div className="space-y-1.5">

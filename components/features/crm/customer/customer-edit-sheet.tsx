@@ -9,12 +9,15 @@ import { toast } from "sonner";
 
 import { CustomerProfileFormFields } from "@/components/features/crm/customer/customer-profile-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetContentWideClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
@@ -109,12 +112,12 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+      <SheetContent className={sheetContentWideClass}>
         <SheetHeader>
           <SheetTitle>Edit customer</SheetTitle>
           <SheetDescription>{customer.email}</SheetDescription>
         </SheetHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
           <FormServerError message={serverError} />
           <CustomerProfileFormFields
             form={form}
@@ -127,18 +130,16 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
             tagInput={tagInput}
             onTagInputChange={setTagInput}
           />
-          <SheetFooter className="px-0">
-            <Button type="submit" disabled={fieldsDisabled || busy}>
-              {busy ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </SheetFooter>
+          <Button type="submit" disabled={fieldsDisabled || busy}>
+            {busy ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                Saving…
+              </>
+            ) : (
+              "Save changes"
+            )}
+          </Button>
         </form>
       </SheetContent>
     </Sheet>

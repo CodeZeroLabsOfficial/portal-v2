@@ -1,7 +1,5 @@
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
-import {
-  type TemplateCatalogMeta,
-} from "@/lib/templates/catalog-meta";
+import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
 import type { ProposalDocument } from "@/types/proposal";
 

@@ -3,6 +3,10 @@
 import * as React from "react";
 import { Plus, X } from "lucide-react";
 
+import {
+  sheetContentClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,12 +105,12 @@ export function TemplatePropertiesEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className={sheetContentClass}>
         <SheetHeader>
           <SheetTitle>Edit properties</SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 p-4 pt-0" noValidate>
+        <form onSubmit={handleSubmit} className={sheetFormClass} noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="template-version">Version</Label>
             <Input

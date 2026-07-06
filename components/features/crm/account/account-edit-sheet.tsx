@@ -9,12 +9,15 @@ import { toast } from "sonner";
 
 import { AccountFormFields, type AccountFormFieldsProps } from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
+import {
+  sheetContentWideClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
@@ -68,7 +71,7 @@ export function AccountEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+      <SheetContent className={sheetContentWideClass}>
         <SheetHeader>
           <SheetTitle>Edit account</SheetTitle>
           <SheetDescription>
@@ -76,25 +79,23 @@ export function AccountEditSheet({
             contact{contactCount === 1 ? "" : "s"}).
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
           <FormServerError message={serverError} />
           <AccountFormFields
             form={form as unknown as AccountFormFieldsProps["form"]}
             idPrefix="edit-account"
             disabled={busy}
           />
-          <SheetFooter className="px-0">
-            <Button type="submit" disabled={busy}>
-              {busy ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                  Saving…
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </SheetFooter>
+          <Button type="submit" disabled={busy}>
+            {busy ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                Saving…
+              </>
+            ) : (
+              "Save changes"
+            )}
+          </Button>
         </form>
       </SheetContent>
     </Sheet>

@@ -9,6 +9,11 @@ import { toast } from "sonner";
 
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
+  sheetActionsRowClass,
+  sheetContentMediumClass,
+  sheetFormClass,
+} from "@/components/shared/sheet-layout";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -26,7 +31,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -120,7 +124,7 @@ export function StripeConnectSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className={sheetContentMediumClass}>
           <SheetHeader>
             <SheetTitle>{hasPortalStripeConfig ? "Stripe integration" : "Connect Stripe"}</SheetTitle>
             <SheetDescription>
@@ -130,44 +134,44 @@ export function StripeConnectSheet({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="mt-4 space-y-3 px-4">
-            <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-              <span className="text-sm">Secret key</span>
-              <Badge variant={stripeStatus.hasSecretKey ? "success" : "secondary"}>
-                {stripeStatus.hasSecretKey ? "Configured" : "Not configured"}
-              </Badge>
+          <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <span className="text-sm">Secret key</span>
+                <Badge variant={stripeStatus.hasSecretKey ? "success" : "secondary"}>
+                  {stripeStatus.hasSecretKey ? "Configured" : "Not configured"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <span className="text-sm">Webhook secret</span>
+                <Badge variant={stripeStatus.hasWebhookSecret ? "success" : "secondary"}>
+                  {stripeStatus.hasWebhookSecret ? "Configured" : "Not configured"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <span className="text-sm">Publishable key</span>
+                <Badge variant={stripeStatus.hasPublishableKey ? "success" : "secondary"}>
+                  {stripeStatus.hasPublishableKey ? "Configured" : "Not configured"}
+                </Badge>
+              </div>
+              {!stripeStatus.hasSecretKey || !stripeStatus.hasWebhookSecret ? (
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Add <code className="rounded bg-muted px-1 py-0.5">STRIPE_SECRET_KEY</code> and{" "}
+                  <code className="rounded bg-muted px-1 py-0.5">STRIPE_WEBHOOK_SECRET</code> to your deployment
+                  environment. Secret keys are never stored in the portal database.
+                </p>
+              ) : null}
+              <a
+                href="https://dashboard.stripe.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                Open Stripe Dashboard
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
             </div>
-            <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-              <span className="text-sm">Webhook secret</span>
-              <Badge variant={stripeStatus.hasWebhookSecret ? "success" : "secondary"}>
-                {stripeStatus.hasWebhookSecret ? "Configured" : "Not configured"}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-              <span className="text-sm">Publishable key</span>
-              <Badge variant={stripeStatus.hasPublishableKey ? "success" : "secondary"}>
-                {stripeStatus.hasPublishableKey ? "Configured" : "Not configured"}
-              </Badge>
-            </div>
-            {!stripeStatus.hasSecretKey || !stripeStatus.hasWebhookSecret ? (
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Add <code className="rounded bg-muted px-1 py-0.5">STRIPE_SECRET_KEY</code> and{" "}
-                <code className="rounded bg-muted px-1 py-0.5">STRIPE_WEBHOOK_SECRET</code> to your deployment
-                environment. Secret keys are never stored in the portal database.
-              </p>
-            ) : null}
-            <a
-              href="https://dashboard.stripe.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-            >
-              Open Stripe Dashboard
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-            </a>
-          </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4" noValidate>
             <FormServerError message={serverError} />
 
             <div className="space-y-2">
@@ -203,7 +207,7 @@ export function StripeConnectSheet({
               ) : null}
             </div>
 
-            <SheetFooter className="flex-row justify-between px-0 sm:justify-between">
+            <div className={sheetActionsRowClass}>
               {hasPortalStripeConfig ? (
                 <Button
                   type="button"
@@ -220,7 +224,7 @@ export function StripeConnectSheet({
                 {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
                 Save
               </Button>
-            </SheetFooter>
+            </div>
           </form>
         </SheetContent>
       </Sheet>

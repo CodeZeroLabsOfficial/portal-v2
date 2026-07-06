@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Edit, FileIcon, MessageSquare } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
+import { sheetContentClass, sheetFormClass } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -43,7 +44,7 @@ export function TaskDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className={sheetContentClass}>
         <SheetHeader>
           <div className="flex items-start justify-between pe-6">
             <SheetTitle className="text-left">{task.title}</SheetTitle>
@@ -71,7 +72,7 @@ export function TaskDetailSheet({
           </div>
         </SheetHeader>
 
-        <div className="space-y-6 p-4">
+        <div className={sheetFormClass}>
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Description</h4>
             <p className="text-muted-foreground text-sm">
