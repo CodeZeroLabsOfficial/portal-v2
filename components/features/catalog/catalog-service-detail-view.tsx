@@ -1,92 +1,86 @@
 "use client";
 
 import * as React from "react";
-import { ListChecks, MapPin, Shield, Users } from "lucide-react";
+import { Edit3, MapPin, Shield, Trash2, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
+import { CatalogServiceEditSheet } from "@/components/features/catalog/catalog-service-edit-sheet";
+import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalog-service-features-card";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { PageBackButton } from "@/components/shared/page-back-button";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import {
   catalogAvailableTermMonths,
   catalogBillingLabel,
   catalogHeroPriceLabel,
-  catalogPricingDetailLines,
   catalogPricingModelLabel,
   catalogServiceTypeLabel,
-  formatCatalogTableDate
+  formatCatalogTableDate,
 } from "@/lib/catalog/display";
 import {
   catalogServiceStatusBadgeDisplay,
-  catalogStripeSyncBadgeDisplay
+  catalogStripeSyncBadgeDisplay,
 } from "@/lib/catalog/status-badges";
+import { deleteCatalogServiceAction } from "@/server/actions/catalog-services";
 import type { CatalogServiceRecord, CatalogServiceTermMonths } from "@/types/catalog-service";
 import { cn } from "@/lib/utils";
 
-function renderPricingDetail(value: string | string[]) {
-  if (Array.isArray(value)) {
-    return (
-      <ul className="space-y-0.5">
-        {value.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
-    );
-  }
-  return value;
-}
-
 const ENTITLEMENT_STATS = [
-  { key: "users", label: "users", icon: Users, field: "includedUsers" },
-  { key: "locations", label: "locations", icon: MapPin, field: "includedLocations" },
-  { key: "admins", label: "admins", icon: Shield, field: "includedAdmins" }
-] as const;
-
-function buildSpecRows(service: CatalogServiceRecord) {
-  return [
-    { key: "Type", value: catalogServiceTypeLabel(service) },
-    { key: "Billing", value: catalogBillingLabel(service) },
-    { key: "Pricing model", value: catalogPricingModelLabel(service) },
-    { key: "Price", value: renderPricingDetail(catalogPricingDetailLines(service)) },
-    { key: "Updated", value: formatCatalogTableDate(service.updatedAt) }
-  ];
-}
+  { key: "users", label: "Users", icon: Users, field: "includedUsers" as const },
+  { key: "locations", label: "Locations", icon: MapPin, field: "includedLocations" as const },
+  { key: "admins", label: "Admins", icon: Shield, field: "includedAdmins" as const },
+];
 
 export interface CatalogServiceDetailViewProps {
   service: CatalogServiceRecord;
 }
 
 export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewProps) {
+  const router = useRouter();
   const availableTerms = catalogAvailableTermMonths(service);
   const defaultTerm = availableTerms[0] ?? 12;
   const [selectedTermMonths, setSelectedTermMonths] =
     React.useState<CatalogServiceTermMonths>(defaultTerm);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const isPlan = service.serviceType !== "addon";
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
+  const isArchived = service.status === "archived";
   const statusDisplay = catalogServiceStatusBadgeDisplay(service.status);
   const stripeDisplay = catalogStripeSyncBadgeDisplay(
     service.stripeProductId,
-    service.stripeSyncedAt
+    service.stripeSyncedAt,
   );
-  const specRows = buildSpecRows(service);
+
+  async function handleDelete() {
+    setIsDeleting(true);
+    const result = await deleteCatalogServiceAction(service.id);
+    setIsDeleting(false);
+
+    if (!result.ok) {
+      toast.error(result.message);
+      throw new Error(result.message);
+    }
+
+    toast.success("Service deleted.");
+    router.push("/admin/services");
+  }
 
   return (
-    <div className="space-y-6">
-      <PageBackButton href="/admin/services" label="Services" />
+    <div className="space-y-4">
+      <div className="flex flex-row items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+          <PageBackButton href="/admin/services" label="Services" />
 
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <Typography variant="h1" className="text-3xl lg:text-4xl">
+          <div className="min-w-0 space-y-2">
+            <Typography variant="h1" className="text-xl tracking-tight lg:text-2xl">
               {service.name}
             </Typography>
 
@@ -95,29 +89,83 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
               <StatusBadge label={stripeDisplay.label} variant={stripeDisplay.variant} />
             </div>
 
-            <p className="text-muted-foreground max-w-xl text-sm">
-              {service.description?.trim() || "—"}
-            </p>
-
-            {isPlan ? (
-              <div className="grid grid-cols-3 gap-3 text-sm *:space-y-1 *:rounded-md *:border *:p-3 *:text-center">
-                {ENTITLEMENT_STATS.map((stat) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div key={stat.key}>
-                      <p className="text-2xl font-semibold tabular-nums">
-                        {service[stat.field]}
-                      </p>
-                      <p className="text-muted-foreground inline-flex items-center justify-center gap-1">
-                        <Icon className="size-4" aria-hidden />
-                        {stat.label}
-                      </p>
-                    </div>
-                  );
-                })}
+            <div className="text-muted-foreground inline-flex flex-col gap-2 text-sm lg:flex-row lg:gap-4">
+              <div>
+                <span className="text-foreground font-semibold">Type :</span>{" "}
+                {catalogServiceTypeLabel(service)}
               </div>
-            ) : null}
+              <div>
+                <span className="text-foreground font-semibold">Billing :</span>{" "}
+                {catalogBillingLabel(service)}
+              </div>
+              <div>
+                <span className="text-foreground font-semibold">Pricing model :</span>{" "}
+                {catalogPricingModelLabel(service)}
+              </div>
+              <div>
+                <span className="text-foreground font-semibold">Updated :</span>{" "}
+                {formatCatalogTableDate(service.updatedAt)}
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            disabled={isArchived}
+          >
+            <Edit3 className="size-4" aria-hidden />
+            <span className="hidden lg:inline">Edit</span>
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            onClick={() => setDeleteOpen(true)}
+            disabled={isDeleting}
+            aria-label="Delete service"
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-6">
+        <div className={cn("space-y-4", isPlan ? "lg:col-span-4" : "lg:col-span-6")}>
+          {isPlan ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {ENTITLEMENT_STATS.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={stat.key}
+                    className="hover:border-primary/30 bg-muted grid auto-cols-max grid-flow-col gap-4 rounded-lg border p-4"
+                  >
+                    <Icon className="size-6 opacity-40" aria-hidden />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-sm">{stat.label}</span>
+                      <span className="text-lg font-semibold tabular-nums">
+                        {service[stat.field]}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          <Card>
+            <CardContent className="space-y-4 pt-6">
+              <div>
+                <h3 className="mb-2 font-semibold">Description</h3>
+                <p className="text-muted-foreground text-sm">
+                  {service.description?.trim() || "—"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Separator />
 
@@ -139,9 +187,10 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
                         "focus-visible:ring-ring rounded-full border px-3 py-1 text-sm transition-colors focus-visible:ring-1 focus-visible:outline-none",
                         selectedTermMonths === months
                           ? "border-foreground bg-foreground text-background"
-                          : "border-border text-muted-foreground hover:text-foreground"
+                          : "border-border text-muted-foreground hover:text-foreground",
                       )}
-                      aria-pressed={selectedTermMonths === months}>
+                      aria-pressed={selectedTermMonths === months}
+                    >
                       {months} mo
                     </button>
                   ))}
@@ -151,53 +200,28 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
           </div>
         </div>
 
-        <div className="border-t pt-6 lg:border-t-0 lg:pt-0 lg:pl-8">
-          <Typography variant="h2" className="text-xl">
-            Service details
-          </Typography>
-          <Table className="mt-4">
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground h-auto py-3">Spec</TableHead>
-                <TableHead className="text-muted-foreground h-auto py-3">Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {specRows.map((row) => (
-                <TableRow key={row.key} className="border-border">
-                  <TableCell className="text-muted-foreground py-3">{row.key}</TableCell>
-                  <TableCell className="text-foreground py-3 text-sm whitespace-normal">
-                    {row.value}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        {isPlan ? (
+          <div className="lg:col-span-2">
+            <CatalogServiceFeaturesCard
+              serviceId={service.id}
+              initialFeatures={service.features}
+              disabled={isArchived}
+            />
+          </div>
+        ) : null}
       </div>
 
-      {isPlan ? (
-        <div className="space-y-3">
-          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <ListChecks className="size-3.5" aria-hidden />
-            Included features
-            {service.features.length > 0 ? (
-              <span className="normal-case tracking-normal text-muted-foreground/80">
-                ({service.features.length})
-              </span>
-            ) : null}
-          </p>
-          {service.features.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No features listed.</p>
-          ) : (
-            <ul className="text-foreground space-y-1 text-sm">
-              {service.features.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ) : null}
+      <CatalogServiceEditSheet service={service} open={editOpen} onOpenChange={setEditOpen} />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete service"
+        description="Delete this service permanently? It will be removed from the catalogue. Linked Stripe product will be deactivated if present; existing subscriptions are not changed."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

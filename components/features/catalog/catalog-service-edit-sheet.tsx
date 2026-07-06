@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm, type FieldErrors, type Resolver } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   CatalogServiceFormFields,
@@ -14,59 +15,61 @@ import {
 import { FormServerError } from "@/components/shared/form-server-error";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { buildCatalogServicePayload, majorInputToMinor } from "@/lib/catalog/form-defaults";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  buildCatalogServicePayload,
+  majorInputToMinor,
+  servicePriceControlDefaults,
+  serviceToEditDefaults,
+} from "@/lib/catalog/form-defaults";
 import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
 import {
   createCatalogServiceSchema,
   type CreateCatalogServiceInput,
 } from "@/lib/schemas/catalog-service";
-import { createCatalogServiceAction } from "@/server/actions/catalog-services";
+import { updateCatalogServiceAction } from "@/server/actions/catalog-services";
+import type { CatalogServiceRecord } from "@/types/catalog-service";
 
-interface AddCatalogServiceDialogProps {
+export interface CatalogServiceEditSheetProps {
+  service: CatalogServiceRecord;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const defaultValues: CreateCatalogServiceInput = {
-  serviceType: "plan",
-  name: "",
-  description: "",
-  billingType: "recurring",
-  pricingModel: "by_term",
-  lookupKeyBase: "",
-  currency: "aud",
-  flatAmountMinor: 0,
-  monthlyCost12Minor: 0,
-  monthlyCost24Minor: 0,
-  includedUsers: 0,
-  includedLocations: 0,
-  includedAdmins: 0,
-};
-
-export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServiceDialogProps) {
+export function CatalogServiceEditSheet({
+  service,
+  open,
+  onOpenChange,
+}: CatalogServiceEditSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
-  const [lookupKeyBase, setLookupKeyBase] = React.useState("");
+  const [lookupKeyBase, setLookupKeyBase] = React.useState(service.slug);
   const [lookupTouched, setLookupTouched] = React.useState(false);
   const [flatPrice, setFlatPrice] = React.useState("");
   const [upfrontPrice, setUpfrontPrice] = React.useState("");
   const [monthly12, setMonthly12] = React.useState("");
   const [monthly24, setMonthly24] = React.useState("");
 
+  const serviceType = service.serviceType ?? "plan";
+  const fieldsDisabled = service.status === "archived";
+
   const form = useForm<CreateCatalogServiceInput>({
     resolver: zodResolver(createCatalogServiceSchema) as Resolver<CreateCatalogServiceInput>,
-    defaultValues,
+    defaultValues: {
+      ...serviceToEditDefaults(service),
+      serviceType,
+    },
   });
 
-  const serviceType = form.watch("serviceType");
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
+  const name = form.watch("name");
   const { isPlan, isFlat, isByTerm, showUpfront } = useCatalogServicePricingFlags(
     serviceType,
     billingType,
@@ -76,17 +79,21 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
   const resolvedLookupBase = normalizeLookupKeyBase(lookupKeyBase);
 
   React.useEffect(() => {
-    if (!open) {
-      form.reset(defaultValues);
-      setLookupKeyBase("");
-      setLookupTouched(false);
-      setFlatPrice("");
-      setUpfrontPrice("");
-      setMonthly12("");
-      setMonthly24("");
-      setServerError(null);
-    }
-  }, [open, form]);
+    if (!open) return;
+    const defaults = serviceToEditDefaults(service);
+    const prices = servicePriceControlDefaults(service);
+    form.reset({
+      ...defaults,
+      serviceType: service.serviceType ?? "plan",
+    });
+    setLookupKeyBase(service.slug);
+    setLookupTouched(true);
+    setFlatPrice(prices.flatPrice);
+    setUpfrontPrice(prices.upfrontPrice);
+    setMonthly12(prices.monthly12);
+    setMonthly24(prices.monthly24);
+    setServerError(null);
+  }, [open, service, form]);
 
   function syncFormFromControls() {
     form.setValue("lookupKeyBase", resolvedLookupBase, { shouldValidate: false });
@@ -122,15 +129,20 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
       upfrontPrice,
       monthly12,
       monthly24,
-    }) as CreateCatalogServiceInput;
+    });
 
-    const result = await createCatalogServiceAction(payload);
+    const result = await updateCatalogServiceAction({
+      ...payload,
+      serviceId: service.id,
+    });
+
     if (!result.ok) {
       setServerError(result.message);
       return;
     }
+
+    toast.success("Service saved. Re-sync from the services list to update Stripe.");
     onOpenChange(false);
-    router.push(`/admin/services/${result.serviceId}`);
     router.refresh();
   }
 
@@ -144,46 +156,51 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
   const busy = form.formState.isSubmitting;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(90vh,860px)] max-w-[880px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[880px]">
-        <DialogHeader className="shrink-0 border-b px-6 pb-5 pt-6 text-left">
-          <DialogTitle className="text-xl font-semibold tracking-tight">Add a new service</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+        <SheetHeader>
+          <SheetTitle>Edit service</SheetTitle>
+          <SheetDescription>{name.trim() || service.slug}</SheetDescription>
+        </SheetHeader>
 
-        <form onSubmit={handleFormSubmit} className="flex min-h-0 flex-1 flex-col" noValidate>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-6">
-            <FormServerError message={serverError} />
-            <CatalogServiceFormFields
-              form={form}
-              mode="create"
-              serviceType={serviceType}
-              busy={busy}
-              lookupKeyBase={lookupKeyBase}
-              setLookupKeyBase={setLookupKeyBase}
-              lookupTouched={lookupTouched}
-              setLookupTouched={setLookupTouched}
-              flatPrice={flatPrice}
-              setFlatPrice={setFlatPrice}
-              upfrontPrice={upfrontPrice}
-              setUpfrontPrice={setUpfrontPrice}
-              monthly12={monthly12}
-              setMonthly12={setMonthly12}
-              monthly24={monthly24}
-              setMonthly24={setMonthly24}
-            />
-          </div>
+        <form onSubmit={handleFormSubmit} className="mt-6 space-y-4 px-4" noValidate>
+          <FormServerError message={serverError} />
+          <CatalogServiceFormFields
+            form={form}
+            mode="edit"
+            serviceType={serviceType}
+            busy={busy || fieldsDisabled}
+            lookupKeyBase={lookupKeyBase}
+            setLookupKeyBase={setLookupKeyBase}
+            lookupTouched={lookupTouched}
+            setLookupTouched={setLookupTouched}
+            flatPrice={flatPrice}
+            setFlatPrice={setFlatPrice}
+            upfrontPrice={upfrontPrice}
+            setUpfrontPrice={setUpfrontPrice}
+            monthly12={monthly12}
+            setMonthly12={setMonthly12}
+            monthly24={monthly24}
+            setMonthly24={setMonthly24}
+            idPrefix="edit-catalog"
+          />
 
-          <DialogFooter className="shrink-0 gap-2 border-t px-6 pb-6 pt-4 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+          <SheetFooter className="gap-2 px-0 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={busy}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={busy} className="min-w-[7rem] gap-2">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-              Create
+            <Button type="submit" disabled={busy || fieldsDisabled} className="min-w-[7rem] gap-2">
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              Save
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

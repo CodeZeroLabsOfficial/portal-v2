@@ -11,6 +11,10 @@ import {
   createCatalogServiceSchema,
   createInputToServiceTerms,
   resolveCreateCatalogSlug,
+  resolveUpdateCatalogSlug,
+  updateCatalogServiceFeaturesSchema,
+  updateCatalogServiceSchema,
+  updateInputToServiceTerms,
 } from "@/lib/schemas/catalog-service";
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { COLLECTIONS } from "@/server/firestore/collections";
@@ -114,6 +118,116 @@ export async function createCatalogServiceAction(
 
   revalidateCatalogPaths(ref.id);
   return { ok: true, serviceId: ref.id };
+}
+
+export async function updateCatalogServiceAction(
+  raw: unknown,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const user = await requireStaffSession();
+  if (!user) return { ok: false, message: "Unauthorized." };
+
+  const parsed = updateCatalogServiceSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: zodErrorToMessage(parsed.error) };
+  }
+
+  const id = parsed.data.serviceId.trim();
+  const existing = await getCatalogServiceForStaff(user, id);
+  if (!existing) return { ok: false, message: "Service not found." };
+  if (existing.status === "archived") {
+    return { ok: false, message: "Archived services cannot be edited." };
+  }
+
+  const db = getFirebaseAdminFirestore();
+  if (!db) return { ok: false, message: "Database unavailable." };
+
+  const name = parsed.data.name.trim();
+  const slug = resolveUpdateCatalogSlug(parsed.data);
+  const serviceType = existing.serviceType ?? "plan";
+  const pricingModel = parsed.data.billingType === "one_off" ? "flat" : parsed.data.pricingModel;
+  const terms = updateInputToServiceTerms(existing, parsed.data);
+  const description = parsed.data.description?.trim() ?? "";
+
+  const payload: Record<string, unknown> = {
+    name,
+    slug,
+    description,
+    billingType: parsed.data.billingType,
+    pricingModel,
+    terms,
+    updatedAt: FieldValue.serverTimestamp(),
+    ...planOnlyCatalogFirestoreFields(serviceType, {
+      includedUsers: parsed.data.includedUsers ?? 0,
+      includedLocations: parsed.data.includedLocations ?? 0,
+      includedAdmins: parsed.data.includedAdmins ?? 0,
+      features: existing.features,
+    }),
+  };
+
+  if (serviceType === "plan") {
+    if (
+      typeof parsed.data.upfrontCost12Minor === "number" &&
+      parsed.data.upfrontCost12Minor > 0
+    ) {
+      payload.upfrontCost12Minor = Math.round(parsed.data.upfrontCost12Minor);
+    } else {
+      payload.upfrontCost12Minor = FieldValue.delete();
+    }
+  }
+
+  const write = await runAdminWrite(
+    "catalog_service_update_failed",
+    { serviceId: id, uid: user.uid },
+    "Could not save the service.",
+    () => db.collection(COLLECTIONS.services).doc(id).set(payload, { merge: true }),
+  );
+  if (!write.ok) return write;
+
+  revalidateCatalogPaths(id);
+  return { ok: true };
+}
+
+export async function updateCatalogServiceFeaturesAction(
+  raw: unknown,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const user = await requireStaffSession();
+  if (!user) return { ok: false, message: "Unauthorized." };
+
+  const parsed = updateCatalogServiceFeaturesSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: zodErrorToMessage(parsed.error) };
+  }
+
+  const id = parsed.data.serviceId.trim();
+  const existing = await getCatalogServiceForStaff(user, id);
+  if (!existing) return { ok: false, message: "Service not found." };
+  if (existing.serviceType === "addon") {
+    return { ok: false, message: "Only plans support feature lists." };
+  }
+  if (existing.status === "archived") {
+    return { ok: false, message: "Archived services cannot be edited." };
+  }
+
+  const db = getFirebaseAdminFirestore();
+  if (!db) return { ok: false, message: "Database unavailable." };
+
+  const write = await runAdminWrite(
+    "catalog_service_features_update_failed",
+    { serviceId: id, uid: user.uid },
+    "Could not save features.",
+    () =>
+      db.collection(COLLECTIONS.services).doc(id).set(
+        {
+          features: parsed.data.features,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      ),
+  );
+  if (!write.ok) return write;
+
+  revalidateCatalogPaths(id);
+  return { ok: true };
 }
 
 async function pushCatalogServiceToStripe(

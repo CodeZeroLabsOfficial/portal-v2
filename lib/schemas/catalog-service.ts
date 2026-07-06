@@ -4,7 +4,7 @@ import {
   normalizeLookupKeyBase,
   slugifyCatalogServiceName,
 } from "@/lib/catalog/service-slug";
-import type { CatalogServiceTerm } from "@/types/catalog-service";
+import type { CatalogServiceKind, CatalogServiceRecord, CatalogServiceTerm } from "@/types/catalog-service";
 
 const trimmed = z.string().trim();
 const lookupKeyBaseField = trimmed
@@ -14,24 +14,27 @@ const lookupKeyBaseField = trimmed
 
 const STRIPE_MIN_MINOR = 50;
 
-export const createCatalogServiceSchema = z
-  .object({
-    serviceType: z.enum(["plan", "addon"]),
-    name: trimmed.min(1, "Name is required").max(120),
-    description: trimmed.max(500).optional(),
-    billingType: z.enum(["recurring", "one_off"]),
-    pricingModel: z.enum(["flat", "by_term"]),
-    lookupKeyBase: lookupKeyBaseField,
-    currency: trimmed.min(3).max(3).default("aud"),
-    flatAmountMinor: z.number().finite().min(0).optional(),
-    monthlyCost12Minor: z.number().finite().min(0).optional(),
-    monthlyCost24Minor: z.number().finite().min(0).optional(),
-    includedUsers: z.number().int().min(0).max(1_000_000).default(0),
-    includedLocations: z.number().int().min(0).max(1_000_000).default(0),
-    includedAdmins: z.number().int().min(0).max(1_000_000).default(0),
-    upfrontCost12Minor: z.number().finite().min(0).optional(),
-  })
-  .superRefine((data, ctx) => {
+const catalogServiceFieldsSchema = z.object({
+  serviceType: z.enum(["plan", "addon"]),
+  name: trimmed.min(1, "Name is required").max(120),
+  description: trimmed.max(500).optional(),
+  billingType: z.enum(["recurring", "one_off"]),
+  pricingModel: z.enum(["flat", "by_term"]),
+  lookupKeyBase: lookupKeyBaseField,
+  currency: trimmed.min(3).max(3).default("aud"),
+  flatAmountMinor: z.number().finite().min(0).optional(),
+  monthlyCost12Minor: z.number().finite().min(0).optional(),
+  monthlyCost24Minor: z.number().finite().min(0).optional(),
+  includedUsers: z.number().int().min(0).max(1_000_000).default(0),
+  includedLocations: z.number().int().min(0).max(1_000_000).default(0),
+  includedAdmins: z.number().int().min(0).max(1_000_000).default(0),
+  upfrontCost12Minor: z.number().finite().min(0).optional(),
+});
+
+function refineCatalogServicePricing<
+  T extends z.ZodTypeAny,
+>(schema: T) {
+  return schema.superRefine((data, ctx) => {
     const effectivePricing =
       data.billingType === "one_off" ? ("flat" as const) : data.pricingModel;
 
@@ -86,11 +89,44 @@ export const createCatalogServiceSchema = z
       });
     }
   });
+}
+
+export const createCatalogServiceSchema = refineCatalogServicePricing(catalogServiceFieldsSchema);
 
 export type CreateCatalogServiceInput = z.infer<typeof createCatalogServiceSchema>;
 
 export function createInputToServiceTerms(input: CreateCatalogServiceInput): CatalogServiceTerm[] {
   const slug = resolveCreateCatalogSlug(input);
+  return buildTermsFromPricingInput(slug, input.serviceType, input);
+}
+
+export function resolveCreateCatalogSlug(input: CreateCatalogServiceInput): string {
+  return normalizeLookupKeyBase(input.lookupKeyBase) || slugifyCatalogServiceName(input.name);
+}
+
+export const updateCatalogServiceSchema = refineCatalogServicePricing(
+  catalogServiceFieldsSchema.omit({ serviceType: true }).extend({
+    serviceId: trimmed.min(1, "Service id is required"),
+  }),
+);
+
+export type UpdateCatalogServiceInput = z.infer<typeof updateCatalogServiceSchema>;
+
+export const updateCatalogServiceFeaturesSchema = z.object({
+  serviceId: trimmed.min(1, "Service id is required"),
+  features: z.array(trimmed.min(1).max(200)).max(50),
+});
+
+export type UpdateCatalogServiceFeaturesInput = z.infer<typeof updateCatalogServiceFeaturesSchema>;
+
+function buildTermsFromPricingInput(
+  slug: string,
+  serviceType: CatalogServiceKind,
+  input: Pick<
+    CreateCatalogServiceInput,
+    "billingType" | "pricingModel" | "flatAmountMinor" | "monthlyCost12Minor" | "monthlyCost24Minor"
+  >,
+): CatalogServiceTerm[] {
   const pricingModel = input.billingType === "one_off" ? "flat" : input.pricingModel;
 
   const terms: CatalogServiceTerm[] =
@@ -114,7 +150,7 @@ export function createInputToServiceTerms(input: CreateCatalogServiceInput): Cat
   return applyCatalogServiceTermLookupKeys(
     {
       slug,
-      serviceType: input.serviceType,
+      serviceType,
       billingType: input.billingType,
       pricingModel,
     },
@@ -122,6 +158,40 @@ export function createInputToServiceTerms(input: CreateCatalogServiceInput): Cat
   );
 }
 
-export function resolveCreateCatalogSlug(input: CreateCatalogServiceInput): string {
+export function updateInputToServiceTerms(
+  service: Pick<CatalogServiceRecord, "serviceType" | "slug" | "terms">,
+  input: UpdateCatalogServiceInput,
+): CatalogServiceTerm[] {
+  const slug =
+    normalizeLookupKeyBase(input.lookupKeyBase) ||
+    service.slug.trim() ||
+    slugifyCatalogServiceName(input.name);
+  const serviceType = service.serviceType ?? "plan";
+  const nextTerms = buildTermsFromPricingInput(slug, serviceType, input);
+
+  return nextTerms.map((term) => {
+    const previous =
+      nextTerms.length > 1
+        ? service.terms.find(
+            (existing) =>
+              existing.months === term.months &&
+              existing.monthlyAmountMinor === term.monthlyAmountMinor,
+          )
+        : service.terms.find(
+            (existing) =>
+              !existing.months &&
+              !term.months &&
+              existing.monthlyAmountMinor === term.monthlyAmountMinor,
+          );
+
+    if (!previous?.stripePriceId?.trim()) return term;
+    return {
+      ...term,
+      stripePriceId: previous.stripePriceId,
+    };
+  });
+}
+
+export function resolveUpdateCatalogSlug(input: UpdateCatalogServiceInput): string {
   return normalizeLookupKeyBase(input.lookupKeyBase) || slugifyCatalogServiceName(input.name);
 }

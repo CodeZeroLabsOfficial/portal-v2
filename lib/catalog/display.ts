@@ -40,32 +40,6 @@ function formatCatalogPriceAmount(service: CatalogServiceRecord, amountMinor: nu
   return `${formatted}/mo`;
 }
 
-export function catalogPricingDetailLines(service: CatalogServiceRecord): string | string[] {
-  const terms = service.terms;
-  if (terms.length === 0) return "—";
-
-  const isByTerm = service.pricingModel === "by_term";
-  const term12 = terms.find((t) => t.months === 12);
-  const term24 = terms.find((t) => t.months === 24);
-
-  if (isByTerm && (term12 || term24)) {
-    const lines: string[] = [];
-    if (term12) {
-      const line = formatCatalogPriceAmount(service, term12.monthlyAmountMinor);
-      if (line) lines.push(`12 mo · ${line}`);
-    }
-    if (term24) {
-      const line = formatCatalogPriceAmount(service, term24.monthlyAmountMinor);
-      if (line) lines.push(`24 mo · ${line}`);
-    }
-    if (lines.length === 0) return "—";
-    return lines.length === 1 ? lines[0]! : lines;
-  }
-
-  const flat = formatCatalogPriceAmount(service, terms[0]?.monthlyAmountMinor ?? 0);
-  return flat ?? "—";
-}
-
 export function catalogHeroPriceLabel(
   service: CatalogServiceRecord,
   selectedTermMonths?: CatalogServiceTermMonths
