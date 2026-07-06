@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Clock } from "lucide-react";
 
 import { TemplateCardActionsMenu } from "@/components/features/templates/template-card-actions-menu";
 import { TemplateCover } from "@/components/features/templates/template-cover";
@@ -51,7 +50,7 @@ export function TemplateCard({
           <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
         </Link>
 
-        <Badge variant="secondary" className="absolute top-3 left-3 z-10 shadow-sm">
+        <Badge variant="secondary" className="absolute top-3 left-3 z-10">
           {kindBadge.label}
         </Badge>
 
@@ -89,29 +88,37 @@ export function TemplateCard({
           {templateExcerpt(row)}
         </Typography>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <Avatar className="size-6 shrink-0">
-              <AvatarFallback className="text-[10px] font-semibold">
-                {cardMeta.authorInitials}
-              </AvatarFallback>
-            </Avatar>
-            <p className="truncate font-medium leading-none">{cardMeta.authorName}</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Author</p>
+            <div className="flex items-center gap-2">
+              <Avatar className="size-6 shrink-0">
+                <AvatarFallback className="text-[10px] font-semibold">
+                  {cardMeta.authorInitials}
+                </AvatarFallback>
+              </Avatar>
+              <p className="truncate font-medium leading-none">{cardMeta.authorName}</p>
+            </div>
           </div>
-          <span className="text-muted-foreground flex shrink-0 items-center text-xs">
-            <Clock className="me-1 size-3" aria-hidden />
-            <time
-              dateTime={
-                row.lastEditedMs > 0 ? new Date(row.lastEditedMs).toISOString() : undefined
-              }>
-              {formatLastEditedInLocality(row.lastEditedMs, localityTimeZone)}
-            </time>
-          </span>
-        </div>
-
-        <div className="text-muted-foreground flex items-center justify-between gap-3 text-sm">
-          <span>{cardMeta.lengthLabel ?? "—"}</span>
-          <span className="text-foreground shrink-0 font-medium">{cardMeta.usageLabel}</span>
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Updated</p>
+            <p className="font-medium">
+              <time
+                dateTime={
+                  row.lastEditedMs > 0 ? new Date(row.lastEditedMs).toISOString() : undefined
+                }>
+                {formatLastEditedInLocality(row.lastEditedMs, localityTimeZone)}
+              </time>
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Length</p>
+            <p className="font-medium">{cardMeta.lengthLabel ?? "—"}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">Usage</p>
+            <p className="font-medium">{cardMeta.usageLabel}</p>
+          </div>
         </div>
 
         {cardMeta.featureTags.length > 0 ? (
