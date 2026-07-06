@@ -30,7 +30,7 @@ export interface TemplateCardActionsMenuProps {
   onUpdateStage: (row: TemplateHubRow, stage: ProposalTemplateStage) => void;
   onClone: (row: TemplateHubRow) => void;
   onRequestDelete: (row: TemplateHubRow) => void;
-  /** Frosted trigger for cover overlay placement. */
+  /** Outline trigger for cover overlay placement. */
   overlay?: boolean;
 }
 
@@ -46,12 +46,9 @@ export function TemplateCardActionsMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={overlay ? "secondary" : "ghost"}
+          variant={overlay ? "outline" : "ghost"}
           size="icon"
-          className={cn(
-            "size-8 shrink-0",
-            overlay && "bg-background/80 shadow-sm backdrop-blur-sm"
-          )}
+          className={cn("size-8 shrink-0", overlay && "bg-background/80 shadow-sm backdrop-blur-sm")}
           disabled={disabled}
           aria-label={`Actions for ${row.name}`}
           onPointerDown={(e) => e.stopPropagation()}

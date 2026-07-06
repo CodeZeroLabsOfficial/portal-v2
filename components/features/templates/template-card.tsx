@@ -45,22 +45,18 @@ export function TemplateCard({
   const { cardMeta } = row;
 
   return (
-    <Card className="flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-md">
+    <Card className="group flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-md">
       <div className="relative">
         <Link href={row.editHref} className="block">
           <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
         </Link>
 
-        <div className="absolute top-3 left-3 z-10">
-          <StatusBadge
-            label={kindBadge.label}
-            variant={kindBadge.variant}
-            className="shadow-sm"
-          />
-        </div>
+        <Badge variant="secondary" className="absolute top-3 left-3 z-10 shadow-sm">
+          {kindBadge.label}
+        </Badge>
 
         <div
-          className="absolute top-2 right-2 z-10"
+          className="absolute top-3 right-3 z-10"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}>
           <TemplateCardActionsMenu
@@ -74,13 +70,34 @@ export function TemplateCard({
         </div>
       </div>
 
-      <CardContent className="flex flex-1 flex-col space-y-3">
-        <div className="flex items-start justify-between gap-2">
+      <CardContent className="flex flex-1 flex-col space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <Link href={row.editHref} className="min-w-0 hover:underline">
+            <Typography variant="h3" className="line-clamp-2">
+              {row.name}
+            </Typography>
+          </Link>
           <StatusBadge
             label={stageBadge.label}
             variant={stageBadge.variant}
             title={templateStageBadgeTitle(row.stage)}
+            className="shrink-0"
           />
+        </div>
+
+        <Typography variant="muted" className="line-clamp-3 text-sm">
+          {templateExcerpt(row)}
+        </Typography>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <Avatar className="size-6 shrink-0">
+              <AvatarFallback className="text-[10px] font-semibold">
+                {cardMeta.authorInitials}
+              </AvatarFallback>
+            </Avatar>
+            <p className="truncate font-medium leading-none">{cardMeta.authorName}</p>
+          </div>
           <span className="text-muted-foreground flex shrink-0 items-center text-xs">
             <Clock className="me-1 size-3" aria-hidden />
             <time
@@ -92,40 +109,13 @@ export function TemplateCard({
           </span>
         </div>
 
-        <Link href={row.editHref} className="hover:underline">
-          <Typography variant="h3" className="line-clamp-2">
-            {row.name}
-          </Typography>
-        </Link>
-
-        <Typography variant="muted" className="text-sm">
-          {cardMeta.categoryLabel}
-        </Typography>
-
-        <Typography variant="muted" className="line-clamp-3 text-sm">
-          {templateExcerpt(row)}
-        </Typography>
-
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Author</p>
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6">
-                <AvatarFallback className="text-[10px] font-semibold">
-                  {cardMeta.authorInitials}
-                </AvatarFallback>
-              </Avatar>
-              <p className="font-medium leading-none">{cardMeta.authorName}</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Used</p>
-            <p className="font-medium">{cardMeta.usageLabel}</p>
-          </div>
+        <div className="text-muted-foreground flex items-center justify-between gap-3 text-sm">
+          <span>{cardMeta.lengthLabel ?? "—"}</span>
+          <span className="text-foreground shrink-0 font-medium">{cardMeta.usageLabel}</span>
         </div>
 
         {cardMeta.featureTags.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-1.5">
             {cardMeta.featureTags.map((tag) => (
               <Badge key={tag} variant="secondary" className="font-normal">
                 {tag}
