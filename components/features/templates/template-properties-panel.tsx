@@ -8,8 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
+import {
+  catalogSelectOptions,
+  type TemplateCatalogMeta,
+} from "@/lib/templates/catalog-meta";
+import {
+  TEMPLATE_CATEGORIES,
+  TEMPLATE_CLASSIFICATIONS,
+} from "@/lib/templates/template-catalog-options";
 import {
   templateStageBadgeDisplay,
   templateStageBadgeTitle,
@@ -43,6 +57,12 @@ export function TemplatePropertiesPanel({
   const stageBadge = templateStageBadgeDisplay(stage);
   const [featureDraft, setFeatureDraft] = React.useState("");
 
+  const classificationOptions = catalogSelectOptions(
+    TEMPLATE_CLASSIFICATIONS,
+    catalogMeta.classification,
+  );
+  const categoryOptions = catalogSelectOptions(TEMPLATE_CATEGORIES, catalogMeta.category);
+
   function addFeature() {
     const label = featureDraft.trim();
     if (!label) return;
@@ -69,6 +89,18 @@ export function TemplatePropertiesPanel({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
+        <Label htmlFor="template-version">Version</Label>
+        <Input
+          id="template-version"
+          value={catalogMeta.version ?? ""}
+          placeholder="2.3"
+          onChange={(e) =>
+            updateCatalogField(catalogMeta, onCatalogMetaChange, "version", e.target.value)
+          }
+        />
+      </div>
+
+      <div className="space-y-1.5">
         <Label htmlFor="template-subtitle">Subtitle</Label>
         <Input
           id="template-subtitle"
@@ -76,30 +108,6 @@ export function TemplatePropertiesPanel({
           placeholder="Mobile App Development Proposal"
           onChange={(e) =>
             updateCatalogField(catalogMeta, onCatalogMetaChange, "subtitle", e.target.value)
-          }
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="template-use-case">Use case</Label>
-        <Input
-          id="template-use-case"
-          value={catalogMeta.useCase ?? ""}
-          placeholder="Mobile Development"
-          onChange={(e) =>
-            updateCatalogField(catalogMeta, onCatalogMetaChange, "useCase", e.target.value)
-          }
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="template-category">Category</Label>
-        <Input
-          id="template-category"
-          value={catalogMeta.category ?? ""}
-          placeholder="SaaS"
-          onChange={(e) =>
-            updateCatalogField(catalogMeta, onCatalogMetaChange, "category", e.target.value)
           }
         />
       </div>
@@ -113,6 +121,46 @@ export function TemplatePropertiesPanel({
           placeholder="Short summary shown on template cards in the hub."
           onChange={(e) => onDescriptionChange(e.target.value)}
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="template-classification">Classification</Label>
+        <Select
+          value={catalogMeta.classification || undefined}
+          onValueChange={(value) =>
+            updateCatalogField(catalogMeta, onCatalogMetaChange, "classification", value)
+          }>
+          <SelectTrigger id="template-classification" className="w-full">
+            <SelectValue placeholder="Select classification" />
+          </SelectTrigger>
+          <SelectContent>
+            {classificationOptions.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="template-category">Category</Label>
+        <Select
+          value={catalogMeta.category || undefined}
+          onValueChange={(value) =>
+            updateCatalogField(catalogMeta, onCatalogMetaChange, "category", value)
+          }>
+          <SelectTrigger id="template-category" className="w-full">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categoryOptions.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -152,18 +200,6 @@ export function TemplatePropertiesPanel({
             <Plus className="size-4" aria-hidden />
           </Button>
         </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="template-version">Version</Label>
-        <Input
-          id="template-version"
-          value={catalogMeta.version ?? ""}
-          placeholder="2.3"
-          onChange={(e) =>
-            updateCatalogField(catalogMeta, onCatalogMetaChange, "version", e.target.value)
-          }
-        />
       </div>
 
       <div className="space-y-1">

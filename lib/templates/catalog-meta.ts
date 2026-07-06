@@ -2,9 +2,11 @@
 export interface TemplateCatalogMeta {
   /** e.g. "Mobile App Development Proposal" */
   subtitle?: string;
-  /** e.g. "Mobile Development" */
+  /** Staff-facing service line (Properties dropdown). */
+  classification?: string;
+  /** @deprecated Legacy free-text field — use `classification`. */
   useCase?: string;
-  /** e.g. "SaaS" */
+  /** Industry vertical (Properties dropdown). */
   category?: string;
   /** Display tags on hub cards (e.g. "Dynamic Pricing"). */
   keyFeatures?: string[];
@@ -35,6 +37,7 @@ export function parseTemplateCatalogMeta(raw: unknown): TemplateCatalogMeta | un
   const data = raw as Record<string, unknown>;
   const meta: TemplateCatalogMeta = {
     subtitle: trimOptional(data.subtitle),
+    classification: trimOptional(data.classification),
     useCase: trimOptional(data.useCase),
     category: trimOptional(data.category),
     version: trimOptional(data.version),
@@ -50,6 +53,7 @@ export function normalizeTemplateCatalogMeta(
 ): TemplateCatalogMeta | undefined {
   const normalized: TemplateCatalogMeta = {
     subtitle: trimOptional(meta.subtitle),
+    classification: trimOptional(meta.classification),
     useCase: trimOptional(meta.useCase),
     category: trimOptional(meta.category),
     version: trimOptional(meta.version),
@@ -58,6 +62,7 @@ export function normalizeTemplateCatalogMeta(
 
   const hasValue =
     normalized.subtitle ||
+    normalized.classification ||
     normalized.useCase ||
     normalized.category ||
     normalized.version ||
@@ -72,10 +77,10 @@ export function templateCatalogCategoryLabel(meta?: TemplateCatalogMeta): string
   const subtitle = meta.subtitle?.trim();
   if (subtitle) return subtitle;
 
-  const useCase = meta.useCase?.trim();
+  const classification = meta.classification?.trim() || meta.useCase?.trim();
   const category = meta.category?.trim();
-  if (useCase && category) return `${useCase} • ${category}`;
-  if (useCase) return useCase;
+  if (classification && category) return `${classification} • ${category}`;
+  if (classification) return classification;
   if (category) return category;
   return undefined;
 }
@@ -84,4 +89,16 @@ export function templateCatalogVersionLabel(meta?: TemplateCatalogMeta): string 
   const version = meta?.version?.trim();
   if (!version) return undefined;
   return version.startsWith("v") ? version : `v${version}`;
+}
+
+/** Ensures a saved value outside the current option list still appears in Select menus. */
+export function catalogSelectOptions(
+  allowed: readonly string[],
+  current?: string,
+): string[] {
+  const value = current?.trim();
+  if (value && !allowed.includes(value)) {
+    return [value, ...allowed];
+  }
+  return [...allowed];
 }
