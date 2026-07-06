@@ -4,11 +4,9 @@ import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
 
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { catalogServiceKindBadgeDisplay } from "@/lib/catalog/status-badges";
 import {
   normalizeLookupKeyBase,
   previewCatalogServiceLookupKeys,
@@ -122,6 +120,7 @@ export interface CatalogServiceFormFieldsProps {
   setMonthly12: React.Dispatch<React.SetStateAction<string>>;
   monthly24: string;
   setMonthly24: React.Dispatch<React.SetStateAction<string>>;
+  hideStripeLookupPreview?: boolean;
   idPrefix?: string;
 }
 
@@ -142,6 +141,7 @@ export function CatalogServiceFormFields({
   setMonthly12,
   monthly24,
   setMonthly24,
+  hideStripeLookupPreview = false,
   idPrefix = "catalog",
 }: CatalogServiceFormFieldsProps) {
   const name = form.watch("name");
@@ -182,8 +182,6 @@ export function CatalogServiceFormFields({
     }
   }, [isOneOff, pricingModel, form]);
 
-  const typeBadge = catalogServiceKindBadgeDisplay(serviceType);
-
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
@@ -223,16 +221,13 @@ export function CatalogServiceFormFields({
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <StatusBadge label={typeBadge.label} variant={typeBadge.variant} />
-            <Input
-              id={`${idPrefix}-service-name`}
-              autoComplete="off"
-              disabled={busy}
-              placeholder="Service or product name"
-              {...form.register("name")}
-            />
-          </div>
+          <Input
+            id={`${idPrefix}-service-name`}
+            autoComplete="off"
+            disabled={busy}
+            placeholder="Service or product name"
+            {...form.register("name")}
+          />
         )}
         {typeof errors.name?.message === "string" ? (
           <p className="text-xs leading-tight text-destructive">{errors.name.message}</p>
@@ -311,7 +306,7 @@ export function CatalogServiceFormFields({
         {typeof errors.lookupKeyBase?.message === "string" ? (
           <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
         ) : null}
-        {resolvedLookupBase ? (
+        {!hideStripeLookupPreview && resolvedLookupBase ? (
           <p className="text-xs leading-snug text-muted-foreground">
             Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
             <span className="font-mono">{lookupPreview.join(" · ")}</span>

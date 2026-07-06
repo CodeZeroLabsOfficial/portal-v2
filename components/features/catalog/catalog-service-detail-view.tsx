@@ -1,23 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Edit3, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { Edit3 } from "lucide-react";
 
 import { CatalogServiceEditSheet } from "@/components/features/catalog/catalog-service-edit-sheet";
 import { CatalogServiceEntitlementStats } from "@/components/features/catalog/catalog-service-entitlement-stats";
 import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalog-service-features-card";
 import { CatalogServiceSummaryCard } from "@/components/features/catalog/catalog-service-summary-card";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import {
-  catalogServiceStatusBadgeDisplay,
-  catalogStripeSyncBadgeDisplay,
-} from "@/lib/catalog/status-badges";
-import { deleteCatalogServiceAction } from "@/server/actions/catalog-services";
+import { catalogServiceStatusBadgeDisplay } from "@/lib/catalog/status-badges";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 import { cn } from "@/lib/utils";
 
@@ -26,32 +19,11 @@ export interface CatalogServiceDetailViewProps {
 }
 
 export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewProps) {
-  const router = useRouter();
   const [editOpen, setEditOpen] = React.useState(false);
-  const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const isPlan = service.serviceType !== "addon";
   const isArchived = service.status === "archived";
   const statusDisplay = catalogServiceStatusBadgeDisplay(service.status);
-  const stripeDisplay = catalogStripeSyncBadgeDisplay(
-    service.stripeProductId,
-    service.stripeSyncedAt,
-  );
-
-  async function handleDelete() {
-    setIsDeleting(true);
-    const result = await deleteCatalogServiceAction(service.id);
-    setIsDeleting(false);
-
-    if (!result.ok) {
-      toast.error(result.message);
-      throw new Error(result.message);
-    }
-
-    toast.success("Service deleted.");
-    router.push("/admin/services");
-  }
 
   return (
     <div className="space-y-4">
@@ -63,7 +35,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
 
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
-            <StatusBadge label={stripeDisplay.label} variant={stripeDisplay.variant} />
           </div>
         </div>
 
@@ -71,16 +42,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
           <Button type="button" onClick={() => setEditOpen(true)} disabled={isArchived}>
             <Edit3 className="size-4" aria-hidden />
             <span className="hidden lg:inline">Edit</span>
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            onClick={() => setDeleteOpen(true)}
-            disabled={isDeleting}
-            aria-label="Delete service"
-          >
-            <Trash2 className="size-4" aria-hidden />
           </Button>
         </div>
       </div>
@@ -103,16 +64,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
       </div>
 
       <CatalogServiceEditSheet service={service} open={editOpen} onOpenChange={setEditOpen} />
-
-      <ConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title="Delete service"
-        description="Delete this service permanently? It will be removed from the catalogue. Linked Stripe product will be deactivated if present; existing subscriptions are not changed."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={handleDelete}
-      />
     </div>
   );
 }

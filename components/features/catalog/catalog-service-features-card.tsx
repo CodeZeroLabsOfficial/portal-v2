@@ -81,8 +81,21 @@ export function CatalogServiceFeaturesCard({
           Features
           {saving ? <Loader2 className="text-muted-foreground size-4 animate-spin" aria-hidden /> : null}
         </CardTitle>
+        {!disabled ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={saving || features.length >= MAX_FEATURES}
+            onClick={() => void handleAddFeature()}
+          >
+            <Plus className="size-4" aria-hidden />
+            Add feature
+          </Button>
+        ) : null}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {features.length > 0 ? (
           <ul className="space-y-3">
             {features.map((feature, index) => (
@@ -136,20 +149,6 @@ export function CatalogServiceFeaturesCard({
         ) : (
           <p className="text-muted-foreground text-sm">No features yet. Add one to show on proposals.</p>
         )}
-
-        {!disabled ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            disabled={saving || features.length >= MAX_FEATURES}
-            onClick={() => void handleAddFeature()}
-          >
-            <Plus className="size-4" aria-hidden />
-            Add feature
-          </Button>
-        ) : null}
       </CardContent>
     </Card>
   );

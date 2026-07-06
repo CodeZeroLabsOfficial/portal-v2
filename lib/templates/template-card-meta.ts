@@ -1,6 +1,5 @@
 import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import {
-  templateCatalogTaxonomyLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
 import type { TemplateHubKind } from "@/lib/templates/hub-rows";
@@ -10,8 +9,6 @@ import type { ProposalDocument } from "@/types/proposal";
 export interface TemplateCardMeta {
   /** From Properties subtitle — shown under the card title when set. */
   subtitleLabel?: string;
-  /** Classification • category from saved catalog meta. */
-  taxonomyLabel?: string;
   featureTags: string[];
 }
 
@@ -50,7 +47,6 @@ export function buildTemplateCardMeta(
 ): TemplateCardMeta {
   const seed = hashString(`${kind}:${id}`);
 
-  const savedTaxonomy = templateCatalogTaxonomyLabel(catalogMeta);
   const savedFeatures = catalogMeta?.keyFeatures?.filter((tag) => tag.trim().length > 0) ?? [];
   const subtitleLabel = catalogMeta?.subtitle?.trim() || undefined;
 
@@ -67,7 +63,6 @@ export function buildTemplateCardMeta(
 
   return {
     subtitleLabel,
-    taxonomyLabel: savedTaxonomy,
     featureTags,
   };
 }
