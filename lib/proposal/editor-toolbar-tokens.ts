@@ -103,27 +103,45 @@ export function proposalToolbarIconButtonClasses(
   );
 }
 
-const SECTION_GUTTER_BUTTON_BASE =
-  "flex h-7 w-7 shrink-0 items-center justify-center p-0 shadow-sm transition-[color,background-color,border-color,transform] duration-150 ease-out active:scale-100 focus-visible:outline-none focus-visible:ring-2 hover:scale-105";
+type ProposalSectionInCanvasControlShape = "square" | "circle";
+
+const SECTION_IN_CANVAS_CONTROL_BASE =
+  "flex h-7 w-7 shrink-0 items-center justify-center p-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2";
+
+/** Ghost affordances on the section canvas: gutter `+`, drag, top insert, CTA edit FAB. */
+function proposalSectionInCanvasControlClasses(
+  appearance: ProposalToolbarAppearance,
+  shape: ProposalSectionInCanvasControlShape,
+): string {
+  const rounded = shape === "square" ? "rounded-md" : "rounded-full";
+  const gutterMotion = shape === "square" ? "hover:scale-105 active:scale-100" : "";
+
+  if (appearance === "elevated") {
+    return cn(
+      SECTION_IN_CANVAS_CONTROL_BASE,
+      rounded,
+      gutterMotion,
+      "bg-transparent text-white/70 ring-1 ring-inset ring-white/20",
+      "hover:bg-white/10 hover:text-white hover:ring-white/30",
+      "focus-visible:ring-white/40",
+      "data-[state=open]:bg-white/15 data-[state=open]:text-white data-[state=open]:ring-white/30",
+    );
+  }
+
+  return cn(
+    SECTION_IN_CANVAS_CONTROL_BASE,
+    rounded,
+    gutterMotion,
+    "bg-transparent text-muted-foreground ring-1 ring-inset ring-border/70",
+    "hover:bg-muted hover:text-foreground",
+    "focus-visible:ring-ring",
+    "data-[state=open]:bg-accent data-[state=open]:text-foreground data-[state=open]:ring-border",
+  );
+}
 
 /** Section-child gutter `+` / drag controls — matches toolbar appearance on the band. */
 export function proposalSectionGutterButtonClasses(appearance: ProposalToolbarAppearance): string {
-  if (appearance === "elevated") {
-    return cn(
-      SECTION_GUTTER_BUTTON_BASE,
-      "rounded-md border border-white/25 bg-white/10 text-zinc-100",
-      "hover:border-white/40 hover:bg-white/15 hover:text-white",
-      "focus-visible:ring-white/35",
-      "data-[state=open]:border-white/50 data-[state=open]:bg-white/20 data-[state=open]:text-white",
-    );
-  }
-  return cn(
-    SECTION_GUTTER_BUTTON_BASE,
-    "rounded-md border border-border/80 bg-background text-muted-foreground",
-    "hover:border-primary/50 hover:bg-background hover:text-primary",
-    "focus-visible:ring-ring",
-    "data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground",
-  );
+  return proposalSectionInCanvasControlClasses(appearance, "square");
 }
 
 export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolbarAppearance): string {
@@ -132,20 +150,7 @@ export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolb
 
 /** Small FAB edit affordance on in-canvas previews (e.g. Accept CTA). */
 export function proposalSectionFabEditButtonClasses(appearance: ProposalToolbarAppearance): string {
-  if (appearance === "elevated") {
-    return cn(
-      "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-md transition-colors",
-      "border-white/30 bg-white/15 text-white",
-      "hover:border-white/45 hover:bg-white/25 hover:text-white",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
-    );
-  }
-  return cn(
-    "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-md transition-colors",
-    "border-border bg-background text-muted-foreground",
-    "hover:bg-muted hover:text-foreground",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-  );
+  return proposalSectionInCanvasControlClasses(appearance, "circle");
 }
 
 /** Compact text trigger inside an elevated block toolbar (e.g. Edit agreement). */
