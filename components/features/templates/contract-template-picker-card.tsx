@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { contractTemplatePickerExcerpt } from "@/lib/templates/contract-template-picker";
 import type { ContractTemplatePickerRow } from "@/lib/templates/contract-template-picker";
-import { templateKindLabel } from "@/lib/templates/status-badges";
 import { cn } from "@/lib/utils";
 
 export interface ContractTemplatePickerCardProps {
@@ -33,47 +32,32 @@ export function ContractTemplatePickerCard({
   return (
     <Card
       className={cn(
-        "flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-md",
+        "flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-sm",
         isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
       )}
     >
       <div className="relative">
-        <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind="contract" />
-        <Badge variant="outline" className="absolute top-3 left-3 z-10 bg-card shadow-sm">
-          {templateKindLabel("contract")}
-        </Badge>
+        <TemplateCover
+          coverImageUrl={row.coverImageUrl}
+          alt={row.name}
+          kind="contract"
+          className="aspect-[2/1] max-h-28"
+        />
         {row.stage === "draft" ? (
-          <Badge variant="secondary" className="absolute top-3 right-3 z-10 bg-card shadow-sm">
+          <Badge variant="secondary" className="absolute top-2 right-2 z-10 bg-card text-xs shadow-sm">
             Draft
           </Badge>
         ) : null}
       </div>
 
-      <CardContent className="flex flex-1 flex-col space-y-4">
-        <div className="space-y-1">
-          <h4 className="line-clamp-2 text-xl leading-snug">{row.name}</h4>
-          {row.cardMeta.subtitleLabel ? (
-            <Typography variant="muted" className="line-clamp-2 text-sm">
-              {row.cardMeta.subtitleLabel}
-            </Typography>
-          ) : null}
-        </div>
+      <CardContent className="flex flex-1 flex-col gap-2 p-3">
+        <h4 className="line-clamp-2 text-base leading-snug font-semibold">{row.name}</h4>
 
-        <Typography variant="muted" className="line-clamp-3 text-sm">
+        <Typography variant="muted" className="line-clamp-2 text-sm">
           {excerpt}
         </Typography>
 
-        {row.cardMeta.featureTags.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {row.cardMeta.featureTags.map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-1">
           <Button
             type="button"
             className="w-full"
