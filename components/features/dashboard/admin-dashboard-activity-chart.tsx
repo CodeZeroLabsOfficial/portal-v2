@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -75,7 +75,11 @@ export function AdminDashboardActivityChart({
 
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full lg:h-[250px]">
-          <AreaChart data={chartData} accessibilityLayer margin={{ left: 0, right: 0, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            accessibilityLayer
+            margin={{ top: 8, left: 0, right: 0, bottom: 0 }}
+          >
             <defs>
               <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-activity)" stopOpacity={0.8} />
@@ -83,6 +87,11 @@ export function AdminDashboardActivityChart({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
+            <YAxis
+              hide
+              domain={[0, (max: number) => Math.max(Math.ceil(max * 1.15), 1)]}
+              allowDecimals={false}
+            />
             <XAxis
               dataKey="label"
               tickLine={false}
@@ -105,7 +114,8 @@ export function AdminDashboardActivityChart({
             />
             <Area
               dataKey="activity"
-              type="natural"
+              type="monotone"
+              baseValue={0}
               fill={`url(#${fillGradientId})`}
               stroke="var(--color-activity)"
               strokeWidth={2}
