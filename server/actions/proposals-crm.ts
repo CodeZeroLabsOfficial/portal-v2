@@ -19,8 +19,7 @@ import { logError } from "@/lib/common/logging";
 import { staffDisplayNameForActivity } from "@/lib/crm/staff-display-name";
 import {
   commitNewProposalWithTemplateUsage,
-  proposalTemplateUsageSnapshot,
-} from "@/lib/templates/template-usage";
+} from "@/lib/templates/proposal-template-usage";
 import type { CustomerRecord } from "@/types/customer";
 import type { OpportunityRecord } from "@/types/opportunity";
 import type { ProposalBlock, ProposalBranding, ProposalDocument } from "@/types/proposal";
@@ -191,7 +190,7 @@ export async function createDraftProposalFromCustomerAction(
       db,
       ref,
       payload,
-      proposalTemplateUsageSnapshot(sourceTemplateId, document),
+      sourceTemplateId,
     );
 
     try {
@@ -303,7 +302,7 @@ export async function createDraftProposalFromOpportunityAction(
       db,
       ref,
       payload,
-      proposalTemplateUsageSnapshot(sourceTemplateId, document),
+      sourceTemplateId,
     );
 
     try {
