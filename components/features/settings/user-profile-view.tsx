@@ -43,14 +43,13 @@ export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col items-center gap-2 sm:items-start">
+        <div className="flex flex-col sm:items-start">
           <Avatar className="border-background size-20 border-4">
             {user.photoURL ? <AvatarImage src={user.photoURL} alt={displayName} /> : null}
             <AvatarFallback className="text-lg font-semibold">
               {initialsFromName(displayName)}
             </AvatarFallback>
           </Avatar>
-          {displayName ? <p className="text-sm font-medium">{displayName}</p> : null}
         </div>
 
         <dl className="grid gap-4 sm:grid-cols-2">

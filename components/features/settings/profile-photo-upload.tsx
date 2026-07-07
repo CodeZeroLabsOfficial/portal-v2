@@ -33,7 +33,7 @@ export function ProfilePhotoUpload({ photoURL, displayName, onFileChange }: Prof
   const initials = initialsFromName(displayName);
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-start gap-2">
       <div className="border-background bg-muted relative flex size-20 items-center justify-center overflow-hidden rounded-full border-4 shadow-xs shadow-black/10">
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -51,7 +51,7 @@ export function ProfilePhotoUpload({ photoURL, displayName, onFileChange }: Prof
         </button>
         <input {...getInputProps()} aria-label="Upload profile picture" className="sr-only" />
       </div>
-      {errors[0] ? <p className="text-destructive text-center text-xs">{errors[0]}</p> : null}
+      {errors[0] ? <p className="text-destructive text-xs">{errors[0]}</p> : null}
     </div>
   );
 }
