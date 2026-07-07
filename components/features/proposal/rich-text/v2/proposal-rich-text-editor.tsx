@@ -1178,7 +1178,7 @@ export function ProposalRichText({
         tippyOptions={{
           duration: 80,
           placement: "top",
-          maxWidth: 720,
+          maxWidth: "none",
           popperOptions: {
             modifiers: [
               { name: "preventOverflow", options: { padding: VIEWPORT_EDGE_PAD_PX, altAxis: true } },
@@ -1197,7 +1197,7 @@ export function ProposalRichText({
       >
         <div
           className={cn(
-            "flex items-center gap-0.5 rounded-lg border p-1",
+            "flex w-max flex-nowrap items-center gap-0.5 rounded-lg border p-1",
             proposalToolbarShellClasses(toolbarAppearance),
           )}
         >
