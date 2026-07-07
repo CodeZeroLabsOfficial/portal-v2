@@ -112,18 +112,6 @@ export function TemplatePropertiesEditSheet({
 
         <form onSubmit={handleSubmit} className={sheetFormClass} noValidate>
           <div className="space-y-1.5">
-            <Label htmlFor="template-version">Version</Label>
-            <Input
-              id="template-version"
-              value={draftCatalogMeta.version ?? ""}
-              placeholder="2.3"
-              onChange={(e) =>
-                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "version", e.target.value))
-              }
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="template-subtitle">Subtitle</Label>
             <Input
               id="template-subtitle"
@@ -143,6 +131,18 @@ export function TemplatePropertiesEditSheet({
               rows={4}
               placeholder="Short summary shown on template cards in the hub."
               onChange={(e) => setDraftDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="template-version">Version</Label>
+            <Input
+              id="template-version"
+              value={draftCatalogMeta.version ?? ""}
+              placeholder="2.3"
+              onChange={(e) =>
+                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "version", e.target.value))
+              }
             />
           </div>
 

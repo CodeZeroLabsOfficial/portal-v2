@@ -64,20 +64,32 @@ export function TemplatePropertiesPanel({
     <>
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-2">
-          <StatusBadge
-            label={stageBadge.label}
-            variant={stageBadge.variant}
-            title={templateStageBadgeTitle(stage)}
-          />
+          <div className="min-w-0 flex-1">
+            <PropertyField label="Author">
+              <TemplateAuthorDisplay author={author} muted />
+            </PropertyField>
+          </div>
           <SettingsEditButton
             onClick={() => setEditOpen(true)}
             ariaLabel="Edit template properties"
           />
         </div>
 
+        <PropertyField label="Subtitle">{mutedText(catalogMeta.subtitle)}</PropertyField>
+
+        <PropertyField label="Description">
+          <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+            {descriptionText || "No description provided."}
+          </p>
+        </PropertyField>
+
         <div className="grid grid-cols-2 gap-4">
-          <PropertyField label="Author">
-            <TemplateAuthorDisplay author={author} muted />
+          <PropertyField label="Stage">
+            <StatusBadge
+              label={stageBadge.label}
+              variant={stageBadge.variant}
+              title={templateStageBadgeTitle(stage)}
+            />
           </PropertyField>
 
           <PropertyField label="Version">
@@ -90,14 +102,6 @@ export function TemplatePropertiesPanel({
 
           <PropertyField label="Category">{mutedText(catalogMeta.category)}</PropertyField>
         </div>
-
-        <PropertyField label="Subtitle">{mutedText(catalogMeta.subtitle)}</PropertyField>
-
-        <PropertyField label="Description">
-          <p className="text-muted-foreground text-sm whitespace-pre-wrap">
-            {descriptionText || "No description provided."}
-          </p>
-        </PropertyField>
 
         <PropertyField label="Key features">
           {(catalogMeta.keyFeatures?.length ?? 0) > 0 ? (
