@@ -94,6 +94,8 @@ export async function updatePortalAppearanceSettingsAction(
   revalidatePath("/admin", "layout");
   revalidatePath("/admin/settings", "layout");
   revalidatePath("/admin/settings/appearance");
+  revalidatePath("/icon");
+  revalidatePath("/favicon.ico");
 
   return { ok: true };
 }

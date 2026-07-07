@@ -22,7 +22,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing image file." }, { status: 400 });
   }
 
-  if (!file.type.startsWith("image/")) {
+  const isIco =
+    file.name.toLowerCase().endsWith(".ico") ||
+    file.type === "image/x-icon" ||
+    file.type === "image/vnd.microsoft.icon";
+
+  if (!file.type.startsWith("image/") && !isIco) {
     return NextResponse.json({ error: "File must be an image." }, { status: 400 });
   }
 

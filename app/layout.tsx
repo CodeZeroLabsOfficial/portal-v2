@@ -18,12 +18,10 @@ import { PROPOSAL_GOOGLE_FONTS_STYLESHEET_HREF } from "@/lib/proposal/rich-text/
 export async function generateMetadata(): Promise<Metadata> {
   const appearance = await getPortalAppearanceSettings();
   const portalName = appearance?.portalName?.trim() || "Code Zero Labs";
-  const iconUrl = appearance?.faviconUrl || appearance?.logoUrl;
 
   return {
     title: `${portalName} Portal`,
     description: "CRM, billing, and proposals for Code Zero Labs.",
-    ...(iconUrl ? { icons: { icon: iconUrl } } : {}),
   };
 }
 
