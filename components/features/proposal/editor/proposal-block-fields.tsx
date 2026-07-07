@@ -81,7 +81,7 @@ import {
 } from "@/components/proposal/proposal-icon-block-toolbar";
 import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
 import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
-import { useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
+import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
 import {
   SectionChildBlockGutter,
   SectionChildDragHandle,
@@ -142,6 +142,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES } from "@/lib/proposal/editor-glass";
+import {
+  proposalSectionFabEditButtonClasses,
+  proposalToolbarAuxIconButtonClasses,
+  proposalToolbarAuxTextButtonClasses,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_AGREEMENT_BUTTON_COLOR,
@@ -281,7 +286,7 @@ function SortableShell({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const sectionChrome = useProposalSectionEditorChrome();
   const seamless = sectionChrome?.seamless ?? false;
-  const prefersLightSection = sectionChrome?.prefersLight ?? false;
+  const elevatedSection = sectionChrome?.appearance === "elevated";
   const flushEdges = flush ?? seamless;
   const sectionChild = layout === "section-child";
   const useFloatingGutter = sectionChild && Boolean(sectionChildInsertMenu && floatingGutter);
@@ -318,7 +323,7 @@ function SortableShell({
   );
   const showSectionGutter = sectionChild && !useFloatingGutter && (hovered || selected || isDragging);
 
-  const sectionChildRingClasses = prefersLightSection
+  const sectionChildRingClasses = elevatedSection
     ? cn(
         "rounded-sm ring-1 ring-offset-0 transition-[box-shadow] duration-150",
         selected || isDragging
@@ -342,7 +347,7 @@ function SortableShell({
         sectionChild
           ? sectionChildRingClasses
           : selected
-            ? prefersLightSection
+            ? elevatedSection
               ? "rounded-sm ring-1 ring-white/40 ring-offset-0"
               : "rounded-sm ring-1 ring-sky-500/70 ring-offset-0"
             : "rounded-sm",
@@ -1480,6 +1485,7 @@ export function SectionBlockFields({
                             />
                           ) : child.type === "packages" ? (
                             <ProposalSectionBackgroundPicker
+                              appearance="elevated"
                               background={(child as PackagesBlock).background}
                               onChange={(next) => {
                                 const p = child as PackagesBlock;
@@ -1567,12 +1573,7 @@ function AgreementBubbleEditMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors",
-            "bg-transparent text-muted-foreground shadow-none",
-            "hover:bg-background hover:text-foreground",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          )}
+          className={proposalToolbarAuxTextButtonClasses("elevated")}
           onPointerDown={(e) => e.stopPropagation()}
         >
           <Pencil className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -1630,12 +1631,7 @@ function AgreementEsignatureSettingsPopover({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={cn(
-                "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                "bg-transparent text-muted-foreground shadow-none",
-                "ring-1 ring-border/70 hover:bg-background hover:text-foreground",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              )}
+              className={proposalToolbarAuxIconButtonClasses("elevated")}
               aria-label="E-signature and acceptance settings"
               onPointerDown={(e) => e.stopPropagation()}
             >
@@ -1939,6 +1935,7 @@ function AgreementSignButtonPreview({
   const label = block.buttonLabel?.trim() || "View Agreement";
   const align = block.buttonAlign ?? "center";
   const [hexDraft, setHexDraft] = React.useState(ctaColor);
+  const sectionAppearance = useProposalSectionEditorAppearance();
   React.useEffect(() => setHexDraft(ctaColor), [ctaColor]);
 
   function commitHexDraft() {
@@ -1968,7 +1965,10 @@ function AgreementSignButtonPreview({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="absolute -right-1.5 -top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(
+                "absolute -right-1.5 -top-1.5",
+                proposalSectionFabEditButtonClasses(sectionAppearance),
+              )}
               aria-label="Edit sign button"
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden />
@@ -2407,6 +2407,7 @@ export function AgreementBlockFields({
                             />
                           ) : child.type === "packages" ? (
                             <ProposalSectionBackgroundPicker
+                              appearance="elevated"
                               background={(child as PackagesBlock).background}
                               onChange={(next) => {
                                 const p = child as PackagesBlock;

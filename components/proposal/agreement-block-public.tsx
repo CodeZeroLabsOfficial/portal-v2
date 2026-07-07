@@ -586,7 +586,7 @@ export function AgreementBlockPublic({
                   className="gap-1.5 hover:opacity-90"
                   style={{ backgroundColor: ctaColor, color: ctaForeground }}
                 >
-                  Agree
+                  Accept
                   <ArrowRight className="size-4" aria-hidden />
                 </Button>
               )}

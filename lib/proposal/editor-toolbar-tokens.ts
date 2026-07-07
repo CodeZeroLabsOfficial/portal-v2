@@ -102,3 +102,83 @@ export function proposalToolbarIconButtonClasses(
     active && "bg-muted text-foreground",
   );
 }
+
+const SECTION_GUTTER_BUTTON_BASE =
+  "flex h-7 w-7 shrink-0 items-center justify-center p-0 shadow-sm transition-[color,background-color,border-color,transform] duration-150 ease-out active:scale-100 focus-visible:outline-none focus-visible:ring-2 hover:scale-105";
+
+/** Section-child gutter `+` / drag controls — matches toolbar appearance on the band. */
+export function proposalSectionGutterButtonClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return cn(
+      SECTION_GUTTER_BUTTON_BASE,
+      "rounded-md border border-white/25 bg-white/10 text-zinc-100",
+      "hover:border-white/40 hover:bg-white/15 hover:text-white",
+      "focus-visible:ring-white/35",
+      "data-[state=open]:border-white/50 data-[state=open]:bg-white/20 data-[state=open]:text-white",
+    );
+  }
+  return cn(
+    SECTION_GUTTER_BUTTON_BASE,
+    "rounded-md border border-border/80 bg-background text-muted-foreground",
+    "hover:border-primary/50 hover:bg-background hover:text-primary",
+    "focus-visible:ring-ring",
+    "data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground",
+  );
+}
+
+export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolbarAppearance): string {
+  return cn(proposalSectionGutterButtonClasses(appearance), "touch-none cursor-grab active:cursor-grabbing");
+}
+
+/** Small FAB edit affordance on in-canvas previews (e.g. Accept CTA). */
+export function proposalSectionFabEditButtonClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-md transition-colors",
+      "border-white/30 bg-white/15 text-white",
+      "hover:border-white/45 hover:bg-white/25 hover:text-white",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+    );
+  }
+  return cn(
+    "inline-flex h-7 w-7 items-center justify-center rounded-full border shadow-md transition-colors",
+    "border-border bg-background text-muted-foreground",
+    "hover:bg-muted hover:text-foreground",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  );
+}
+
+/** Compact text trigger inside an elevated block toolbar (e.g. Edit agreement). */
+export function proposalToolbarAuxTextButtonClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors shadow-none",
+      proposalToolbarMenuItemClasses("elevated"),
+      proposalToolbarMenuItemHoverClasses("elevated"),
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+    );
+  }
+  return cn(
+    "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors shadow-none",
+    "bg-transparent text-muted-foreground hover:bg-background hover:text-foreground",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  );
+}
+
+/** Circular icon trigger beside an elevated block toolbar (e.g. e-sign settings). */
+export function proposalToolbarAuxIconButtonClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors shadow-none",
+      "bg-transparent text-[var(--proposal-toolbar-fg)] ring-1 ring-white/20",
+      "hover:bg-[var(--proposal-toolbar-hover-bg)] hover:text-white",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900",
+    );
+  }
+  return cn(
+    "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors shadow-none",
+    "bg-transparent text-muted-foreground ring-1 ring-border/70",
+    "hover:bg-background hover:text-foreground",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  );
+}

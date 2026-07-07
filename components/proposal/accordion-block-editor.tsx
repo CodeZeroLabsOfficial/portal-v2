@@ -28,7 +28,7 @@ function accordionPanelTitleEditorHtml(p: AccordionPanel): string {
   return `<h3>${escapeHtml(t)}</h3>`;
 }
 
-const LIGHT_SECTION_CHROME = { seamless: false, prefersLight: false } as const;
+const LIGHT_SECTION_CHROME = { seamless: false, appearance: "surface" } as const;
 
 export function AccordionBlockEditor({
   block,

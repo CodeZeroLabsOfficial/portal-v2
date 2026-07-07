@@ -282,16 +282,19 @@ export function RootBlockCanvas({
                               backdropPickerSlot={
                                 block.type === "section" ? (
                                   <ProposalSectionBackgroundPicker
+                                    appearance="elevated"
                                     background={block.background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />
                                 ) : block.type === "packages" ? (
                                   <ProposalSectionBackgroundPicker
+                                    appearance="elevated"
                                     background={(block as PackagesBlock).background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />
                                 ) : block.type === "agreement" ? (
                                   <ProposalSectionBackgroundPicker
+                                    appearance="elevated"
                                     background={(block as AgreementBlock).background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />

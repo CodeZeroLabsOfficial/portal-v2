@@ -1019,7 +1019,7 @@ export function ProposalRichText({
 }: ProposalRichTextProps) {
   const sectionChrome = useProposalSectionEditorChrome();
   const seamless = sectionChrome?.seamless ?? false;
-  const prefersLight = sectionChrome?.prefersLight ?? false;
+  const elevatedSection = sectionChrome?.appearance === "elevated";
   const headerVariant = variant === "header";
 
   const shellRef = React.useRef<HTMLDivElement | null>(null);
@@ -1043,7 +1043,7 @@ export function ProposalRichText({
   // (toolbar + outline) already conveys selection. Browser-default outline is
   // suppressed via `focus-within:outline-none` so removing the ring doesn't
   // expose it.
-  const displayTone = seamless && prefersLight ? "on-dark" : "default";
+  const displayTone = seamless && elevatedSection ? "on-dark" : "default";
   const displayLayout = headerVariant ? "heading" : "body";
 
   const editorRootClass = cn(

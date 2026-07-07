@@ -99,7 +99,9 @@ export function ProposalSectionShell({
 
   if (editorCanvas) {
     return (
-      <ProposalSectionEditorChromeContext.Provider value={{ seamless: true, prefersLight }}>
+      <ProposalSectionEditorChromeContext.Provider
+        value={{ seamless: true, appearance: prefersLight ? "elevated" : "surface" }}
+      >
         {shellInner}
       </ProposalSectionEditorChromeContext.Provider>
     );
