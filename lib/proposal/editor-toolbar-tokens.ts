@@ -103,54 +103,44 @@ export function proposalToolbarIconButtonClasses(
   );
 }
 
-type ProposalSectionInCanvasControlShape = "square" | "circle";
+export type ProposalSectionInCanvasControlShape = "square" | "circle";
 
 const SECTION_IN_CANVAS_CONTROL_BASE =
-  "flex h-7 w-7 shrink-0 items-center justify-center p-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2";
+  "flex h-7 w-7 shrink-0 items-center justify-center border border-transparent p-0 transition-[color,background-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2";
 
 /** Ghost affordances on the section canvas: gutter `+`, drag, top insert, CTA edit FAB. */
-function proposalSectionInCanvasControlClasses(
+export function proposalSectionInCanvasControlClasses(
   appearance: ProposalToolbarAppearance,
   shape: ProposalSectionInCanvasControlShape,
 ): string {
   const rounded = shape === "square" ? "rounded-md" : "rounded-full";
-  const gutterMotion = shape === "square" ? "hover:scale-105 active:scale-100" : "";
 
   if (appearance === "elevated") {
     return cn(
       SECTION_IN_CANVAS_CONTROL_BASE,
       rounded,
-      gutterMotion,
-      "bg-transparent text-white/70 ring-1 ring-inset ring-white/20",
-      "hover:bg-white/10 hover:text-white hover:ring-white/30",
+      "bg-transparent text-white/80",
+      "hover:bg-white/10 hover:text-white",
       "focus-visible:ring-white/40",
-      "data-[state=open]:bg-white/15 data-[state=open]:text-white data-[state=open]:ring-white/30",
+      "data-[state=open]:bg-white/15 data-[state=open]:text-white",
     );
   }
 
   return cn(
     SECTION_IN_CANVAS_CONTROL_BASE,
     rounded,
-    gutterMotion,
-    "bg-transparent text-muted-foreground ring-1 ring-inset ring-border/70",
+    "bg-transparent text-muted-foreground",
     "hover:bg-muted hover:text-foreground",
     "focus-visible:ring-ring",
-    "data-[state=open]:bg-accent data-[state=open]:text-foreground data-[state=open]:ring-border",
+    "data-[state=open]:bg-accent data-[state=open]:text-foreground",
   );
 }
 
-/** Section-child gutter `+` / drag controls — matches toolbar appearance on the band. */
-export function proposalSectionGutterButtonClasses(appearance: ProposalToolbarAppearance): string {
-  return proposalSectionInCanvasControlClasses(appearance, "square");
-}
-
 export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolbarAppearance): string {
-  return cn(proposalSectionGutterButtonClasses(appearance), "touch-none cursor-grab active:cursor-grabbing");
-}
-
-/** Small FAB edit affordance on in-canvas previews (e.g. Accept CTA). */
-export function proposalSectionFabEditButtonClasses(appearance: ProposalToolbarAppearance): string {
-  return proposalSectionInCanvasControlClasses(appearance, "circle");
+  return cn(
+    proposalSectionInCanvasControlClasses(appearance, "square"),
+    "touch-none cursor-grab active:cursor-grabbing",
+  );
 }
 
 /** Compact text trigger inside an elevated block toolbar (e.g. Edit agreement). */

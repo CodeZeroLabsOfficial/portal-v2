@@ -3,8 +3,8 @@
 import * as React from "react";
 import { GripVertical, Plus } from "lucide-react";
 import {
-  proposalSectionGutterButtonClasses,
   proposalSectionGutterDragHandleClasses,
+  proposalSectionInCanvasControlClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
 import { PROPOSAL_EDITOR_SECTION_CHILD_INSERT_HOST_CLASSES } from "@/lib/proposal/public/public-layout";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function SectionChildPlusTrigger({
     <button
       type="button"
       aria-label="Add content below"
-      className={cn(proposalSectionGutterButtonClasses(appearance), className)}
+      className={cn(proposalSectionInCanvasControlClasses(appearance, "square"), className)}
       {...props}
     >
       <Plus className="h-3.5 w-3.5" aria-hidden />
@@ -103,10 +103,10 @@ export function SectionChildInsertSlot({
       type="button"
       aria-label="Add content at top"
       className={cn(
-        "pointer-events-auto absolute top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full p-0",
+        "pointer-events-auto absolute top-1/2 z-20 -translate-y-1/2",
         SECTION_CHILD_INSERT_LEFT_CLASSES,
-        proposalSectionGutterButtonClasses(appearance),
-        "opacity-0 transition-[opacity,border-color,color,background-color,transform] duration-150",
+        proposalSectionInCanvasControlClasses(appearance, "square"),
+        "opacity-0 transition-opacity duration-150",
         "group-hover/section-insert:opacity-100",
         "group-focus-within/section-insert:opacity-100",
         "focus-visible:opacity-100",

@@ -143,7 +143,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES } from "@/lib/proposal/editor-glass";
 import {
-  proposalSectionFabEditButtonClasses,
+  proposalSectionInCanvasControlClasses,
   proposalToolbarAuxIconButtonClasses,
   proposalToolbarAuxTextButtonClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
@@ -1967,7 +1967,7 @@ function AgreementSignButtonPreview({
               type="button"
               className={cn(
                 "absolute -right-1.5 -top-1.5",
-                proposalSectionFabEditButtonClasses(sectionAppearance),
+                proposalSectionInCanvasControlClasses(sectionAppearance, "circle"),
               )}
               aria-label="Edit sign button"
             >
