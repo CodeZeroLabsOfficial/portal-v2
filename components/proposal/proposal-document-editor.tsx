@@ -27,7 +27,7 @@ import {
 import { ProposalBrandingProvider } from "@/components/proposal/proposal-branding-context";
 import { EditorCatalogServicesContext, EditorTemplatePricingReadOnlyContext } from "@/components/proposal/editor-catalog-services-context";
 import { ProposalEditorLibraryScope } from "@/components/proposal/proposal-editor-library-scope";
-import { ProposalContractTemplateLibraryProvider } from "@/components/proposal/proposal-contract-template-library";
+import { ContractTemplatePickerProvider } from "@/components/features/templates/contract-template-picker-provider";
 import { ProposalDocumentView } from "@/components/proposal/proposal-document-view";
 import { ProposalMediaLibraryProvider } from "@/components/proposal/proposal-media-library";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -312,7 +312,7 @@ export function ProposalDocumentEditor({
         <ProposalEditorLibraryScope>
           <ProposalMediaLibraryProvider>
             <ProposalBrandingProvider value={brandingContextValue}>
-              <ProposalContractTemplateLibraryProvider>
+              <ContractTemplatePickerProvider>
                 <BlockMenuProfileContext.Provider value={blockMenuProfile}>
                   <div className={embeddedInBuilder ? "space-y-0" : "space-y-8"}>
                     {!embeddedInBuilder ? <ProposalEditorChrome {...editorChromeProps} /> : null}
@@ -385,7 +385,7 @@ export function ProposalDocumentEditor({
                     </Tabs>
                   </div>
                 </BlockMenuProfileContext.Provider>
-              </ProposalContractTemplateLibraryProvider>
+              </ContractTemplatePickerProvider>
             </ProposalBrandingProvider>
           </ProposalMediaLibraryProvider>
         </ProposalEditorLibraryScope>

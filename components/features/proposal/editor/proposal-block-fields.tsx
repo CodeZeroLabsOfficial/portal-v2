@@ -74,10 +74,8 @@ import type {
 import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
 import { PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES } from "@/lib/proposal/editor-surface-tokens";
-import {
-  useProposalContractTemplateLibraryOptional,
-  type ContractTemplatePick,
-} from "@/components/proposal/proposal-contract-template-library";
+import { useContractTemplatePickerOptional } from "@/components/features/templates/contract-template-picker-provider";
+import type { ContractTemplatePick } from "@/lib/templates/contract-template-picker";
 import {
   type ProposalIconColumnToolbarActions,
 } from "@/components/proposal/proposal-icon-block-toolbar";
@@ -1562,8 +1560,8 @@ function AgreementBubbleEditMenu({
   block: AgreementBlock;
   onApplyPick: (next: AgreementBlock) => void;
 }) {
-  const contractTemplateLibrary = useProposalContractTemplateLibraryOptional();
-  if (!contractTemplateLibrary) return null;
+  const contractTemplatePicker = useContractTemplatePickerOptional();
+  if (!contractTemplatePicker) return null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -1593,8 +1591,10 @@ function AgreementBubbleEditMenu({
           className="cursor-pointer gap-2"
           onClick={(e) => {
             e.stopPropagation();
-            contractTemplateLibrary.openSelection({
+            contractTemplatePicker.openPicker({
               onSelect: (pick) => onApplyPick(applyContractTemplatePickToAgreementBlock(block, pick)),
+              includeContractTemplateId: block.contractTemplateId?.trim() || undefined,
+              currentContractTemplateId: block.contractTemplateId?.trim() || undefined,
             });
           }}
         >

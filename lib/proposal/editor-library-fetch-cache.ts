@@ -1,64 +1,17 @@
 import { PROPOSAL_MEDIA_LIBRARY_DEFAULT_PREFIX } from "@/lib/proposal/media/media-library-blob";
 import type { ProposalLibraryAsset } from "@/lib/proposal/media/media-library-types";
 
-export type ContractTemplateLibraryRow = {
-  id: string;
-  name: string;
-  agreementTitle: string;
-  introHtml: string;
-  legalHtml: string;
-  previewSnippet: string;
-};
-
 export type ProposalMediaLibraryFetchResult = {
   assets: ProposalLibraryAsset[];
   libraryPrefix: string;
 };
 
-let contractTemplatesCache: ContractTemplateLibraryRow[] | null = null;
-let contractTemplatesInflight: Promise<ContractTemplateLibraryRow[]> | null = null;
-
 let mediaLibraryCache: ProposalMediaLibraryFetchResult | null = null;
 let mediaLibraryInflight: Promise<ProposalMediaLibraryFetchResult> | null = null;
-
-export function invalidateContractTemplatesLibraryCache(): void {
-  contractTemplatesCache = null;
-  contractTemplatesInflight = null;
-}
 
 export function invalidateProposalMediaLibraryCache(): void {
   mediaLibraryCache = null;
   mediaLibraryInflight = null;
-}
-
-export async function fetchContractTemplatesLibrary(
-  options?: { force?: boolean },
-): Promise<ContractTemplateLibraryRow[]> {
-  if (!options?.force && contractTemplatesCache) {
-    return contractTemplatesCache;
-  }
-  if (!options?.force && contractTemplatesInflight) {
-    return contractTemplatesInflight;
-  }
-
-  const promise = fetch("/api/contract-templates")
-    .then(async (res) => {
-      if (!res.ok) throw new Error(res.statusText);
-      return res.json() as Promise<{ templates?: ContractTemplateLibraryRow[] }>;
-    })
-    .then((data) => {
-      const templates = Array.isArray(data.templates) ? data.templates : [];
-      contractTemplatesCache = templates;
-      contractTemplatesInflight = null;
-      return templates;
-    })
-    .catch((err) => {
-      contractTemplatesInflight = null;
-      throw err;
-    });
-
-  contractTemplatesInflight = promise;
-  return promise;
 }
 
 export async function fetchProposalMediaLibrary(
