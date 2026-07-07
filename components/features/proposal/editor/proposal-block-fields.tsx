@@ -144,6 +144,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES } from "@/lib/proposal/editor-glass";
 import {
+  proposalAgreementCtaEditChipClasses,
   proposalEditorCanvasChipClasses,
   proposalToolbarAuxTextButtonClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
@@ -1092,10 +1093,7 @@ export function ColumnsBlockFields({
                           trigger={
                             <button
                               type="button"
-                              className={proposalEditorCanvasChipClasses(sectionAppearance, {
-                                size: "md",
-                                shape: "circle",
-                              })}
+                              className={proposalEditorCanvasChipClasses(sectionAppearance)}
                               aria-label="Add content"
                               title={`Add block to column ${i + 1}`}
                             >
@@ -1925,7 +1923,7 @@ function AgreementSignButtonPreview({
   return (
     <Popover>
       <div className={cn("flex w-full", align === "start" ? "justify-start" : "justify-center")}>
-        <div className="relative inline-flex max-w-full">
+        <div className="group/agreement-cta relative inline-flex max-w-full">
           <div
             className="inline-flex h-10 min-w-0 max-w-full items-center justify-center rounded-lg px-5 text-sm font-semibold shadow-sm"
             style={{ backgroundColor: ctaColor, color: fg }}
@@ -1937,7 +1935,7 @@ function AgreementSignButtonPreview({
               type="button"
               className={cn(
                 "absolute -right-1.5 -top-1.5",
-                proposalEditorCanvasChipClasses(sectionAppearance, { size: "sm", shape: "circle" }),
+                proposalAgreementCtaEditChipClasses(sectionAppearance),
               )}
               aria-label="Edit sign button"
             >

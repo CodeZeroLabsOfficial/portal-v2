@@ -104,7 +104,7 @@ export type ProposalSectionInCanvasControlShape = "square" | "circle";
 const SECTION_IN_CANVAS_CONTROL_BASE =
   "flex h-7 w-7 shrink-0 items-center justify-center border border-transparent p-0 transition-[color,background-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2";
 
-/** Ghost affordances on the section canvas: gutter `+`, drag, top insert, CTA edit FAB. */
+/** Ghost affordances on the section canvas: gutter `+`, drag, top insert. */
 export function proposalSectionInCanvasControlClasses(
   appearance: ProposalToolbarAppearance,
   shape: ProposalSectionInCanvasControlShape,
@@ -139,25 +139,45 @@ export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolb
   );
 }
 
-export type ProposalEditorCanvasChipSize = "sm" | "md";
+const PROPOSAL_EDITOR_CANVAS_CHIP_SHELL =
+  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/80 p-0 shadow-sm transition-[color,background-color,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2";
 
-/** Opaque mini chip on the canvas (Yoopta-style) — column insert, CTA edit affordances. */
-export function proposalEditorCanvasChipClasses(
+function proposalEditorCanvasControlFocusRingClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+    : "focus-visible:ring-ring";
+}
+
+/**
+ * View Agreement CTA edit chip — hidden until the button is hovered; dark badge on reveal,
+ * inverts to a light chip on direct hover. Fixed zinc/white colors avoid dark-section token remaps.
+ */
+export function proposalAgreementCtaEditChipClasses(
   appearance: ProposalToolbarAppearance,
-  options: { size: ProposalEditorCanvasChipSize; shape: "circle" },
 ): string {
   return cn(
-    "inline-flex shrink-0 items-center justify-center border border-border/80 bg-background p-0 shadow-sm",
-    // Fixed dark icon on a light chip — do not use text-muted-foreground; dark sections remap that to white.
-    "text-zinc-600 transition-[color,background-color,box-shadow] duration-150 ease-out",
-    options.size === "sm" ? "h-7 w-7" : "h-8 w-8",
-    "rounded-full",
-    "hover:bg-muted hover:text-zinc-900",
-    "focus-visible:outline-none focus-visible:ring-2",
-    appearance === "elevated"
-      ? "focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
-      : "focus-visible:ring-ring",
-    "data-[state=open]:bg-muted data-[state=open]:text-zinc-900",
+    PROPOSAL_EDITOR_CANVAS_CHIP_SHELL,
+    "h-7 w-7",
+    "opacity-0",
+    "group-hover/agreement-cta:opacity-100",
+    "group-focus-within/agreement-cta:opacity-100",
+    "focus-visible:opacity-100",
+    proposalEditorCanvasControlFocusRingClasses(appearance),
+    "bg-zinc-900 text-white",
+    "hover:bg-white hover:text-zinc-900",
+    "data-[state=open]:opacity-100 data-[state=open]:bg-white data-[state=open]:text-zinc-900",
+  );
+}
+
+/** Opaque mini chip on the canvas — column insert affordances. */
+export function proposalEditorCanvasChipClasses(appearance: ProposalToolbarAppearance): string {
+  return cn(
+    PROPOSAL_EDITOR_CANVAS_CHIP_SHELL,
+    proposalEditorCanvasControlFocusRingClasses(appearance),
+    // Fixed light surface — do not use semantic muted/background; dark sections remap those.
+    "bg-white text-zinc-600",
+    "hover:bg-zinc-100 hover:text-zinc-900",
+    "data-[state=open]:bg-zinc-100 data-[state=open]:text-zinc-900",
   );
 }
 
