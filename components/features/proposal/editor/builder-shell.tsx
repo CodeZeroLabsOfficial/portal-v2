@@ -17,11 +17,10 @@ export interface BuilderShellProps {
   className?: string;
 }
 
-/** Track widths (`20vw`) must match `BUILDER_SIDE_PANEL_WIDTH_CLASSES` so panels fill their cell exactly. */
 function builderDesktopGridColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
-  if (outlineOpen && inspectorOpen) return "grid-cols-[20vw_minmax(0,1fr)_20vw]";
-  if (outlineOpen) return "grid-cols-[20vw_minmax(0,1fr)_0px]";
-  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20vw]";
+  if (outlineOpen && inspectorOpen) return "grid-cols-[20%_minmax(0,1fr)_20%]";
+  if (outlineOpen) return "grid-cols-[20%_minmax(0,1fr)_0px]";
+  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20%]";
   return "grid-cols-[0px_minmax(0,1fr)_0px]";
 }
 
