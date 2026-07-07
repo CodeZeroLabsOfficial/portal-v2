@@ -65,18 +65,27 @@ function clampDecrementUsage(current: number): number {
   return Math.max(0, current - 1);
 }
 
-async function decrementTemplateUsageInTransaction(
+interface TemplateUsageDecrement {
+  ref: DocumentReference;
+  current: number;
+}
+
+async function readTemplateUsageForDecrement(
   tx: Transaction,
   db: Firestore,
   collection: typeof COLLECTIONS.proposalTemplates | typeof COLLECTIONS.contractTemplates,
   templateId: string,
-): Promise<void> {
+): Promise<TemplateUsageDecrement | null> {
   const ref = db.collection(collection).doc(templateId);
   const snap = await tx.get(ref);
-  if (!snap.exists) return;
+  if (!snap.exists) return null;
   const data = snap.data() as Record<string, unknown>;
   const current = asNumber(data.usageCount) ?? 0;
-  tx.update(ref, { usageCount: clampDecrementUsage(current) });
+  return { ref, current };
+}
+
+function applyTemplateUsageDecrement(tx: Transaction, entry: TemplateUsageDecrement): void {
+  tx.update(entry.ref, { usageCount: clampDecrementUsage(entry.current) });
 }
 
 /** Deletes a proposal and decrements linked template usage (never below zero). */
@@ -94,24 +103,32 @@ export async function deleteProposalWithTemplateUsageDecrement(
     const proposalSnap = await tx.get(proposalRef);
     if (!proposalSnap.exists) return;
 
-    tx.delete(proposalRef);
+    const decrements: TemplateUsageDecrement[] = [];
 
     if (snapshot.proposalTemplateId) {
-      await decrementTemplateUsageInTransaction(
+      const entry = await readTemplateUsageForDecrement(
         tx,
         db,
         COLLECTIONS.proposalTemplates,
         snapshot.proposalTemplateId,
       );
+      if (entry) decrements.push(entry);
     }
 
     for (const contractTemplateId of contractIds) {
-      await decrementTemplateUsageInTransaction(
+      const entry = await readTemplateUsageForDecrement(
         tx,
         db,
         COLLECTIONS.contractTemplates,
         contractTemplateId,
       );
+      if (entry) decrements.push(entry);
+    }
+
+    tx.delete(proposalRef);
+
+    for (const entry of decrements) {
+      applyTemplateUsageDecrement(tx, entry);
     }
   });
 }
