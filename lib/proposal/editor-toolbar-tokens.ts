@@ -81,10 +81,6 @@ export function proposalToolbarDividerClasses(appearance: ProposalToolbarAppeara
   );
 }
 
-export function proposalToolbarElevatedDividerClasses(): string {
-  return proposalToolbarDividerClasses("elevated");
-}
-
 export function proposalToolbarIconButtonClasses(
   appearance: ProposalToolbarAppearance,
   active?: boolean,
@@ -143,37 +139,167 @@ export function proposalSectionGutterDragHandleClasses(appearance: ProposalToolb
   );
 }
 
-/** Compact text trigger inside an elevated block toolbar (e.g. Edit agreement). */
-export function proposalToolbarAuxTextButtonClasses(appearance: ProposalToolbarAppearance): string {
+export type ProposalEditorCanvasChipSize = "sm" | "md";
+
+/** Opaque mini chip on the canvas (Yoopta-style) — column insert, CTA edit affordances. */
+export function proposalEditorCanvasChipClasses(
+  appearance: ProposalToolbarAppearance,
+  options: { size: ProposalEditorCanvasChipSize; shape: "circle" },
+): string {
+  return cn(
+    "inline-flex shrink-0 items-center justify-center border border-border/80 bg-background p-0 shadow-sm",
+    "text-muted-foreground transition-[color,background-color,box-shadow] duration-150 ease-out",
+    options.size === "sm" ? "h-7 w-7" : "h-8 w-8",
+    "rounded-full",
+    "hover:bg-muted hover:text-foreground",
+    "focus-visible:outline-none focus-visible:ring-2",
+    appearance === "elevated"
+      ? "focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+      : "focus-visible:ring-ring",
+    "data-[state=open]:bg-muted data-[state=open]:text-foreground",
+  );
+}
+
+/** Vertical divider between compact layout-control groups inside a block toolbar. */
+export function proposalToolbarLayoutControlsGroupDividerClasses(
+  appearance: ProposalToolbarAppearance,
+): string {
+  return appearance === "elevated" ? "border-white/10" : "border-border/60";
+}
+
+/** Dropdown/popover trigger inside a proposal toolbar shell. */
+export function proposalToolbarBubbleTriggerClasses(appearance: ProposalToolbarAppearance): string {
   if (appearance === "elevated") {
     return cn(
-      "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors shadow-none",
+      "inline-flex items-center gap-1.5 rounded px-2 py-1 text-sm transition-colors",
+      proposalToolbarMenuItemClasses("elevated"),
+      proposalToolbarMenuItemHoverClasses("elevated"),
+    );
+  }
+  return "inline-flex items-center gap-1.5 rounded px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+}
+
+/** Compact label badge inside bubble triggers (e.g. H1 short label). */
+export function proposalToolbarBubbleBadgeClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-5 w-7 items-center justify-center rounded bg-white/10 font-semibold tabular-nums",
+      proposalToolbarMenuItemCompactClasses("elevated"),
+    );
+  }
+  return "inline-flex h-5 w-7 items-center justify-center rounded bg-muted font-semibold tabular-nums text-muted-foreground";
+}
+
+export function proposalToolbarBubbleMutedFgClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "text-[var(--proposal-toolbar-muted-fg)]"
+    : "text-muted-foreground";
+}
+
+export function proposalToolbarBubbleActiveAccentClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "text-sky-400" : "text-primary";
+}
+
+export function proposalToolbarBubbleMenuItemClasses(
+  appearance: ProposalToolbarAppearance,
+  active?: boolean,
+): string {
+  if (appearance === "elevated") {
+    return cn(
+      "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm outline-none",
+      proposalToolbarMenuItemClasses("elevated"),
+      proposalToolbarMenuItemHoverClasses("elevated"),
+      "hover:text-white focus-visible:text-white",
+      active && "bg-[var(--proposal-toolbar-active-bg)] text-white",
+    );
+  }
+  return cn(
+    "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm outline-none",
+    proposalToolbarMenuItemClasses("surface"),
+    proposalToolbarMenuItemHoverClasses("surface"),
+    active && "bg-accent text-foreground",
+  );
+}
+
+export function proposalToolbarBubblePanelClasses(appearance: ProposalToolbarAppearance): string {
+  return cn("rounded-md border p-1 shadow-lg", proposalToolbarPanelClasses(appearance));
+}
+
+export function proposalToolbarBubblePanelFloatingClasses(
+  appearance: ProposalToolbarAppearance,
+): string {
+  return cn(proposalToolbarBubblePanelClasses(appearance), "absolute left-0 top-full z-[100] mt-1");
+}
+
+export function proposalToolbarBubbleSmallIconButtonClasses(
+  appearance: ProposalToolbarAppearance,
+  active?: boolean,
+): string {
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-7 w-7 items-center justify-center rounded transition-colors",
+      proposalToolbarMenuItemClasses("elevated"),
+      proposalToolbarMenuItemHoverClasses("elevated"),
+      "hover:text-white focus-visible:text-white",
+      active && "bg-[var(--proposal-toolbar-active-bg)] text-white",
+    );
+  }
+  return cn(
+    "inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+    active && "bg-muted text-foreground",
+  );
+}
+
+export function proposalToolbarBubbleStepperButtonClasses(
+  appearance: ProposalToolbarAppearance,
+): string {
+  return cn(
+    "rounded p-0.5 transition-colors",
+    proposalToolbarBubbleMutedFgClasses(appearance),
+    appearance === "elevated"
+      ? "hover:bg-[var(--proposal-toolbar-hover-bg)] hover:text-white"
+      : "hover:bg-muted hover:text-foreground",
+  );
+}
+
+export function proposalToolbarBubbleFieldShellClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "flex h-8 items-center rounded border border-white/10 bg-white/5 pr-0.5"
+    : "flex h-8 items-center rounded border border-border bg-muted/30 pr-0.5";
+}
+
+export function proposalToolbarBubbleInlineInputClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "min-w-0 flex-1 bg-transparent px-2 text-sm tabular-nums text-[var(--proposal-toolbar-fg)] outline-none"
+    : "min-w-0 flex-1 bg-transparent px-2 text-sm tabular-nums text-foreground outline-none";
+}
+
+export function proposalToolbarBubbleSelectClasses(appearance: ProposalToolbarAppearance): string {
+  if (appearance === "elevated") {
+    return "h-8 w-full rounded border border-white/10 bg-white/5 px-2 text-sm text-[var(--proposal-toolbar-fg)] outline-none focus:bg-white/10";
+  }
+  return "h-8 w-full rounded border border-border bg-muted/30 px-2 text-sm text-foreground outline-none focus:bg-muted";
+}
+
+/** Text trigger inside a block toolbar (e.g. Edit agreement, Edit columns). */
+export function proposalToolbarAuxTextButtonClasses(
+  appearance: ProposalToolbarAppearance,
+  options?: { compact?: boolean },
+): string {
+  const size = options?.compact ? "gap-1 rounded-full px-2.5" : "gap-1.5 rounded-full px-3";
+  if (appearance === "elevated") {
+    return cn(
+      "inline-flex h-8 items-center text-xs font-medium transition-colors shadow-none",
+      size,
       proposalToolbarMenuItemClasses("elevated"),
       proposalToolbarMenuItemHoverClasses("elevated"),
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
     );
   }
   return cn(
-    "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors shadow-none",
+    "inline-flex h-8 items-center text-xs font-medium transition-colors shadow-none",
+    size,
     "bg-transparent text-muted-foreground hover:bg-background hover:text-foreground",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-  );
-}
-
-/** Circular icon trigger beside an elevated block toolbar (e.g. e-sign settings). */
-export function proposalToolbarAuxIconButtonClasses(appearance: ProposalToolbarAppearance): string {
-  if (appearance === "elevated") {
-    return cn(
-      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors shadow-none",
-      "bg-transparent text-[var(--proposal-toolbar-fg)] ring-1 ring-white/20",
-      "hover:bg-[var(--proposal-toolbar-hover-bg)] hover:text-white",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900",
-    );
-  }
-  return cn(
-    "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors shadow-none",
-    "bg-transparent text-muted-foreground ring-1 ring-border/70",
-    "hover:bg-background hover:text-foreground",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   );
 }

@@ -31,8 +31,21 @@ import {
   Underline as UnderlineIcon,
 } from "lucide-react";
 import {
-  PROPOSAL_TOOLBAR_TOKENS,
-  proposalToolbarPanelClasses,
+  proposalToolbarBubbleActiveAccentClasses,
+  proposalToolbarBubbleBadgeClasses,
+  proposalToolbarBubbleFieldShellClasses,
+  proposalToolbarBubbleInlineInputClasses,
+  proposalToolbarBubbleMenuItemClasses,
+  proposalToolbarBubbleMutedFgClasses,
+  proposalToolbarBubblePanelClasses,
+  proposalToolbarBubblePanelFloatingClasses,
+  proposalToolbarBubbleSelectClasses,
+  proposalToolbarBubbleSmallIconButtonClasses,
+  proposalToolbarBubbleStepperButtonClasses,
+  proposalToolbarBubbleTriggerClasses,
+  proposalToolbarHintClasses,
+  proposalToolbarMenuItemClasses,
+  proposalToolbarMenuItemHoverClasses,
   proposalToolbarShellClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
 import { cn } from "@/lib/utils";
@@ -52,7 +65,7 @@ import {
   ProposalBlockTypography,
   type ProposalLetterCase,
 } from "@/lib/proposal/rich-text/tiptap-typography";
-import { useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
+import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
 import {
   ProposalToolbarIconButton,
   ProposalToolbarSectionLabel,
@@ -106,16 +119,6 @@ const ALIGN_OPTIONS: { value: "left" | "center" | "right"; icon: typeof AlignLef
   { value: "center", icon: AlignCenter, label: "Center" },
   { value: "right", icon: AlignRight, label: "Right" },
 ];
-
-const BUBBLE_MENU_PANEL_SURFACE_CLASS = cn(
-  "rounded-md border p-1",
-  proposalToolbarPanelClasses("elevated"),
-);
-
-const BUBBLE_MENU_PANEL_CLASS = cn(
-  BUBBLE_MENU_PANEL_SURFACE_CLASS,
-  "absolute left-0 top-full z-[100] mt-1",
-);
 
 const VIEWPORT_EDGE_PAD_PX = 8;
 
@@ -233,9 +236,10 @@ function RichTextToolbarButton({
   children: React.ReactNode;
   disabled?: boolean;
 }) {
+  const appearance = useProposalSectionEditorAppearance();
   return (
     <ProposalToolbarIconButton
-      appearance="elevated"
+      appearance={appearance}
       active={active}
       aria-label={ariaLabel}
       title={ariaLabel}
@@ -249,10 +253,12 @@ function RichTextToolbarButton({
 }
 
 function RichTextToolbarDivider() {
-  return <ProposalToolbarSeparator appearance="elevated" />;
+  const appearance = useProposalSectionEditorAppearance();
+  return <ProposalToolbarSeparator appearance={appearance} />;
 }
 
 function HeadingPicker({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const active = getActiveHeading(editor);
@@ -269,18 +275,18 @@ function HeadingPicker({ editor }: { editor: Editor }) {
         aria-label="Text style"
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-sm text-zinc-100 transition-colors hover:bg-white/10"
+        className={proposalToolbarBubbleTriggerClasses(appearance)}
       >
-        <span className={cn("inline-flex h-5 w-7 items-center justify-center rounded bg-white/10 font-semibold tabular-nums text-zinc-100", PROPOSAL_TOOLBAR_TOKENS.elevated.menuItemCompact)}>
+        <span className={proposalToolbarBubbleBadgeClasses(appearance)}>
           {active.shortLabel}
         </span>
         <span className="whitespace-nowrap">{active.label}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+        <ChevronDown className={cn("h-3.5 w-3.5", proposalToolbarBubbleMutedFgClasses(appearance))} />
       </button>
       {open ? (
         <div
           role="menu"
-          className={cn(BUBBLE_MENU_PANEL_CLASS, "min-w-[200px]")}
+          className={cn(proposalToolbarBubblePanelFloatingClasses(appearance), "min-w-[200px]")}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {HEADING_OPTIONS.map((opt) => {
@@ -290,10 +296,7 @@ function HeadingPicker({ editor }: { editor: Editor }) {
                 key={opt.value}
                 type="button"
                 role="menuitem"
-                className={cn(
-                  "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-zinc-200 outline-none hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white",
-                  isActive && "bg-white/10 text-white",
-                )}
+                className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
                 onPointerDown={(e) => e.preventDefault()}
                 onClick={() => {
                   applyHeadingOption(editor, opt);
@@ -303,7 +306,9 @@ function HeadingPicker({ editor }: { editor: Editor }) {
                 <span
                   className={cn(
                     "inline-block w-7 text-center text-xs font-semibold",
-                    isActive ? "text-sky-400" : "text-zinc-400",
+                    isActive
+                      ? proposalToolbarBubbleActiveAccentClasses(appearance)
+                      : proposalToolbarBubbleMutedFgClasses(appearance),
                   )}
                 >
                   {opt.shortLabel}
@@ -325,6 +330,7 @@ function FontFamilyPicker({
   editor: Editor;
   layout?: "toolbar" | "menu";
 }) {
+  const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
   useCloseBubbleToolbarMenu(open, setOpen, rootRef);
@@ -351,9 +357,9 @@ function FontFamilyPicker({
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "inline-flex items-center gap-1 rounded text-sm text-zinc-100 transition-colors hover:bg-white/10",
+          proposalToolbarBubbleTriggerClasses(appearance),
           menuLayout
-            ? "h-8 w-full justify-between border border-white/10 bg-white/5 px-2"
+            ? cn("h-8 w-full justify-between px-2", proposalToolbarBubbleFieldShellClasses(appearance))
             : "max-w-[9.5rem] px-2 py-1",
         )}
       >
@@ -367,13 +373,13 @@ function FontFamilyPicker({
         >
           {active.label}
         </span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0", proposalToolbarBubbleMutedFgClasses(appearance))} />
       </button>
       {open ? (
         <div
           role="menu"
           className={cn(
-            BUBBLE_MENU_PANEL_CLASS,
+            proposalToolbarBubblePanelFloatingClasses(appearance),
             "min-w-[11rem] max-w-[min(18rem,calc(100vw-2rem))] max-h-[min(50vh,22rem)] overflow-y-auto overflow-x-hidden",
           )}
           onPointerDown={(e) => e.stopPropagation()}
@@ -381,7 +387,7 @@ function FontFamilyPicker({
           {PROPOSAL_FONT_MENU_SECTIONS.map((section) => (
             <div key={section.id} role="group" aria-label={section.label}>
               {section.label ? (
-                <ProposalToolbarSectionLabel appearance="elevated" className="px-2 pb-1 pt-2 first:pt-1">
+                <ProposalToolbarSectionLabel appearance={appearance} className="px-2 pb-1 pt-2 first:pt-1">
                   {section.label}
                 </ProposalToolbarSectionLabel>
               ) : null}
@@ -398,8 +404,8 @@ function FontFamilyPicker({
                     type="button"
                     role="menuitem"
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm text-zinc-200 outline-none hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white",
-                      isActive && "bg-white/10 text-white",
+                      proposalToolbarBubbleMenuItemClasses(appearance, isActive),
+                      "justify-between",
                     )}
                     style={preview ? { fontFamily: preview } : undefined}
                     onPointerDown={(e) => e.preventDefault()}
@@ -410,7 +416,7 @@ function FontFamilyPicker({
                   >
                     <span className="whitespace-nowrap">{opt.label}</span>
                     {isActive ? (
-                      <span className="text-sky-400" aria-hidden>
+                      <span className={proposalToolbarBubbleActiveAccentClasses(appearance)} aria-hidden>
                         ✓
                       </span>
                     ) : null}
@@ -426,6 +432,7 @@ function FontFamilyPicker({
 }
 
 function FontSizeControl({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const { fontSizeRaw } = useEditorState({
     editor,
     selector: (snap) => ({
@@ -441,7 +448,10 @@ function FontSizeControl({ editor }: { editor: Editor }) {
   }
   return (
     <div
-      className="inline-flex items-center gap-0.5 rounded text-zinc-200"
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded",
+        appearance === "elevated" ? "text-[var(--proposal-toolbar-fg)]" : "text-foreground",
+      )}
       onPointerDown={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -457,7 +467,8 @@ function FontSizeControl({ editor }: { editor: Editor }) {
           if (Number.isFinite(n) && n > 0) set(n);
         }}
         className={cn(
-          "w-10 rounded bg-transparent px-1 py-0.5 text-center text-sm tabular-nums outline-none focus:bg-white/10",
+          "w-10 rounded bg-transparent px-1 py-0.5 text-center text-sm tabular-nums outline-none",
+          appearance === "elevated" ? "focus:bg-[var(--proposal-toolbar-hover-bg)]" : "focus:bg-muted",
           "[appearance:textfield] [-moz-appearance:textfield]",
           "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
         )}
@@ -469,7 +480,7 @@ function FontSizeControl({ editor }: { editor: Editor }) {
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => set(value + 1)}
           aria-label="Increase font size"
-          className="rounded p-0.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+          className={proposalToolbarBubbleStepperButtonClasses(appearance)}
         >
           <ChevronUp className="h-3 w-3" />
         </button>
@@ -478,7 +489,7 @@ function FontSizeControl({ editor }: { editor: Editor }) {
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => set(value - 1)}
           aria-label="Decrease font size"
-          className="rounded p-0.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+          className={proposalToolbarBubbleStepperButtonClasses(appearance)}
         >
           <ChevronDown className="h-3 w-3" />
         </button>
@@ -488,16 +499,17 @@ function FontSizeControl({ editor }: { editor: Editor }) {
 }
 
 function ColorControl({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const { colorRaw } = useEditorState({
     editor,
     selector: (snap) => ({
       colorRaw: snap.editor.getAttributes("textStyle").color as string | undefined,
     }),
   });
-  const current = colorRaw ?? "#ffffff";
+  const current = colorRaw ?? (appearance === "elevated" ? "#ffffff" : "#000000");
   return (
     <label
-      className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded text-zinc-200 transition-colors hover:bg-white/10"
+      className={cn(proposalToolbarBubbleSmallIconButtonClasses(appearance), "cursor-pointer")}
       aria-label="Text color"
       onMouseDown={(e) => e.preventDefault()}
     >
@@ -518,6 +530,7 @@ function ColorControl({ editor }: { editor: Editor }) {
 }
 
 function AlignmentPicker({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const current =
@@ -536,14 +549,14 @@ function AlignmentPicker({ editor }: { editor: Editor }) {
         aria-label="Text alignment"
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex h-7 w-7 items-center justify-center rounded text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+        className={proposalToolbarBubbleSmallIconButtonClasses(appearance, open)}
       >
         <Icon className="h-4 w-4" />
       </button>
       {open ? (
         <div
           role="menu"
-          className={cn(BUBBLE_MENU_PANEL_CLASS, "min-w-[9rem]")}
+          className={cn(proposalToolbarBubblePanelFloatingClasses(appearance), "min-w-[9rem]")}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {ALIGN_OPTIONS.map((a) => {
@@ -554,10 +567,7 @@ function AlignmentPicker({ editor }: { editor: Editor }) {
                 key={a.value}
                 type="button"
                 role="menuitem"
-                className={cn(
-                  "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-zinc-200 outline-none hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white",
-                  isActive && "bg-white/10 text-white",
-                )}
+                className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
                 onPointerDown={(e) => e.preventDefault()}
                 onClick={() => {
                   editor.chain().focus().setTextAlign(a.value).run();
@@ -578,6 +588,7 @@ function AlignmentPicker({ editor }: { editor: Editor }) {
 const MERGE_FIELD_PANEL_WIDTH_PX = 340;
 
 function MergeFieldMenu({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -599,10 +610,10 @@ function MergeFieldMenu({ editor }: { editor: Editor }) {
         ref={panelRef}
         role="menu"
         style={panelStyle}
-        className="rounded-md border border-zinc-700 bg-zinc-900 p-1 text-zinc-100 shadow-lg"
+        className={cn(proposalToolbarBubblePanelClasses(appearance), "min-w-[17rem]")}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <ProposalToolbarSectionLabel appearance="elevated" className="px-2 pb-1 pt-1.5">
+        <ProposalToolbarSectionLabel appearance={appearance} className="px-2 pb-1 pt-1.5">
           CRM merge tokens
         </ProposalToolbarSectionLabel>
         <div className="max-h-[min(70vh,24rem)] overflow-y-auto overscroll-y-contain">
@@ -612,16 +623,17 @@ function MergeFieldMenu({ editor }: { editor: Editor }) {
               type="button"
               role="menuitem"
               className={cn(
-                "flex w-full rounded px-2 py-1.5 text-left leading-snug outline-none hover:bg-white/10 focus-visible:bg-white/10",
-                PROPOSAL_TOOLBAR_TOKENS.elevated.menuItem,
+                "flex w-full rounded px-2 py-1.5 text-left leading-snug outline-none",
+                proposalToolbarMenuItemClasses(appearance),
+                proposalToolbarMenuItemHoverClasses(appearance),
               )}
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => insert(opt.insert)}
             >
-              <span className="text-zinc-100">
-                {opt.label}: <span className="text-sky-300/90">{opt.insert}</span>
+              <span>
+                {opt.label}: <span className={proposalToolbarBubbleActiveAccentClasses(appearance)}>{opt.insert}</span>
                 {opt.description ? (
-                  <span className="text-zinc-500"> — {opt.description}</span>
+                  <span className={proposalToolbarBubbleMutedFgClasses(appearance)}> — {opt.description}</span>
                 ) : null}
               </span>
             </button>
@@ -641,7 +653,10 @@ function MergeFieldMenu({ editor }: { editor: Editor }) {
         aria-label="Insert merge field"
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex h-7 w-7 items-center justify-center rounded border border-zinc-600 bg-transparent text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+        className={cn(
+          proposalToolbarBubbleSmallIconButtonClasses(appearance),
+          appearance === "elevated" ? "border border-white/20" : "border border-border",
+        )}
       >
         <Braces className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
       </button>
@@ -678,11 +693,7 @@ function roundTypography(n: number, decimals = 2) {
   return Math.round(n * p) / p;
 }
 
-const TYPOGRAPHY_NUMERIC_INPUT_CLASS = cn(
-  "min-w-0 flex-1 bg-transparent px-2 text-sm tabular-nums text-zinc-100 outline-none",
-  "[appearance:textfield] [-moz-appearance:textfield]",
-  "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-);
+const TYPOGRAPHY_MORE_MENU_WIDTH_PX = 216;
 
 function TypographyNumericField({
   label,
@@ -699,14 +710,15 @@ function TypographyNumericField({
   step: number;
   onChange: (next: number) => void;
 }) {
+  const appearance = useProposalSectionEditorAppearance();
   function clamp(n: number) {
     return Math.min(max, Math.max(min, roundTypography(n)));
   }
   return (
     <div className="space-y-1">
-      <span className="block text-xs text-zinc-400">{label}</span>
+      <span className={cn("block text-xs", proposalToolbarHintClasses(appearance))}>{label}</span>
       <div
-        className="flex h-8 items-center rounded border border-white/10 bg-white/5 pr-0.5"
+        className={proposalToolbarBubbleFieldShellClasses(appearance)}
         onPointerDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -722,7 +734,11 @@ function TypographyNumericField({
             const n = Number(e.target.value);
             if (Number.isFinite(n)) onChange(clamp(n));
           }}
-          className={TYPOGRAPHY_NUMERIC_INPUT_CLASS}
+          className={cn(
+            proposalToolbarBubbleInlineInputClasses(appearance),
+            "[appearance:textfield] [-moz-appearance:textfield]",
+            "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          )}
           aria-label={label}
         />
         <span className="flex shrink-0 flex-col">
@@ -731,7 +747,7 @@ function TypographyNumericField({
             onPointerDown={(e) => e.preventDefault()}
             onClick={() => onChange(clamp(value + step))}
             aria-label={`Increase ${label}`}
-            className="rounded p-0.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+            className={proposalToolbarBubbleStepperButtonClasses(appearance)}
           >
             <ChevronUp className="h-3 w-3" />
           </button>
@@ -740,7 +756,7 @@ function TypographyNumericField({
             onPointerDown={(e) => e.preventDefault()}
             onClick={() => onChange(clamp(value - step))}
             aria-label={`Decrease ${label}`}
-            className="rounded p-0.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+            className={proposalToolbarBubbleStepperButtonClasses(appearance)}
           >
             <ChevronDown className="h-3 w-3" />
           </button>
@@ -750,9 +766,8 @@ function TypographyNumericField({
   );
 }
 
-const TYPOGRAPHY_MORE_MENU_WIDTH_PX = 216;
-
 function TypographyMoreMenu({ editor }: { editor: Editor }) {
+  const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -794,16 +809,16 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
         ref={panelRef}
         role="menu"
         style={panelStyle}
-        className={cn(BUBBLE_MENU_PANEL_SURFACE_CLASS, "min-w-[13.5rem] space-y-2.5 p-2")}
+        className={cn(proposalToolbarBubblePanelClasses(appearance), "min-w-[13.5rem] space-y-2.5 p-2")}
         onPointerDown={(e) => e.stopPropagation()}
       >
           <div className="space-y-1">
-            <span className="block text-xs text-zinc-400">Font</span>
+            <span className={cn("block text-xs", proposalToolbarHintClasses(appearance))}>Font</span>
             <FontFamilyPicker editor={editor} layout="menu" />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="proposal-rich-font-weight" className="block text-xs text-zinc-400">
+            <label htmlFor="proposal-rich-font-weight" className={cn("block text-xs", proposalToolbarHintClasses(appearance))}>
               Font weight
             </label>
             <select
@@ -813,11 +828,11 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
                 const v = e.target.value;
                 editor.chain().focus().setFontWeight(v || null).run();
               }}
-              className="h-8 w-full rounded border border-white/10 bg-white/5 px-2 text-sm text-zinc-100 outline-none focus:bg-white/10"
+              className={proposalToolbarBubbleSelectClasses(appearance)}
               onMouseDown={(e) => e.stopPropagation()}
             >
               {PROPOSAL_FONT_WEIGHT_OPTIONS.map((opt) => (
-                <option key={opt.label} value={opt.value} className="bg-zinc-900 text-zinc-100">
+                <option key={opt.label} value={opt.value}>
                   {opt.label}
                 </option>
               ))}
@@ -845,14 +860,24 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
                 }
               />
               <div className="space-y-1">
-                <span className="block text-xs text-zinc-400">Letter case</span>
-                <div className="flex h-8 overflow-hidden rounded border border-white/10">
+                <span className={cn("block text-xs", proposalToolbarHintClasses(appearance))}>Letter case</span>
+                <div
+                  className={cn(
+                    "flex h-8 overflow-hidden rounded border",
+                    appearance === "elevated" ? "border-white/10" : "border-border",
+                  )}
+                >
                   <button
                     type="button"
                     aria-pressed={letterCase !== "uppercase"}
                     className={cn(
-                      "flex-1 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10",
-                      letterCase !== "uppercase" && "bg-white/15 text-white",
+                      "flex-1 text-sm font-medium transition-colors",
+                      proposalToolbarMenuItemClasses(appearance),
+                      proposalToolbarMenuItemHoverClasses(appearance),
+                      letterCase !== "uppercase" &&
+                        (appearance === "elevated"
+                          ? "bg-white/15 text-white"
+                          : "bg-muted text-foreground"),
                     )}
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => editor.chain().focus().setBlockLetterCase("none").run()}
@@ -863,8 +888,14 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
                     type="button"
                     aria-pressed={letterCase === "uppercase"}
                     className={cn(
-                      "flex-1 border-l border-white/10 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10",
-                      letterCase === "uppercase" && "bg-white/15 text-white",
+                      "flex-1 border-l text-sm font-medium transition-colors",
+                      appearance === "elevated" ? "border-white/10" : "border-border",
+                      proposalToolbarMenuItemClasses(appearance),
+                      proposalToolbarMenuItemHoverClasses(appearance),
+                      letterCase === "uppercase" &&
+                        (appearance === "elevated"
+                          ? "bg-white/15 text-white"
+                          : "bg-muted text-foreground"),
                     )}
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => editor.chain().focus().setBlockLetterCase("uppercase").run()}
@@ -891,7 +922,7 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
               />
             </>
           ) : (
-            <p className="px-1 text-xs leading-snug text-zinc-500">
+            <p className={cn("px-1 text-xs leading-snug", proposalToolbarHintClasses(appearance))}>
               Place the cursor in a paragraph or heading to adjust spacing.
             </p>
           )}
@@ -909,10 +940,7 @@ function TypographyMoreMenu({ editor }: { editor: Editor }) {
         aria-label="More typography options"
         aria-expanded={open}
         aria-haspopup="menu"
-        className={cn(
-          "inline-flex h-7 w-7 items-center justify-center rounded text-zinc-300 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:bg-white/10",
-          open && "bg-white/15 text-white",
-        )}
+        className={proposalToolbarBubbleSmallIconButtonClasses(appearance, open)}
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
@@ -1018,6 +1046,7 @@ export function ProposalRichText({
   showBubbleWhenBlockSelected = false,
 }: ProposalRichTextProps) {
   const sectionChrome = useProposalSectionEditorChrome();
+  const toolbarAppearance = useProposalSectionEditorAppearance();
   const seamless = sectionChrome?.seamless ?? false;
   const elevatedSection = sectionChrome?.appearance === "elevated";
   const headerVariant = variant === "header";
@@ -1169,7 +1198,7 @@ export function ProposalRichText({
         <div
           className={cn(
             "flex items-center gap-0.5 rounded-lg border p-1",
-            proposalToolbarShellClasses("elevated"),
+            proposalToolbarShellClasses(toolbarAppearance),
           )}
         >
           <HeadingPicker editor={editor} />

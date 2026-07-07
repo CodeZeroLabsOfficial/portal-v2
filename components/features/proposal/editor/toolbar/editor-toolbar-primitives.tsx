@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
+import type { DraggableAttributes } from "@dnd-kit/core";
+import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import { GripVertical } from "lucide-react";
 
+import { useResolvedProposalToolbarAppearance } from "@/components/proposal/proposal-section-editor-chrome";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,11 +25,12 @@ export interface ProposalToolbarShellProps extends React.ComponentProps<"div"> {
 }
 
 export function ProposalToolbarShell({
-  appearance = "surface",
+  appearance: appearanceProp,
   className,
   children,
   ...props
 }: ProposalToolbarShellProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   return (
     <div
       className={cn(
@@ -48,7 +53,7 @@ export interface ProposalToolbarIconButtonProps extends ButtonProps {
 }
 
 export function ProposalToolbarIconButton({
-  appearance = "surface",
+  appearance: appearanceProp,
   active,
   tooltip,
   tooltipShortcut,
@@ -56,6 +61,7 @@ export function ProposalToolbarIconButton({
   children,
   ...props
 }: ProposalToolbarIconButtonProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   const button = (
     <Button
       type="button"
@@ -90,10 +96,11 @@ export interface ProposalToolbarSectionLabelProps {
 }
 
 export function ProposalToolbarSectionLabel({
-  appearance = "surface",
+  appearance: appearanceProp,
   className,
   children,
 }: ProposalToolbarSectionLabelProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   return (
     <p className={cn(proposalToolbarSectionLabelClasses(appearance), "px-1", className)}>
       {children}
@@ -102,12 +109,13 @@ export function ProposalToolbarSectionLabel({
 }
 
 export function ProposalToolbarSeparator({
-  appearance = "surface",
+  appearance: appearanceProp,
   className,
 }: {
   appearance?: ProposalToolbarAppearance;
   className?: string;
 }) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   return (
     <Separator
       orientation="vertical"
@@ -125,11 +133,12 @@ export interface ProposalToolbarMenuItemProps extends React.ComponentProps<"butt
 }
 
 export function ProposalToolbarMenuItem({
-  appearance = "surface",
+  appearance: appearanceProp,
   className,
   children,
   ...props
 }: ProposalToolbarMenuItemProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   return (
     <button
       type="button"
@@ -143,5 +152,38 @@ export function ProposalToolbarMenuItem({
     >
       {children}
     </button>
+  );
+}
+
+export interface ProposalToolbarDragHandleProps {
+  ariaLabel: string;
+  tooltip: string;
+  dragAttributes: DraggableAttributes;
+  dragListeners: SyntheticListenerMap | undefined;
+}
+
+/** Sortable drag affordance for block toolbars — matches section-band toolbar appearance. */
+export function ProposalToolbarDragHandle({
+  ariaLabel,
+  tooltip,
+  dragAttributes,
+  dragListeners,
+}: ProposalToolbarDragHandleProps) {
+  return (
+    <Tooltip delayDuration={320}>
+      <TooltipTrigger asChild>
+        <ProposalToolbarIconButton
+          className="touch-none"
+          aria-label={ariaLabel}
+          {...dragAttributes}
+          {...dragListeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </ProposalToolbarIconButton>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
   );
 }

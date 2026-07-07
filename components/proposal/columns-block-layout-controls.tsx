@@ -5,6 +5,7 @@ import {
   AlignVerticalJustifyCenter,
   Check,
   LayoutGrid,
+  Pencil,
   SlidersHorizontal,
 } from "lucide-react";
 import {
@@ -14,7 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useProposalSectionEditorAppearance } from "@/components/proposal/proposal-section-editor-chrome";
 import { cn } from "@/lib/utils";
+import {
+  proposalToolbarAuxTextButtonClasses,
+  proposalToolbarLayoutControlsGroupDividerClasses,
+} from "@/lib/proposal/editor-toolbar-tokens";
 import {
   ColumnLayoutCount,
   coerceColumnFlex,
@@ -51,9 +57,6 @@ const ALIGN_OPTIONS: { value: ColumnsBlockRowAlign; label: string }[] = [
   { value: "stretch", label: "Fill" },
 ];
 
-const triggerBtnClass =
-  "inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-transparent px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-background hover:text-foreground";
-
 function ColumnBarsMini({ count, className }: { count: ColumnLayoutCount; className?: string }) {
   return (
     <span className={cn("flex h-3.5 items-end gap-0.5", className)} aria-hidden>
@@ -75,6 +78,9 @@ export function ColumnsBlockLayoutControls({
   block: ColumnsBlock;
   onPatch: (patch: ColumnsBlockLayoutPatch) => void;
 }) {
+  const appearance = useProposalSectionEditorAppearance();
+  const triggerBtnClass = proposalToolbarAuxTextButtonClasses(appearance, { compact: true });
+  const groupDividerClass = proposalToolbarLayoutControlsGroupDividerClasses(appearance);
   const gap = block.columnGap ?? "normal";
   const align = block.rowAlign ?? "stretch";
   const inset = block.insetPaddingPx;
@@ -85,7 +91,7 @@ export function ColumnsBlockLayoutControls({
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-      <div className="flex shrink-0 items-center gap-0.5 border-border/60 sm:border-r sm:pr-2">
+      <div className={cn("flex shrink-0 items-center gap-0.5 sm:border-r sm:pr-2", groupDividerClass)}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className={triggerBtnClass} aria-label="Number of columns">
@@ -206,5 +212,55 @@ export function ColumnsBlockLayoutControls({
         </DropdownMenu>
       </div>
     </div>
+  );
+}
+
+/** Edit / Done + layout controls for a columns block toolbar primary slot. */
+export function ColumnsBlockToolbarPrimarySlot({
+  block,
+  editing,
+  onStartEdit,
+  onEndEdit,
+  onPatch,
+}: {
+  block: ColumnsBlock;
+  editing: boolean;
+  onStartEdit: () => void;
+  onEndEdit: () => void;
+  onPatch: (patch: ColumnsBlockLayoutPatch) => void;
+}) {
+  const appearance = useProposalSectionEditorAppearance();
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onStartEdit();
+        }}
+        className={proposalToolbarAuxTextButtonClasses(appearance)}
+      >
+        <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+        Edit columns
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEndEdit();
+        }}
+        className={proposalToolbarAuxTextButtonClasses(appearance)}
+      >
+        <Check className="h-4 w-4 shrink-0" aria-hidden />
+        Done
+      </button>
+      <ColumnsBlockLayoutControls block={block} onPatch={onPatch} />
+    </>
   );
 }

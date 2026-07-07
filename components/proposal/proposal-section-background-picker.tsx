@@ -30,6 +30,7 @@ import {
 import { useProposalMediaLibraryOptional } from "@/components/proposal/proposal-media-library";
 import { SectionBackgroundTintPopover } from "@/components/proposal/proposal-background-tint-popover";
 import { youtubeThumbnailFromPageUrl } from "@/components/proposal/embed-video";
+import { useResolvedProposalToolbarAppearance } from "@/components/proposal/proposal-section-editor-chrome";
 
 export interface ProposalSectionBackgroundPickerProps {
   background?: SectionBackground;
@@ -40,8 +41,9 @@ export interface ProposalSectionBackgroundPickerProps {
 export function ProposalSectionBackgroundPicker({
   background,
   onChange,
-  appearance = "surface",
+  appearance: appearanceProp,
 }: ProposalSectionBackgroundPickerProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   const mediaLibrary = useProposalMediaLibraryOptional();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const model = mergeSectionBackground(background, {});

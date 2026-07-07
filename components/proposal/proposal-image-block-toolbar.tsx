@@ -44,7 +44,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { isProposalImagePlaceholderUrl, PROPOSAL_IMAGE_BLOCK_PLACEHOLDER_URL } from "@/components/proposal/proposal-image-block-editor";
 
-/** Matches {@link ProposalBlockToolbar} `appearance="surface"` chrome. */
+/** Matches {@link ProposalBlockToolbar} shell chrome for the current section band. */
 const barShellClassName =
   "max-w-[calc(100vw-3rem)] shrink-0 flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
@@ -169,7 +169,6 @@ export function ProposalImageBlockToolbar({
       />
 
       <ProposalToolbarShell
-        appearance="surface"
         className={cn("p-1", barShellClassName)}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -177,7 +176,6 @@ export function ProposalImageBlockToolbar({
         <Popover open={linkOpen} onOpenChange={setLinkOpen}>
           <PopoverTrigger asChild>
             <ProposalToolbarIconButton
-              appearance="surface"
               active={Boolean(block.href?.trim())}
               aria-label="Image link"
               title="Link"
@@ -212,7 +210,6 @@ export function ProposalImageBlockToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <ProposalToolbarIconButton
-              appearance="surface"
               aria-label="Replace image"
               title="Replace image"
               disabled={uploading}
@@ -267,14 +264,13 @@ export function ProposalImageBlockToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <ProposalToolbarIconButton appearance="surface" title="Crop (coming soon)" aria-label="Crop (coming soon)" disabled>
+        <ProposalToolbarIconButton title="Crop (coming soon)" aria-label="Crop (coming soon)" disabled>
           <Crop className="h-4 w-4" />
         </ProposalToolbarIconButton>
 
         <Popover open={altOpen} onOpenChange={setAltOpen}>
           <PopoverTrigger asChild>
             <ProposalToolbarIconButton
-              appearance="surface"
               active={Boolean(block.alt?.trim() || block.caption?.trim())}
               aria-label="Alt text and caption"
               title="Alt text and caption"
@@ -310,7 +306,6 @@ export function ProposalImageBlockToolbar({
         </Popover>
 
         <ProposalToolbarIconButton
-          appearance="surface"
           active={align === "left"}
           aria-label="Align left"
           title="Align left"
@@ -319,7 +314,6 @@ export function ProposalImageBlockToolbar({
           <AlignLeft className="h-4 w-4" />
         </ProposalToolbarIconButton>
         <ProposalToolbarIconButton
-          appearance="surface"
           active={align === "center"}
           aria-label="Align center"
           title="Align center"
@@ -328,7 +322,6 @@ export function ProposalImageBlockToolbar({
           <AlignCenter className="h-4 w-4" />
         </ProposalToolbarIconButton>
         <ProposalToolbarIconButton
-          appearance="surface"
           active={align === "right"}
           aria-label="Align right"
           title="Align right"
@@ -339,9 +332,8 @@ export function ProposalImageBlockToolbar({
 
         {onDelete ? (
           <>
-            <ProposalToolbarSeparator appearance="surface" />
+            <ProposalToolbarSeparator />
             <ProposalToolbarIconButton
-              appearance="surface"
               aria-label="Delete block"
               title="Delete block"
               className="text-destructive hover:bg-red-500/15 hover:text-destructive"

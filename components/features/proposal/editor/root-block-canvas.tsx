@@ -15,7 +15,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Check, GripVertical, Pencil } from "lucide-react";
 
 import {
   AgreementToolbarAgreementAux,
@@ -25,17 +24,13 @@ import {
 } from "@/components/features/proposal/editor/proposal-block-fields";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
+import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
 import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
+import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
 import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
 import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
 import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposal/proposal-splash-editor";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { packagesAddonsSectionActive } from "@/lib/proposal/commerce/packages-totals";
 import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
@@ -162,22 +157,12 @@ export function RootBlockCanvas({
                         }
                         toolbar={({ dragAttributes, dragListeners }) => {
                           const dragHandle = (
-                            <Tooltip delayDuration={320}>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="touch-none inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                                  aria-label={`Reorder ${blockLabel(block.type)}`}
-                                  {...dragAttributes}
-                                  {...dragListeners}
-                                >
-                                  <GripVertical className="h-4 w-4" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="text-xs">
-                                Drag to reposition · arrows nudge precisely
-                              </TooltipContent>
-                            </Tooltip>
+                            <ProposalToolbarDragHandle
+                              ariaLabel={`Reorder ${blockLabel(block.type)}`}
+                              tooltip="Drag to reposition · arrows nudge precisely"
+                              dragAttributes={dragAttributes}
+                              dragListeners={dragListeners}
+                            />
                           );
                           const compactColumnsChrome = block.type === "columns";
                           if (block.type === "image") {
@@ -196,7 +181,6 @@ export function RootBlockCanvas({
                           }
                           return (
                             <ProposalBlockToolbar
-                              appearance="elevated"
                               blockType={
                                 block.type === "pricing"
                                   ? "pricing"
@@ -218,40 +202,16 @@ export function RootBlockCanvas({
                               compactChrome={compactColumnsChrome}
                               compactPrimarySlot={
                                 compactColumnsChrome ? (
-                                  rootColumnsLayoutEditingId === block.id ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setRootColumnsLayoutEditingId(null);
-                                        }}
-                                        className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-500/15 dark:text-teal-400 dark:hover:bg-teal-500/10"
-                                      >
-                                        <Check className="h-4 w-4 shrink-0" aria-hidden />
-                                        Done
-                                      </button>
-                                      <ColumnsBlockLayoutControls
-                                        block={block as ColumnsBlock}
-                                        onPatch={(patch) => {
-                                          if (block.type !== "columns") return;
-                                          updateBlock(block.id, { ...block, ...patch });
-                                        }}
-                                      />
-                                    </>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setRootColumnsLayoutEditingId(block.id);
-                                      }}
-                                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                                    >
-                                      <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                                      Edit columns
-                                    </button>
-                                  )
+                                  <ColumnsBlockToolbarPrimarySlot
+                                    block={block as ColumnsBlock}
+                                    editing={rootColumnsLayoutEditingId === block.id}
+                                    onStartEdit={() => setRootColumnsLayoutEditingId(block.id)}
+                                    onEndEdit={() => setRootColumnsLayoutEditingId(null)}
+                                    onPatch={(patch) => {
+                                      if (block.type !== "columns") return;
+                                      updateBlock(block.id, { ...block, ...patch });
+                                    }}
+                                  />
                                 ) : undefined
                               }
                               overflowLeadingAction={
@@ -282,19 +242,16 @@ export function RootBlockCanvas({
                               backdropPickerSlot={
                                 block.type === "section" ? (
                                   <ProposalSectionBackgroundPicker
-                                    appearance="elevated"
                                     background={block.background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />
                                 ) : block.type === "packages" ? (
                                   <ProposalSectionBackgroundPicker
-                                    appearance="elevated"
                                     background={(block as PackagesBlock).background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />
                                 ) : block.type === "agreement" ? (
                                   <ProposalSectionBackgroundPicker
-                                    appearance="elevated"
                                     background={(block as AgreementBlock).background}
                                     onChange={(next) => patchBlockBackground(block.id, next)}
                                   />

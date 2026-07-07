@@ -1,4 +1,5 @@
 export {
+  ProposalToolbarDragHandle,
   ProposalToolbarIconButton,
   ProposalToolbarMenuItem,
   ProposalToolbarSectionLabel,
@@ -6,6 +7,7 @@ export {
   ProposalToolbarShell,
 } from "./editor-toolbar-primitives";
 export type {
+  ProposalToolbarDragHandleProps,
   ProposalToolbarIconButtonProps,
   ProposalToolbarMenuItemProps,
   ProposalToolbarSectionLabelProps,

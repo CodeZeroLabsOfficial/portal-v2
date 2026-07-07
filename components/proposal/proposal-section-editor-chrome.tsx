@@ -19,3 +19,11 @@ export function useProposalSectionEditorChrome() {
 export function useProposalSectionEditorAppearance(): ProposalToolbarAppearance {
   return useProposalSectionEditorChrome()?.appearance ?? "surface";
 }
+
+/** Prefer an explicit toolbar appearance; otherwise match the enclosing section band. */
+export function useResolvedProposalToolbarAppearance(
+  appearanceProp?: ProposalToolbarAppearance,
+): ProposalToolbarAppearance {
+  const sectionAppearance = useProposalSectionEditorAppearance();
+  return appearanceProp ?? sectionAppearance;
+}

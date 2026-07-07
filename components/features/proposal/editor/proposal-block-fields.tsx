@@ -94,7 +94,8 @@ import {
   useSectionChildFloatingGutterOptional,
 } from "@/components/proposal/section-child-floating-gutter";
 import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import { ColumnsBlockLayoutControls } from "@/components/proposal/columns-block-layout-controls";
+import { ProposalToolbarDragHandle, ProposalToolbarIconButton } from "@/components/features/proposal/editor/toolbar";
+import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
 import {
   isRegistryCanvasBlock,
   ProposalBlockCanvas,
@@ -143,8 +144,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES } from "@/lib/proposal/editor-glass";
 import {
-  proposalSectionInCanvasControlClasses,
-  proposalToolbarAuxIconButtonClasses,
+  proposalEditorCanvasChipClasses,
   proposalToolbarAuxTextButtonClasses,
 } from "@/lib/proposal/editor-toolbar-tokens";
 import { cn } from "@/lib/utils";
@@ -885,6 +885,7 @@ export function ColumnsBlockFields({
   selectedCellIdRef.current = selectedCellId;
   const onInnerCellActiveRef = React.useRef(onInnerCellActiveChange);
   onInnerCellActiveRef.current = onInnerCellActiveChange;
+  const sectionAppearance = useProposalSectionEditorAppearance();
 
   const reportInnerCellActive = React.useCallback((cellId: string | null) => {
     onInnerCellActiveRef.current?.(cellId);
@@ -1059,7 +1060,7 @@ export function ColumnsBlockFields({
                   {mountColumnLeftRail ? (
                     <div
                       className={cn(
-                        "pointer-events-none absolute right-full top-1/2 z-20 -mr-1 flex -translate-y-1/2 flex-col items-center gap-2 sm:-mr-1.5",
+                        "pointer-events-none absolute left-0 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2",
                         "invisible opacity-0 transition-opacity duration-150",
                         "group-hover/colcell:visible group-hover/colcell:opacity-100",
                         "group-focus-within/colcell:visible group-focus-within/colcell:opacity-100",
@@ -1091,7 +1092,10 @@ export function ColumnsBlockFields({
                           trigger={
                             <button
                               type="button"
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/80 bg-muted/50 text-muted-foreground shadow-sm transition-colors hover:border-sky-500/50 hover:bg-background hover:text-foreground data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground"
+                              className={proposalEditorCanvasChipClasses(sectionAppearance, {
+                                size: "md",
+                                shape: "circle",
+                              })}
                               aria-label="Add content"
                               title={`Add block to column ${i + 1}`}
                             >
@@ -1337,22 +1341,12 @@ export function SectionBlockFields({
                   }
                   toolbar={({ dragAttributes, dragListeners }) => {
                     const dragHandle = (
-                      <Tooltip delayDuration={320}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="touch-none inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                            aria-label={`Reorder ${blockLabel(child.type)}`}
-                            {...dragAttributes}
-                            {...dragListeners}
-                          >
-                            <GripVertical className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">
-                          Drag to move · arrows nudge precisely
-                        </TooltipContent>
-                      </Tooltip>
+                      <ProposalToolbarDragHandle
+                        ariaLabel={`Reorder ${blockLabel(child.type)}`}
+                        tooltip="Drag to move · arrows nudge precisely"
+                        dragAttributes={dragAttributes}
+                        dragListeners={dragListeners}
+                      />
                     );
                     const compactColumnsChrome = child.type === "columns";
                     if (child.type === "image") {
@@ -1368,7 +1362,6 @@ export function SectionBlockFields({
                     }
                     return (
                       <ProposalBlockToolbar
-                        appearance="elevated"
                         blockType={
                           child.type === "pricing"
                             ? "pricing"
@@ -1388,40 +1381,16 @@ export function SectionBlockFields({
                         compactChrome={compactColumnsChrome}
                         compactPrimarySlot={
                           compactColumnsChrome ? (
-                            columnsLayoutEditingId === child.id ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setColumnsLayoutEditingId(null);
-                                  }}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-500/15 dark:text-teal-400 dark:hover:bg-teal-500/10"
-                                >
-                                  <Check className="h-4 w-4 shrink-0" aria-hidden />
-                                  Done
-                                </button>
-                                <ColumnsBlockLayoutControls
-                                  block={child as ColumnsBlock}
-                                  onPatch={(patch) => {
-                                    if (child.type !== "columns") return;
-                                    updateChild(child.id, { ...child, ...patch } as ProposalContentBlock);
-                                  }}
-                                />
-                              </>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setColumnsLayoutEditingId(child.id);
-                                }}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                              >
-                                <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                                Edit columns
-                              </button>
-                            )
+                            <ColumnsBlockToolbarPrimarySlot
+                              block={child as ColumnsBlock}
+                              editing={columnsLayoutEditingId === child.id}
+                              onStartEdit={() => setColumnsLayoutEditingId(child.id)}
+                              onEndEdit={() => setColumnsLayoutEditingId(null)}
+                              onPatch={(patch) => {
+                                if (child.type !== "columns") return;
+                                updateChild(child.id, { ...child, ...patch } as ProposalContentBlock);
+                              }}
+                            />
                           ) : undefined
                         }
                         // Inner blocks now mirror the section toolbar: drag handle leads,
@@ -1441,27 +1410,15 @@ export function SectionBlockFields({
                           const packagesSlot =
                             child.type === "packages" &&
                             packagesAddonsSectionActive(child as PackagesBlock) ? (
-                              <Tooltip delayDuration={320}>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                                    onClick={() => {
-                                      const p = child as PackagesBlock;
-                                      updateChild(child.id, {
-                                        ...p,
-                                        addonsSectionEnabled: false,
-                                      } as ProposalContentBlock);
-                                    }}
-                                    aria-label="Remove add-ons table"
-                                  >
-                                    Remove add-ons
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom" className="text-xs">
-                                  Remove the add-ons sub-table from this Packages block
-                                </TooltipContent>
-                              </Tooltip>
+                              <PackagesRemoveAddonsButton
+                                onClick={() => {
+                                  const p = child as PackagesBlock;
+                                  updateChild(child.id, {
+                                    ...p,
+                                    addonsSectionEnabled: false,
+                                  } as ProposalContentBlock);
+                                }}
+                              />
                             ) : null;
                           if (!agreementMenu && !packagesSlot) return undefined;
                           return (
@@ -1485,7 +1442,6 @@ export function SectionBlockFields({
                             />
                           ) : child.type === "packages" ? (
                             <ProposalSectionBackgroundPicker
-                              appearance="elevated"
                               background={(child as PackagesBlock).background}
                               onChange={(next) => {
                                 const p = child as PackagesBlock;
@@ -1559,6 +1515,27 @@ function applyContractTemplatePickToAgreementBlock(block: AgreementBlock, pick: 
     legalHtml: snapshot.legalHtml.trim() ? snapshot.legalHtml : undefined,
   };
 }
+function PackagesRemoveAddonsButton({ onClick }: { onClick: () => void }) {
+  const appearance = useProposalSectionEditorAppearance();
+  return (
+    <Tooltip delayDuration={320}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className={proposalToolbarAuxTextButtonClasses(appearance, { compact: true })}
+          onClick={onClick}
+          aria-label="Remove add-ons table"
+        >
+          Remove add-ons
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        Remove the add-ons sub-table from this Packages block
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 function AgreementBubbleEditMenu({
   block,
   onApplyPick,
@@ -1566,6 +1543,7 @@ function AgreementBubbleEditMenu({
   block: AgreementBlock;
   onApplyPick: (next: AgreementBlock) => void;
 }) {
+  const appearance = useProposalSectionEditorAppearance();
   const contractTemplatePicker = useContractTemplatePickerOptional();
   if (!contractTemplatePicker) return null;
   return (
@@ -1573,7 +1551,7 @@ function AgreementBubbleEditMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={proposalToolbarAuxTextButtonClasses("elevated")}
+          className={proposalToolbarAuxTextButtonClasses(appearance)}
           onPointerDown={(e) => e.stopPropagation()}
         >
           <Pencil className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -1626,23 +1604,15 @@ function AgreementEsignatureSettingsPopover({
 
   return (
     <Popover>
-      <Tooltip delayDuration={320}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={proposalToolbarAuxIconButtonClasses("elevated")}
-              aria-label="E-signature and acceptance settings"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <FileSignature className="h-4 w-4 shrink-0" aria-hidden />
-            </button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="max-w-[14rem] text-xs">
-          E-signature & acceptance
-        </TooltipContent>
-      </Tooltip>
+      <PopoverTrigger asChild>
+        <ProposalToolbarIconButton
+          aria-label="E-signature and acceptance settings"
+          tooltip="E-signature & acceptance"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <FileSignature className="h-4 w-4 shrink-0" aria-hidden />
+        </ProposalToolbarIconButton>
+      </PopoverTrigger>
       <PopoverContent
         className="w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden p-0"
         align="start"
@@ -1967,7 +1937,7 @@ function AgreementSignButtonPreview({
               type="button"
               className={cn(
                 "absolute -right-1.5 -top-1.5",
-                proposalSectionInCanvasControlClasses(sectionAppearance, "circle"),
+                proposalEditorCanvasChipClasses(sectionAppearance, { size: "sm", shape: "circle" }),
               )}
               aria-label="Edit sign button"
             >
@@ -2279,22 +2249,12 @@ export function AgreementBlockFields({
                   }
                   toolbar={({ dragAttributes, dragListeners }) => {
                     const dragHandle = (
-                      <Tooltip delayDuration={320}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="touch-none inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                            aria-label={`Reorder ${blockLabel(child.type)}`}
-                            {...dragAttributes}
-                            {...dragListeners}
-                          >
-                            <GripVertical className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">
-                          Drag to move · arrows nudge precisely
-                        </TooltipContent>
-                      </Tooltip>
+                      <ProposalToolbarDragHandle
+                        ariaLabel={`Reorder ${blockLabel(child.type)}`}
+                        tooltip="Drag to move · arrows nudge precisely"
+                        dragAttributes={dragAttributes}
+                        dragListeners={dragListeners}
+                      />
                     );
                     const compactColumnsChrome = child.type === "columns";
                     if (child.type === "image") {
@@ -2310,7 +2270,6 @@ export function AgreementBlockFields({
                     }
                     return (
                       <ProposalBlockToolbar
-                        appearance="elevated"
                         blockType={
                           child.type === "pricing"
                             ? "pricing"
@@ -2328,40 +2287,16 @@ export function AgreementBlockFields({
                         compactChrome={compactColumnsChrome}
                         compactPrimarySlot={
                           compactColumnsChrome ? (
-                            columnsLayoutEditingId === child.id ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setColumnsLayoutEditingId(null);
-                                  }}
-                                  className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-500/15 dark:text-teal-400 dark:hover:bg-teal-500/10"
-                                >
-                                  <Check className="h-4 w-4 shrink-0" aria-hidden />
-                                  Done
-                                </button>
-                                <ColumnsBlockLayoutControls
-                                  block={child as ColumnsBlock}
-                                  onPatch={(patch) => {
-                                    if (child.type !== "columns") return;
-                                    updateChild(child.id, { ...child, ...patch } as ProposalAgreementChildBlock);
-                                  }}
-                                />
-                              </>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setColumnsLayoutEditingId(child.id);
-                                }}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                              >
-                                <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-                                Edit columns
-                              </button>
-                            )
+                            <ColumnsBlockToolbarPrimarySlot
+                              block={child as ColumnsBlock}
+                              editing={columnsLayoutEditingId === child.id}
+                              onStartEdit={() => setColumnsLayoutEditingId(child.id)}
+                              onEndEdit={() => setColumnsLayoutEditingId(null)}
+                              onPatch={(patch) => {
+                                if (child.type !== "columns") return;
+                                updateChild(child.id, { ...child, ...patch } as ProposalAgreementChildBlock);
+                              }}
+                            />
                           ) : undefined
                         }
                         showOverflowMenu={false}
@@ -2369,27 +2304,15 @@ export function AgreementBlockFields({
                           const packagesSlot =
                             child.type === "packages" &&
                             packagesAddonsSectionActive(child as PackagesBlock) ? (
-                              <Tooltip delayDuration={320}>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                                    onClick={() => {
-                                      const p = child as PackagesBlock;
-                                      updateChild(child.id, {
-                                        ...p,
-                                        addonsSectionEnabled: false,
-                                      } as ProposalAgreementChildBlock);
-                                    }}
-                                    aria-label="Remove add-ons table"
-                                  >
-                                    Remove add-ons
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom" className="text-xs">
-                                  Remove the add-ons sub-table from this Packages block
-                                </TooltipContent>
-                              </Tooltip>
+                              <PackagesRemoveAddonsButton
+                                onClick={() => {
+                                  const p = child as PackagesBlock;
+                                  updateChild(child.id, {
+                                    ...p,
+                                    addonsSectionEnabled: false,
+                                  } as ProposalAgreementChildBlock);
+                                }}
+                              />
                             ) : null;
                           return packagesSlot ?? undefined;
                         })()}
@@ -2407,7 +2330,6 @@ export function AgreementBlockFields({
                             />
                           ) : child.type === "packages" ? (
                             <ProposalSectionBackgroundPicker
-                              appearance="elevated"
                               background={(child as PackagesBlock).background}
                               onChange={(next) => {
                                 const p = child as PackagesBlock;

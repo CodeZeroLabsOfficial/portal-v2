@@ -30,6 +30,7 @@ import {
   ProposalToolbarSeparator,
   ProposalToolbarShell,
 } from "@/components/features/proposal/editor/toolbar";
+import { useResolvedProposalToolbarAppearance } from "@/components/proposal/proposal-section-editor-chrome";
 import {
   type ProposalToolbarAppearance,
   PROPOSAL_TOOLBAR_TOKENS,
@@ -78,7 +79,7 @@ export interface ProposalBlockToolbarProps {
 }
 
 export function ProposalBlockToolbar({
-  appearance = "surface",
+  appearance: appearanceProp,
   blockType,
   deleteLabel = "Delete block",
   canMoveUp,
@@ -100,6 +101,7 @@ export function ProposalBlockToolbar({
   compactChrome = false,
   compactPrimarySlot,
 }: ProposalBlockToolbarProps) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   const supportsStyle =
     (blockType === "packages" || blockType === "pricing" || blockType === "agreement") &&
     typeof onStyleChange === "function";
