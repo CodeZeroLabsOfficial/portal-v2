@@ -78,7 +78,7 @@ export function AdminDashboardActivityChart({
           <AreaChart
             data={chartData}
             accessibilityLayer
-            margin={{ top: 8, left: 0, right: 0, bottom: 0 }}
+            margin={{ top: 8, left: 4, right: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
@@ -88,9 +88,12 @@ export function AdminDashboardActivityChart({
             </defs>
             <CartesianGrid vertical={false} />
             <YAxis
-              hide
               domain={[0, (max: number) => Math.max(Math.ceil(max * 1.15), 1)]}
               allowDecimals={false}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              width={36}
             />
             <XAxis
               dataKey="label"
@@ -104,11 +107,7 @@ export function AdminDashboardActivityChart({
               content={
                 <ChartTooltipContent
                   indicator="dot"
-                  nameKey="activity"
-                  formatter={(value) => [
-                    `${value} ${Number(value) === 1 ? "update" : "updates"}`,
-                    active?.label ?? "Activity",
-                  ]}
+                  formatter={(value) => `${value} ${active?.label ?? "Activity"}`}
                 />
               }
             />

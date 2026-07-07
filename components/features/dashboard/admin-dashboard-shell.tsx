@@ -8,7 +8,7 @@ import { AdminDashboardAchievement } from "@/components/features/dashboard/admin
 import { AdminDashboardActivityChart } from "@/components/features/dashboard/admin-dashboard-activity-chart";
 import { AdminDashboardRecentTransactions } from "@/components/features/dashboard/admin-dashboard-recent-transactions";
 import { AdminDashboardReminders } from "@/components/features/dashboard/admin-dashboard-reminders";
-import { AdminDashboardReportsPlaceholder } from "@/components/features/dashboard/admin-dashboard-reports-placeholder";
+import { AdminDashboardSalesPlaceholder } from "@/components/features/dashboard/admin-dashboard-sales-placeholder";
 import { AdminDashboardSideMetrics } from "@/components/features/dashboard/admin-dashboard-side-metrics";
 import { AdminDashboardStatusChart } from "@/components/features/dashboard/admin-dashboard-status-chart";
 import { AdminDashboardSummaryCards } from "@/components/features/dashboard/admin-dashboard-summary-cards";
@@ -101,7 +101,7 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="z-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="activities" disabled>
             Activities
           </TabsTrigger>
@@ -130,8 +130,8 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
           <AdminDashboardRecentTransactions payments={data.payments} />
         </TabsContent>
 
-        <TabsContent value="reports">
-          <AdminDashboardReportsPlaceholder />
+        <TabsContent value="sales">
+          <AdminDashboardSalesPlaceholder />
         </TabsContent>
 
         <TabsContent value="activities">...</TabsContent>
