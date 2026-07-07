@@ -148,15 +148,16 @@ export function proposalEditorCanvasChipClasses(
 ): string {
   return cn(
     "inline-flex shrink-0 items-center justify-center border border-border/80 bg-background p-0 shadow-sm",
-    "text-muted-foreground transition-[color,background-color,box-shadow] duration-150 ease-out",
+    // Fixed dark icon on a light chip — do not use text-muted-foreground; dark sections remap that to white.
+    "text-zinc-600 transition-[color,background-color,box-shadow] duration-150 ease-out",
     options.size === "sm" ? "h-7 w-7" : "h-8 w-8",
     "rounded-full",
-    "hover:bg-muted hover:text-foreground",
+    "hover:bg-muted hover:text-zinc-900",
     "focus-visible:outline-none focus-visible:ring-2",
     appearance === "elevated"
       ? "focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
       : "focus-visible:ring-ring",
-    "data-[state=open]:bg-muted data-[state=open]:text-foreground",
+    "data-[state=open]:bg-muted data-[state=open]:text-zinc-900",
   );
 }
 
