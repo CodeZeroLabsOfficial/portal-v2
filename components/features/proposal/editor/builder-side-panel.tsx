@@ -4,22 +4,16 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-/** Aligns fixed panels with builder canvas `scroll-pt-12` / sticky top bar clearance. */
-export const BUILDER_SIDE_PANEL_TOP_CLASS = "top-12";
-
-/** Matches `BuilderPanel` header row (`pt-6` below sticky top bar). */
+/** Matches `BuilderPanel` header row (`pt-6` below sticky top bar) — reopen edge triggers. */
 export const BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS =
   "top-[calc(theme(spacing.12)+theme(spacing.6))]";
 
-/** Fixed panel width — 20% / 60% / 20% builder columns when both open. */
-export const BUILDER_SIDE_PANEL_WIDTH_CLASSES = "w-[20%]";
-
-/** Off-screen slide distance (must match width). */
-export const BUILDER_SIDE_PANEL_OFFSCREEN_LEFT_CLASS = "left-[calc(-20%)]";
-export const BUILDER_SIDE_PANEL_OFFSCREEN_RIGHT_CLASS = "right-[calc(-20%)]";
-
-const BUILDER_SIDE_PANEL_TRANSITION_CLASSES =
-  "duration-200 ease-linear motion-reduce:transition-none";
+/**
+ * Panel content width. MUST stay in sync with the open builder grid track in
+ * `builderDesktopGridColumns` (`20vw`): the content is pinned to the track's inner edge and
+ * clipped by the collapsing cell, so an exact match means no gap or overlap against the canvas.
+ */
+export const BUILDER_SIDE_PANEL_WIDTH_CLASSES = "w-[20vw]";
 
 export interface BuilderSidePanelProps {
   side: "left" | "right";
@@ -28,7 +22,11 @@ export interface BuilderSidePanelProps {
   children: React.ReactNode;
 }
 
-/** Fixed offcanvas side column — mirrors `Sidebar` gap + `left`/`right` slide transitions. */
+/**
+ * In-flow offcanvas side column. The parent grid animates this cell's track between `20vw` and
+ * `0px`, genuinely reflowing the canvas; `overflow-hidden` clips the fixed-width content so it
+ * slides off the viewport edge instead of overlaying (and covering) the canvas.
+ */
 export function BuilderSidePanel({ side, label, open, children }: BuilderSidePanelProps) {
   const isLeft = side === "left";
 
@@ -39,37 +37,15 @@ export function BuilderSidePanel({ side, label, open, children }: BuilderSidePan
       data-side={side}
       data-collapsible="offcanvas"
     >
-      <div
-        aria-hidden
-        className={cn(
-          "relative h-full bg-transparent",
-          BUILDER_SIDE_PANEL_TRANSITION_CLASSES,
-          open ? "w-full" : "w-0",
-        )}
-      />
+      {/* Pinned to the canvas-facing edge so the outer (viewport) edge clips first as the track collapses. */}
       <div
         className={cn(
-          "fixed bottom-0 z-30 flex flex-col bg-background transition-[left,right] ease-linear",
-          BUILDER_SIDE_PANEL_TRANSITION_CLASSES,
-          BUILDER_SIDE_PANEL_TOP_CLASS,
+          "bg-background absolute inset-y-0 flex flex-col",
           BUILDER_SIDE_PANEL_WIDTH_CLASSES,
+          isLeft ? "border-border right-0 border-r" : "border-border left-0 border-l",
           !open && "pointer-events-none",
-          isLeft
-            ? open
-              ? "left-0"
-              : BUILDER_SIDE_PANEL_OFFSCREEN_LEFT_CLASS
-            : open
-              ? "right-0"
-              : BUILDER_SIDE_PANEL_OFFSCREEN_RIGHT_CLASS,
         )}
       >
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 w-px bg-border",
-            isLeft ? "right-0" : "left-0",
-          )}
-        />
         <aside
           aria-label={label}
           aria-hidden={!open}
