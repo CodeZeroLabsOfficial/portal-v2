@@ -1,5 +1,16 @@
 import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
 import { Typography } from "@/components/ui/typography";
+import {
+  agreementLegalHtmlUsesSectionTags,
+  splitAgreementLegalHtml,
+} from "@/lib/agreement/split-legal-html";
+import {
+  AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_ATTR,
+  AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_CLASSES,
+  AGREEMENT_PRINT_LEGAL_BODY_ATTR,
+  AGREEMENT_PRINT_LEGAL_SECTIONS_ATTR,
+} from "@/lib/proposal/agreement/print-layout";
+import { cn } from "@/lib/utils";
 
 /** Placeholder body when the editor has not supplied custom legal text. */
 export const DEFAULT_AGREEMENT_LEGAL_SECTIONS: Array<{ heading: string; body: string }> = [
@@ -50,14 +61,43 @@ export interface AgreementLegalContentProps {
 }
 
 export function AgreementLegalContent({ legalHtml }: AgreementLegalContentProps) {
-  if (legalHtml?.trim()) {
-    return <ProposalRichTextHtml html={legalHtml} tone="muted" layout="body" />;
+  const customLegal = legalHtml?.trim();
+
+  if (customLegal) {
+    if (agreementLegalHtmlUsesSectionTags(customLegal)) {
+      return (
+        <div {...{ [AGREEMENT_PRINT_LEGAL_BODY_ATTR]: "" }}>
+          <ProposalRichTextHtml html={customLegal} tone="muted" layout="body" />
+        </div>
+      );
+    }
+
+    const { firstBlockHtml, remainderHtml } = splitAgreementLegalHtml(customLegal);
+
+    return (
+      <div {...{ [AGREEMENT_PRINT_LEGAL_BODY_ATTR]: "" }}>
+        <div
+          {...{ [AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_ATTR]: "" }}
+          className={AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_CLASSES}
+        >
+          <ProposalRichTextHtml html={firstBlockHtml} tone="muted" layout="body" />
+        </div>
+        {remainderHtml ? (
+          <ProposalRichTextHtml html={remainderHtml} tone="muted" layout="body" />
+        ) : null}
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
+    <div {...{ [AGREEMENT_PRINT_LEGAL_SECTIONS_ATTR]: "" }} className="space-y-8">
       {DEFAULT_AGREEMENT_LEGAL_SECTIONS.map((s, i) => (
-        <section key={s.heading} id={`agreement-section-${i}`} className="space-y-2">
+        <section
+          key={s.heading}
+          id={`agreement-section-${i}`}
+          className={cn("space-y-2", i === 0 && AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_CLASSES)}
+          {...(i === 0 ? { [AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_ATTR]: "" } : {})}
+        >
           <Typography variant="h3">{s.heading}</Typography>
           <Typography className="text-sm leading-relaxed text-muted-foreground">{s.body}</Typography>
         </section>

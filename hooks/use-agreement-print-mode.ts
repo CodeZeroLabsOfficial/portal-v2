@@ -41,12 +41,16 @@ export function printAgreementDocument(options?: { documentTitle?: string }) {
   }
   document.body.classList.add(AGREEMENT_PRINT_BODY_CLASS);
 
-  function restoreTitle() {
+  function cleanupAfterPrint() {
+    document.body.classList.remove(AGREEMENT_PRINT_BODY_CLASS);
     if (nextTitle) {
       document.title = previousTitle;
     }
-    window.removeEventListener("afterprint", restoreTitle);
+    window.removeEventListener("afterprint", cleanupAfterPrint);
   }
-  window.addEventListener("afterprint", restoreTitle);
-  window.print();
+
+  window.addEventListener("afterprint", cleanupAfterPrint);
+  requestAnimationFrame(() => {
+    window.print();
+  });
 }

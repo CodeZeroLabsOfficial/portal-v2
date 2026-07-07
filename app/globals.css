@@ -331,7 +331,12 @@
    * Only [data-agreement-print-target] (the scrollable document pane) is visible.
    */
   @media print {
-    body.agreement-print-mode .proposal-print-root {
+    body.agreement-print-mode {
+      overflow: visible !important;
+    }
+
+    body.agreement-print-mode .proposal-print-root,
+    body.agreement-print-mode [data-slot="dialog-overlay"] {
       display: none !important;
     }
 
@@ -339,9 +344,8 @@
       visibility: hidden;
     }
 
-    body.agreement-print-mode [role="dialog"]:has([data-agreement-print-target]),
-    body.agreement-print-mode [data-agreement-print-target],
-    body.agreement-print-mode [data-agreement-print-target] * {
+    body.agreement-print-mode [role="dialog"],
+    body.agreement-print-mode [role="dialog"] * {
       visibility: visible;
     }
 
@@ -352,15 +356,14 @@
     }
 
     body.agreement-print-mode [data-agreement-print-target] {
-      position: absolute;
-      left: 0;
-      top: 0;
+      position: static !important;
       width: 100%;
       max-width: none;
       height: auto !important;
       max-height: none !important;
       min-height: 0 !important;
       overflow: visible !important;
+      padding-top: 0 !important;
       padding-bottom: 0 !important;
     }
 
@@ -371,6 +374,7 @@
       width: 100% !important;
       max-width: none !important;
       height: auto !important;
+      min-height: 0 !important;
       max-height: none !important;
       margin: 0 !important;
       padding: 0 !important;
@@ -378,6 +382,31 @@
       border-radius: 0 !important;
       box-shadow: none !important;
       overflow: visible !important;
+    }
+
+    /* Page 1 — hero title only. */
+    body.agreement-print-mode [data-agreement-print-title-page] {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    /* Page 2 ends after the first legal block (section-tagged templates). */
+    body.agreement-print-mode
+      [data-agreement-legal-body]
+      .proposal-rich-text
+      > section:first-of-type {
+      break-after: page;
+      page-break-after: always;
+    }
+
+    /* Page 2 ends after the first legal block (heading split + default sections). */
+    body.agreement-print-mode [data-agreement-print-first-legal-block] {
+      break-after: page;
+      page-break-after: always;
     }
   }
 }

@@ -51,11 +51,19 @@ import {
   AGREEMENT_NAV_CHILD_LINK_CLASSES,
   AGREEMENT_NAV_LINK_CLASSES,
 } from "@/lib/proposal/agreement/chrome-typography";
+import {
+  AGREEMENT_PRINT_TITLE_PAGE_ATTR,
+  AGREEMENT_PRINT_TITLE_PAGE_CLASSES,
+} from "@/lib/proposal/agreement/print-layout";
+import {
+  AGREEMENT_PRINT_EXCLUDE_ATTR,
+  printAgreementDocument,
+  useAgreementPrintMode,
+} from "@/hooks/use-agreement-print-mode";
 import { isDocumentPackageSelectionComplete } from "@/lib/proposal/commerce/package-selection";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { printAgreementDocument, useAgreementPrintMode } from "@/hooks/use-agreement-print-mode";
 import { toast } from "sonner";
 
 export interface AgreementBlockPublicProps {
@@ -665,9 +673,16 @@ export function AgreementBlockPublic({
             >
               <div id="agreement-top" aria-hidden />
 
-              <AgreementDocumentTitle title={agreementTitle} />
+              <div
+                {...{ [AGREEMENT_PRINT_TITLE_PAGE_ATTR]: "" }}
+                className={AGREEMENT_PRINT_TITLE_PAGE_CLASSES}
+              >
+                <AgreementDocumentTitle title={agreementTitle} />
+              </div>
 
-              <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
+              <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
+                <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
+              </div>
 
               {packageSummaries.length > 0 ? (
                 <section
