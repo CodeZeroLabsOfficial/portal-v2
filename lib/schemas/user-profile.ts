@@ -18,6 +18,7 @@ export const updateUserProfileSchema = z.object({
   region: z.string().trim().max(120),
   postalCode: z.string().trim().max(32),
   country: z.string().trim().max(120),
+  photoURL: z.string().trim().max(2048).optional(),
 });
 
 export type UpdateUserProfileInput = z.infer<typeof updateUserProfileSchema>;

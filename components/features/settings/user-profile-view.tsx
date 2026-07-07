@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatAddressLines, websiteHref } from "@/lib/common/format";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatAddressLines, initialsFromName, websiteHref } from "@/lib/common/format";
 import type { PortalUser } from "@/types/user";
 
 function formatDob(iso: string | undefined): string {
@@ -28,6 +29,10 @@ export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
   const addressLines = formatAddressLines(user);
   const hasAddress = addressLines.length > 0;
   const dobLabel = formatDob(user.dateOfBirth);
+  const displayName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+    user.displayName?.trim() ||
+    user.email;
 
   return (
     <Card>
@@ -37,7 +42,17 @@ export function UserProfileView({ user, onEdit }: UserProfileViewProps) {
           <SettingsEditButton onClick={onEdit} ariaLabel="Edit profile details" />
         </CardAction>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col items-center gap-2 sm:items-start">
+          <Avatar className="border-background size-20 border-4">
+            {user.photoURL ? <AvatarImage src={user.photoURL} alt={displayName} /> : null}
+            <AvatarFallback className="text-lg font-semibold">
+              {initialsFromName(displayName)}
+            </AvatarFallback>
+          </Avatar>
+          {displayName ? <p className="text-sm font-medium">{displayName}</p> : null}
+        </div>
+
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">First name</dt>

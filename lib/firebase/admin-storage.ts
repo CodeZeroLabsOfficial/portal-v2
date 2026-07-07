@@ -94,6 +94,24 @@ export async function uploadBrandingFaviconAdmin(
 }
 
 /**
+ * Upload a staff profile photo via the Admin SDK.
+ * Returns a Firebase download URL with a storage token.
+ */
+export async function uploadUserProfilePhotoAdmin(
+  uid: string,
+  buffer: Buffer,
+  contentType: string,
+  originalName: string,
+): Promise<string> {
+  if (buffer.length > MAX_BRANDING_IMAGE_BYTES) {
+    throw new Error("Image must be 5 MB or smaller.");
+  }
+
+  const ext = originalName.split(".").pop()?.toLowerCase() || "jpg";
+  return savePublicStorageImage(`users/${uid}/profile-photo.${ext}`, buffer, contentType);
+}
+
+/**
  * Short-lived HTTPS URL for a private Storage object (e.g. signature PNG in staff document viewer).
  */
 export async function getStorageFileSignedReadUrl(

@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import {
+  ProfilePhotoUpload,
+  uploadProfilePhoto,
+} from "@/components/features/settings/profile-photo-upload";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentMediumClass,
@@ -42,7 +46,16 @@ function portalUserToFormDefaults(user: PortalUser): UpdateUserProfileInput {
   };
 }
 
-function mergeUserFromInput(current: PortalUser, v: UpdateUserProfileInput): PortalUser {
+function profileDisplayName(user: PortalUser): string {
+  const fromParts = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+  return fromParts || user.displayName?.trim() || user.email;
+}
+
+function mergeUserFromInput(
+  current: PortalUser,
+  v: UpdateUserProfileInput,
+  photoURL?: string,
+): PortalUser {
   const parts = [v.firstName.trim(), v.lastName.trim()].filter(Boolean);
   const displayName = parts.length > 0 ? parts.join(" ") : current.displayName;
   return {
@@ -59,6 +72,7 @@ function mergeUserFromInput(current: PortalUser, v: UpdateUserProfileInput): Por
     postalCode: v.postalCode.trim(),
     country: v.country.trim(),
     displayName,
+    ...(photoURL !== undefined ? { photoURL } : {}),
   };
 }
 
@@ -72,6 +86,8 @@ export interface ProfileEditSheetProps {
 export function ProfileEditSheet({ user, open, onOpenChange, onSaved }: ProfileEditSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
+  const [pendingPhoto, setPendingPhoto] = React.useState<File | null>(null);
+  const [photoUploadKey, setPhotoUploadKey] = React.useState(0);
 
   const form = useForm<UpdateUserProfileInput>({
     resolver: zodResolver(updateUserProfileSchema),
@@ -81,19 +97,37 @@ export function ProfileEditSheet({ user, open, onOpenChange, onSaved }: ProfileE
   React.useEffect(() => {
     if (open) {
       form.reset(portalUserToFormDefaults(user));
+      setPendingPhoto(null);
+      setPhotoUploadKey((k) => k + 1);
       setServerError(null);
     }
   }, [open, user, form]);
 
   async function onSubmit(values: UpdateUserProfileInput) {
     setServerError(null);
-    const result = await updateCurrentUserProfileAction(values);
+
+    let nextPhotoURL: string | undefined;
+    if (pendingPhoto) {
+      try {
+        nextPhotoURL = await uploadProfilePhoto(pendingPhoto);
+      } catch (err) {
+        setServerError(err instanceof Error ? err.message : "Could not upload profile photo.");
+        return;
+      }
+    }
+
+    const payload: UpdateUserProfileInput = {
+      ...values,
+      ...(nextPhotoURL !== undefined ? { photoURL: nextPhotoURL } : {}),
+    };
+
+    const result = await updateCurrentUserProfileAction(payload);
     if (!result.ok) {
       setServerError(result.message);
       return;
     }
     toast.success("Profile saved");
-    onSaved(mergeUserFromInput(user, values));
+    onSaved(mergeUserFromInput(user, values, nextPhotoURL ?? user.photoURL));
     onOpenChange(false);
     router.refresh();
   }
@@ -105,9 +139,16 @@ export function ProfileEditSheet({ user, open, onOpenChange, onSaved }: ProfileE
       <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Edit profile</SheetTitle>
-          <SheetDescription>Update your name, contact details, and address.</SheetDescription>
+          <SheetDescription>Update your photo, name, contact details, and address.</SheetDescription>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
+          <ProfilePhotoUpload
+            key={photoUploadKey}
+            photoURL={user.photoURL}
+            displayName={profileDisplayName(user)}
+            onFileChange={setPendingPhoto}
+          />
+
           <FormServerError message={serverError} />
 
           <div className="grid gap-4 sm:grid-cols-2">

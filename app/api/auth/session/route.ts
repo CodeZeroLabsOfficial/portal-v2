@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           .map((s) => (typeof s === "string" ? s.trim() : ""))
           .find(Boolean) ?? "",
       displayName: decoded.name ?? existing?.displayName ?? "",
-      photoURL: decoded.picture ?? existing?.photoURL ?? "",
+      photoURL: existing?.photoURL ?? decoded.picture ?? "",
       role,
       organizationId: existing?.organizationId ?? "",
       stripeCustomerId: existing?.stripeCustomerId ?? "",
