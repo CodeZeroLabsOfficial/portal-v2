@@ -237,7 +237,7 @@ function applyContractTemplatePickToAgreementBlock(
   };
 }
 
-export function PackagesRemoveAddonsButton({ onClick }: { onClick: () => void }) {
+function PackagesRemoveAddonsButton({ onClick }: { onClick: () => void }) {
   const appearance = useProposalSectionEditorAppearance();
   return (
     <Tooltip delayDuration={320}>
@@ -562,7 +562,7 @@ function AgreementEsignatureSettingsPopover({
   );
 }
 
-export function AgreementToolbarAgreementAux({
+function AgreementToolbarAgreementAux({
   block,
   onChange,
 }: {

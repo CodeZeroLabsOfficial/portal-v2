@@ -21,8 +21,9 @@ export function ImageBlockEditor({
   return (
     <div className="relative">
       {showEmbeddedColumnToolbar ? (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 -translate-y-full pb-1.5 pt-2">
-          <div className="pointer-events-auto flex w-full flex-wrap items-start justify-end gap-1.5">
+        // Overlays the image's top-end corner — block toolbars never mount above their block.
+        <div className="pointer-events-none absolute right-2 top-2 z-30">
+          <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1.5">
             <ProposalImageBlockToolbar
               variant="embedded"
               block={block}

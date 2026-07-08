@@ -41,7 +41,7 @@ function BuilderDesktopLayout({
       </BuilderSidePanel>
       <main className="relative min-h-0 min-w-0 overflow-hidden">
         {/* Symmetric scrollbar gutters keep left/right canvas margins identical. */}
-        <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12 [scrollbar-gutter:stable_both-edges]">
+        <div className="h-full min-h-0 overflow-x-clip overflow-y-auto [scrollbar-gutter:stable_both-edges]">
           {canvas}
         </div>
       </main>
@@ -87,7 +87,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
             </SheetContent>
           </Sheet>
         </div>
-        <main className="min-h-0 flex-1 overflow-y-auto scroll-pt-12">{canvas}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{canvas}</main>
       </div>
     );
   }
