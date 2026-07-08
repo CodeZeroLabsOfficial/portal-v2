@@ -49,6 +49,7 @@ export function BlockRow({ id, className, onHoverChange, children }: BlockRowPro
       ref={setRowRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-block-row={id}
+      data-hovered={hovered || undefined}
       className={cn("relative min-w-0", isDragging && "opacity-55", className)}
       onMouseEnter={() => {
         setHovered(true);
