@@ -19,6 +19,7 @@ import {
   splashSharedRailCrossAxisClasses,
 } from "@/lib/proposal/splash-branding";
 import { PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES } from "@/lib/proposal/public/public-layout";
+import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 
 /** Splash-specific layout tweaks on top of shared rich-text scale. */
 const SPLASH_RICH_CONTENT_CLASS = cn(
@@ -256,6 +257,11 @@ export function ProposalSplashBlockCanvas({
 
   const railTextClasses = splashRailTextAlignClasses(align.horizontal);
 
+  // Editor aligns the splash content rail to the shared band inset so it lines up with
+  // section blocks below; the public viewer keeps its own reading column.
+  const contentColumnClasses =
+    mode === "editor" ? BUILDER_BAND_CONTENT_INSET_CLASSES : PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES;
+
   const inner = children ? (
     <div className={cn("w-full min-w-0", !publicEdge && "max-w-[40rem]", railTextClasses)}>
       {children}
@@ -328,10 +334,10 @@ export function ProposalSplashBlockCanvas({
           "relative z-10 flex h-full min-h-[inherit] w-full flex-col py-10 sm:py-14 md:py-16",
         )}
       >
-        <div
+          <div
           className={cn(
             "relative flex min-h-0 w-full flex-1 flex-col",
-            PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
+            contentColumnClasses,
           )}
         >
           {companyLogoUrl ? (
