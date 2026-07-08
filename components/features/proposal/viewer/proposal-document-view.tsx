@@ -12,18 +12,9 @@ import type {
   ProposalDocument,
   ProposalPublicSelections,
   ProposalStatus,
-  SectionBlock,
 } from "@/types/proposal";
 import {
-  PROPOSAL_COLUMNS_GRID_CLASS,
-  columnFlexToGridTemplate,
-  coerceColumnFlex,
-  columnsBlockMdGapX,
-  columnsBlockMdItemsClass,
-} from "@/lib/proposal/columns";
-import {
   PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
-  PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
   PROPOSAL_DOCUMENT_ROOT_STACK_GAP_CLASSES,
   PROPOSAL_EDITOR_SECTION_INNER_PAD_BOTTOM_CLASSES,
   PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
@@ -31,12 +22,9 @@ import {
   PROPOSAL_PUBLIC_LOGO_IMAGE_CLASSES,
 } from "@/lib/proposal/public/public-layout";
 import { firstRootSplashBlockId, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
-import {
-  type ProposalRenderContext,
-  renderProposalBlockFromRegistry,
-} from "@/lib/proposal/block-view-registry";
+import { renderProposalBlockFromRegistry } from "@/components/features/proposal/blocks/block-editor-registry";
+import type { ProposalRenderContext } from "@/lib/proposal/block-view-types";
 import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
-import { ProposalSectionShell } from "@/components/features/proposal/editor/section-chrome/proposal-section-shell";
 import { cn } from "@/lib/utils";
 
 export type { ProposalRenderContext };
@@ -110,67 +98,9 @@ function BlockView({
     splashPublicPresentation,
     proposalContext,
     renderBlock,
+    sectionInnerPadClasses,
   });
-  if (registryNode !== undefined) {
-    return registryNode;
-  }
-
-  switch (block.type) {
-    case "section": {
-      const sb = block as SectionBlock;
-      const stack = sb.children.map((c) => renderBlock(c));
-      const body = (
-        <div
-          className={cn(
-            PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES,
-            sectionInnerPadClasses ?? PROPOSAL_DOCUMENT_BLOCK_INNER_PAD_CLASSES,
-          )}
-        >
-          <div className="flex flex-col">{stack}</div>
-        </div>
-      );
-      return (
-        <ProposalSectionShell background={sb.background} variant="viewer" viewportBleed={Boolean(viewportSectionBleed)}>
-          {body}
-        </ProposalSectionShell>
-      );
-    }
-    case "columns": {
-      const stacks = block.stacks?.length ? block.stacks : [[], []];
-      const colCount = stacks.length;
-      const flexRow = coerceColumnFlex(colCount, block.columnFlex);
-      const gapX = columnsBlockMdGapX(block.columnGap, colCount);
-      const itemsClass = columnsBlockMdItemsClass(block.rowAlign);
-      const pad =
-        typeof block.insetPaddingPx === "number" && Number.isFinite(block.insetPaddingPx)
-          ? Math.min(64, Math.max(0, Math.round(block.insetPaddingPx)))
-          : 0;
-      const grid = (
-        <div
-          className={cn(PROPOSAL_COLUMNS_GRID_CLASS, PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES, gapX, itemsClass)}
-          style={
-            {
-              ["--proposal-cols" as string]: columnFlexToGridTemplate(flexRow),
-            } as React.CSSProperties
-          }
-        >
-          {stacks.map((stack, colIdx) => (
-            <div key={colIdx} className="flex min-w-0 flex-col">
-              {stack.map((c) => renderBlock(c))}
-            </div>
-          ))}
-        </div>
-      );
-      if (pad <= 0) return grid;
-      return (
-        <div className="rounded-lg" style={{ padding: pad }}>
-          {grid}
-        </div>
-      );
-    }
-    default:
-      return null;
-  }
+  return registryNode ?? null;
 }
 
 export function ProposalDocumentView({

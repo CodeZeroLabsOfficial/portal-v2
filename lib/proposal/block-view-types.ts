@@ -31,6 +31,8 @@ export interface ProposalBlockViewProps {
   splashPublicPresentation?: "editor" | "nestedColumn" | "rootFullWidth";
   proposalContext?: ProposalRenderContext;
   renderBlock: (block: ProposalBlock | ProposalContentBlock) => React.ReactNode;
+  /** Root document view: alternate inner padding for the first section when `flushTop` is set. */
+  sectionInnerPadClasses?: string;
 }
 
 export type ProposalBlockViewRenderer = (props: ProposalBlockViewProps) => React.ReactNode;

@@ -3,6 +3,7 @@ import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
 import type { BlockStyle, ProposalBlock } from "@/types/proposal";
 import type { ProposalBlockViewProps, ProposalBlockViewRenderer } from "@/lib/proposal/block-view-types";
 import { renderAccordionBlock } from "@/components/features/proposal/blocks/accordion/viewer";
+import { renderColumnsBlock } from "@/components/features/proposal/blocks/columns/viewer";
 import { renderAgreementBlock } from "@/components/features/proposal/blocks/agreement/viewer";
 import { renderDividerBlock } from "@/components/features/proposal/blocks/divider/viewer";
 import { renderEmbedBlock } from "@/components/features/proposal/blocks/embed/viewer";
@@ -13,6 +14,7 @@ import { renderImageBlock } from "@/components/features/proposal/blocks/image/vi
 import { renderPackagesBlock } from "@/components/features/proposal/blocks/packages/viewer";
 import { renderPaymentBlock } from "@/components/features/proposal/blocks/payment/viewer";
 import { renderPricingBlock } from "@/components/features/proposal/blocks/pricing/viewer";
+import { renderSectionBlock } from "@/components/features/proposal/blocks/section/viewer";
 import { renderSignatureBlock } from "@/components/features/proposal/blocks/signature/viewer";
 import { renderSpacerBlock } from "@/components/features/proposal/blocks/spacer/viewer";
 import { renderSplashBlock } from "@/components/features/proposal/blocks/splash/viewer";
@@ -170,6 +172,7 @@ export const SECTION_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["root"],
   Editor: SectionBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderSectionBlock,
 });
 
 export const COLUMNS_BLOCK_DEFINITION = defineBlock({
@@ -179,6 +182,7 @@ export const COLUMNS_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["root", "section", "agreement"],
   Editor: ColumnsBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderColumnsBlock,
 });
 
 export const ACCORDION_BLOCK_DEFINITION = defineBlock({

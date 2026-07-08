@@ -16,7 +16,7 @@ function newId(): string {
   return `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** Matches {@link components/proposal/proposal-document-view} spacer clamp (1–2400px). */
+/** Matches {@link components/features/proposal/viewer/proposal-document-view} spacer clamp (1–2400px). */
 export function clampProposalSpacerHeightPx(heightPx: number | undefined): number {
   return Math.min(2400, Math.max(1, Math.round(heightPx ?? 40)));
 }

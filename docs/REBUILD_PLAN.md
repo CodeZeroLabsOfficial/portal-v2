@@ -93,7 +93,7 @@ Bootable app where the kit UI and Portal backend coexist.
 - Domain layer copied from Portal (`types`, `server`, `lib`, `hooks`, `middleware.ts`,
   `instrumentation.ts`, `app/api`, Firebase config, `functions/`). Kit's `fonts.ts`/`utils.ts`/
   `globals.css`/`themes.css` kept intact to preserve the kit look.
-- One pure helper carried over for a domain dependency: `components/proposal/embed-video.ts`.
+- One pure helper carried over for a domain dependency: `lib/proposal/media/embed-video.ts`.
 - `package.json` merged: kit UI stack + Portal backend deps (firebase, firebase-admin, stripe,
   @vercel/blob, sanitize-html); **TipTap pinned to v2**; `typecheck` script; node `>=20.9`.
 - `next.config.ts`: Portal security headers + Firebase image domains + 2 MB server-action limit.
