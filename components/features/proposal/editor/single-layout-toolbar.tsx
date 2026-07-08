@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { CommerceBlockStyleToolbarSlot, ImageBlockToolbarSlot } from "@/components/features/proposal/editor/block-toolbar-slots";
-import { RichTextFormattingToolbar } from "@/components/features/proposal/rich-text/v2/proposal-rich-text-editor";
+import { RichTextFormattingToolbar } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalToolbarShell } from "@/components/features/proposal/editor/toolbar";
 import { useProposalSingleLayoutRichTextEditorOptional } from "@/components/features/proposal/editor/single-layout-rich-text-context";
 import type { BlockStyle, ImageBlock, ProposalContentBlock } from "@/types/proposal";

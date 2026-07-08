@@ -3,15 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { type Editor, EditorContent, useEditor, useEditorState } from "@tiptap/react";
-import { BubbleMenu } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
-import TextAlign from "@tiptap/extension-text-align";
+import { BubbleMenu } from "@tiptap/react/menus";
 import {
   AlignCenter,
   AlignLeft,
@@ -58,11 +50,9 @@ import {
   proposalFontPreviewFamily,
   resolveProposalFontOption,
 } from "@/lib/proposal/rich-text/fonts";
+import { createProposalRichTextExtensions } from "@/lib/proposal/rich-text/tiptap-extensions";
 import {
-  FontFamily,
-  FontSize,
-  FontWeight,
-  ProposalBlockTypography,
+  parseRichTextFontSizePx,
   type ProposalLetterCase,
 } from "@/lib/proposal/rich-text/tiptap-typography";
 import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
@@ -123,7 +113,7 @@ const ALIGN_OPTIONS: { value: "left" | "center" | "right"; icon: typeof AlignLef
 
 const VIEWPORT_EDGE_PAD_PX = 8;
 
-/** Radix dropdowns portal to `document.body`; inside TipTap's Tippy bubble that breaks anchor geometry. Inline panels stay under the trigger. */
+/** Radix dropdowns portal to `document.body`; inside the Floating UI bubble that breaks anchor geometry. Inline panels stay under the trigger. */
 function useCloseBubbleToolbarMenu(
   open: boolean,
   setOpen: React.Dispatch<React.SetStateAction<boolean>>,
@@ -381,7 +371,11 @@ function FontFamilyPicker({
             style={preview ? { fontFamily: preview } : undefined}
             onPointerDown={(e) => e.preventDefault()}
             onClick={() => {
-              editor.chain().focus().setFontFamily(opt.value || null).run();
+              if (!opt.value) {
+                editor.chain().focus().unsetFontFamily().run();
+              } else {
+                editor.chain().focus().setFontFamily(opt.value).run();
+              }
               setOpen(false);
             }}
           >
@@ -490,12 +484,12 @@ function FontSizeControl({ editor }: { editor: Editor }) {
       effectivePx: readSelectionFontSizePx(snap.editor),
     }),
   });
-  const value = effectivePx ?? (fontSizeRaw ? Number(fontSizeRaw) : 16);
+  const value = effectivePx ?? parseRichTextFontSizePx(fontSizeRaw) ?? 16;
   function clamp(n: number) {
     return Math.max(8, Math.min(120, Math.round(n)));
   }
   function set(next: number) {
-    editor.chain().focus().setFontSize(String(clamp(next))).run();
+    editor.chain().focus().setFontSize(`${clamp(next)}px`).run();
   }
   return (
     <div
@@ -1241,32 +1235,13 @@ export function ProposalRichText({
   );
 
   const extensions = React.useMemo(
-    () => [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4] },
-        bulletList: { keepMarks: true },
-        orderedList: { keepMarks: true },
-      }),
-      Underline,
-      TextStyle,
-      Color.configure({ types: ["textStyle"] }),
-      FontSize,
-      FontFamily,
-      FontWeight,
-      ProposalBlockTypography,
-      TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }),
-      Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
-      Image.configure({
-        inline: true,
-        allowBase64: false,
-      }),
-      Placeholder.configure({ placeholder: placeholder ?? "Write your section…" }),
-    ],
+    () => createProposalRichTextExtensions({ placeholder: placeholder ?? "Write your section…" }),
     [placeholder],
   );
 
   const editor = useEditor({
     immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     extensions,
     content: html?.trim() ? html : "<p></p>",
     editorProps: {
@@ -1332,16 +1307,11 @@ export function ProposalRichText({
       {!bandFormattingChrome ? (
         <BubbleMenu
           editor={editor}
-          tippyOptions={{
-            duration: 80,
+          options={{
             placement: "top",
-            maxWidth: "none",
-            popperOptions: {
-              modifiers: [
-                { name: "preventOverflow", options: { padding: VIEWPORT_EDGE_PAD_PX, altAxis: true } },
-                { name: "flip", options: { fallbackPlacements: ["bottom", "top"] } },
-              ],
-            },
+            offset: 6,
+            flip: { fallbackPlacements: ["bottom", "top"] },
+            shift: { padding: VIEWPORT_EDGE_PAD_PX },
           }}
           shouldShow={({ editor: ed, from, to }) => {
             if (!ed.isEditable) return false;

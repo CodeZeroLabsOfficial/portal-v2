@@ -462,7 +462,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
             placeholder="Section title"
             className={cn(
               "!border-0 !bg-transparent !px-0 !py-0 !shadow-none",
-              isVisual && "[&_.tiptap]:text-center",
+              isVisual && "[&_.ProseMirror]:text-center",
             )}
             onChange={(html) =>
               patch({

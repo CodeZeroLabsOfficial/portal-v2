@@ -5,18 +5,10 @@ import "@tiptap/extension-text-style";
 /** Block nodes that support line height and vertical rhythm overrides. */
 export const PROPOSAL_TYPOGRAPHY_BLOCK_TYPES = ["paragraph", "heading", "blockquote"] as const;
 
-export type ProposalTypographyBlockType = (typeof PROPOSAL_TYPOGRAPHY_BLOCK_TYPES)[number];
-
 export type ProposalLetterCase = "none" | "uppercase";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
-    fontSize: {
-      setFontSize: (size: string | null) => ReturnType;
-    };
-    fontFamily: {
-      setFontFamily: (family: string | null) => ReturnType;
-    };
     fontWeight: {
       setFontWeight: (weight: string | null) => ReturnType;
     };
@@ -75,86 +67,6 @@ function updateActiveTypographyBlock(
     })
     .run();
 }
-
-export const FontSize = Extension.create({
-  name: "fontSize",
-  addOptions() {
-    return { types: ["textStyle"] };
-  },
-  addGlobalAttributes() {
-    return [
-      {
-        types: this.options.types,
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: (el) => {
-              const m = (el as HTMLElement).style.fontSize?.match(/^(\d+(?:\.\d+)?)px$/);
-              return m ? m[1] : null;
-            },
-            renderHTML: (attrs) =>
-              attrs.fontSize ? { style: `font-size: ${attrs.fontSize}px` } : {},
-          },
-        },
-      },
-    ];
-  },
-  addCommands() {
-    return {
-      setFontSize:
-        (size) =>
-        ({ chain }) => {
-          if (size === null) {
-            return chain()
-              .setMark("textStyle", { fontSize: null })
-              .removeEmptyTextStyle()
-              .run();
-          }
-          return chain().setMark("textStyle", { fontSize: size }).run();
-        },
-    };
-  },
-});
-
-export const FontFamily = Extension.create({
-  name: "fontFamily",
-  addOptions() {
-    return { types: ["textStyle"] };
-  },
-  addGlobalAttributes() {
-    return [
-      {
-        types: this.options.types,
-        attributes: {
-          fontFamily: {
-            default: null,
-            parseHTML: (el) => {
-              const raw = (el as HTMLElement).style.fontFamily?.trim();
-              return raw || null;
-            },
-            renderHTML: (attrs) =>
-              attrs.fontFamily ? { style: `font-family: ${attrs.fontFamily as string}` } : {},
-          },
-        },
-      },
-    ];
-  },
-  addCommands() {
-    return {
-      setFontFamily:
-        (family) =>
-        ({ chain }) => {
-          if (family === null || family === "") {
-            return chain()
-              .setMark("textStyle", { fontFamily: null })
-              .removeEmptyTextStyle()
-              .run();
-          }
-          return chain().setMark("textStyle", { fontFamily: family }).run();
-        },
-    };
-  },
-});
 
 export const FontWeight = Extension.create({
   name: "fontWeight",
@@ -288,3 +200,12 @@ export const ProposalBlockTypography = Extension.create({
     };
   },
 });
+
+/** Parses TipTap font-size mark values (`18`, `18px`) to a pixel number for toolbar display. */
+export function parseRichTextFontSizePx(raw: string | undefined): number | null {
+  if (!raw?.trim()) return null;
+  const m = raw.trim().match(/^(\d+(?:\.\d+)?)(px)?$/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}

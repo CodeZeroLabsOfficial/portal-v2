@@ -413,7 +413,7 @@ export function ColumnsBlockFields({
             onPointerDownCapture={markColumnContentActive}
             onFocusCapture={(e) => {
               const el = e.target as HTMLElement;
-              if (el.closest(".tiptap") || el.closest(".ProseMirror")) markColumnContentActive();
+              if (el.closest(".ProseMirror")) markColumnContentActive();
             }}
             className={cn(
               "flex flex-col gap-6 md:flex-row",

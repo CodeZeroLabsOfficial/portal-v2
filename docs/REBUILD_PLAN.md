@@ -27,7 +27,7 @@ shadcn `Form`).
 | Tailwind | v3 (`tailwind.config.ts`) | v4 (`@import "tailwindcss"`, OKLCH tokens) |
 | Tables | Custom | TanStack Table |
 | Charts | Custom SVG | Recharts + shadcn `Chart` |
-| TipTap | v2 | **v2 (pinned)** — v3 migration deferred |
+| TipTap | v2 | **v3** |
 | Shell | Custom dark-glass `WorkspaceShellLayout` | shadcn `Sidebar` (`PortalShell`) |
 
 ---
@@ -58,9 +58,9 @@ or Firestore access. These are integration-heavy and battle-tested.
 
 ### Proposal system — special case
 
-~45 components + extensive `lib` code. **Do not** rebuild the block editor on the kit's TipTap v3
-editor in early phases. Keep Portal's TipTap v2 editor + block logic; reskin the surrounding chrome
-(toolbars, panels, dialogs). A TipTap v2 → v3 migration is a later, optional effort.
+~45 components + extensive `lib` code. Rich text uses TipTap v3 behind the
+`proposal-rich-text` adapter; block logic and viewers are version-agnostic (HTML in / HTML out).
+Reskin surrounding chrome (toolbars, panels, dialogs) with kit patterns as needed.
 
 ---
 
@@ -95,7 +95,7 @@ Bootable app where the kit UI and Portal backend coexist.
   `globals.css`/`themes.css` kept intact to preserve the kit look.
 - One pure helper carried over for a domain dependency: `lib/proposal/media/embed-video.ts`.
 - `package.json` merged: kit UI stack + Portal backend deps (firebase, firebase-admin, stripe,
-  @vercel/blob, sanitize-html); **TipTap pinned to v2**; `typecheck` script; node `>=20.9`.
+  @vercel/blob, sanitize-html); **TipTap v3**; `typecheck` script; node `>=20.9`.
 - `next.config.ts`: Portal security headers + Firebase image domains + 2 MB server-action limit.
 - `tsconfig.json`: excludes `functions/`. `.env.example` + `.env.local` copied.
 - Kit shell rebuilt as props-driven and wired to the real session:
@@ -203,7 +203,7 @@ Routes: `/admin/proposals/*`, `/p/[token]`.
 |---|---|
 | No automated tests in Portal | Add Playwright E2E for critical flows before Phase 4 |
 | Proposal/Stripe acceptance complexity | Keep domain logic; reskin only; test heavily |
-| TipTap v2 vs kit v3 | Keep v2 pinned; defer migration |
+| TipTap v3 | Migrated — `@floating-ui/dom`, adapter at `proposal-rich-text.tsx` |
 | Broken public proposal links | Keep `/p/[token]` URL identical |
 | Auth/session cookie regressions | API routes + cookie names copied verbatim |
 | `@hookform/resolvers` v5 vs Portal v3 | Validate zodResolver usage as forms are migrated |

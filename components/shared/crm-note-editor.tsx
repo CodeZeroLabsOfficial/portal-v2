@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import LinkExtension from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
   Italic,
@@ -18,6 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { createCrmNoteExtensions } from "@/lib/proposal/rich-text/tiptap-extensions";
 import { cn } from "@/lib/utils";
 
 import "./crm-note-editor.css";
@@ -67,22 +64,15 @@ export function CrmNoteEditor({
   disabled = false,
   className
 }: CrmNoteEditorProps) {
+  const extensions = React.useMemo(
+    () => createCrmNoteExtensions({ placeholder }),
+    [placeholder],
+  );
+
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: false,
-        codeBlock: false,
-        blockquote: false,
-        horizontalRule: false
-      }),
-      Underline,
-      LinkExtension.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-primary underline underline-offset-2" }
-      }),
-      Placeholder.configure({ placeholder })
-    ],
+    shouldRerenderOnTransaction: true,
+    extensions,
     content: value,
     editable: !disabled,
     autofocus: false,
@@ -103,7 +93,7 @@ export function CrmNoteEditor({
     if (!editor) return;
     const current = editor.getHTML();
     if (value !== current) {
-      editor.commands.setContent(value || "<p></p>", false);
+      editor.commands.setContent(value || "<p></p>", { emitUpdate: false });
     }
   }, [editor, value]);
 
