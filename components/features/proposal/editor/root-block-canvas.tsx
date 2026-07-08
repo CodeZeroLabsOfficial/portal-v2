@@ -17,11 +17,13 @@ import {
 } from "@dnd-kit/sortable";
 
 import {
-  AgreementToolbarAgreementAux,
   ProposalBlockFields,
   SortableShell,
-  blockLabel,
 } from "@/components/features/proposal/editor/proposal-block-fields";
+import {
+  AgreementToolbarAgreementAux,
+  blockLabel,
+} from "@/components/features/proposal/editor/block-toolbar-factory";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
