@@ -130,10 +130,6 @@ export function TemplatePropertiesEditSheet({
                 placeholder="Services Agreement"
                 onChange={(e) => setDraftAgreementTitle(e.target.value)}
               />
-              <p className="text-muted-foreground text-xs leading-snug">
-                Customer-facing heading on the agreement modal and PDF cover — separate from the template
-                name in the hub.
-              </p>
             </div>
           ) : null}
 

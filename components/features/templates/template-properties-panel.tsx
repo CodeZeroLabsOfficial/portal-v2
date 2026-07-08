@@ -85,9 +85,6 @@ export function TemplatePropertiesPanel({
         {isContractTemplate ? (
           <PropertyField label="Agreement title">
             <p className="text-muted-foreground text-sm">{agreementTitleText}</p>
-            <p className="text-muted-foreground mt-1 text-xs leading-snug">
-              Shown on the agreement modal, PDF cover, and when attached to proposals.
-            </p>
           </PropertyField>
         ) : null}
 
