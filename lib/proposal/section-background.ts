@@ -23,6 +23,14 @@ export function defaultSectionBackground(): SectionBackground {
   };
 }
 
+/** Background applied when a new section block is inserted in the builder. */
+export function defaultNewSectionBackground(): SectionBackground {
+  return {
+    ...defaultSectionBackground(),
+    color: "#ffffff",
+  };
+}
+
 export interface ResolvedSectionBackground {
   active: boolean;
   kind: "color" | "image" | "video";

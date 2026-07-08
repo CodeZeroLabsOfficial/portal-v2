@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { PROPOSAL_IMAGE_BLOCK_PLACEHOLDER_URL } from "@/lib/proposal/media/image-placeholder";
 import { DEFAULT_HIGHLIGHT_COLOR, DEFAULT_PRIMARY_COLOR } from "@/lib/proposal/block-style";
+import { defaultNewSectionBackground } from "@/lib/proposal/section-background";
 import { defaultSplashBlock } from "@/lib/proposal/splash-block";
 import type { ColumnsBlock, ProposalBlock } from "@/types/proposal";
 import type { ColumnLayoutCount } from "@/lib/proposal/columns";
@@ -164,6 +165,7 @@ export function createProposalBlock(type: ProposalBlock["type"]): ProposalBlock 
         id,
         type: "section",
         children: [],
+        background: defaultNewSectionBackground(),
         style: {
           variant: "simple",
           primaryColor: DEFAULT_PRIMARY_COLOR,

@@ -927,9 +927,6 @@ export function SectionBlockFields({
     onSelectBlock(null);
   }
 
-  const resolvedBg = resolveSectionBackground(block.background);
-  const backdropOn = resolvedBg.active;
-
   const sectionStack =
     children.length === 0 ? (
       <div className="flex flex-col items-center gap-5 py-14 text-center">
@@ -1038,14 +1035,7 @@ export function SectionBlockFields({
 
   return (
     <ProposalSectionShell background={block.background} variant="editor">
-      {backdropOn ? (
-        // Horizontal inset is applied once by the editor section shell.
-        <div className="min-w-0">{sectionStack}</div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-border/65 bg-muted/15 px-1 py-1 sm:bg-muted/[0.35]">
-          {sectionStack}
-        </div>
-      )}
+      <div className="min-w-0">{sectionStack}</div>
     </ProposalSectionShell>
   );
 }
