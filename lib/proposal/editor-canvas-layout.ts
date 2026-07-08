@@ -45,4 +45,4 @@ export const BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES = "pb-[min(45vh,26rem)] sm:pb
  * zero horizontal padding — flush bands span edge-to-edge and all inset lives here.
  */
 export const BUILDER_BAND_CONTENT_INSET_CLASSES =
-  "mx-auto w-full min-w-0 max-w-none px-16 sm:px-20";
+  "mx-auto w-full min-w-0 max-w-none px-20 sm:px-24";
