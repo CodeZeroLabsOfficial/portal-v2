@@ -210,24 +210,6 @@ export function TemplatePropertiesEditSheet({
 
           <div className="space-y-1.5">
             <Label htmlFor="template-feature-draft">Key features</Label>
-            {(draftCatalogMeta.keyFeatures?.length ?? 0) > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {draftCatalogMeta.keyFeatures!.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1 pr-1">
-                    {tag}
-                    <button
-                      type="button"
-                      className="hover:bg-muted rounded-sm p-0.5"
-                      aria-label={`Remove ${tag}`}
-                      onClick={() => removeFeature(tag)}>
-                      <X className="size-3" aria-hidden />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-xs">No features yet.</p>
-            )}
             <div className="flex gap-2">
               <Input
                 id="template-feature-draft"
@@ -250,6 +232,22 @@ export function TemplatePropertiesEditSheet({
                 <Plus className="size-4" aria-hidden />
               </Button>
             </div>
+            {(draftCatalogMeta.keyFeatures?.length ?? 0) > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {draftCatalogMeta.keyFeatures!.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                    {tag}
+                    <button
+                      type="button"
+                      className="hover:bg-muted rounded-sm p-0.5"
+                      aria-label={`Remove ${tag}`}
+                      onClick={() => removeFeature(tag)}>
+                      <X className="size-3" aria-hidden />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-end gap-2">
