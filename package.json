@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:unit": "npx tsx --test 'lib/**/*.test.ts' 'lib/**/**/*.test.ts'"
+    "test:unit": "npx tsx --test 'lib/**/*.test.ts' 'tests/**/*.test.ts'"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
@@ -70,7 +70,6 @@
     "firebase-admin": "^13.0.2",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.4.2",
-    "isomorphic-dompurify": "^2.19.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.522.0",
     "marked": "^15.0.12",
@@ -111,6 +110,7 @@
     "eslint": "^9.39.2",
     "eslint-config-next": "^15.5.9",
     "eslint-plugin-better-tailwindcss": "^3.8.0",
+    "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4.1.18",
@@ -118,8 +118,5 @@
   },
   "engines": {
     "node": ">=20.9.0"
-  },
-  "overrides": {
-    "jsdom": "27.3.0"
   }
 }
