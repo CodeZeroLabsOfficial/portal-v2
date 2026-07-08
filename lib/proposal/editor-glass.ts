@@ -12,13 +12,17 @@ export const PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES =
 export const PROPOSAL_TOOLBAR_SHELL_ELEVATED_CLASSES =
   "border-zinc-700/50 bg-zinc-900/80 text-zinc-100 shadow-xl ring-1 ring-white/[0.06] backdrop-blur-md supports-[backdrop-filter]:bg-zinc-900/65";
 
-/** Compact panels attached to a toolbar (e.g. Plans background picker). */
+/**
+ * Compact panels attached to a toolbar (e.g. Plans background picker).
+ * Kept near-opaque — these host dropdown lists over busy section backgrounds, so
+ * content bleed-through hurts legibility.
+ */
 export const PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES =
-  "border-border/80 bg-background/85 shadow-sm ring-1 ring-black/[0.04] backdrop-blur-md supports-[backdrop-filter]:bg-background/70 dark:ring-white/10";
+  "border-border/80 bg-background/98 shadow-sm ring-1 ring-black/[0.04] backdrop-blur-md supports-[backdrop-filter]:bg-background/95 dark:ring-white/10";
 
 /** Elevated dropdown / merge-token panels (dark chrome). */
 export const PROPOSAL_TOOLBAR_PANEL_ELEVATED_CLASSES =
-  "border-zinc-700/50 bg-zinc-900/80 text-zinc-100 shadow-lg ring-1 ring-white/[0.06] backdrop-blur-md supports-[backdrop-filter]:bg-zinc-900/65";
+  "border-zinc-700/50 bg-zinc-900/98 text-zinc-100 shadow-lg ring-1 ring-white/[0.06] backdrop-blur-md supports-[backdrop-filter]:bg-zinc-900/95";
 
 /**
  * Scoped semantic tokens for elevated (dark) toolbars — mirrors kit tiptap.css intent without

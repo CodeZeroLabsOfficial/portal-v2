@@ -260,12 +260,54 @@ function RichTextToolbarDivider() {
 function HeadingPicker({ editor }: { editor: Editor }) {
   const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const panelStyle = useFixedToolbarMenuPosition(open, triggerRef, panelRef, { align: "start" });
   const active = getActiveHeading(editor);
-  useCloseBubbleToolbarMenu(open, setOpen, rootRef);
+  useCloseBubbleToolbarMenu(open, setOpen, triggerRef, [panelRef]);
+
+  const panel =
+    open && panelStyle ? (
+      <div
+        ref={panelRef}
+        role="menu"
+        style={panelStyle}
+        className={cn(proposalToolbarBubblePanelClasses(appearance), "min-w-[200px]")}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {HEADING_OPTIONS.map((opt) => {
+          const isActive = active.value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="menuitem"
+              className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={() => {
+                applyHeadingOption(editor, opt);
+                setOpen(false);
+              }}
+            >
+              <span
+                className={cn(
+                  "inline-block w-7 text-center text-xs font-semibold",
+                  isActive
+                    ? proposalToolbarBubbleActiveAccentClasses(appearance)
+                    : proposalToolbarBubbleMutedFgClasses(appearance),
+                )}
+              >
+                {opt.shortLabel}
+              </span>
+              <span className="whitespace-nowrap">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative" ref={triggerRef}>
       <button
         type="button"
         onPointerDown={(e) => {
@@ -283,42 +325,7 @@ function HeadingPicker({ editor }: { editor: Editor }) {
         <span className="whitespace-nowrap">{active.label}</span>
         <ChevronDown className={cn("h-3.5 w-3.5", proposalToolbarBubbleMutedFgClasses(appearance))} />
       </button>
-      {open ? (
-        <div
-          role="menu"
-          className={cn(proposalToolbarBubblePanelFloatingClasses(appearance), "min-w-[200px]")}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {HEADING_OPTIONS.map((opt) => {
-            const isActive = active.value === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                role="menuitem"
-                className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
-                onPointerDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  applyHeadingOption(editor, opt);
-                  setOpen(false);
-                }}
-              >
-                <span
-                  className={cn(
-                    "inline-block w-7 text-center text-xs font-semibold",
-                    isActive
-                      ? proposalToolbarBubbleActiveAccentClasses(appearance)
-                      : proposalToolbarBubbleMutedFgClasses(appearance),
-                  )}
-                >
-                  {opt.shortLabel}
-                </span>
-                <span className="whitespace-nowrap">{opt.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {typeof document !== "undefined" && panel ? createPortal(panel, document.body) : null}
     </div>
   );
 }
@@ -332,8 +339,15 @@ function FontFamilyPicker({
 }) {
   const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  useCloseBubbleToolbarMenu(open, setOpen, rootRef);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const menuLayout = layout === "menu";
+  // Toolbar variant portals to the top layer so it clears sibling blocks; the menu variant
+  // already lives inside a portaled panel, so it stays inline to keep that menu's outside-click intact.
+  const panelStyle = useFixedToolbarMenuPosition(open && !menuLayout, triggerRef, panelRef, {
+    align: "start",
+  });
+  useCloseBubbleToolbarMenu(open, setOpen, triggerRef, [panelRef]);
 
   const { fontFamilyRaw } = useEditorState({
     editor,
@@ -343,10 +357,63 @@ function FontFamilyPicker({
   });
 
   const active = resolveProposalFontOption(fontFamilyRaw);
-  const menuLayout = layout === "menu";
+
+  const menuBody = PROPOSAL_FONT_MENU_SECTIONS.map((section) => (
+    <div key={section.id} role="group" aria-label={section.label}>
+      {section.label ? (
+        <ProposalToolbarSectionLabel appearance={appearance} className="px-2 pb-1 pt-2 first:pt-1">
+          {section.label}
+        </ProposalToolbarSectionLabel>
+      ) : null}
+      {section.items.map((opt) => {
+        const isActive =
+          opt.value === ""
+            ? !fontFamilyRaw || normalizeProposalFontFamily(fontFamilyRaw) === ""
+            : normalizeProposalFontFamily(opt.value) === normalizeProposalFontFamily(fontFamilyRaw);
+        const preview = proposalFontPreviewFamily(opt.value);
+        return (
+          <button
+            key={`${section.id}-${opt.label}-${opt.value}`}
+            type="button"
+            role="menuitem"
+            className={cn(proposalToolbarBubbleMenuItemClasses(appearance, isActive), "justify-between")}
+            style={preview ? { fontFamily: preview } : undefined}
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={() => {
+              editor.chain().focus().setFontFamily(opt.value || null).run();
+              setOpen(false);
+            }}
+          >
+            <span className="whitespace-nowrap">{opt.label}</span>
+            {isActive ? (
+              <span className={proposalToolbarBubbleActiveAccentClasses(appearance)} aria-hidden>
+                ✓
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  ));
+
+  const menuClasses =
+    "min-w-[11rem] max-w-[min(18rem,calc(100vw-2rem))] max-h-[min(50vh,22rem)] overflow-y-auto overflow-x-hidden";
+
+  const portaledPanel =
+    open && !menuLayout && panelStyle ? (
+      <div
+        ref={panelRef}
+        role="menu"
+        style={panelStyle}
+        className={cn(proposalToolbarBubblePanelClasses(appearance), menuClasses)}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {menuBody}
+      </div>
+    ) : null;
 
   return (
-    <div className={cn("relative", menuLayout && "w-full")} ref={rootRef}>
+    <div className={cn("relative", menuLayout && "w-full")} ref={triggerRef}>
       <button
         type="button"
         onPointerDown={(e) => {
@@ -375,71 +442,54 @@ function FontFamilyPicker({
         </span>
         <ChevronDown className={cn("h-3.5 w-3.5 shrink-0", proposalToolbarBubbleMutedFgClasses(appearance))} />
       </button>
-      {open ? (
+      {menuLayout && open ? (
         <div
+          ref={panelRef}
           role="menu"
-          className={cn(
-            proposalToolbarBubblePanelFloatingClasses(appearance),
-            "min-w-[11rem] max-w-[min(18rem,calc(100vw-2rem))] max-h-[min(50vh,22rem)] overflow-y-auto overflow-x-hidden",
-          )}
+          className={cn(proposalToolbarBubblePanelFloatingClasses(appearance), menuClasses)}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          {PROPOSAL_FONT_MENU_SECTIONS.map((section) => (
-            <div key={section.id} role="group" aria-label={section.label}>
-              {section.label ? (
-                <ProposalToolbarSectionLabel appearance={appearance} className="px-2 pb-1 pt-2 first:pt-1">
-                  {section.label}
-                </ProposalToolbarSectionLabel>
-              ) : null}
-              {section.items.map((opt) => {
-                const isActive =
-                  opt.value === ""
-                    ? !fontFamilyRaw || normalizeProposalFontFamily(fontFamilyRaw) === ""
-                    : normalizeProposalFontFamily(opt.value) ===
-                      normalizeProposalFontFamily(fontFamilyRaw);
-                const preview = proposalFontPreviewFamily(opt.value);
-                return (
-                  <button
-                    key={`${section.id}-${opt.label}-${opt.value}`}
-                    type="button"
-                    role="menuitem"
-                    className={cn(
-                      proposalToolbarBubbleMenuItemClasses(appearance, isActive),
-                      "justify-between",
-                    )}
-                    style={preview ? { fontFamily: preview } : undefined}
-                    onPointerDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      editor.chain().focus().setFontFamily(opt.value || null).run();
-                      setOpen(false);
-                    }}
-                  >
-                    <span className="whitespace-nowrap">{opt.label}</span>
-                    {isActive ? (
-                      <span className={proposalToolbarBubbleActiveAccentClasses(appearance)} aria-hidden>
-                        ✓
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          {menuBody}
         </div>
       ) : null}
+      {typeof document !== "undefined" && portaledPanel
+        ? createPortal(portaledPanel, document.body)
+        : null}
     </div>
   );
 }
 
+/**
+ * Effective (rendered) font size in px at the selection, read from the DOM. Reflects the size the
+ * user actually sees — including heading-level and inherited CSS sizes that carry no inline
+ * `fontSize` mark — so the control isn't stuck on a hard-coded default. Returns null off the DOM.
+ */
+function readSelectionFontSizePx(editor: Editor): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const { state, view } = editor;
+    const { empty, from } = state.selection;
+    const pos = empty ? state.selection.$head.pos : from;
+    const { node } = view.domAtPos(Math.max(1, pos));
+    const el = node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
+    if (!el) return null;
+    const px = Number.parseFloat(window.getComputedStyle(el).fontSize);
+    return Number.isFinite(px) ? Math.round(px) : null;
+  } catch {
+    return null;
+  }
+}
+
 function FontSizeControl({ editor }: { editor: Editor }) {
   const appearance = useProposalSectionEditorAppearance();
-  const { fontSizeRaw } = useEditorState({
+  const { fontSizeRaw, effectivePx } = useEditorState({
     editor,
     selector: (snap) => ({
       fontSizeRaw: snap.editor.getAttributes("textStyle").fontSize as string | undefined,
+      effectivePx: readSelectionFontSizePx(snap.editor),
     }),
   });
-  const value = Number(fontSizeRaw ?? 16);
+  const value = effectivePx ?? (fontSizeRaw ? Number(fontSizeRaw) : 16);
   function clamp(n: number) {
     return Math.max(8, Math.min(120, Math.round(n)));
   }
@@ -532,14 +582,48 @@ function ColorControl({ editor }: { editor: Editor }) {
 function AlignmentPicker({ editor }: { editor: Editor }) {
   const appearance = useProposalSectionEditorAppearance();
   const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const panelStyle = useFixedToolbarMenuPosition(open, triggerRef, panelRef, { align: "start" });
   const current =
     ALIGN_OPTIONS.find((a) => editor.isActive({ textAlign: a.value })) ?? ALIGN_OPTIONS[0];
   const Icon = current.icon;
-  useCloseBubbleToolbarMenu(open, setOpen, rootRef);
+  useCloseBubbleToolbarMenu(open, setOpen, triggerRef, [panelRef]);
+
+  const panel =
+    open && panelStyle ? (
+      <div
+        ref={panelRef}
+        role="menu"
+        style={panelStyle}
+        className={cn(proposalToolbarBubblePanelClasses(appearance), "min-w-[9rem]")}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {ALIGN_OPTIONS.map((a) => {
+          const Ic = a.icon;
+          const isActive = current.value === a.value;
+          return (
+            <button
+              key={a.value}
+              type="button"
+              role="menuitem"
+              className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.chain().focus().setTextAlign(a.value).run();
+                setOpen(false);
+              }}
+            >
+              <Ic className="h-4 w-4 shrink-0" />
+              {a.label}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative" ref={triggerRef}>
       <button
         type="button"
         onPointerDown={(e) => {
@@ -553,34 +637,7 @@ function AlignmentPicker({ editor }: { editor: Editor }) {
       >
         <Icon className="h-4 w-4" />
       </button>
-      {open ? (
-        <div
-          role="menu"
-          className={cn(proposalToolbarBubblePanelFloatingClasses(appearance), "min-w-[9rem]")}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {ALIGN_OPTIONS.map((a) => {
-            const Ic = a.icon;
-            const isActive = current.value === a.value;
-            return (
-              <button
-                key={a.value}
-                type="button"
-                role="menuitem"
-                className={proposalToolbarBubbleMenuItemClasses(appearance, isActive)}
-                onPointerDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().setTextAlign(a.value).run();
-                  setOpen(false);
-                }}
-              >
-                <Ic className="h-4 w-4 shrink-0" />
-                {a.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {typeof document !== "undefined" && panel ? createPortal(panel, document.body) : null}
     </div>
   );
 }
