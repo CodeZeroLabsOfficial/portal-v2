@@ -42,7 +42,14 @@ export function TemplateCard({
     <Card className="group flex h-full w-full flex-col overflow-hidden pt-0 shadow-none transition-shadow hover:shadow-md">
       <div className="relative">
         <Link href={row.editHref} className="block">
-          <TemplateCover coverImageUrl={row.coverImageUrl} alt={row.name} kind={row.kind} />
+          <TemplateCover
+            alt={row.name}
+            kind={row.kind}
+            coverPreviewBlocks={row.coverPreviewBlocks}
+            branding={row.branding}
+            coverImageUrl={row.coverImageUrl}
+            agreementTitle={row.agreementTitle}
+          />
         </Link>
 
         <Badge

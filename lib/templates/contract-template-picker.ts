@@ -1,6 +1,5 @@
 import { contractTemplateToAgreementSnapshot } from "@/lib/contract-template/agreement-snapshot";
 import { buildTemplateCardMeta, type TemplateCardMeta } from "@/lib/templates/template-card-meta";
-import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
 import type { ContractTemplateRecord } from "@/types/contract-template";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -21,7 +20,6 @@ export interface ContractTemplatePickerRow {
   introHtml: string;
   legalHtml: string;
   description?: string;
-  coverImageUrl?: string;
   cardMeta: TemplateCardMeta;
   stage: ProposalTemplateStage;
 }
@@ -35,7 +33,6 @@ export function contractTemplateRecordToPickerRow(record: ContractTemplateRecord
     introHtml: snapshot.introHtml ?? "",
     legalHtml: snapshot.legalHtml ?? "",
     description: record.description?.trim() || undefined,
-    coverImageUrl: resolveTemplateCoverImageUrl(record.document),
     cardMeta: buildTemplateCardMeta(record.id, "contract", record.document, record.catalogMeta),
     stage: record.stage,
   };

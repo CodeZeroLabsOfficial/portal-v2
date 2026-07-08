@@ -13,4 +13,8 @@ export const AGREEMENT_PRINT_LEGAL_SECTIONS_ATTR = "data-agreement-legal-section
 export const AGREEMENT_PRINT_TITLE_PAGE_CLASSES =
   "print:flex print:min-h-screen print:items-center print:justify-center print:break-after-page";
 
+/** Screen layout matching agreement PDF page 1 — centered hero title on white. */
+export const AGREEMENT_TITLE_PAGE_SCREEN_CLASSES =
+  "flex h-full min-h-full w-full items-center justify-center bg-background";
+
 export const AGREEMENT_PRINT_FIRST_LEGAL_BLOCK_CLASSES = "print:break-after-page";

@@ -1,7 +1,9 @@
 import { resolveTemplateCoverImageUrl } from "@/lib/templates/template-cover-url";
+import { resolveTemplateCoverPreviewBlocks } from "@/lib/templates/template-cover-preview";
 import { buildTemplateCardMeta, type TemplateCardMeta } from "@/lib/templates/template-card-meta";
 import type { ContractTemplateRecord } from "@/types/contract-template";
 import type { ProposalTemplateRecord, ProposalTemplateStage } from "@/types/proposal-template";
+import type { ProposalBlock, ProposalBranding } from "@/types/proposal";
 
 export type TemplateHubKind = "proposal" | "contract";
 
@@ -23,6 +25,10 @@ export interface TemplateHubRow {
   stage: ProposalTemplateStage;
   lastEditedMs: number;
   agreementTitle?: string;
+  /** Proposal hub card — first root block for live preview. */
+  coverPreviewBlocks?: ProposalBlock[];
+  branding?: ProposalBranding;
+  /** Proposal fallback when preview blocks are empty. */
   coverImageUrl?: string;
   cardMeta: TemplateCardMeta;
   editHref: string;
@@ -57,6 +63,8 @@ export function buildTemplateHubRows(
     description: row.description,
     stage: row.stage,
     lastEditedMs: lastEditedMsProposal(row),
+    coverPreviewBlocks: resolveTemplateCoverPreviewBlocks(row.document),
+    branding: row.branding,
     coverImageUrl: resolveTemplateCoverImageUrl(row.document),
     cardMeta: buildTemplateCardMeta(row.id, "proposal", row.document, row.catalogMeta),
     editHref: `/admin/templates/${row.id}`,
@@ -72,7 +80,6 @@ export function buildTemplateHubRows(
     stage: row.stage,
     lastEditedMs: lastEditedMsContract(row),
     agreementTitle: row.agreementTitle,
-    coverImageUrl: resolveTemplateCoverImageUrl(row.document),
     cardMeta: buildTemplateCardMeta(row.id, "contract", row.document, row.catalogMeta),
     editHref: `/admin/templates/contracts/${row.id}`,
     previewHref: `/admin/templates/contracts/${row.id}/preview`,

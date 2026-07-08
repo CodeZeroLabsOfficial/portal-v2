@@ -38,9 +38,9 @@ export function ContractTemplatePickerCard({
     >
       <div className="relative">
         <TemplateCover
-          coverImageUrl={row.coverImageUrl}
           alt={row.name}
           kind="contract"
+          agreementTitle={row.agreementTitle}
           className="aspect-[2/1] max-h-28"
         />
         {row.stage === "draft" ? (
