@@ -113,6 +113,14 @@ const ALIGN_OPTIONS: { value: "left" | "center" | "right"; icon: typeof AlignLef
 
 const VIEWPORT_EDGE_PAD_PX = 8;
 
+/** Stable Floating UI config — TipTap v3 BubbleMenu re-dispatches plugin updates when `options` identity changes. */
+const BUBBLE_MENU_FLOATING_OPTIONS = {
+  placement: "top" as const,
+  offset: 6,
+  flip: { fallbackPlacements: ["bottom", "top"] as Array<"bottom" | "top"> },
+  shift: { padding: VIEWPORT_EDGE_PAD_PX },
+};
+
 /** Radix dropdowns portal to `document.body`; inside the Floating UI bubble that breaks anchor geometry. Inline panels stay under the trigger. */
 function useCloseBubbleToolbarMenu(
   open: boolean,
@@ -1239,6 +1247,18 @@ export function ProposalRichText({
     [placeholder],
   );
 
+  const bubbleMenuShouldShow = React.useCallback(
+    ({ editor: ed, from, to }: { editor: Editor; from: number; to: number }) => {
+      if (!ed.isEditable) return false;
+      if (from !== to) return true;
+      if (showBubbleWhenBlockSelected) return true;
+      if (bubbleMenuRequiresTextSelection) return false;
+      if (headerVariant && ed.isActive("heading")) return true;
+      return ed.isFocused;
+    },
+    [showBubbleWhenBlockSelected, bubbleMenuRequiresTextSelection, headerVariant],
+  );
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
@@ -1307,20 +1327,8 @@ export function ProposalRichText({
       {!bandFormattingChrome ? (
         <BubbleMenu
           editor={editor}
-          options={{
-            placement: "top",
-            offset: 6,
-            flip: { fallbackPlacements: ["bottom", "top"] },
-            shift: { padding: VIEWPORT_EDGE_PAD_PX },
-          }}
-          shouldShow={({ editor: ed, from, to }) => {
-            if (!ed.isEditable) return false;
-            if (from !== to) return true;
-            if (showBubbleWhenBlockSelected) return true;
-            if (bubbleMenuRequiresTextSelection) return false;
-            if (headerVariant && ed.isActive("heading")) return true;
-            return ed.isFocused;
-          }}
+          options={BUBBLE_MENU_FLOATING_OPTIONS}
+          shouldShow={bubbleMenuShouldShow}
         >
           <div
             className={cn(
