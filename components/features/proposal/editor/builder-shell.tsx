@@ -17,11 +17,10 @@ export interface BuilderShellProps {
   className?: string;
 }
 
-/** Track widths (`20vw`) must match `BUILDER_SIDE_PANEL_WIDTH_CLASSES` so panels fill their cell exactly. */
 function builderDesktopGridColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
-  if (outlineOpen && inspectorOpen) return "grid-cols-[20vw_minmax(0,1fr)_20vw]";
-  if (outlineOpen) return "grid-cols-[20vw_minmax(0,1fr)_0px]";
-  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20vw]";
+  if (outlineOpen && inspectorOpen) return "grid-cols-[20%_minmax(0,1fr)_20%]";
+  if (outlineOpen) return "grid-cols-[20%_minmax(0,1fr)_0px]";
+  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20%]";
   return "grid-cols-[0px_minmax(0,1fr)_0px]";
 }
 
@@ -97,8 +96,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   }
 
   return (
-    // Definite height + clipped page scroll: only the columns scroll, so panels never move with the canvas.
-    <div className={cn("flex h-dvh flex-col overflow-hidden", className)}>
+    <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
       <BuilderSidePanelEdgeTriggers />
       <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />
