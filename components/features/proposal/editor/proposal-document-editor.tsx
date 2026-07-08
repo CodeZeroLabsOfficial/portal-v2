@@ -231,8 +231,6 @@ export function ProposalDocumentEditor({
     onTemplateNameStartEdit: handleTemplateNameStartEdit,
     onTemplateNameConfirmSave: handleTemplateNameConfirmSave,
     onTemplateNameCancelEdit: handleTemplateNameCancelEdit,
-    agreementTitle,
-    onAgreementTitleChange: setAgreementTitle,
     proposalEditShellToolbar,
     initialStatus,
     saving,
@@ -259,6 +257,8 @@ export function ProposalDocumentEditor({
         catalogMeta={catalogMeta}
         onCatalogMetaChange={setCatalogMeta}
         stage={templateStage}
+        agreementTitle={isContractTemplate ? agreementTitle : undefined}
+        onAgreementTitleChange={isContractTemplate ? setAgreementTitle : undefined}
       />
     );
   });

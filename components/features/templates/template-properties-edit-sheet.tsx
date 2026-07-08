@@ -39,7 +39,9 @@ export interface TemplatePropertiesEditSheetProps {
   onOpenChange: (open: boolean) => void;
   description: string;
   catalogMeta: TemplateCatalogMeta;
-  onSave: (description: string, catalogMeta: TemplateCatalogMeta) => void;
+  /** Contract templates — customer-facing agreement modal / PDF title. */
+  agreementTitle?: string;
+  onSave: (description: string, catalogMeta: TemplateCatalogMeta, agreementTitle?: string) => void;
 }
 
 function updateCatalogField(
@@ -55,18 +57,22 @@ export function TemplatePropertiesEditSheet({
   onOpenChange,
   description,
   catalogMeta,
+  agreementTitle,
   onSave,
 }: TemplatePropertiesEditSheetProps) {
+  const isContractTemplate = agreementTitle !== undefined;
   const [draftDescription, setDraftDescription] = React.useState(description);
   const [draftCatalogMeta, setDraftCatalogMeta] = React.useState(catalogMeta);
+  const [draftAgreementTitle, setDraftAgreementTitle] = React.useState(agreementTitle ?? "");
   const [featureDraft, setFeatureDraft] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
     setDraftDescription(description);
     setDraftCatalogMeta(catalogMeta);
+    setDraftAgreementTitle(agreementTitle ?? "");
     setFeatureDraft("");
-  }, [open, description, catalogMeta]);
+  }, [open, description, catalogMeta, agreementTitle]);
 
   const classificationOptions = catalogSelectOptions(
     TEMPLATE_CLASSIFICATIONS,
@@ -99,7 +105,11 @@ export function TemplatePropertiesEditSheet({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSave(draftDescription, draftCatalogMeta);
+    onSave(
+      draftDescription,
+      draftCatalogMeta,
+      isContractTemplate ? draftAgreementTitle.trim() || "Services Agreement" : undefined,
+    );
     onOpenChange(false);
   }
 
@@ -111,6 +121,22 @@ export function TemplatePropertiesEditSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className={sheetFormClass} noValidate>
+          {isContractTemplate ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="template-agreement-title">Agreement title</Label>
+              <Input
+                id="template-agreement-title"
+                value={draftAgreementTitle}
+                placeholder="Services Agreement"
+                onChange={(e) => setDraftAgreementTitle(e.target.value)}
+              />
+              <p className="text-muted-foreground text-xs leading-snug">
+                Customer-facing heading on the agreement modal and PDF cover — separate from the template
+                name in the hub.
+              </p>
+            </div>
+          ) : null}
+
           <div className="space-y-1.5">
             <Label htmlFor="template-subtitle">Subtitle</Label>
             <Input

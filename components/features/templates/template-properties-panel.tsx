@@ -25,6 +25,9 @@ export interface TemplatePropertiesPanelProps {
   catalogMeta: TemplateCatalogMeta;
   onCatalogMetaChange: (next: TemplateCatalogMeta) => void;
   stage: ProposalTemplateStage;
+  /** Contract templates — customer-facing agreement modal / PDF title. */
+  agreementTitle?: string;
+  onAgreementTitleChange?: (value: string) => void;
 }
 
 interface PropertyFieldProps {
@@ -54,11 +57,15 @@ export function TemplatePropertiesPanel({
   catalogMeta,
   onCatalogMetaChange,
   stage,
+  agreementTitle,
+  onAgreementTitleChange,
 }: TemplatePropertiesPanelProps) {
+  const isContractTemplate = onAgreementTitleChange !== undefined;
   const stageBadge = templateStageBadgeDisplay(stage);
   const [editOpen, setEditOpen] = React.useState(false);
   const versionLabel = templateCatalogVersionLabel(catalogMeta);
   const descriptionText = description.trim();
+  const agreementTitleText = agreementTitle?.trim() || "Services Agreement";
 
   return (
     <>
@@ -74,6 +81,15 @@ export function TemplatePropertiesPanel({
             ariaLabel="Edit template properties"
           />
         </div>
+
+        {isContractTemplate ? (
+          <PropertyField label="Agreement title">
+            <p className="text-muted-foreground text-sm">{agreementTitleText}</p>
+            <p className="text-muted-foreground mt-1 text-xs leading-snug">
+              Shown on the agreement modal, PDF cover, and when attached to proposals.
+            </p>
+          </PropertyField>
+        ) : null}
 
         <PropertyField label="Subtitle">{mutedText(catalogMeta.subtitle)}</PropertyField>
 
@@ -123,9 +139,13 @@ export function TemplatePropertiesPanel({
         onOpenChange={setEditOpen}
         description={description}
         catalogMeta={catalogMeta}
-        onSave={(nextDescription, nextCatalogMeta) => {
+        agreementTitle={isContractTemplate ? agreementTitle : undefined}
+        onSave={(nextDescription, nextCatalogMeta, nextAgreementTitle) => {
           onDescriptionChange(nextDescription);
           onCatalogMetaChange(nextCatalogMeta);
+          if (nextAgreementTitle !== undefined) {
+            onAgreementTitleChange?.(nextAgreementTitle);
+          }
         }}
       />
     </>

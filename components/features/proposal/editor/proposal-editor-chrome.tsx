@@ -11,7 +11,6 @@ import {
 } from "@/components/features/templates/template-editor-actions-menu";
 import { EditableTemplateNameControl } from "@/components/features/proposal/editor/editable-template-name-control";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export type ProposalEditShellToolbarProps = {
   customerBackHref: string | null;
@@ -31,8 +30,6 @@ export interface ProposalEditorChromeProps {
   onTemplateNameStartEdit: () => void;
   onTemplateNameConfirmSave: () => void;
   onTemplateNameCancelEdit: () => void;
-  agreementTitle: string;
-  onAgreementTitleChange: (title: string) => void;
   proposalEditShellToolbar?: ProposalEditShellToolbarProps;
   initialStatus?: string;
   saving: boolean;
@@ -164,8 +161,6 @@ export function ProposalEditorChrome({
   onTemplateNameStartEdit,
   onTemplateNameConfirmSave,
   onTemplateNameCancelEdit,
-  agreementTitle,
-  onAgreementTitleChange,
   proposalEditShellToolbar,
   initialStatus = "draft",
   saving,
@@ -233,19 +228,6 @@ export function ProposalEditorChrome({
             />
           </div>
         </div>
-        {isContractTemplate ? (
-          <div className="flex h-8 max-w-xl items-center gap-2 border-b border-border/60">
-            <span className="shrink-0 text-xs font-medium text-muted-foreground">Agreement title</span>
-            <Input
-              aria-label="Default agreement modal title"
-              value={agreementTitle}
-              disabled={saving}
-              onChange={(e) => onAgreementTitleChange(e.target.value)}
-              placeholder="Services Agreement"
-              className="h-8 flex-1 border-0 bg-transparent px-0 text-xs text-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-          </div>
-        ) : null}
         {message ? <span className="block text-sm text-muted-foreground">{message}</span> : null}
       </>
     );
