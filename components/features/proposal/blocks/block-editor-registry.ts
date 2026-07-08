@@ -1,5 +1,23 @@
-import type { ComponentType } from "react";
+import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
 
+import type { BlockStyle, ProposalBlock } from "@/types/proposal";
+import type { ProposalBlockViewProps, ProposalBlockViewRenderer } from "@/lib/proposal/block-view-types";
+import { renderAccordionBlock } from "@/components/features/proposal/blocks/accordion/viewer";
+import { renderAgreementBlock } from "@/components/features/proposal/blocks/agreement/viewer";
+import { renderDividerBlock } from "@/components/features/proposal/blocks/divider/viewer";
+import { renderEmbedBlock } from "@/components/features/proposal/blocks/embed/viewer";
+import { renderFormBlock } from "@/components/features/proposal/blocks/form/viewer";
+import { renderHeaderBlock } from "@/components/features/proposal/blocks/header/viewer";
+import { renderIconBlock } from "@/components/features/proposal/blocks/icon/viewer";
+import { renderImageBlock } from "@/components/features/proposal/blocks/image/viewer";
+import { renderPackagesBlock } from "@/components/features/proposal/blocks/packages/viewer";
+import { renderPaymentBlock } from "@/components/features/proposal/blocks/payment/viewer";
+import { renderPricingBlock } from "@/components/features/proposal/blocks/pricing/viewer";
+import { renderSignatureBlock } from "@/components/features/proposal/blocks/signature/viewer";
+import { renderSpacerBlock } from "@/components/features/proposal/blocks/spacer/viewer";
+import { renderSplashBlock } from "@/components/features/proposal/blocks/splash/viewer";
+import { renderTextBlock } from "@/components/features/proposal/blocks/text/viewer";
+import { renderVideoBlock } from "@/components/features/proposal/blocks/video/viewer";
 import { TextBlockEditor } from "@/components/features/proposal/blocks/text/editor";
 import { HeaderBlockEditor } from "@/components/features/proposal/blocks/header/editor";
 import { DividerBlockEditor } from "@/components/features/proposal/blocks/divider/editor";
@@ -12,14 +30,35 @@ import { FormBlockEditor } from "@/components/features/proposal/blocks/form/edit
 import { PaymentBlockEditor } from "@/components/features/proposal/blocks/payment/editor";
 import { SignatureBlockEditor } from "@/components/features/proposal/blocks/signature/editor";
 import { SplashBlockEditor } from "@/components/features/proposal/blocks/splash/editor";
-import { AccordionBlockEditor } from "@/components/features/proposal/blocks/accordion/editor";
+import { AccordionBlockEditor } from "@/components/features/proposal/blocks/accordion/accordion-block-editor";
 import { ColumnsBlockEditor } from "@/components/features/proposal/blocks/columns/editor";
 import { SectionBlockEditor } from "@/components/features/proposal/blocks/section/editor";
 import { AgreementBlockEditor } from "@/components/features/proposal/blocks/agreement/editor";
 import { PricingBlockEditor } from "@/components/features/proposal/blocks/pricing/editor";
 import { PackagesBlockEditor } from "@/components/features/proposal/blocks/packages/editor";
 import { createProposalBlock } from "@/lib/proposal/block-definitions";
-import type { ProposalBlock } from "@/types/proposal";
+
+/** Canvas context passed from {@link ProposalBlockCanvas} into block editors. */
+export interface BlockCanvasContext {
+  selectedBlockId?: string | null;
+  onSelectBlock?: (id: string | null) => void;
+  textPlaceholder?: string;
+  seamlessSection?: boolean;
+  editableSurface?: "section-child" | "column-cell" | null;
+  formattingChrome?: "bubble" | "band";
+  getBlockStyle?: (b: ProposalBlock) => BlockStyle | undefined;
+  applyBlockStyle?: (id: string, style: BlockStyle | undefined) => void;
+  imageColumnToolbar?: { onRemove: () => void };
+  iconColumnToolbar?: { onRemove: () => void };
+  columnsLayoutEditing?: {
+    activeId: string | null;
+    setActiveId: Dispatch<SetStateAction<string | null>>;
+  };
+  columnsInnerCellCallbacks?: {
+    onInnerCellActiveChange: (cellId: string | null) => void;
+    registerClearCellSelection: (clear: (() => void) | null) => void;
+  };
+}
 
 export type BlockMenuProfile = "proposal" | "template" | "contract-template";
 
@@ -27,10 +66,7 @@ export interface BlockEditorProps<T extends ProposalBlock = ProposalBlock> {
   block: T;
   onChange: (block: T) => void;
   selected?: boolean;
-}
-
-export interface BlockViewerProps {
-  block: ProposalBlock;
+  canvas?: BlockCanvasContext;
 }
 
 export interface ProposalBlockDefinition {
@@ -40,7 +76,7 @@ export interface ProposalBlockDefinition {
   allowedProfiles: BlockMenuProfile[];
   allowedParents: ("root" | "section" | "column" | "agreement")[];
   Editor?: ComponentType<BlockEditorProps<ProposalBlock>>;
-  Viewer?: ComponentType<BlockViewerProps>;
+  viewRenderer?: ProposalBlockViewRenderer;
 }
 
 function defineBlock(def: ProposalBlockDefinition): ProposalBlockDefinition {
@@ -54,6 +90,7 @@ export const TEXT_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: TextBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderTextBlock,
 });
 
 export const HEADER_BLOCK_DEFINITION = defineBlock({
@@ -63,6 +100,7 @@ export const HEADER_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: HeaderBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderHeaderBlock,
 });
 
 export const DIVIDER_BLOCK_DEFINITION = defineBlock({
@@ -72,6 +110,7 @@ export const DIVIDER_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: DividerBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderDividerBlock,
 });
 
 export const SPACER_BLOCK_DEFINITION = defineBlock({
@@ -81,6 +120,7 @@ export const SPACER_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: SpacerBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderSpacerBlock,
 });
 
 export const SPLASH_BLOCK_DEFINITION = defineBlock({
@@ -90,6 +130,7 @@ export const SPLASH_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["root", "section", "column"],
   Editor: SplashBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderSplashBlock,
 });
 
 export const IMAGE_BLOCK_DEFINITION = defineBlock({
@@ -99,6 +140,7 @@ export const IMAGE_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: ImageBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderImageBlock,
 });
 
 export const VIDEO_BLOCK_DEFINITION = defineBlock({
@@ -108,6 +150,7 @@ export const VIDEO_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: VideoBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderVideoBlock,
 });
 
 export const ICON_BLOCK_DEFINITION = defineBlock({
@@ -117,6 +160,7 @@ export const ICON_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["section", "column"],
   Editor: IconBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderIconBlock,
 });
 
 export const SECTION_BLOCK_DEFINITION = defineBlock({
@@ -144,6 +188,7 @@ export const ACCORDION_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template", "contract-template"],
   allowedParents: ["root", "section", "column"],
   Editor: AccordionBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderAccordionBlock,
 });
 
 export const PACKAGES_BLOCK_DEFINITION = defineBlock({
@@ -153,6 +198,7 @@ export const PACKAGES_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: PackagesBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderPackagesBlock,
 });
 
 export const PRICING_BLOCK_DEFINITION = defineBlock({
@@ -162,6 +208,7 @@ export const PRICING_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["section", "column", "agreement"],
   Editor: PricingBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderPricingBlock,
 });
 
 export const AGREEMENT_BLOCK_DEFINITION = defineBlock({
@@ -171,6 +218,7 @@ export const AGREEMENT_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["root", "column"],
   Editor: AgreementBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderAgreementBlock,
 });
 
 export const FORM_BLOCK_DEFINITION = defineBlock({
@@ -180,6 +228,7 @@ export const FORM_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal"],
   allowedParents: ["section", "column"],
   Editor: FormBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderFormBlock,
 });
 
 export const SIGNATURE_BLOCK_DEFINITION = defineBlock({
@@ -189,6 +238,7 @@ export const SIGNATURE_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal"],
   allowedParents: ["section", "column", "agreement"],
   Editor: SignatureBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderSignatureBlock,
 });
 
 export const PAYMENT_BLOCK_DEFINITION = defineBlock({
@@ -198,6 +248,7 @@ export const PAYMENT_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal"],
   allowedParents: ["section", "column"],
   Editor: PaymentBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderPaymentBlock,
 });
 
 export const EMBED_BLOCK_DEFINITION = defineBlock({
@@ -207,6 +258,7 @@ export const EMBED_BLOCK_DEFINITION = defineBlock({
   allowedProfiles: ["proposal", "template"],
   allowedParents: ["section", "column"],
   Editor: EmbedBlockEditor as ProposalBlockDefinition["Editor"],
+  viewRenderer: renderEmbedBlock,
 });
 
 export const PROPOSAL_BLOCK_DEFINITIONS = [
@@ -240,12 +292,29 @@ export function getBlockDefinition(type: ProposalBlock["type"]): ProposalBlockDe
   return REGISTRY_BY_TYPE[type];
 }
 
+export function getBlockViewRenderer(type: ProposalBlock["type"]): ProposalBlockViewRenderer | undefined {
+  return getBlockDefinition(type)?.viewRenderer;
+}
+
+/** Public proposal viewer dispatch — delegates to each block definition's `viewRenderer`. */
+export function renderProposalBlockFromRegistry(props: ProposalBlockViewProps): ReactNode | undefined {
+  return getBlockViewRenderer(props.block.type as ProposalBlock["type"])?.(props);
+}
+
+/** Whether a block definition is available for the given menu profile. */
+export function blockMatchesProfile(def: ProposalBlockDefinition, profile: BlockMenuProfile): boolean {
+  if (profile === "proposal" || profile === "template") {
+    return def.allowedProfiles.includes("proposal") || def.allowedProfiles.includes("template");
+  }
+  return def.allowedProfiles.includes(profile);
+}
+
 export function listBlocksForProfile(
   profile: BlockMenuProfile,
   parent: "root" | "section" | "column" | "agreement" = "root",
 ): ProposalBlockDefinition[] {
   return PROPOSAL_BLOCK_DEFINITIONS.filter(
-    (def) => def.allowedProfiles.includes(profile) && def.allowedParents.includes(parent),
+    (def) => blockMatchesProfile(def, profile) && def.allowedParents.includes(parent),
   );
 }
 

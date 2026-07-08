@@ -19,12 +19,12 @@ import {
 import { BlockRow, type BlockRowContext } from "@/components/features/proposal/editor/block-row";
 import { BlockSelection } from "@/components/features/proposal/editor/block-selection";
 import { BlockToolbarHost } from "@/components/features/proposal/editor/block-toolbar-host";
-import { SectionChildInsertSlot } from "@/components/proposal/proposal-section-child-chrome";
+import { SectionChildInsertSlot } from "@/components/features/proposal/editor/section-chrome/proposal-section-child-chrome";
 import {
   SectionChildFloatingGutterProvider,
   useRegisterSectionChildFloatingRow,
   useSectionChildFloatingGutterOptional,
-} from "@/components/proposal/section-child-floating-gutter";
+} from "@/components/features/proposal/editor/section-chrome/section-child-floating-gutter";
 import { sectionChildChrome } from "@/lib/proposal/block-chrome";
 import {
   PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,

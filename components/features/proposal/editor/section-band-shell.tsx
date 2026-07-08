@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
+import { ProposalSectionEditorChromeContext } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
 import {
   resolveSectionBackground,
   sectionPrefersLightForeground,

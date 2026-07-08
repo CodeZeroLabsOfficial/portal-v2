@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnsBlockFields } from "@/components/features/proposal/editor/proposal-block-fields";
+import { ColumnsBlockFields } from "./fields";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { ColumnsBlock } from "@/types/proposal";
 
@@ -15,21 +15,25 @@ export interface ColumnsBlockEditorProps extends BlockEditorProps<ColumnsBlock> 
 export function ColumnsBlockEditor({
   block,
   onChange,
+  canvas,
   resizeLayoutActive,
   onExitResizeLayout,
-  ancestorSelectedBlockId = null,
+  ancestorSelectedBlockId,
   onInnerCellActiveChange,
   registerClearCellSelection,
 }: ColumnsBlockEditorProps) {
+  const layoutEditing = canvas?.columnsLayoutEditing;
+  const innerCallbacks = canvas?.columnsInnerCellCallbacks;
+
   return (
     <ColumnsBlockFields
       block={block}
       onChange={onChange}
-      resizeLayoutActive={resizeLayoutActive}
-      onExitResizeLayout={onExitResizeLayout}
-      ancestorSelectedBlockId={ancestorSelectedBlockId}
-      onInnerCellActiveChange={onInnerCellActiveChange}
-      registerClearCellSelection={registerClearCellSelection}
+      resizeLayoutActive={resizeLayoutActive ?? layoutEditing?.activeId === block.id}
+      onExitResizeLayout={onExitResizeLayout ?? (() => layoutEditing?.setActiveId(null))}
+      ancestorSelectedBlockId={ancestorSelectedBlockId ?? canvas?.selectedBlockId ?? null}
+      onInnerCellActiveChange={onInnerCellActiveChange ?? innerCallbacks?.onInnerCellActiveChange}
+      registerClearCellSelection={registerClearCellSelection ?? innerCallbacks?.registerClearCellSelection}
     />
   );
 }

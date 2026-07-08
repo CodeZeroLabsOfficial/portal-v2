@@ -14,17 +14,23 @@ export interface HeaderBlockEditorProps extends BlockEditorProps<HeaderBlock> {
 export function HeaderBlockEditor({
   block,
   onChange,
+  canvas,
   showBubbleWhenBlockSelected,
   formattingChrome,
 }: HeaderBlockEditorProps) {
+  const resolvedFormattingChrome = formattingChrome ?? canvas?.formattingChrome ?? "bubble";
+  const resolvedShowBubble =
+    showBubbleWhenBlockSelected ??
+    (resolvedFormattingChrome !== "band" && canvas?.selectedBlockId === block.id);
+
   return (
     <ProposalRichText
       key={block.id}
       variant="header"
       html={headerBlockEditorHtml(block)}
       placeholder="Heading"
-      showBubbleWhenBlockSelected={showBubbleWhenBlockSelected}
-      formattingChrome={formattingChrome}
+      showBubbleWhenBlockSelected={resolvedShowBubble}
+      formattingChrome={resolvedFormattingChrome}
       onChange={(html) =>
         onChange({
           ...block,

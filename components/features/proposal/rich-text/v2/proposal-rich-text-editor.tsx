@@ -65,8 +65,8 @@ import {
   ProposalBlockTypography,
   type ProposalLetterCase,
 } from "@/lib/proposal/rich-text/tiptap-typography";
-import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
-import { useSingleSectionRichTextEditor } from "@/components/features/proposal/editor/single-section-rich-text-bridge";
+import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
+import { useProposalSingleLayoutRichTextEditorOptional } from "@/components/features/proposal/editor/single-layout-rich-text-context";
 import {
   ProposalToolbarIconButton,
   ProposalToolbarSectionLabel,
@@ -1029,7 +1029,7 @@ export interface ProposalRichTextProps {
   showBubbleWhenBlockSelected?: boolean;
   /**
    * `bubble` (default) — TipTap selection bubble. `band` — fixed toolbar in the
-   * single-section chrome stack (shared with image/pricing controls).
+   * single-layout chrome stack (shared with image/pricing controls).
    */
   formattingChrome?: "bubble" | "band";
 }
@@ -1192,7 +1192,7 @@ export function ProposalRichText({
   formattingChrome = "bubble",
 }: ProposalRichTextProps) {
   const sectionChrome = useProposalSectionEditorChrome();
-  const singleSectionRichText = useSingleSectionRichTextEditor();
+  const singleLayoutRichText = useProposalSingleLayoutRichTextEditorOptional();
   const bandFormattingChrome = formattingChrome === "band";
   const toolbarAppearance = useProposalSectionEditorAppearance();
   const seamless = sectionChrome?.seamless ?? false;
@@ -1289,12 +1289,12 @@ export function ProposalRichText({
   }, [showBubbleWhenBlockSelected, editor, bandFormattingChrome]);
 
   React.useEffect(() => {
-    if (!bandFormattingChrome || !singleSectionRichText || !editor) return;
-    singleSectionRichText.setEditor(editor);
+    if (!bandFormattingChrome || !singleLayoutRichText || !editor) return;
+    singleLayoutRichText.setEditor(editor);
     return () => {
-      singleSectionRichText.setEditor(null);
+      singleLayoutRichText.setEditor(null);
     };
-  }, [bandFormattingChrome, singleSectionRichText, editor]);
+  }, [bandFormattingChrome, singleLayoutRichText, editor]);
 
   React.useEffect(() => {
     if (!editor) return;

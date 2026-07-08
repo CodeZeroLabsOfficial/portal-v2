@@ -1,6 +1,6 @@
 "use client";
 
-import { AgreementBlockFields } from "@/components/features/proposal/editor/proposal-block-fields";
+import { AgreementBlockFields } from "./fields";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { AgreementBlock, BlockStyle, ProposalBlock } from "@/types/proposal";
 
@@ -14,19 +14,20 @@ export interface AgreementBlockEditorProps extends BlockEditorProps<AgreementBlo
 export function AgreementBlockEditor({
   block,
   onChange,
-  selectedBlockId = null,
-  onSelectBlock = () => {},
-  getBlockStyle = () => undefined,
-  applyBlockStyle = () => {},
+  canvas,
+  selectedBlockId,
+  onSelectBlock,
+  getBlockStyle,
+  applyBlockStyle,
 }: AgreementBlockEditorProps) {
   return (
     <AgreementBlockFields
       block={block}
       onChange={onChange as (next: ProposalBlock) => void}
-      selectedBlockId={selectedBlockId}
-      onSelectBlock={onSelectBlock}
-      getBlockStyle={getBlockStyle}
-      applyBlockStyle={applyBlockStyle}
+      selectedBlockId={selectedBlockId ?? canvas?.selectedBlockId ?? null}
+      onSelectBlock={onSelectBlock ?? canvas?.onSelectBlock ?? (() => {})}
+      getBlockStyle={getBlockStyle ?? canvas?.getBlockStyle ?? (() => undefined)}
+      applyBlockStyle={applyBlockStyle ?? canvas?.applyBlockStyle ?? (() => {})}
     />
   );
 }

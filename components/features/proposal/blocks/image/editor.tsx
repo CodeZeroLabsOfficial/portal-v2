@@ -1,7 +1,7 @@
 "use client";
 
-import { ProposalImageBlockEditor } from "@/components/proposal/proposal-image-block-editor";
-import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
+import { ProposalImageBlockEditor } from "@/components/features/proposal/blocks/image/image-block-editor";
+import { ProposalImageBlockToolbar } from "@/components/features/proposal/blocks/image/image-block-toolbar";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { ImageBlock } from "@/types/proposal";
 
@@ -13,10 +13,13 @@ export interface ImageBlockEditorProps extends BlockEditorProps<ImageBlock> {
 export function ImageBlockEditor({
   block,
   onChange,
+  canvas,
   selectedBlockId,
   columnToolbar,
 }: ImageBlockEditorProps) {
-  const showEmbeddedColumnToolbar = Boolean(columnToolbar) && selectedBlockId === block.id;
+  const resolvedSelectedId = selectedBlockId ?? canvas?.selectedBlockId;
+  const resolvedColumnToolbar = columnToolbar ?? canvas?.imageColumnToolbar;
+  const showEmbeddedColumnToolbar = Boolean(resolvedColumnToolbar) && resolvedSelectedId === block.id;
 
   return (
     <div className="relative">
@@ -28,7 +31,7 @@ export function ImageBlockEditor({
               variant="embedded"
               block={block}
               onChange={onChange}
-              onDelete={columnToolbar?.onRemove}
+              onDelete={resolvedColumnToolbar?.onRemove}
             />
           </div>
         </div>

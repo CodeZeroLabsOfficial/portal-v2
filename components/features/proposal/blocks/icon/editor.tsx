@@ -1,7 +1,7 @@
 "use client";
 
-import { ProposalIconBlockEditorRow } from "@/components/proposal/proposal-icon-block-editor";
-import { ProposalIconBlockToolbar } from "@/components/proposal/proposal-icon-block-toolbar";
+import { ProposalIconBlockEditorRow } from "@/components/features/proposal/blocks/icon/icon-block-editor";
+import { ProposalIconBlockToolbar } from "@/components/features/proposal/blocks/icon/icon-block-toolbar";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { IconBlock } from "@/types/proposal";
 
@@ -14,24 +14,28 @@ export interface IconBlockEditorProps extends BlockEditorProps<IconBlock> {
 export function IconBlockEditor({
   block,
   onChange,
+  canvas,
   selectedBlockId,
   onSelectBlock,
   columnToolbar,
 }: IconBlockEditorProps) {
-  const isSelected = selectedBlockId === block.id;
+  const resolvedSelectedId = selectedBlockId ?? canvas?.selectedBlockId;
+  const resolvedOnSelect = onSelectBlock ?? canvas?.onSelectBlock;
+  const resolvedColumnToolbar = columnToolbar ?? canvas?.iconColumnToolbar;
+  const isSelected = resolvedSelectedId === block.id;
 
   return (
     <ProposalIconBlockEditorRow
       block={block}
       onChange={onChange}
       isSelected={isSelected}
-      onSelect={() => onSelectBlock?.(block.id)}
+      onSelect={() => resolvedOnSelect?.(block.id)}
       toolbar={
         <ProposalIconBlockToolbar
           variant="embedded"
           block={block}
           onChange={onChange}
-          onRemove={columnToolbar?.onRemove}
+          onRemove={resolvedColumnToolbar?.onRemove}
         />
       }
     />

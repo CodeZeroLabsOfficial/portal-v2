@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
-import { useBlockMenuProfile } from "@/components/features/proposal/editor/proposal-block-fields";
+import { useBlockMenuProfile } from "@/components/features/proposal/editor/block-menu-profile-context";
 import {
   DropdownMenu,
   DropdownMenuContent,

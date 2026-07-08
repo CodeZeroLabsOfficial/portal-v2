@@ -25,10 +25,8 @@ import {
   blockLabel,
 } from "@/components/features/proposal/editor/block-toolbar-factory";
 import { SectionBandShell } from "@/components/features/proposal/editor/section-band-shell";
-import {
-  SingleSectionRichTextEditorProvider,
-  SingleSectionToolbarStack,
-} from "@/components/features/proposal/editor/single-section-toolbar";
+import { ProposalSingleLayoutRichTextProvider } from "@/components/features/proposal/editor/single-layout-rich-text-context";
+import { ProposalSingleLayoutToolbarStack } from "@/components/features/proposal/editor/single-layout-toolbar";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
@@ -36,7 +34,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { rootBlockChrome } from "@/lib/proposal/block-chrome";
 import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
-import { isSingleLayoutSection, singleLayoutSectionChild } from "@/lib/proposal/single-section";
+import { isSingleLayoutSection, singleLayoutSectionChild } from "@/lib/proposal/single-layout-section";
 import { cn } from "@/lib/utils";
 import type { BlockStyle, ProposalBlock, SectionBackground, SectionBlock } from "@/types/proposal";
 
@@ -149,11 +147,13 @@ export function RootBlockCanvas({
                             (isSelected ||
                               (chrome.toolbarVisibility === "hover-or-selected" && ctx.hovered));
 
-                          const singleSection = isSingleLayoutSection(block);
-                          const singleChild = singleSection ? singleLayoutSectionChild(block) : undefined;
+                          const singleLayout = isSingleLayoutSection(block);
+                          const singleLayoutChild = singleLayout
+                            ? singleLayoutSectionChild(block)
+                            : undefined;
                           const bandToolbarActive =
                             toolbarActive ||
-                            Boolean(singleChild && selectedBlockId === singleChild.id);
+                            Boolean(singleLayoutChild && selectedBlockId === singleLayoutChild.id);
 
                           const sectionToolbar = (
                             <BlockToolbarForBlock
@@ -193,10 +193,10 @@ export function RootBlockCanvas({
                               placement={chrome.toolbarPlacement}
                               active={bandToolbarActive}
                             >
-                              {singleSection && singleChild ? (
-                                <SingleSectionToolbarStack
+                              {singleLayout && singleLayoutChild ? (
+                                <ProposalSingleLayoutToolbarStack
                                   sectionToolbar={sectionToolbar}
-                                  child={singleChild}
+                                  child={singleLayoutChild}
                                   active={bandToolbarActive}
                                   onUpdateChild={(next) =>
                                     updateBlock(block.id, {
@@ -213,24 +213,7 @@ export function RootBlockCanvas({
                             </BlockToolbarHost>
                           );
 
-                          const fields = singleSection ? (
-                            <SingleSectionRichTextEditorProvider>
-                              <ProposalBlockFields
-                                block={block}
-                                onChange={(next) => updateBlock(block.id, next)}
-                                selection={{
-                                  selectedId: selectedBlockId,
-                                  onSelect: onSelectBlock,
-                                }}
-                                getBlockStyle={getBlockStyle}
-                                applyBlockStyle={applyBlockStyle}
-                                columnsLayoutEditing={{
-                                  activeId: rootColumnsLayoutEditingId,
-                                  setActiveId: setRootColumnsLayoutEditingId,
-                                }}
-                              />
-                            </SingleSectionRichTextEditorProvider>
-                          ) : (
+                          const fields = (
                             <ProposalBlockFields
                               block={block}
                               onChange={(next) => updateBlock(block.id, next)}
@@ -240,6 +223,7 @@ export function RootBlockCanvas({
                               }}
                               getBlockStyle={getBlockStyle}
                               applyBlockStyle={applyBlockStyle}
+                              formattingChrome={singleLayout ? "band" : undefined}
                               columnsLayoutEditing={{
                                 activeId: rootColumnsLayoutEditingId,
                                 setActiveId: setRootColumnsLayoutEditingId,
@@ -252,6 +236,17 @@ export function RootBlockCanvas({
                             />
                           );
 
+                          const rowContent = flushBand ? (
+                            <SectionBandShell block={block} toolbar={toolbar}>
+                              {fields}
+                            </SectionBandShell>
+                          ) : (
+                            <>
+                              {toolbar}
+                              {fields}
+                            </>
+                          );
+
                           return (
                             <BlockSelection
                               variant="root"
@@ -262,15 +257,12 @@ export function RootBlockCanvas({
                               lightSurface={block.type !== "section"}
                               onSelect={handleSelect}
                             >
-                              {flushBand ? (
-                                <SectionBandShell block={block} toolbar={toolbar}>
-                                  {fields}
-                                </SectionBandShell>
+                              {singleLayout ? (
+                                <ProposalSingleLayoutRichTextProvider>
+                                  {rowContent}
+                                </ProposalSingleLayoutRichTextProvider>
                               ) : (
-                                <>
-                                  {toolbar}
-                                  {fields}
-                                </>
+                                rowContent
                               )}
                             </BlockSelection>
                           );

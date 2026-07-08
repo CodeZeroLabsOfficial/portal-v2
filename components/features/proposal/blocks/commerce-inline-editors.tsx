@@ -1,0 +1,1601 @@
+"use client";
+
+import * as React from "react";
+import { Check, ChevronDown, Plus, Sparkles, TableProperties, X } from "lucide-react";
+import type {
+  PackageTier,
+  PackagesBlock,
+  PackagesPublicSelection,
+  PricingBlock,
+  PricingLineItem,
+} from "@/types/proposal";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { formatCurrencyAmount } from "@/lib/common/format";
+import {
+  readableForeground,
+  resolveBlockStyle,
+  resolveTableSurfaceColors,
+  tableSurfaceControlStyle,
+  tableSurfaceInlineTone,
+  tableSurfaceOutlineButtonStyle,
+  withAlpha,
+} from "@/lib/proposal/block-style";
+import {
+  DEFAULT_PACKAGES_UPFRONT_COST_12_MINOR,
+  formatPackageTierIncluded,
+} from "@/lib/catalog/package-tier-limits";
+import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import {
+  packageAddonsTotalMinor,
+  packageCommitmentTotalMinor,
+  packageMonthlyTotalMinor,
+  packageTermMonths,
+  packagesAddonsSectionActive,
+  resolvePackagesTotalSectionLabel,
+} from "@/lib/proposal/commerce/packages-totals";
+import { Input } from "@/components/ui/input";
+import type { CatalogServicePickerOption } from "@/types/catalog-service";
+import { useEditorCatalogServices, useEditorTemplatePricingReadOnly } from "@/components/features/proposal/editor/catalog/editor-catalog-services-context";
+import {
+  catalogAddonUnitAmountForTerm,
+  effectiveCatalogAddonUnitAmount,
+  isCatalogServiceAddonPickerOption,
+  isCatalogServicePlanPickerOption,
+  packageTierFromCatalogService,
+  pricingLineItemFromCatalogAddon,
+  syncCatalogAddonLineItemsForTerm,
+} from "@/lib/catalog/service-tier";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ProposalAccordionExpandSurface } from "@/components/features/proposal/blocks/shared/accordion-expand-surface";
+import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
+import { escapeHtml } from "@/lib/common/escape-html";
+import { proposalRichHtmlToPlainText } from "@/lib/proposal/rich-text/rich-plain-text";
+import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
+
+function newId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `b-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function packagesTitleEditorHtml(block: PackagesBlock): string {
+  if (block.titleHtml?.trim()) return block.titleHtml;
+  const t = (block.title ?? "").trim() || "Packages";
+  return `<h1>${escapeHtml(t)}</h1>`;
+}
+
+/* -----------------------------------------------------------------------------
+ * Inline edit primitives
+ * Each renders a clickable read-mode chip; on activation it swaps to a focused
+ * input. Enter / blur commits, Escape cancels. Designed so the editor feels
+ * like the public viewer — no sidebar form fields.
+ * -------------------------------------------------------------------------- */
+
+interface InlineTextProps {
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+  ariaLabel?: string;
+  className?: string;
+  inputClassName?: string;
+  /** Tone of the read-mode hover hint. */
+  tone?: "light" | "dark";
+}
+
+function InlineText({
+  value,
+  onChange,
+  placeholder = "Click to edit",
+  ariaLabel,
+  className,
+  inputClassName,
+  tone = "light",
+}: InlineTextProps) {
+  const [editing, setEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState(value);
+  React.useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [editing, value]);
+
+  function commit() {
+    setEditing(false);
+    if (draft !== value) onChange(draft);
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          } else if (e.key === "Escape") {
+            setDraft(value);
+            setEditing(false);
+          }
+        }}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        className={cn(
+          "w-full min-w-0 rounded-md border border-current/30 bg-transparent px-1.5 py-0.5 outline-none focus:border-current/60",
+          inputClassName ?? className,
+        )}
+      />
+    );
+  }
+
+  const isEmpty = !value;
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      aria-label={ariaLabel}
+      className={cn(
+        "group/inline rounded-md border border-transparent px-1.5 py-0.5 text-left transition-colors",
+        tone === "dark"
+          ? "hover:bg-white/10 hover:border-white/20"
+          : "hover:bg-foreground/5 hover:border-border",
+        isEmpty && "opacity-60",
+        className,
+      )}
+    >
+      {value || <span className="italic">{placeholder}</span>}
+    </button>
+  );
+}
+
+interface InlineNumberProps {
+  value: number;
+  onChange: (next: number) => void;
+  min?: number;
+  step?: number;
+  width?: string;
+  ariaLabel?: string;
+  className?: string;
+  tone?: "light" | "dark";
+}
+
+function InlineNumber({
+  value,
+  onChange,
+  min = 0,
+  step = 1,
+  width = "w-16",
+  ariaLabel,
+  className,
+  tone = "light",
+}: InlineNumberProps) {
+  const [draft, setDraft] = React.useState(String(value));
+  React.useEffect(() => setDraft(String(value)), [value]);
+
+  function commit(raw: string) {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < min) {
+      setDraft(String(value));
+      return;
+    }
+    const rounded = step >= 1 ? Math.floor(n) : n;
+    if (rounded !== value) onChange(rounded);
+    setDraft(String(rounded));
+  }
+
+  return (
+    <input
+      type="number"
+      min={min}
+      step={step}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      aria-label={ariaLabel}
+      className={cn(
+        "rounded-md border border-current/20 bg-transparent px-1.5 py-0.5 text-center tabular-nums outline-none transition-colors focus:border-current/60",
+        tone === "dark" ? "hover:bg-white/10" : "hover:bg-foreground/5",
+        width,
+        className,
+      )}
+    />
+  );
+}
+
+interface InlinePriceProps {
+  /** Stored in minor units. */
+  minor: number;
+  onChange: (nextMinor: number) => void;
+  currency: string;
+  ariaLabel?: string;
+  className?: string;
+  tone?: "light" | "dark";
+}
+
+function InlinePrice({ minor, onChange, currency, ariaLabel, className, tone = "light" }: InlinePriceProps) {
+  const [editing, setEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState(((minor ?? 0) / 100).toString());
+  React.useEffect(() => {
+    if (!editing) setDraft(((minor ?? 0) / 100).toString());
+  }, [editing, minor]);
+
+  function commit() {
+    setEditing(false);
+    const n = Number(draft);
+    if (!Number.isFinite(n) || n < 0) return;
+    const next = Math.round(n * 100);
+    if (next !== minor) onChange(next);
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="number"
+        min={0}
+        step="0.01"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          } else if (e.key === "Escape") {
+            setEditing(false);
+          }
+        }}
+        aria-label={ariaLabel}
+        className={cn(
+          "w-full min-w-0 rounded-md border border-current/40 bg-transparent px-2 py-1 text-center tabular-nums outline-none focus:border-current/60",
+          className,
+        )}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      aria-label={ariaLabel}
+      className={cn(
+        "rounded-md border border-transparent px-2 py-0.5 tabular-nums transition-colors",
+        tone === "dark"
+          ? "hover:bg-white/10 hover:border-white/20"
+          : "hover:bg-foreground/5 hover:border-border",
+        className,
+      )}
+    >
+      {formatCurrencyAmount(minor ?? 0, currency)}
+    </button>
+  );
+}
+
+/* -----------------------------------------------------------------------------
+ * Plans (packages) — inline editor.
+ * Visually mirrors PackagesBlockPublic so the admin sees what customers see.
+ * -------------------------------------------------------------------------- */
+
+export interface PackagesInlineEditorProps {
+  block: PackagesBlock;
+  onChange: (next: PackagesBlock) => void;
+}
+
+function defaultTier(): PackageTier {
+  return {
+    id: newId(),
+    name: "New tier",
+    includedUsers: 0,
+    includedLocations: 0,
+    includedAdmins: 0,
+    monthlyCost12Minor: 0,
+    monthlyCost24Minor: 0,
+    upfrontCost12Minor: DEFAULT_PACKAGES_UPFRONT_COST_12_MINOR,
+    features: [],
+  };
+}
+
+export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorProps) {
+  const pricingReadOnly = useEditorTemplatePricingReadOnly();
+  const tiers = block.tiers ?? [];
+  const currency = (block.currency ?? "aud").toUpperCase();
+  const catalogServices = useEditorCatalogServices();
+  const orderedCatalogServices = React.useMemo(() => {
+    const rank = (name: string): number => {
+      const n = name.trim().toLowerCase();
+      if (n === "starter") return 0;
+      if (n === "professional") return 1;
+      if (n === "premium") return 2;
+      if (n === "enterprise") return 3;
+      return 100;
+    };
+    return [...catalogServices]
+      .filter(isCatalogServicePlanPickerOption)
+      .sort((a, b) => {
+        const ra = rank(a.serviceName);
+        const rb = rank(b.serviceName);
+        if (ra !== rb) return ra - rb;
+        return a.serviceName.localeCompare(b.serviceName, undefined, { sensitivity: "base" });
+      });
+  }, [catalogServices]);
+  const catalogAddons = React.useMemo(
+    () =>
+      [...catalogServices]
+        .filter(isCatalogServiceAddonPickerOption)
+        .sort((a, b) =>
+          a.serviceName.localeCompare(b.serviceName, undefined, { sensitivity: "base" }),
+        ),
+    [catalogServices],
+  );
+  const [term, setTerm] = React.useState<"12_months" | "24_months">("24_months");
+  const setTermWithAddonSync = React.useCallback(
+    (next: "12_months" | "24_months") => {
+      setTerm(next);
+      const synced = syncCatalogAddonLineItemsForTerm(block.addonLineItems ?? [], next, catalogAddons);
+      if (synced !== (block.addonLineItems ?? [])) {
+        onChange({ ...block, addonLineItems: synced });
+      }
+    },
+    [block, catalogAddons, onChange],
+  );
+  const [addonsSectionOpen, setAddonsSectionOpen] = React.useState(true);
+  const style = resolveBlockStyle(block.style);
+  const isVisual = style.variant === "visual";
+
+  function patch(next: Partial<PackagesBlock>) {
+    onChange({ ...block, ...next });
+  }
+  function patchTier(id: string, next: Partial<PackageTier>) {
+    onChange({ ...block, tiers: tiers.map((t) => (t.id === id ? { ...t, ...next } : t)) });
+  }
+  function removeTier(id: string) {
+    onChange({ ...block, tiers: tiers.filter((t) => t.id !== id) });
+  }
+  function addTier() {
+    onChange({ ...block, tiers: [...tiers, defaultTier()] });
+  }
+  function toggleRecommended(id: string) {
+    onChange({
+      ...block,
+      tiers: tiers.map((t) => ({ ...t, recommended: t.id === id ? !t.recommended : false })),
+    });
+  }
+
+  const addonLineItems = block.addonLineItems ?? [];
+  const editableAddonQty = block.allowAddonQuantityEdit !== false;
+
+  function patchAddonLine(id: string, next: Partial<PricingLineItem>) {
+    onChange({
+      ...block,
+      addonLineItems: addonLineItems.map((l) => (l.id === id ? { ...l, ...next } : l)),
+    });
+  }
+  function removeAddonLine(id: string) {
+    onChange({ ...block, addonLineItems: addonLineItems.filter((l) => l.id !== id) });
+  }
+  function addCatalogAddon(service: CatalogServicePickerOption) {
+    if (addonLineItems.some((li) => li.serviceId === service.serviceId)) return;
+    onChange({
+      ...block,
+      addonLineItems: [
+        ...addonLineItems,
+        pricingLineItemFromCatalogAddon(service, term, newId()),
+      ],
+    });
+  }
+
+  const availableCatalogAddons = catalogAddons.filter(
+    (s) => !addonLineItems.some((li) => li.serviceId === s.serviceId),
+  );
+
+  const previewTierId = tiers.find((t) => t.recommended)?.id ?? tiers[0]?.id ?? null;
+  const mockAddonQty: Record<string, number> = {};
+  for (const li of addonLineItems) {
+    mockAddonQty[li.id] = effectivePricingLineQuantity(li);
+  }
+  const previewSel: PackagesPublicSelection | undefined =
+    previewTierId != null
+      ? {
+          kind: "packages",
+          tierId: previewTierId,
+          term,
+          updatedAt: 0,
+          addonQuantities: mockAddonQty,
+        }
+      : undefined;
+  const addonsPreviewMinor = previewSel
+    ? packageAddonsTotalMinor(block, previewSel)
+    : packageAddonsTotalMinor(block, undefined, mockAddonQty, term);
+  const previewTermMonths = packageTermMonths({ term });
+  const monthlyPreviewMinor = previewSel
+    ? packageMonthlyTotalMinor(block, previewSel)
+    : addonsPreviewMinor;
+  const commitmentPreviewMinor = previewSel
+    ? packageCommitmentTotalMinor(block, previewSel)
+    : addonsPreviewMinor * previewTermMonths;
+
+  const label12 = block.plan12Label ?? "12 months";
+  const label24 = block.plan24Label ?? "24 months";
+  const headerBarFg = readableForeground(style.primaryColor);
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const addonsInlineTone = tableSurfaceInlineTone(tableSurface);
+  const headerSimpleDividerColor =
+    headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
+  const headerSimpleSolid: React.CSSProperties = {
+    backgroundColor: style.primaryColor,
+    color: headerBarFg,
+    borderColor: style.primaryColor,
+  };
+
+  const addonsActive = packagesAddonsSectionActive(block);
+
+  function enableAddonsTable() {
+    patch({
+      addonsSectionEnabled: true,
+      addonLineItems: addonLineItems.length > 0 ? addonLineItems : [],
+      addonsTitle: block.addonsTitle?.trim() || "Add-ons",
+      allowAddonQuantityEdit: true,
+    });
+  }
+
+  return (
+    <div className="relative w-full min-w-0 text-foreground">
+      {/* Header: title + term toggle. The remove icon now lives in the floating toolbar. */}
+      <div className={cn(isVisual ? "text-center" : "text-left")}>
+        <div className="min-w-0" onPointerDown={(e) => e.stopPropagation()}>
+          <ProposalRichText
+            key={`${block.id}-title`}
+            variant="header"
+            html={packagesTitleEditorHtml(block)}
+            placeholder="Section title"
+            className={cn(
+              "!border-0 !bg-transparent !px-0 !py-0 !shadow-none",
+              isVisual && "[&_.tiptap]:text-center",
+            )}
+            onChange={(html) =>
+              patch({
+                titleHtml: html,
+                title: proposalRichHtmlToPlainText(html) || block.title,
+              })
+            }
+          />
+        </div>
+
+        <div
+          className={cn(
+            "flex max-w-sm",
+            isVisual ? "mx-auto mt-8 justify-center" : "mt-8",
+          )}
+        >
+          <div
+            className="inline-flex items-center gap-1 rounded-full p-0.5 ring-1"
+            style={{ borderColor: "transparent", background: "rgba(15,23,42,0.04)", boxShadow: "inset 0 0 0 1px rgba(15,23,42,0.08)" }}
+          >
+            <TermPill
+              active={term === "12_months"}
+              onActivate={() => setTermWithAddonSync("12_months")}
+              label={label12}
+              onLabelChange={(v) => patch({ plan12Label: v })}
+              activeColor={style.primaryColor}
+              ariaLabel="12-month term toggle label"
+            />
+            <TermPill
+              active={term === "24_months"}
+              onActivate={() => setTermWithAddonSync("24_months")}
+              label={label24}
+              onLabelChange={(v) => patch({ plan24Label: v })}
+              activeColor={style.primaryColor}
+              ariaLabel="24-month term toggle label"
+            />
+          </div>
+        </div>
+
+        <p className={cn("text-xs text-muted-foreground", isVisual ? "mt-2" : "mt-1.5")}>
+          Currency:{" "}
+          <InlineText
+            tone="light"
+            value={(block.currency ?? "aud").toLowerCase()}
+            onChange={(v) => patch({ currency: v.toLowerCase().slice(0, 3) })}
+            ariaLabel="Currency code"
+            className="inline-block text-xs uppercase tracking-wider text-muted-foreground"
+          />
+        </p>
+      </div>
+
+      <div
+        className={cn(
+          "grid gap-3 sm:grid-cols-2 md:gap-3 lg:grid-cols-3 xl:grid-cols-4",
+          isVisual ? "mt-8" : "mt-4",
+        )}
+      >
+        {tiers.map((tier) => (
+          <TierCard
+            key={tier.id}
+            tier={tier}
+            term={term}
+            currency={currency}
+            highlightColor={style.primaryColor}
+            tableBackground={style.tableBackground}
+            catalogServices={orderedCatalogServices}
+            onChange={(next) => patchTier(tier.id, next)}
+            onRemove={() => removeTier(tier.id)}
+            onToggleRecommended={() => toggleRecommended(tier.id)}
+          />
+        ))}
+
+        <button
+          type="button"
+          onClick={addTier}
+          className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/70 bg-muted/20 px-4 py-5 text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary/5 hover:text-foreground sm:min-h-[220px]"
+          aria-label="Add tier"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/5">
+            <Plus className="h-4 w-4" />
+          </span>
+          <span className="text-xs font-medium sm:text-sm">Add tier</span>
+        </button>
+      </div>
+
+      {!addonsActive ? (
+        <div className="group/pkginsert relative mt-6 flex items-center justify-center py-1.5">
+          <div className="pointer-events-none absolute inset-x-10 top-1/2 h-px -translate-y-1/2 bg-border opacity-0 transition-opacity group-hover/pkginsert:opacity-80 group-focus-within/pkginsert:opacity-80" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Add table"
+                className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" sideOffset={4} className="w-[min(200px,calc(100vw-2rem))] p-1">
+              <p className="px-2 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Add to plan
+              </p>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 rounded-sm"
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => enableAddonsTable()}
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-muted ring-1 ring-border">
+                  <TableProperties className="h-3 w-3" aria-hidden />
+                </span>
+                Table
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <TooltipProvider delayDuration={300}>
+          <div
+            className="mt-8 overflow-hidden rounded-xl border text-left shadow-sm"
+            style={{
+              backgroundColor: tableSurface.background,
+              borderColor: tableSurface.borderColor,
+            }}
+          >
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-3 rounded-t-xl px-4 py-3",
+                addonsSectionOpen && "border-b border-dashed",
+              )}
+              style={{ ...headerSimpleSolid, borderBottomColor: headerSimpleDividerColor }}
+            >
+              <div className="min-w-0 flex-1">
+                <InlineText
+                  tone="dark"
+                  value={block.addonsTitle ?? ""}
+                  placeholder="Add-ons"
+                  onChange={(v) => patch({ addonsTitle: v || undefined })}
+                  ariaLabel="Add-ons section title"
+                  className="text-base font-semibold"
+                  inputClassName="w-full text-base font-semibold"
+                />
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-expanded={addonsSectionOpen}
+                      aria-controls="packages-inline-addons-table"
+                      onClick={() => setAddonsSectionOpen((o) => !o)}
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors",
+                        headerBarFg === "#ffffff"
+                          ? "border-white/35 bg-white/10 hover:bg-white/18"
+                          : "border-foreground/15 bg-foreground/[0.06] hover:bg-foreground/10",
+                      )}
+                      style={{ color: headerBarFg }}
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          !addonsSectionOpen && "-rotate-180",
+                        )}
+                        aria-hidden
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {addonsSectionOpen ? "Close section" : "Open section"}
+                  </TooltipContent>
+                </Tooltip>
+                <div className="text-right" style={{ color: headerBarFg }}>
+                  <span className="block text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
+                  <div className="mt-0.5 text-lg font-semibold tabular-nums leading-none">
+                    {formatCurrencyAmount(addonsPreviewMinor, currency)}
+                    <span className="ml-1 text-xs font-medium opacity-90">/ mo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ProposalAccordionExpandSurface
+              open={addonsSectionOpen}
+              motionKey="packages-inline-addons-table"
+              id="packages-inline-addons-table"
+              className="w-full"
+            >
+              <div className="overflow-x-auto text-left" style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}>
+                <table className="w-full min-w-[480px] text-left text-sm">
+                  <thead>
+                    <tr
+                      className="border-b border-dashed text-left text-xs font-medium uppercase tracking-wide"
+                      style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
+                    >
+                      <th className="px-4 py-2.5 text-left">Description</th>
+                      <th className="px-4 py-2.5 text-right">Item</th>
+                      {editableAddonQty ? <th className="px-4 py-2.5 text-right">Quantity</th> : null}
+                      <th className="px-4 py-2.5 text-right">Price</th>
+                      <th className="w-8 px-2 py-2.5" />
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr]:border-b [&_tr]:border-dashed" style={{ borderColor: tableSurface.dividerColor }}>
+                    {addonLineItems.map((li) => {
+                      const q = effectivePricingLineQuantity(li);
+                      const linkedService = li.serviceId
+                        ? catalogAddons.find((s) => s.serviceId === li.serviceId)
+                        : undefined;
+                      const unitMinor = effectiveCatalogAddonUnitAmount(li, term);
+                      const lineTotal = Math.round(unitMinor * q);
+                      const qtyProps = editableAddonQty
+                        ? {
+                            tone: addonsInlineTone,
+                            value: q,
+                            min: 0,
+                            step: 1,
+                            width: "w-16" as const,
+                            onChange: (v: number) => patchAddonLine(li.id, { quantity: v }),
+                            ariaLabel: "Default quantity" as const,
+                          }
+                        : null;
+                      return (
+                        <tr key={li.id} className="group/row">
+                          <td className="px-4 py-3 text-left align-middle">
+                            <div className="flex flex-col items-start gap-1">
+                              {linkedService ? (
+                                <span className="block w-full font-medium">
+                                  {linkedService.serviceName}
+                                </span>
+                              ) : (
+                                <InlineText
+                                  tone={addonsInlineTone}
+                                  value={li.label}
+                                  placeholder="Add-on label"
+                                  onChange={(v) => patchAddonLine(li.id, { label: v })}
+                                  ariaLabel="Add-on label"
+                                  className="font-medium"
+                                  inputClassName="w-full font-medium"
+                                />
+                              )}
+                            </div>
+                          </td>
+                          <td
+                            className="px-4 py-3 text-right align-middle tabular-nums"
+                            style={{ color: tableSurface.mutedForeground }}
+                          >
+                            {linkedService || pricingReadOnly ? (
+                              <span className="tabular-nums">
+                                {formatCurrencyAmount(unitMinor, currency)}
+                              </span>
+                            ) : (
+                              <InlinePrice
+                                tone={addonsInlineTone}
+                                minor={li.unitAmountMinor}
+                                currency={currency}
+                                onChange={(v) => patchAddonLine(li.id, { unitAmountMinor: v })}
+                                ariaLabel="Unit price"
+                              />
+                            )}
+                          </td>
+                          {qtyProps ? (
+                            <td className="px-4 py-3 text-right align-middle">
+                              <span className="inline-flex items-center justify-end tabular-nums">
+                                <InlineNumber {...qtyProps} />
+                              </span>
+                            </td>
+                          ) : null}
+                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
+                            {formatCurrencyAmount(lineTotal, currency)}
+                          </td>
+                          <td className="px-2 py-3 text-right align-middle">
+                            <button
+                              type="button"
+                              onClick={() => removeAddonLine(li.id)}
+                              aria-label="Remove add-on"
+                              className="rounded p-1 opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                              style={{ color: tableSurface.mutedForeground }}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr>
+                      <td colSpan={editableAddonQty ? 5 : 4} className="px-4 py-2">
+                        {catalogAddons.length === 0 ? (
+                          <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
+                            Add active add-ons in Admin → Services (activate to sync Stripe prices).
+                          </p>
+                        ) : availableCatalogAddons.length === 0 ? (
+                          <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
+                            All catalogue items have been added to this table.
+                          </p>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-md border border-dashed bg-transparent px-2 py-1.5 text-left text-sm transition-colors hover:opacity-90 data-[state=open]:opacity-90"
+                                style={{
+                                  color: tableSurface.mutedForeground,
+                                  borderColor: tableSurface.dividerColor,
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add catalogue items
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="start"
+                              className="max-h-64 w-[min(320px,calc(100vw-2rem))] overflow-y-auto p-1"
+                            >
+                              {availableCatalogAddons.map((service) => (
+                                <DropdownMenuItem
+                                  key={service.serviceId}
+                                  className="cursor-pointer flex-col items-start gap-0.5 rounded-sm py-2"
+                                  onSelect={() => addCatalogAddon(service)}
+                                >
+                                  <span className="font-medium text-foreground">{service.serviceName}</span>
+                                  <span className="text-xs text-muted-foreground tabular-nums">
+                                    {formatCurrencyAmount(
+                                      catalogAddonUnitAmountForTerm(service, term),
+                                      currency,
+                                    )}
+                                    / mo
+                                  </span>
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </ProposalAccordionExpandSurface>
+          </div>
+        </TooltipProvider>
+      )}
+
+      <div
+        className={cn(
+          "mt-4 flex flex-col gap-2 rounded-xl border border-border/70 px-4 py-3 shadow-sm",
+          isVisual ? "mx-auto max-w-md" : "",
+        )}
+        style={{ backgroundColor: style.primaryColor, color: headerBarFg }}
+      >
+        <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="inline-flex min-w-0 shrink flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xl font-semibold leading-none sm:text-2xl">
+            <span>{resolvePackagesTotalSectionLabel(block.totalSectionLabel)}</span>
+            <span className="text-sm font-medium opacity-90 sm:text-base">(preview)</span>
+          </span>
+          <div className="min-w-0 shrink-0 text-right">
+            <span className="text-xl font-semibold tabular-nums leading-none sm:text-2xl">
+              {formatCurrencyAmount(monthlyPreviewMinor, currency)}
+            </span>
+            <p className="mt-0.5 text-xs font-medium opacity-90">/ month</p>
+          </div>
+        </div>
+        {!previewTierId ? (
+          <p className="text-xs opacity-85">
+            <span>Add tiers to preview the plan portion of this total.</span>
+          </p>
+        ) : null}
+        {previewTierId || addonsPreviewMinor > 0 ? (
+          <p className="max-w-[280px] text-pretty text-left text-xs leading-snug opacity-80 sm:ml-auto sm:text-right">
+            Total commitment over {previewTermMonths} mo:{" "}
+            <span className="whitespace-nowrap tabular-nums font-medium opacity-95">
+              {formatCurrencyAmount(commitmentPreviewMinor, currency)}
+            </span>
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TermPill({
+  active,
+  onActivate,
+  label,
+  onLabelChange,
+  activeColor,
+  ariaLabel,
+}: {
+  active: boolean;
+  onActivate: () => void;
+  label: string;
+  onLabelChange: (next: string) => void;
+  activeColor: string;
+  ariaLabel: string;
+}) {
+  const [editing, setEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState(label);
+  React.useEffect(() => {
+    if (!editing) setDraft(label);
+  }, [editing, label]);
+
+  const activeForeground = readableForeground(activeColor);
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setEditing(false);
+          if (draft !== label) onLabelChange(draft);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          } else if (e.key === "Escape") {
+            setDraft(label);
+            setEditing(false);
+          }
+        }}
+        aria-label={ariaLabel}
+        className="rounded-full px-3.5 py-1.5 text-xs font-medium outline-none ring-2 md:px-4 md:text-sm"
+        style={{
+          backgroundColor: activeColor,
+          color: activeForeground,
+          boxShadow: `0 0 0 2px ${withAlpha(activeColor, 0.4)}`,
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => (active ? setEditing(true) : onActivate())}
+      onDoubleClick={() => setEditing(true)}
+      aria-label={ariaLabel}
+      className={cn(
+        "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors md:px-4 md:text-sm",
+        active ? "shadow-sm" : "text-muted-foreground hover:text-foreground",
+      )}
+      style={
+        active
+          ? { backgroundColor: activeColor, color: activeForeground }
+          : undefined
+      }
+      title={active ? "Click again to rename" : "Click to switch term"}
+    >
+      {label}
+    </button>
+  );
+}
+
+function TierPriceAmount({
+  minor,
+  currency,
+  className,
+}: {
+  minor: number;
+  currency: string;
+  className?: string;
+}) {
+  return (
+    <span className={cn("tabular-nums", className)}>{formatCurrencyAmount(minor ?? 0, currency)}</span>
+  );
+}
+
+function TierCard({
+  tier,
+  term,
+  currency,
+  highlightColor,
+  tableBackground,
+  catalogServices,
+  onChange,
+  onRemove,
+  onToggleRecommended,
+}: {
+  tier: PackageTier;
+  term: "12_months" | "24_months";
+  currency: string;
+  /** Primary accent — recommended tier fill and badges. */
+  highlightColor: string;
+  tableBackground: string;
+  catalogServices: readonly CatalogServicePickerOption[];
+  onChange: (next: Partial<PackageTier>) => void;
+  onRemove: () => void;
+  onToggleRecommended: () => void;
+}) {
+  const pricingReadOnly = useEditorTemplatePricingReadOnly();
+  const isRecommended = Boolean(tier.recommended);
+  const monthlyMinor = term === "12_months" ? tier.monthlyCost12Minor ?? 0 : tier.monthlyCost24Minor ?? 0;
+  const upfront =
+    term === "12_months" &&
+    typeof tier.upfrontCost12Minor === "number" &&
+    tier.upfrontCost12Minor > 0
+      ? tier.upfrontCost12Minor
+      : undefined;
+  const features = tier.features ?? [];
+  const standardSurface = resolveTableSurfaceColors(tableBackground);
+  const standardInlineTone = tableSurfaceInlineTone(standardSurface);
+  const standardControlStyle = tableSurfaceControlStyle(standardSurface);
+  const tierNameReadOnly = pricingReadOnly && Boolean(tier.serviceId?.trim());
+
+  const recommendedFg = readableForeground(highlightColor);
+  const recommendedTone = recommendedFg === "#ffffff" ? "dark" : "light";
+  const inlineTone = isRecommended ? recommendedTone : standardInlineTone;
+  const recommendedDimText =
+    recommendedFg === "#ffffff" ? "rgba(255,255,255,0.78)" : "rgba(15,23,42,0.62)";
+  const recommendedFaintBorder =
+    recommendedFg === "#ffffff" ? "rgba(255,255,255,0.32)" : "rgba(15,23,42,0.22)";
+
+  const markRecommendedBadgeStyle: React.CSSProperties = isRecommended
+    ? { backgroundColor: highlightColor, color: recommendedFg }
+    : {
+        backgroundColor: "#ffffff",
+        color: "#0f172a",
+        borderColor: standardSurface.borderColor,
+      };
+
+  const cardStyle: React.CSSProperties = isRecommended
+    ? { backgroundColor: highlightColor, color: recommendedFg, borderColor: highlightColor }
+    : {
+        backgroundColor: standardSurface.background,
+        color: standardSurface.foreground,
+        borderColor: standardSurface.borderColor,
+      };
+  const standardMutedStyle = { color: standardSurface.mutedForeground };
+  const dashedBorderStyle = {
+    borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
+  };
+
+  return (
+    <div className="group/tier flex flex-col">
+      <div
+        className={cn(
+          "relative flex min-h-0 flex-col rounded-xl border p-3.5 shadow-sm transition-colors sm:p-4",
+          isRecommended ? "pt-5 sm:pt-5" : "",
+        )}
+        style={cardStyle}
+      >
+        <button
+          type="button"
+          onClick={onToggleRecommended}
+          aria-pressed={isRecommended}
+          aria-label={isRecommended ? "Unmark as recommended" : "Mark as recommended"}
+          className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-dashed px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide shadow transition-all"
+          style={markRecommendedBadgeStyle}
+        >
+          <Sparkles className="h-3 w-3" />
+          {isRecommended ? "Recommended" : "Mark recommended"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove tier"
+          className={cn(
+            "absolute right-2 top-2 rounded-md p-1.5 opacity-0 transition-opacity hover:text-red-500 group-hover/tier:opacity-100",
+          )}
+          style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+
+        {tierNameReadOnly ? (
+          <p className="text-center text-base font-semibold">{tier.name}</p>
+        ) : (
+          <InlineText
+            tone={inlineTone}
+            value={tier.name}
+            placeholder="Tier name"
+            onChange={(v) => onChange({ name: v })}
+            ariaLabel="Tier name"
+            className="text-center text-base font-semibold"
+            inputClassName="w-full text-center text-base font-semibold"
+          />
+        )}
+
+        <ul
+          className="mt-2 space-y-1 text-center text-[13px] leading-snug"
+          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+        >
+          <li>
+            <span className="font-medium">Included users</span>:{" "}
+            {formatPackageTierIncluded(tier.includedUsers)}
+          </li>
+          <li>
+            <span className="font-medium">Included locations</span>:{" "}
+            {formatPackageTierIncluded(tier.includedLocations)}
+          </li>
+          <li>
+            <span className="font-medium">Included admins</span>:{" "}
+            {formatPackageTierIncluded(tier.includedAdmins)}
+          </li>
+        </ul>
+
+        <div className="mt-3 border-t border-dashed pt-3 text-center" style={dashedBorderStyle}>
+          <div className="flex items-baseline justify-center gap-1">
+            {pricingReadOnly ? (
+              <TierPriceAmount
+                minor={monthlyMinor}
+                currency={currency}
+                className="text-xl font-semibold sm:text-2xl"
+              />
+            ) : (
+              <InlinePrice
+                tone={inlineTone}
+                minor={monthlyMinor}
+                currency={currency}
+                onChange={(v) =>
+                  onChange(
+                    term === "12_months" ? { monthlyCost12Minor: v } : { monthlyCost24Minor: v },
+                  )
+                }
+                ariaLabel="Monthly price"
+                className="text-xl font-semibold sm:text-2xl"
+              />
+            )}
+          </div>
+          <p
+            className="text-xs"
+            style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+          >
+            / month
+          </p>
+
+          <div
+            className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
+            style={dashedBorderStyle}
+          >
+            <p
+              className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+              style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+            >
+              {term === "12_months" ? "12-month plan" : "24-month plan"}
+            </p>
+            {term === "12_months" && !pricingReadOnly ? (
+              <InlinePrice
+                tone={inlineTone}
+                minor={tier.upfrontCost12Minor ?? 0}
+                currency={currency}
+                onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
+                ariaLabel="Upfront cost (12-month)"
+                className="mt-0.5 text-xs"
+              />
+            ) : term === "12_months" && upfront !== undefined ? (
+              <p className="mt-0.5 text-xs tabular-nums">
+                Upfront: {formatCurrencyAmount(upfront, currency)}
+              </p>
+            ) : (
+              <p
+                className="mt-0.5 text-xs"
+                style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+              >
+                No upfront charge
+              </p>
+            )}
+          </div>
+        </div>
+
+        {catalogServices.length > 0 ? (
+          <div
+            className="mt-3 border-t border-dashed pt-3"
+            style={{
+              borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
+            }}
+          >
+            <label
+              className="mb-1 block text-xs font-medium"
+              style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+            >
+              Catalogue service
+            </label>
+            <select
+              className={cn(
+                "mt-0.5 w-full rounded-md border px-2 py-1.5 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
+                isRecommended && "border-white/35 bg-white text-slate-900 [color-scheme:light]",
+              )}
+              style={
+                isRecommended
+                  ? { color: "#0f172a", backgroundColor: "#ffffff" }
+                  : {
+                      ...standardControlStyle,
+                    }
+              }
+              value={tier.serviceId ?? ""}
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                if (!v) {
+                  onChange({ serviceId: undefined });
+                  return;
+                }
+                const service = catalogServices.find((s) => s.serviceId === v);
+                if (!service) return;
+                onChange({
+                  ...packageTierFromCatalogService(service, tier.id),
+                  recommended: tier.recommended,
+                });
+              }}
+              aria-label="Catalogue service for this tier"
+            >
+              <option value="">— None —</option>
+              {catalogServices.map((s) => (
+                <option key={s.serviceId} value={s.serviceId}>
+                  {s.serviceName}
+                </option>
+              ))}
+            </select>
+            {pricingReadOnly && !tier.serviceId?.trim() ? (
+              <p className="mt-2 text-xs" style={standardMutedStyle}>
+                Link a catalogue service to load pricing from Admin → Services.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="mt-auto pt-3">
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-8 w-full items-center justify-center rounded-full border text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
+            style={
+              isRecommended
+                ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
+                : tableSurfaceOutlineButtonStyle(standardSurface)
+            }
+          >
+            Select
+          </button>
+        </div>
+      </div>
+
+      <ul className="mt-2 space-y-1.5 border-t border-border/40 pt-2 sm:mt-3 sm:pt-2.5">
+        {features.map((feat, idx) => (
+          <li
+            key={`${idx}-${feat}`}
+            className="group/feat flex items-start gap-1.5 text-xs text-foreground sm:text-sm"
+          >
+            <Check
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/60 sm:h-4 sm:w-4"
+              style={{ color: highlightColor }}
+              aria-hidden
+            />
+            <InlineText
+              tone="light"
+              value={feat}
+              placeholder="Feature"
+              onChange={(v) => {
+                const next = [...features];
+                if (v.trim()) {
+                  next[idx] = v.trim();
+                } else {
+                  next.splice(idx, 1);
+                }
+                onChange({ features: next });
+              }}
+              ariaLabel={`Feature ${idx + 1}`}
+              className="flex-1 text-xs text-foreground sm:text-sm"
+              inputClassName="w-full text-xs text-foreground sm:text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const next = [...features];
+                next.splice(idx, 1);
+                onChange({ features: next });
+              }}
+              aria-label="Remove feature"
+              className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/feat:opacity-100"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </li>
+        ))}
+        <li>
+          <button
+            type="button"
+            onClick={() => onChange({ features: [...features, "New feature"] })}
+            className="flex w-full items-center gap-2 rounded-md border border-dashed border-border bg-transparent px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:bg-muted/30 hover:text-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add a feature
+          </button>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+
+/* -----------------------------------------------------------------------------
+ * Quote (pricing) — inline editor.
+ * Mirrors PricingBlockPublic table layout.
+ * -------------------------------------------------------------------------- */
+
+export interface PricingInlineEditorProps {
+  block: PricingBlock;
+  onChange: (next: PricingBlock) => void;
+}
+
+export function PricingInlineEditor({ block, onChange }: PricingInlineEditorProps) {
+  const lineItems = block.lineItems ?? [];
+  const currency = (block.currency ?? "aud").toUpperCase();
+  const qtyUnitDraft = ((block.quantityUnitLabel ?? "").trim() || "Unit").slice(0, 40);
+  const editable = block.allowQuantityEdit !== false;
+  const style = resolveBlockStyle(block.style);
+  const isVisual = style.variant === "visual";
+
+  const previewTotal = lineItems.reduce((sum, li) => {
+    const q = effectivePricingLineQuantity(li);
+    return sum + Math.round(li.unitAmountMinor * q);
+  }, 0);
+
+  function patch(next: Partial<PricingBlock>) {
+    onChange({ ...block, ...next });
+  }
+  function patchLine(id: string, next: Partial<PricingLineItem>) {
+    onChange({
+      ...block,
+      lineItems: lineItems.map((l) => (l.id === id ? { ...l, ...next } : l)),
+    });
+  }
+  function removeLine(id: string) {
+    onChange({ ...block, lineItems: lineItems.filter((l) => l.id !== id) });
+  }
+  function addLine() {
+    onChange({
+      ...block,
+      lineItems: [
+        ...lineItems,
+        {
+          id: newId(),
+          label: "Line item",
+          unitAmountMinor: 0,
+          quantity: isVisual ? 1 : 0,
+        },
+      ],
+    });
+  }
+
+  /** Visual variant tints the title bar; Simple uses a solid primary bar with subtotal. */
+  const headerVisualStyle: React.CSSProperties | undefined = isVisual
+    ? {
+        background: withAlpha(style.primaryColor, 0.08),
+        borderBottomColor: withAlpha(style.primaryColor, 0.2),
+      }
+    : undefined;
+  const totalRowStyle: React.CSSProperties = {
+    background: withAlpha(style.primaryColor, isVisual ? 0.15 : 0.08),
+  };
+
+  const headerBarFg = readableForeground(style.primaryColor);
+  const headerSimpleSolid: React.CSSProperties = {
+    backgroundColor: style.primaryColor,
+    color: headerBarFg,
+    borderColor: style.primaryColor,
+  };
+  const headerSimpleDividerColor =
+    headerBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)";
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const tableInlineTone = tableSurfaceInlineTone(tableSurface);
+
+  return (
+    <div
+      className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm"
+      style={
+        isVisual
+          ? { borderColor: withAlpha(style.primaryColor, 0.25) }
+          : undefined
+      }
+    >
+      {isVisual ? (
+        <div
+          className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3"
+          style={headerVisualStyle}
+        >
+          <InlineText
+            tone="light"
+            value={block.title ?? ""}
+            placeholder="Quote title"
+            onChange={(v) => patch({ title: v })}
+            ariaLabel="Quote title"
+            className="text-base font-semibold text-foreground"
+            inputClassName="text-base font-semibold text-foreground w-full"
+          />
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={editable}
+                onChange={(e) => patch({ allowQuantityEdit: e.target.checked })}
+                className="h-3 w-3 accent-primary"
+              />
+              Editable qty
+            </label>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <InlineText
+                tone="light"
+                value={(block.currency ?? "aud").toLowerCase()}
+                onChange={(v) => patch({ currency: v.toLowerCase().slice(0, 3) })}
+                ariaLabel="Currency code"
+                className="text-xs uppercase"
+              />
+            </span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-t-xl border-b border-dashed px-4 py-3"
+            style={{ ...headerSimpleSolid, borderBottomColor: headerSimpleDividerColor }}
+          >
+            <div className="min-w-0 flex-1">
+              <InlineText
+                tone="dark"
+                value={block.title ?? ""}
+                placeholder="Section title"
+                onChange={(v) => patch({ title: v })}
+                ariaLabel="Table title"
+                className="text-base font-semibold"
+                inputClassName="text-base font-semibold w-full"
+              />
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+              <span className="text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</span>
+              <span className="text-lg font-semibold tabular-nums leading-none">
+                {formatCurrencyAmount(previewTotal, currency)}
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-dashed border-border/50 bg-muted/10 px-4 py-2 text-xs">
+            <label className="flex cursor-pointer items-center gap-1.5 text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={editable}
+                onChange={(e) => patch({ allowQuantityEdit: e.target.checked })}
+                className="h-3 w-3 accent-primary"
+              />
+              Editable qty
+            </label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Currency</span>
+              <InlineText
+                tone="light"
+                value={(block.currency ?? "aud").toLowerCase()}
+                onChange={(v) => patch({ currency: v.toLowerCase().slice(0, 3) })}
+                ariaLabel="Currency code"
+                className="rounded-md border border-border/60 px-2 py-0.5 uppercase"
+              />
+            </div>
+            <div className="flex flex-1 flex-wrap items-center gap-2 sm:justify-end">
+              <span className="text-muted-foreground">Qty label</span>
+              <Input
+                value={qtyUnitDraft}
+                onChange={(e) =>
+                  patch({
+                    quantityUnitLabel: e.target.value.trim() ? e.target.value.trim().slice(0, 40) : undefined,
+                  })
+                }
+                placeholder="Unit"
+                className="h-8 w-28 bg-background text-xs"
+                aria-label="Quantity suffix (e.g. Unit)"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <div
+        className="overflow-x-auto"
+        style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}
+      >
+        <table className="w-full min-w-[480px] text-sm">
+          <thead>
+            <tr
+              className={cn(
+                "border-b border-dashed text-left text-xs font-medium uppercase tracking-wide",
+                isVisual && "border-border/60 bg-muted/20 text-muted-foreground",
+              )}
+              style={
+                isVisual
+                  ? undefined
+                  : { borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }
+              }
+            >
+              <th className="px-4 py-2.5">{isVisual ? "Item" : "Description"}</th>
+              <th className="px-4 py-2.5 text-right">{isVisual ? "Unit" : "Item"}</th>
+              {editable ? <th className="px-4 py-2.5 text-right">{isVisual ? "Qty" : "Quantity"}</th> : null}
+              <th className="px-4 py-2.5 text-right">{isVisual ? "Line total" : "Price"}</th>
+              <th className="w-8 px-2 py-2.5" />
+            </tr>
+          </thead>
+          <tbody
+            className={cn(
+              "[&_tr]:border-b",
+              isVisual ? "[&_tr]:border-border/40" : "[&_tr]:border-dashed",
+            )}
+            style={isVisual ? undefined : { borderColor: tableSurface.dividerColor }}
+          >
+            {lineItems.map((li) => {
+              const q = effectivePricingLineQuantity(li);
+              const lineTotal = Math.round(li.unitAmountMinor * q);
+              const qtyProps = editable
+                ? {
+                    tone: (isVisual ? "light" : tableInlineTone) as "light" | "dark",
+                    value: q,
+                    min: isVisual ? 1 : 0,
+                    step: 1,
+                    width: "w-16" as const,
+                    onChange: (v: number) => patchLine(li.id, { quantity: v }),
+                    ariaLabel: "Quantity" as const,
+                  }
+                : null;
+              return (
+                <tr key={li.id} className="group/row">
+                  <td className="px-4 py-3 align-middle">
+                    <div className="flex flex-col gap-1">
+                      <InlineText
+                        tone={isVisual ? "light" : tableInlineTone}
+                        value={li.label}
+                        placeholder="Item label"
+                        onChange={(v) => patchLine(li.id, { label: v })}
+                        ariaLabel="Line item label"
+                        className="font-medium"
+                        inputClassName="w-full font-medium"
+                      />
+                      <label
+                        className="flex cursor-pointer items-center gap-2 text-xs"
+                        style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(li.optional)}
+                          onChange={(e) => patchLine(li.id, { optional: e.target.checked })}
+                          className="h-3 w-3 accent-primary"
+                        />
+                        Add-on (buyer can toggle off)
+                      </label>
+                    </div>
+                  </td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 text-right align-middle tabular-nums",
+                      isVisual && "text-foreground",
+                    )}
+                    style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                  >
+                    <InlinePrice
+                      tone={isVisual ? "light" : tableInlineTone}
+                      minor={li.unitAmountMinor}
+                      currency={currency}
+                      onChange={(v) => patchLine(li.id, { unitAmountMinor: v })}
+                      ariaLabel="Unit price"
+                      className={isVisual ? "text-foreground" : undefined}
+                    />
+                  </td>
+                  {qtyProps ? (
+                    <td className="px-4 py-3 text-right align-middle">
+                      {!isVisual ? (
+                        <span className="inline-flex items-center justify-end gap-1.5 tabular-nums">
+                          <InlineNumber {...qtyProps} />
+                          <span
+                            className="text-xs"
+                            style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                          >
+                            {qtyUnitDraft}
+                          </span>
+                        </span>
+                      ) : (
+                        <InlineNumber {...qtyProps} />
+                      )}
+                    </td>
+                  ) : null}
+                  <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
+                    {formatCurrencyAmount(lineTotal, currency)}
+                  </td>
+                  <td className="px-2 py-3 text-right align-middle">
+                    <button
+                      type="button"
+                      onClick={() => removeLine(li.id)}
+                      aria-label="Remove line item"
+                      className="rounded p-1 opacity-0 transition-opacity hover:text-destructive group-hover/row:opacity-100"
+                      style={isVisual ? undefined : { color: tableSurface.mutedForeground }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td colSpan={editable ? 5 : 4} className="px-4 py-2">
+                <button
+                  type="button"
+                  onClick={addLine}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md border border-dashed bg-transparent px-2 py-1.5 text-left text-sm transition-colors",
+                    isVisual &&
+                      "border-border text-muted-foreground hover:border-primary/60 hover:bg-muted/30 hover:text-foreground",
+                  )}
+                  style={
+                    isVisual
+                      ? undefined
+                      : {
+                          color: tableSurface.mutedForeground,
+                          borderColor: tableSurface.dividerColor,
+                        }
+                  }
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add a line item
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          {isVisual ? (
+            <tfoot>
+              <tr style={totalRowStyle}>
+                <td
+                  colSpan={editable ? 3 : 2}
+                  className="px-4 py-3 text-right text-sm font-semibold text-foreground"
+                >
+                  Total (preview)
+                </td>
+                <td className="px-4 py-3 text-right text-base font-semibold tabular-nums text-foreground">
+                  {formatCurrencyAmount(previewTotal, currency)}
+                </td>
+                <td />
+              </tr>
+            </tfoot>
+          ) : null}
+        </table>
+      </div>
+    </div>
+  );
+}

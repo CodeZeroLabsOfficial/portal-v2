@@ -5,7 +5,7 @@ import {
   ProposalPublicPreviewBar,
   ProposalPublicPreviewFrame,
 } from "@/components/features/proposal/viewer/public-preview-bar";
-import { ProposalDocumentView } from "@/components/proposal/proposal-document-view";
+import { ProposalDocumentView } from "@/components/features/proposal/viewer/proposal-document-view";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { syncProposalDocumentPackageTiersFromCatalog } from "@/lib/proposal/commerce/package-catalog-sync";
 import { proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";

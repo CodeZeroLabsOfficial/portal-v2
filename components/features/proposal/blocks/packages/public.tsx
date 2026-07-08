@@ -1,0 +1,649 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Check, ChevronDown, Loader2, Minus, Plus } from "lucide-react";
+import type { PackagesBlock, PackagesPublicSelection } from "@/types/proposal";
+import { formatCurrencyAmount } from "@/lib/common/format";
+import { formatPackageTierIncluded } from "@/lib/catalog/package-tier-limits";
+import { effectiveCatalogAddonUnitAmount } from "@/lib/catalog/service-tier";
+import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import {
+  packageAddonsTotalMinor,
+  packageCommitmentTotalMinor,
+  packageMonthlyTotalMinor,
+  packageTermMonths,
+  packagesAddonsSectionActive,
+  resolvePackagesTotalSectionLabel,
+} from "@/lib/proposal/commerce/packages-totals";
+import { cn } from "@/lib/utils";
+import {
+  readableForeground,
+  resolveBlockStyle,
+  resolveTableSurfaceColors,
+  tableSurfaceControlStyle,
+  tableSurfaceOutlineButtonStyle,
+  withAlpha,
+} from "@/lib/proposal/block-style";
+import { saveProposalPackageSelectionAction } from "@/server/actions/proposal-builder";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ProposalAccordionExpandSurface } from "@/components/features/proposal/blocks/shared/accordion-expand-surface";
+import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
+import { PROPOSAL_PUBLIC_META_LABEL_CLASSES } from "@/lib/proposal/public/public-typography";
+
+export interface PackagesBlockPublicProps {
+  block: PackagesBlock;
+  shareToken: string;
+  /** Hydrated from Firestore after a previous visit. */
+  initialSelection?: PackagesPublicSelection;
+  /** False in admin preview — no persistence. */
+  interactive?: boolean;
+}
+
+export function PackagesBlockPublic({
+  block,
+  shareToken,
+  initialSelection,
+  interactive = true,
+}: PackagesBlockPublicProps) {
+  const router = useRouter();
+  const currency = (block.currency ?? "aud").toUpperCase();
+  const tiers = Array.isArray(block.tiers) ? block.tiers : [];
+
+  const [term, setTerm] = React.useState<"12_months" | "24_months">(
+    initialSelection?.term ?? "24_months",
+  );
+  const [selectedTierId, setSelectedTierId] = React.useState<string | null>(
+    initialSelection?.tierId ?? null,
+  );
+  const [pendingTierId, setPendingTierId] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [addonsTableOpen, setAddonsTableOpen] = React.useState(true);
+
+  const addonsActive = packagesAddonsSectionActive(block);
+  const addonLines = block.addonLineItems ?? [];
+  const addonIdsKey = addonLines.map((l) => l.id).join(",");
+
+  const [addonQty, setAddonQty] = React.useState<Record<string, number>>(() => {
+    const next: Record<string, number> = {};
+    for (const li of addonLines) {
+      const s = initialSelection?.addonQuantities?.[li.id];
+      next[li.id] =
+        typeof s === "number" && Number.isFinite(s) && s >= 0
+          ? Math.floor(s)
+          : effectivePricingLineQuantity(li);
+    }
+    return next;
+  });
+  React.useEffect(() => {
+    if (initialSelection?.tierId) setSelectedTierId(initialSelection.tierId);
+    if (initialSelection?.term) setTerm(initialSelection.term);
+  }, [initialSelection?.tierId, initialSelection?.term]);
+
+  React.useEffect(() => {
+    const lines = block.addonLineItems ?? [];
+    const next: Record<string, number> = {};
+    for (const li of lines) {
+      const s = initialSelection?.addonQuantities?.[li.id];
+      next[li.id] =
+        typeof s === "number" && Number.isFinite(s) && s >= 0
+          ? Math.floor(s)
+          : effectivePricingLineQuantity(li);
+    }
+    setAddonQty(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only rehydrate after server refresh (`updatedAt`) or add-on line set changes
+  }, [addonIdsKey, initialSelection?.updatedAt]);
+
+  const label12 = block.plan12Label ?? "12 months";
+  const label24 = block.plan24Label ?? "24 months";
+  const title = block.title ?? "Packages";
+  const style = resolveBlockStyle(block.style);
+  const isVisual = style.variant === "visual";
+  const recommendedFg = readableForeground(style.highlightColor);
+  const dimRecommendedFg =
+    recommendedFg === "#ffffff" ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.65)";
+  const recommendedFaintBorder =
+    recommendedFg === "#ffffff" ? "rgba(255,255,255,0.32)" : "rgba(15,23,42,0.22)";
+  const activeTermFg = readableForeground(style.primaryColor);
+  const totalBarFg = readableForeground(style.primaryColor);
+  const tableSurface = resolveTableSurfaceColors(style.tableBackground);
+  const addonsControlStyle = tableSurfaceControlStyle(tableSurface);
+  const addonsOutlineButtonStyle = tableSurfaceOutlineButtonStyle(tableSurface);
+  const addonsTitle = block.addonsTitle ?? "Add-ons";
+  const totalSectionLabel = resolvePackagesTotalSectionLabel(block.totalSectionLabel);
+  const allowAddonEdit = block.allowAddonQuantityEdit !== false;
+
+  const selectionDraft: PackagesPublicSelection | undefined = selectedTierId
+    ? {
+        kind: "packages",
+        tierId: selectedTierId,
+        term,
+        updatedAt: initialSelection?.updatedAt ?? 0,
+        addonQuantities: addonQty,
+      }
+    : undefined;
+
+  const addonsSubtotalMinor =
+    selectionDraft != null
+      ? packageAddonsTotalMinor(block, selectionDraft)
+      : packageAddonsTotalMinor(block, undefined, addonQty, term);
+  const termMonths = packageTermMonths({ term });
+  const monthlyTotalMinor = selectionDraft
+    ? packageMonthlyTotalMinor(block, selectionDraft)
+    : addonsSubtotalMinor;
+  const commitmentTotalMinor = selectionDraft
+    ? packageCommitmentTotalMinor(block, selectionDraft)
+    : addonsSubtotalMinor * termMonths;
+
+  async function flushAddonsToServer(nextQty?: Record<string, number>) {
+    if (!interactive || !shareToken || !selectedTierId) return;
+    const q = nextQty ?? addonQty;
+    const res = await saveProposalPackageSelectionAction({
+      shareToken,
+      blockId: block.id,
+      tierId: selectedTierId,
+      term,
+      addonQuantities: q,
+    });
+    if (res.ok) router.refresh();
+  }
+
+  function patchAddonQty(lineItem: (typeof addonLines)[number], nextValue: number) {
+    const clamped = Math.max(0, Math.floor(nextValue));
+    const nextMap = { ...addonQty, [lineItem.id]: clamped };
+    setAddonQty(nextMap);
+    void flushAddonsToServer(nextMap);
+  }
+
+  function monthlyMinor(tier: (typeof tiers)[number]): number {
+    const m12 = tier.monthlyCost12Minor ?? 0;
+    const m24 = tier.monthlyCost24Minor ?? 0;
+    return term === "12_months" ? m12 : m24;
+  }
+
+  async function selectTier(tierId: string) {
+    setError(null);
+    if (!interactive || !shareToken) {
+      setSelectedTierId(tierId);
+      return;
+    }
+    setPendingTierId(tierId);
+    const res = await saveProposalPackageSelectionAction({
+      shareToken,
+      blockId: block.id,
+      tierId,
+      term,
+      addonQuantities: addonQty,
+    });
+    setPendingTierId(null);
+    if (!res.ok) {
+      setError(res.message);
+      return;
+    }
+    setSelectedTierId(tierId);
+    router.refresh();
+  }
+
+  return (
+    <div
+      className={cn("w-full min-w-0 text-foreground", !interactive && "opacity-95")}
+    >
+      <div className={cn(isVisual ? "text-center" : "text-left")}>
+        {(block.titleHtml ?? "").trim() ? (
+          <ProposalRichTextHtml
+            html={block.titleHtml!}
+            layout="heading"
+            className={cn("scroll-mt-20", isVisual && "text-center")}
+          />
+        ) : (
+          <h1
+            className={cn(
+              "scroll-mt-20 text-3xl font-semibold tracking-tight text-foreground",
+              isVisual && "text-center",
+            )}
+          >
+            {title}
+          </h1>
+        )}
+
+        <div
+          className={cn(
+            "flex max-w-sm",
+            isVisual ? "mx-auto mt-8 justify-center" : "mt-8",
+          )}
+        >
+          <div
+            className="inline-flex rounded-full p-0.5"
+            style={{ background: "rgba(15,23,42,0.04)", boxShadow: "inset 0 0 0 1px rgba(15,23,42,0.08)" }}
+          >
+            <button
+              type="button"
+              onClick={() => setTerm("12_months")}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors md:px-4 md:text-sm",
+                term === "12_months" ? "shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+              style={
+                term === "12_months"
+                  ? { backgroundColor: style.primaryColor, color: activeTermFg }
+                  : undefined
+              }
+            >
+              {label12}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTerm("24_months")}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors md:px-4 md:text-sm",
+                term === "24_months" ? "shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+              style={
+                term === "24_months"
+                  ? { backgroundColor: style.primaryColor, color: activeTermFg }
+                  : undefined
+              }
+            >
+              {label24}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {!interactive ? (
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">
+          Preview — selections are saved on the shared link only.
+        </p>
+      ) : null}
+
+      {error ? <p className="mt-2 text-center text-sm text-destructive">{error}</p> : null}
+
+      <div
+        className={cn(
+          "grid gap-3 sm:grid-cols-2 md:gap-3 lg:grid-cols-3 xl:grid-cols-4",
+          isVisual ? "mt-8" : "mt-4",
+        )}
+      >
+        {tiers.length === 0 ? (
+          <p className="col-span-full text-center text-sm text-muted-foreground">
+            No package tiers configured yet.
+          </p>
+        ) : null}
+        {tiers.map((tier) => {
+          const mm = monthlyMinor(tier);
+          const upfront =
+            term === "12_months" && typeof tier.upfrontCost12Minor === "number" && tier.upfrontCost12Minor > 0
+              ? tier.upfrontCost12Minor
+              : undefined;
+          const isSelected = selectedTierId === tier.id;
+          const isRecommended = Boolean(tier.recommended);
+          const busy = pendingTierId === tier.id;
+
+          const cardStyle: React.CSSProperties = isRecommended
+            ? {
+                backgroundColor: style.highlightColor,
+                color: recommendedFg,
+                borderColor: style.highlightColor,
+              }
+            : {
+                backgroundColor: tableSurface.background,
+                color: tableSurface.foreground,
+                borderColor: tableSurface.borderColor,
+              };
+          const standardMutedStyle = { color: tableSurface.mutedForeground };
+          const dashedBorderStyle = {
+            borderColor: isRecommended ? recommendedFaintBorder : tableSurface.dividerColor,
+          };
+          const selectedRingStyle: React.CSSProperties | undefined = isSelected
+            ? {
+                boxShadow: `0 0 0 2px ${style.highlightColor}, 0 0 0 4px ${withAlpha(
+                  style.highlightColor,
+                  0.25,
+                )}`,
+              }
+            : undefined;
+
+          return (
+            <div key={tier.id} className="flex flex-col">
+              <div
+                className={cn(
+                  "relative flex min-h-0 flex-col rounded-xl border p-3.5 shadow-sm transition-colors sm:p-4",
+                  isRecommended ? "pt-5 sm:pt-5" : "",
+                )}
+                style={cardStyle}
+              >
+                {isRecommended ? (
+                  <div
+                    className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide shadow"
+                    style={{ backgroundColor: style.highlightColor, color: recommendedFg }}
+                  >
+                    Recommended
+                  </div>
+                ) : null}
+
+                <h3 className="text-center text-base font-semibold">{tier.name}</h3>
+
+                <ul
+                  className="mt-2 space-y-1 text-center text-[13px] leading-snug"
+                  style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+                >
+                  <li>
+                    <span className="font-medium">Included users</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedUsers)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Included locations</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedLocations)}
+                  </li>
+                  <li>
+                    <span className="font-medium">Included admins</span>:{" "}
+                    {formatPackageTierIncluded(tier.includedAdmins)}
+                  </li>
+                </ul>
+
+                <div
+                  className="mt-3 border-t border-dashed pt-3 text-center"
+                  style={dashedBorderStyle}
+                >
+                  <p className="text-xl font-semibold tabular-nums sm:text-2xl">
+                    {formatCurrencyAmount(mm, currency)}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                  >
+                    / month
+                  </p>
+
+                  <div
+                    className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
+                    style={dashedBorderStyle}
+                  >
+                    <p
+                      className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+                      style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                    >
+                      {term === "12_months" ? "12-month plan" : "24-month plan"}
+                    </p>
+                    {term === "12_months" && upfront !== undefined ? (
+                      <p className="mt-0.5 text-xs tabular-nums">
+                        Upfront: {formatCurrencyAmount(upfront, currency)}
+                      </p>
+                    ) : (
+                      <p
+                        className="mt-0.5 text-xs"
+                        style={isRecommended ? { color: dimRecommendedFg } : standardMutedStyle}
+                      >
+                        No upfront charge
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-3">
+                  <button
+                    type="button"
+                    disabled={!interactive || busy}
+                    onClick={() => void selectTier(tier.id)}
+                    className="inline-flex h-8 w-full items-center justify-center gap-2 rounded-full border text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
+                    style={{
+                      ...(isRecommended
+                        ? { backgroundColor: "#ffffff", color: "#0f172a", borderColor: "#ffffff" }
+                        : addonsOutlineButtonStyle),
+                      ...(selectedRingStyle ?? {}),
+                    }}
+                  >
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {isSelected ? "Selected" : "Select"}
+                  </button>
+                </div>
+              </div>
+
+              {(tier.features ?? []).length > 0 ? (
+                <ul className="mt-2 space-y-1.5 border-t border-border/40 pt-2 sm:mt-3 sm:pt-2.5">
+                  {(tier.features ?? []).map((feat) => (
+                    <li key={feat} className="flex gap-1.5 text-xs text-muted-foreground sm:text-[13px]">
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/60 sm:h-4 sm:w-4"
+                        style={{ color: style.highlightColor }}
+                        aria-hidden
+                      />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {addonsActive && addonLines.length > 0 ? (
+        <div className="mt-[50px] text-left">
+          <TooltipProvider delayDuration={300}>
+            <div
+              className="overflow-hidden rounded-xl border text-left shadow-sm"
+              style={{
+                backgroundColor: tableSurface.background,
+                borderColor: tableSurface.borderColor,
+              }}
+            >
+              <div
+                className={cn(
+                  "flex flex-wrap items-center gap-3 px-4 py-3",
+                  addonsTableOpen && "border-b border-dashed",
+                )}
+                style={{
+                  backgroundColor: style.primaryColor,
+                  color: totalBarFg,
+                  ...(addonsTableOpen
+                    ? {
+                        borderBottomColor:
+                          totalBarFg === "#ffffff" ? "rgba(255,255,255,0.28)" : "rgba(15,23,42,0.18)",
+                      }
+                    : {}),
+                }}
+              >
+                <p className="min-w-0 flex-1 text-sm font-semibold">{addonsTitle}</p>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        id="packages-addons-toggle"
+                        aria-expanded={addonsTableOpen}
+                        aria-controls="packages-addons-table"
+                        onClick={() => setAddonsTableOpen((o) => !o)}
+                        className={cn(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors",
+                          totalBarFg === "#ffffff"
+                            ? "border-white/35 bg-white/10 hover:bg-white/18"
+                            : "border-foreground/15 bg-foreground/[0.06] hover:bg-foreground/10",
+                        )}
+                        style={{ color: totalBarFg }}
+                      >
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform duration-200",
+                            !addonsTableOpen && "-rotate-180",
+                          )}
+                          aria-hidden
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {addonsTableOpen ? "Close section" : "Open section"}
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="text-right">
+                    <p className="block text-xs font-semibold uppercase tracking-wide opacity-90">Subtotal</p>
+                    <p className="mt-0.5 text-lg font-semibold tabular-nums leading-none">
+                      {formatCurrencyAmount(addonsSubtotalMinor, currency)}
+                      <span className="ml-1 text-xs font-medium opacity-90">/ mo</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <ProposalAccordionExpandSurface
+                open={addonsTableOpen}
+                motionKey="packages-addons-table"
+                id="packages-addons-table"
+                className="overflow-x-auto text-left"
+                style={{ backgroundColor: tableSurface.background, color: tableSurface.foreground }}
+              >
+                <table className="w-full min-w-[320px] text-left text-sm [&_thead_th:first-child]:!text-left [&_tbody_td:first-child]:!text-left">
+                  <thead>
+                    <tr
+                      className={cn(
+                        PROPOSAL_PUBLIC_META_LABEL_CLASSES,
+                        "border-b border-dashed text-left",
+                      )}
+                      style={{ borderColor: tableSurface.dividerColor, color: tableSurface.mutedForeground }}
+                    >
+                      <th className="px-4 py-2.5 !text-left">Description</th>
+                      <th className="px-4 py-2.5 text-center">Item</th>
+                      {allowAddonEdit ? <th className="px-4 py-2.5 text-center">Quantity</th> : null}
+                      <th className="px-4 py-2.5 text-right">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    className="[&_tr]:border-b [&_tr]:border-dashed"
+                    style={{ borderColor: tableSurface.dividerColor }}
+                  >
+                    {addonLines.map((li) => {
+                      const qRaw = addonQty[li.id] ?? effectivePricingLineQuantity(li);
+                      const unitMinor = effectiveCatalogAddonUnitAmount(li, term);
+                      const lineTotal = Math.round(unitMinor * qRaw);
+                      return (
+                        <tr key={li.id}>
+                          <td className="px-4 py-3 !text-left align-middle">
+                            <span className="block w-full text-left font-medium">{li.label}</span>
+                          </td>
+                          <td
+                            className="px-4 py-3 text-center align-middle tabular-nums"
+                            style={{ color: tableSurface.mutedForeground }}
+                          >
+                            {formatCurrencyAmount(unitMinor, currency)}
+                          </td>
+                          {allowAddonEdit ? (
+                            <td className="px-4 py-3 text-center align-middle">
+                              <div className="flex min-h-8 w-full items-center justify-center tabular-nums">
+                                {qRaw <= 0 ? (
+                                  <button
+                                    key="addon-qty-add"
+                                    type="button"
+                                    disabled={!interactive || !selectedTierId}
+                                    className={cn(
+                                      "inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium",
+                                      "animate-in fade-in-0 zoom-in-95 duration-200",
+                                      "disabled:pointer-events-none disabled:opacity-50",
+                                    )}
+                                    style={addonsOutlineButtonStyle}
+                                    aria-label={`Add ${li.label}`}
+                                    onClick={() => patchAddonQty(li, 1)}
+                                  >
+                                    <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Add
+                                  </button>
+                                ) : (
+                                  <span
+                                    key="addon-qty-stepper"
+                                    className={cn(
+                                      "inline-flex items-center rounded-md border p-0.5 shadow-sm",
+                                      "animate-in fade-in-0 zoom-in-95 duration-200",
+                                    )}
+                                    style={{
+                                      borderColor: addonsControlStyle.borderColor,
+                                      backgroundColor: addonsControlStyle.backgroundColor,
+                                      color: addonsControlStyle.color,
+                                    }}
+                                  >
+                                    <button
+                                      type="button"
+                                      disabled={!interactive || !selectedTierId}
+                                      className={cn(
+                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
+                                        "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                      )}
+                                      style={{ color: addonsControlStyle.color }}
+                                      aria-label={`Decrease ${li.label} quantity`}
+                                      onClick={() => patchAddonQty(li, qRaw - 1)}
+                                    >
+                                      <Minus className="h-3.5 w-3.5" aria-hidden />
+                                    </button>
+                                    <span
+                                      className="min-w-7 px-1 text-center text-sm font-medium tabular-nums"
+                                      aria-live="polite"
+                                    >
+                                      {qRaw}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      disabled={!interactive || !selectedTierId}
+                                      className={cn(
+                                        "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
+                                        "hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                      )}
+                                      style={{ color: addonsControlStyle.color }}
+                                      aria-label={`Increase ${li.label} quantity`}
+                                      onClick={() => patchAddonQty(li, qRaw + 1)}
+                                    >
+                                      <Plus className="h-3.5 w-3.5" aria-hidden />
+                                    </button>
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          ) : null}
+                          <td className="px-4 py-3 text-right align-middle tabular-nums font-medium">
+                            {formatCurrencyAmount(lineTotal, currency)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </ProposalAccordionExpandSurface>
+            </div>
+          </TooltipProvider>
+          {!selectedTierId && interactive ? (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Select a plan above to configure add-ons and save your choices.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          "mt-[50px] flex flex-col gap-2 rounded-xl border border-border/70 px-4 py-3 shadow-sm",
+          isVisual ? "mx-auto max-w-md" : "",
+        )}
+        style={{ backgroundColor: style.primaryColor, color: totalBarFg }}
+      >
+        <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="min-w-0 shrink text-xl font-semibold leading-none sm:text-2xl">{totalSectionLabel}</span>
+          <div className="min-w-0 shrink-0 text-right">
+            <span className="text-xl font-semibold tabular-nums leading-none sm:text-2xl">
+              {formatCurrencyAmount(monthlyTotalMinor, currency)}
+            </span>
+            <p className="mt-0.5 text-xs font-medium opacity-90">/ month</p>
+          </div>
+        </div>
+        {!selectedTierId ? (
+          <p className="text-xs opacity-85">Choose a plan to include subscription pricing in this total.</p>
+        ) : null}
+        {selectedTierId || addonsSubtotalMinor > 0 ? (
+          <p className="max-w-[280px] text-pretty text-left text-[11px] leading-snug opacity-80 sm:ml-auto sm:text-right">
+            Total commitment over {termMonths} mo:{" "}
+            <span className="whitespace-nowrap tabular-nums font-medium opacity-95">
+              {formatCurrencyAmount(commitmentTotalMinor, currency)}
+            </span>
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}

@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { ProposalPublicPageShell } from "@/components/features/proposal/viewer/public-page-shell";
-import { ProposalAnalyticsTracker } from "@/components/proposal/proposal-analytics-tracker";
-import { ProposalDocumentView } from "@/components/proposal/proposal-document-view";
-import { ProposalPasswordGate } from "@/components/proposal/proposal-password-gate";
-import { ProposalPublicFooter } from "@/components/proposal/proposal-public-footer";
+import { ProposalAnalyticsTracker } from "@/components/features/proposal/viewer/proposal-analytics-tracker";
+import { ProposalDocumentView } from "@/components/features/proposal/viewer/proposal-document-view";
+import { ProposalPasswordGate } from "@/components/features/proposal/viewer/proposal-password-gate";
+import { ProposalPublicFooter } from "@/components/features/proposal/viewer/proposal-public-footer";
 import { hasAgreementBlock, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
 import { getStripePublishableKey } from "@/lib/stripe/publishable-key";
 import { PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES } from "@/lib/proposal/public/public-layout";

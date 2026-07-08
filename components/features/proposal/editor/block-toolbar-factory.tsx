@@ -3,13 +3,13 @@
 import * as React from "react";
 import { ChevronDown, FileSignature, Pencil, RefreshCw } from "lucide-react";
 
-import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
-import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
-import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
-import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposal/proposal-splash-editor";
-import { useProposalSectionEditorAppearance } from "@/components/proposal/proposal-section-editor-chrome";
+import { ColumnsBlockToolbarPrimarySlot } from "@/components/features/proposal/blocks/columns/layout-controls";
+import { ProposalBlockToolbar } from "@/components/features/proposal/editor/toolbar/proposal-block-toolbar";
+import { ProposalSectionBackgroundPicker } from "@/components/features/proposal/editor/background/section-background-picker";
+import { ProposalSplashBackgroundPickerWithBranding } from "@/components/features/proposal/blocks/splash/splash-editor";
+import { useProposalSectionEditorAppearance } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
 import { ProposalToolbarIconButton } from "@/components/features/proposal/editor/toolbar";
+import { ImageBlockToolbarSlot } from "@/components/features/proposal/editor/block-toolbar-slots";
 import { getBlockDefinition } from "@/components/features/proposal/blocks/block-editor-registry";
 import { useContractTemplatePickerOptional } from "@/components/features/templates/contract-template-picker-provider";
 import type { ContractTemplatePick } from "@/lib/templates/contract-template-picker";
@@ -97,23 +97,14 @@ export function BlockToolbarForBlock({
   const compactColumnsChrome = block.type === "columns";
 
   if (block.type === "image") {
-    const imageToolbar = (
-      <ProposalImageBlockToolbar
-        variant="shell"
+    return (
+      <ImageBlockToolbarSlot
         block={block as ImageBlock}
         onChange={(next) => update(next)}
         onDelete={remove}
+        leadingSlot={isRoot ? dragHandle : undefined}
       />
     );
-    if (isRoot && dragHandle) {
-      return (
-        <div className="flex w-full items-start justify-between gap-1.5">
-          {dragHandle}
-          {imageToolbar}
-        </div>
-      );
-    }
-    return imageToolbar;
   }
 
   const backdropPickerSlot = (() => {

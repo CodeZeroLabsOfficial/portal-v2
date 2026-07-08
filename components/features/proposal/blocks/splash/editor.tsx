@@ -1,6 +1,6 @@
 "use client";
 
-import { SplashBlockInspector } from "@/components/proposal/proposal-splash-editor";
+import { SplashBlockInspector } from "@/components/features/proposal/blocks/splash/splash-editor";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { SplashBlock } from "@/types/proposal";
 

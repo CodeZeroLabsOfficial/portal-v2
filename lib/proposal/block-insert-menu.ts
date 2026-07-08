@@ -22,7 +22,7 @@ import {
 import {
   type BlockMenuProfile,
   getBlockDefinition,
-  PROPOSAL_BLOCK_DEFINITIONS,
+  listBlocksForProfile,
   type ProposalBlockDefinition,
 } from "@/components/features/proposal/blocks/block-editor-registry";
 import {
@@ -71,24 +71,22 @@ const BLOCK_PRESENTATION: Partial<Record<ProposalBlock["type"], BlockPresentatio
   payment: { icon: CreditCard, accent: "text-orange-500", accentBg: "bg-orange-500/10" },
 };
 
-/** Monolith uses `proposal` for both CRM proposals and proposal templates. */
+/**
+ * Resolves the block-menu profile for a builder variant. Proposal templates share the
+ * `proposal` profile (same insert menu); only contract templates use a restricted profile.
+ */
 export function resolveBlockMenuProfile(
   variant: "proposal" | "template" | "contract-template",
 ): BlockMenuProfile {
   return variant === "contract-template" ? "contract-template" : "proposal";
 }
 
+/** Insert-menu filtering — delegates to the block-editor registry. */
 export function listBlocksForMenu(
   profile: BlockMenuProfile,
   parent: "root" | "section" | "column" | "agreement" = "root",
 ): ProposalBlockDefinition[] {
-  return PROPOSAL_BLOCK_DEFINITIONS.filter((def) => {
-    const profileOk =
-      profile === "proposal" || profile === "template"
-        ? def.allowedProfiles.includes("proposal") || def.allowedProfiles.includes("template")
-        : def.allowedProfiles.includes(profile);
-    return profileOk && def.allowedParents.includes(parent);
-  });
+  return listBlocksForProfile(profile, parent);
 }
 
 const PROPOSAL_MENU_PRESET_ORDER: Record<InsertMenuPreset, ProposalBlock["type"][]> = {

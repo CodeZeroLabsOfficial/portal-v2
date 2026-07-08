@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { readableForeground } from "@/lib/proposal/block-style";
-import { embedVideoSrc } from "@/components/proposal/embed-video";
+import { embedVideoSrc } from "@/lib/proposal/media/embed-video";
 import type { SplashBlock, SplashBlockBackground, SplashBlockHeight } from "@/types/proposal";
 
 const DEFAULT_BEACH =

@@ -1,7 +1,7 @@
 "use client";
 
-import { PackagesInlineEditor } from "@/components/proposal/proposal-block-inline-editors";
-import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
+import { PackagesInlineEditor } from "@/components/features/proposal/blocks/commerce-inline-editors";
+import { ProposalSectionShell } from "@/components/features/proposal/editor/section-chrome/proposal-section-shell";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
 import { resolveSectionBackground } from "@/lib/proposal/section-background";

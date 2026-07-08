@@ -1,6 +1,6 @@
 "use client";
 
-import { PricingInlineEditor } from "@/components/proposal/proposal-block-inline-editors";
+import { PricingInlineEditor } from "@/components/features/proposal/blocks/commerce-inline-editors";
 import type { BlockEditorProps } from "@/components/features/proposal/blocks/block-editor-registry";
 import type { PricingBlock } from "@/types/proposal";
 

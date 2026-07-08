@@ -14,10 +14,16 @@ export interface TextBlockEditorProps extends BlockEditorProps<TextBlock> {
 export function TextBlockEditor({
   block,
   onChange,
+  canvas,
   placeholder,
   showBubbleWhenBlockSelected,
   formattingChrome,
 }: TextBlockEditorProps) {
+  const resolvedFormattingChrome = formattingChrome ?? canvas?.formattingChrome ?? "bubble";
+  const resolvedShowBubble =
+    showBubbleWhenBlockSelected ??
+    (resolvedFormattingChrome !== "band" && canvas?.selectedBlockId === block.id);
+
   return (
     <ProposalRichText
       key={block.id}
@@ -25,9 +31,9 @@ export function TextBlockEditor({
       editorMinHeightPx={block.editorMinHeightPx}
       onEditorMinHeightPxChange={(next) => onChange({ ...block, editorMinHeightPx: next })}
       resizableHeight
-      placeholder={placeholder}
-      showBubbleWhenBlockSelected={showBubbleWhenBlockSelected}
-      formattingChrome={formattingChrome}
+      placeholder={placeholder ?? canvas?.textPlaceholder}
+      showBubbleWhenBlockSelected={resolvedShowBubble}
+      formattingChrome={resolvedFormattingChrome}
       onChange={(html) => onChange({ ...block, html, body: undefined })}
     />
   );

@@ -333,3 +333,139 @@ export function proposalToolbarAuxTextButtonClasses(
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
   );
 }
+
+/** Muted label text inside toolbar panels (section labels, hints). */
+export function proposalToolbarLabelMutedClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "text-zinc-400" : "text-muted-foreground";
+}
+
+/** Horizontal divider between sections inside a toolbar panel. */
+export function proposalToolbarPanelSectionDividerClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "border-white/10" : "border-border/60";
+}
+
+/** Ring offset for active colour swatches. */
+export function proposalToolbarSwatchRingOffsetClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-offset-zinc-900" : "ring-offset-background";
+}
+
+/** Idle border/hover for colour swatch buttons. */
+export function proposalToolbarSwatchIdleBorderClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "border-zinc-700 hover:scale-105" : "border-border hover:scale-105";
+}
+
+/** Ring on the style-picker palette trigger dot. */
+export function proposalToolbarStyleTriggerDotRingClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-zinc-900" : "ring-background";
+}
+
+/** Frame around variant pills (Visual / Simple). */
+export function proposalToolbarVariantPickerFrameClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "bg-zinc-800/80 ring-zinc-700/60" : "bg-muted/60 ring-border";
+}
+
+/** Individual variant pill inside the style picker. */
+export function proposalToolbarVariantPillClasses(
+  appearance: ProposalToolbarAppearance,
+  active: boolean,
+): string {
+  if (appearance === "elevated") {
+    return active
+      ? "bg-zinc-700 text-white shadow-sm"
+      : "text-zinc-400 hover:text-white";
+  }
+  return active
+    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+    : "text-muted-foreground hover:text-foreground";
+}
+
+/** Reset-to-default button in style/background panels. */
+export function proposalToolbarPanelResetButtonClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "border-zinc-700/60 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+    : "border-border text-muted-foreground hover:text-foreground";
+}
+
+/** Shell around hex colour input rows. */
+export function proposalToolbarColorInputShellClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "border-zinc-700/60 bg-zinc-800/60"
+    : "border-border bg-muted/40";
+}
+
+/** Text inside hex colour input fields. */
+export function proposalToolbarColorInputTextClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "text-zinc-100" : "text-foreground";
+}
+
+/** Ring on the inline colour preview dot. */
+export function proposalToolbarColorPreviewRingClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-zinc-700" : "ring-border";
+}
+
+/** TabsList chrome inside toolbar panels. */
+export function proposalToolbarTabsListClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "bg-black/55" : "bg-muted/60";
+}
+
+/** TabsTrigger chrome inside toolbar panels. */
+export function proposalToolbarTabsTriggerClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+    : "";
+}
+
+/** Outline button inside toolbar panels (e.g. Clear background). */
+export function proposalToolbarPanelOutlineButtonClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "border-zinc-600 text-zinc-200 hover:bg-zinc-800"
+    : "border-border/80";
+}
+
+/** Compact input inside elevated toolbar panels. */
+export function proposalToolbarPanelInputClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated"
+    ? "border-zinc-700 bg-zinc-900 text-zinc-100"
+    : "border-border/80";
+}
+
+/** Background picker trigger button on the toolbar shell. */
+export function proposalToolbarBackdropTriggerClasses(
+  appearance: ProposalToolbarAppearance,
+  options: { showMediaFill: boolean; hasPersistedBackdrop: boolean },
+): string {
+  const { showMediaFill, hasPersistedBackdrop } = options;
+  return cn(
+    "relative inline-flex h-8 w-8 rounded-full ring-2 transition-colors focus:outline-none focus-visible:ring-2",
+    showMediaFill ? "overflow-hidden p-0 ring-border" : "items-center justify-center",
+    appearance === "elevated"
+      ? "text-zinc-200 hover:bg-white/10 focus-visible:ring-white/35 data-[state=open]:bg-white/15"
+      : "text-muted-foreground ring-offset-2 ring-offset-muted/90 hover:bg-background hover:text-foreground focus-visible:ring-ring data-[state=open]:bg-background data-[state=open]:shadow-sm dark:ring-offset-zinc-800",
+    hasPersistedBackdrop ? "" : appearance === "elevated" ? "ring-white/35" : "ring-border ring-dashed",
+  );
+}
+
+/** Ring on mini preview swatches in the backdrop trigger. */
+export function proposalToolbarPreviewSwatchRingClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-black/85" : "ring-background";
+}
+
+/** Border on asset thumb circles in background picker rows. */
+export function proposalToolbarAssetThumbBorderClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "border-white/12" : "border-border/60";
+}
+
+/** Hover ring on library-pick asset rows. */
+export function proposalToolbarAssetRowHoverClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-white/12 hover:bg-white/5 hover:ring-white/20" : "";
+}
+
+/** Compact tint swatch input shell. */
+export function proposalToolbarTintInputShellClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "border-zinc-700/70 bg-black/40" : "border-border/70 bg-muted/30";
+}
+
+/** Ring on tint swatch preview dots. */
+export function proposalToolbarTintPreviewRingClasses(appearance: ProposalToolbarAppearance): string {
+  return appearance === "elevated" ? "ring-zinc-600" : "ring-border";
+}

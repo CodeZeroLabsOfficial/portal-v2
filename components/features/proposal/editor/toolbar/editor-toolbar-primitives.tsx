@@ -5,7 +5,7 @@ import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { GripVertical } from "lucide-react";
 
-import { useResolvedProposalToolbarAppearance } from "@/components/proposal/proposal-section-editor-chrome";
+import { useResolvedProposalToolbarAppearance } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";

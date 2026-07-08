@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
+import { useProposalSectionEditorChrome } from "@/components/features/proposal/editor/section-chrome/proposal-section-editor-chrome";
 import { PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 

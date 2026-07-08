@@ -1,6 +1,12 @@
 /**
  * Builder workspace layout tokens — desktop shell grid tracks and side-panel widths.
  *
+ * Visual vocabulary (editor canvas):
+ * - **flush band** — edge-to-edge backdrop row (`proposalBlockRendersFlushEditorBand`).
+ * - **seamless** — section-child editor content without a boxed surface (`ProposalSectionEditorChromeContext.seamless`).
+ * - **inside-band** — toolbar pinned in the flush band's top-end corner (`BlockToolbarPlacement`).
+ * - **formattingChrome** — rich-text only: `bubble` (TipTap menu) or `band` (single-layout stack).
+ *
  * Contract: panels are IN-FLOW grid children and only `grid-template-columns` animates.
  * Everything inside the canvas column sizes relative to the column (`w-full`), never the
  * viewport, so toggling a panel reflows the whole canvas as one container.

@@ -20,8 +20,8 @@ import {
 import { BuilderSidePanelProvider } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { DocumentEditorProvider } from "@/components/features/proposal/editor/document-editor-context";
 import { BuilderPanel, BuilderTopBar } from "@/components/features/proposal/editor/builder-top-bar";
-import { ProposalDocumentEditorLazy } from "@/components/proposal/proposal-document-editor-lazy";
-import type { ProposalDocumentEditorProps } from "@/components/proposal/proposal-document-editor";
+import { ProposalDocumentEditorLazy } from "@/components/features/proposal/editor/proposal-document-editor-lazy";
+import type { ProposalDocumentEditorProps } from "@/components/features/proposal/editor/proposal-document-editor";
 
 function BuilderOutlineFromDocument() {
   return <BlockOutlinePanel />;
