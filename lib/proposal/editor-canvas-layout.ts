@@ -28,15 +28,21 @@ export function builderDesktopGridColumnsClass(
 }
 
 /**
+ * Top reserve on the builder canvas so the first root block's floating toolbar is not
+ * clipped by the scroller's top edge.
+ */
+export const BUILDER_CANVAS_TOP_RESERVE_CLASSES = "pt-12";
+
+/**
  * Bottom scroll reserve on the builder canvas so the last block can be scrolled up
  * toward the top of the viewport while editing.
  */
 export const BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES = "pb-[min(45vh,26rem)] sm:pb-40 md:pb-48";
 
 /**
- * Horizontal content inset INSIDE a band or non-flush root row. The canvas itself has
- * zero horizontal padding — flush bands span edge-to-edge and all inset lives here, so
- * the canvas column reflows as one unit when side panels toggle.
+ * Horizontal content inset INSIDE a band or non-flush root row. Wide enough to host the
+ * left gutter rail (≈4.25rem + gap) outside the content column. The canvas itself has
+ * zero horizontal padding — flush bands span edge-to-edge and all inset lives here.
  */
 export const BUILDER_BAND_CONTENT_INSET_CLASSES =
-  "mx-auto w-full min-w-0 max-w-none px-3 sm:px-4 md:px-6";
+  "mx-auto w-full min-w-0 max-w-none px-16 sm:px-20";

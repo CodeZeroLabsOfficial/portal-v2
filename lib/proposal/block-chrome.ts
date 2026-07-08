@@ -4,10 +4,10 @@ import type { ProposalBlock } from "@/types/proposal";
 /**
  * Where a block's floating toolbar mounts:
  * - `inside-band` — absolutely positioned in the band's top-end corner (flush backdrop bands).
- * - `inline-row` — absolutely positioned at the top-end of the block row.
- * There is no above-the-block (`-translate-y-full`) placement.
+ * - `above-row` — floats directly above the block row; the host renders a hoverable
+ *   bridge over the gap so mouse travel from row to toolbar never drops it.
  */
-export type BlockToolbarPlacement = "inside-band" | "inline-row";
+export type BlockToolbarPlacement = "inside-band" | "above-row";
 
 export type BlockToolbarVisibility = "selected-only" | "hover-or-selected";
 
@@ -27,7 +27,7 @@ export function rootBlockChrome(block: ProposalBlock): BlockChromeConfig {
     return { toolbarPlacement: "inside-band", toolbarVisibility: "selected-only" };
   }
   return {
-    toolbarPlacement: "inline-row",
+    toolbarPlacement: "above-row",
     toolbarVisibility: mediaSelectedOnly(block.type) ? "selected-only" : "hover-or-selected",
   };
 }
@@ -35,7 +35,7 @@ export function rootBlockChrome(block: ProposalBlock): BlockChromeConfig {
 /** Chrome for a block nested inside a section/agreement band. */
 export function sectionChildChrome(block: ProposalBlock): BlockChromeConfig {
   return {
-    toolbarPlacement: "inline-row",
+    toolbarPlacement: "above-row",
     toolbarVisibility: mediaSelectedOnly(block.type) ? "selected-only" : "hover-or-selected",
   };
 }

@@ -52,7 +52,7 @@ export interface SectionChildStackProps<B extends ProposalBlock> {
 
 /**
  * Shared stack for blocks nested in a section/agreement band: DnD context, insert
- * seams, floating overlay gutter, row selection, and inline-row toolbars. Rendering
+ * seams, floating overlay gutter, row selection, and above-row toolbars. Rendering
  * of each block's fields and toolbar is supplied by the parent (render props) so the
  * stack stays decoupled from the block editors.
  */

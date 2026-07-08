@@ -79,8 +79,8 @@ export function SectionChildBlockGutter({
   );
 }
 
-/** Aligns the top-of-stack insert with the overlay gutter column. */
-const SECTION_CHILD_INSERT_LEFT_CLASSES = "left-2";
+/** Aligns the top-of-stack insert with the overlay gutter rail (outside the content column). */
+const SECTION_CHILD_INSERT_LEFT_CLASSES = "right-full mr-2 left-auto";
 
 /**
  * Insert above the first child in a section stack — seam-only; between-row inserts use

@@ -203,7 +203,8 @@ export function SectionChildFloatingGutterProvider({
           <div
             data-section-floating-gutter
             className={cn(
-              "pointer-events-none absolute left-2 z-30 w-[4.25rem] sm:w-[4.5rem]",
+              // Sits wholly OUTSIDE the content column, in the band's left inset rail.
+              "pointer-events-none absolute right-full mr-2 z-30 w-[4.25rem] sm:w-[4.5rem]",
               "transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none",
               showGutter ? "opacity-100" : "opacity-0",
               "has-[[data-state=open]]:pointer-events-auto has-[[data-state=open]]:opacity-100",

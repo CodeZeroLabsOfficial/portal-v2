@@ -5,8 +5,8 @@ import * as React from "react";
 import type { BlockToolbarPlacement } from "@/lib/proposal/block-chrome";
 import { cn } from "@/lib/utils";
 
-/** Mirrors the section-child floating gutter so mouse travel to the toolbar never drops it. */
-const TOOLBAR_HIDE_DELAY_MS = 160;
+/** Grace window sized to the mouse travel from row edge to a toolbar floating above it. */
+const TOOLBAR_HIDE_DELAY_MS = 200;
 
 export interface BlockToolbarHostProps {
   placement: BlockToolbarPlacement;
@@ -16,9 +16,10 @@ export interface BlockToolbarHostProps {
 }
 
 /**
- * Mounts a block toolbar inside its band or row (never above it) and owns the hover
- * bridge: after `active` drops, the toolbar lingers briefly and stays put while the
- * pointer is over it, so it remains interactive under mouse travel.
+ * Mounts a block toolbar and owns the hover bridge: `inside-band` pins to the band
+ * corner; `above-row` floats over the row with bottom padding that stays hoverable so
+ * pointer travel from row to toolbar never drops it. After `active` falls, the toolbar
+ * lingers briefly and stays mounted while the pointer is over it.
  */
 export function BlockToolbarHost({ placement, active, children }: BlockToolbarHostProps) {
   const [visible, setVisible] = React.useState(active);
@@ -55,7 +56,9 @@ export function BlockToolbarHost({ placement, active, children }: BlockToolbarHo
     <div
       className={cn(
         "absolute z-50",
-        placement === "inside-band" ? "right-3 top-3" : "right-0 top-0 pb-1 pt-0.5",
+        // `above-row`: floats over the row's top edge; the bottom padding is a HOVERABLE
+        // bridge covering the gap, so pointer travel row → toolbar never leaves the host.
+        placement === "inside-band" ? "right-3 top-3" : "bottom-full right-0 pb-2 pt-0.5",
       )}
       onMouseEnter={() => {
         hoveredRef.current = true;
