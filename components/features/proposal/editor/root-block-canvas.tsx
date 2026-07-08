@@ -33,7 +33,9 @@ import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposa
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { packagesAddonsSectionActive } from "@/lib/proposal/commerce/packages-totals";
 import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
+import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
+import { cn } from "@/lib/utils";
 import type {
   AgreementBlock,
   BlockStyle,
@@ -109,7 +111,9 @@ export function RootBlockCanvas({
     <div className={PROPOSAL_CANVAS_ROOT_CLASS}>
       <TooltipProvider delayDuration={280}>
         {blocks.length === 0 ? (
-          <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
+          <div className={cn(BUILDER_BAND_CONTENT_INSET_CLASSES, "pt-10")}>
+            <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
+          </div>
         ) : (
           <div
             onClick={() => {
@@ -126,7 +130,13 @@ export function RootBlockCanvas({
                   const flushBand = proposalBlockRendersFlushEditorBand(block);
                   const isSection = block.type === "section";
                   return (
-                    <div key={block.id} id={proposalBuilderBlockDomId(block.id)} className="scroll-mt-28">
+                    <div
+                      key={block.id}
+                      id={proposalBuilderBlockDomId(block.id)}
+                      // Non-flush root rows carry the canvas inset so flush bands can span
+                      // edge-to-edge while the whole column reflows as one unit.
+                      className={cn("scroll-mt-28", !flushBand && BUILDER_BAND_CONTENT_INSET_CLASSES)}
+                    >
                       <SortableShell
                         id={block.id}
                         selected={isSelected}

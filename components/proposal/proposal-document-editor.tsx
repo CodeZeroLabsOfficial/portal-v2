@@ -334,10 +334,9 @@ export function ProposalDocumentEditor({
                       ) : null}
                       <TabsContent
                         value="edit"
+                        // Embedded: BuilderCanvas owns the bottom scroll reserve.
                         className={
-                          embeddedInBuilder
-                            ? "mt-0 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
-                            : "mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
+                          embeddedInBuilder ? "mt-0" : "mt-4 pb-[min(45vh,26rem)] sm:pb-40 md:pb-48"
                         }
                       >
                         {editorTab === "edit" ? (

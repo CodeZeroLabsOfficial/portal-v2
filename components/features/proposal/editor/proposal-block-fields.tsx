@@ -124,8 +124,6 @@ import {
 import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
 import {
   PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
-  PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES,
-  PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES,
   PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
   PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
   proposalEditorSectionChildEdgePadClasses,
@@ -1489,7 +1487,8 @@ export function SectionBlockFields({
   return (
     <ProposalSectionShell background={block.background} variant="editor">
       {backdropOn ? (
-        <div className={PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES}>{sectionStack}</div>
+        // Horizontal inset is applied once by the editor section shell.
+        <div className="min-w-0">{sectionStack}</div>
       ) : (
         <div className="rounded-xl border border-dashed border-border/65 bg-muted/15 px-1 py-1 sm:bg-muted/[0.35]">
           {sectionStack}
@@ -2383,11 +2382,10 @@ export function AgreementBlockFields({
   return (
     <ProposalSectionShell background={block.background} variant="editor">
       {backdropOn ? (
-        <div className={PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES}>
-          <div className="flex min-w-0 flex-col">
-            {acceptStack}
-            {settingsFooter}
-          </div>
+        // Horizontal inset is applied once by the editor section shell.
+        <div className="flex min-w-0 flex-col">
+          {acceptStack}
+          {settingsFooter}
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-border/65 bg-muted/15 px-1 py-1 sm:bg-muted/[0.35]">

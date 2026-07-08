@@ -11,6 +11,7 @@ import {
   BuilderPropertiesDetailsProvider,
   BuilderPropertiesDetailsSlot,
 } from "@/components/features/proposal/editor/builder-properties-details-slot";
+import { BuilderCanvas } from "@/components/features/proposal/editor/builder-canvas";
 import { BuilderShell } from "@/components/features/proposal/editor/builder-shell";
 import {
   BuilderTopBarActionsProvider,
@@ -70,7 +71,7 @@ export function ProposalBuilderWorkspace({
                   </BuilderPanel>
                 }
                 canvas={
-                  <div className="px-4 pb-6 pt-12">
+                  <BuilderCanvas>
                     <ProposalDocumentEditorLazy
                       {...editorProps}
                       variant={variant}
@@ -78,7 +79,7 @@ export function ProposalBuilderWorkspace({
                       embeddedInBuilder
                       proposalEditMiddleSlot={undefined}
                     />
-                  </div>
+                  </BuilderCanvas>
                 }
                 inspector={
                   <BuilderPanel title="Properties" side="right">

@@ -26,3 +26,17 @@ export function builderDesktopGridColumnsClass(
   if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20rem]";
   return "grid-cols-[0px_minmax(0,1fr)_0px]";
 }
+
+/**
+ * Bottom scroll reserve on the builder canvas so the last block can be scrolled up
+ * toward the top of the viewport while editing.
+ */
+export const BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES = "pb-[min(45vh,26rem)] sm:pb-40 md:pb-48";
+
+/**
+ * Horizontal content inset INSIDE a band or non-flush root row. The canvas itself has
+ * zero horizontal padding — flush bands span edge-to-edge and all inset lives here, so
+ * the canvas column reflows as one unit when side panels toggle.
+ */
+export const BUILDER_BAND_CONTENT_INSET_CLASSES =
+  "mx-auto w-full min-w-0 max-w-none px-3 sm:px-4 md:px-6";

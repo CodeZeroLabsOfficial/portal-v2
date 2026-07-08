@@ -14,7 +14,7 @@ import {
   PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
   PROPOSAL_SECTION_DARK_ACCORDION_LIGHT_SURFACE_OVERRIDES,
 } from "@/lib/proposal/editor-surface-tokens";
-import { PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES } from "@/lib/proposal/public/public-layout";
+import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { ProposalSectionEditorChromeContext } from "@/components/proposal/proposal-section-editor-chrome";
 
 /** Backdrop visuals shared by proposal preview and proposal editor canvases. */
@@ -89,7 +89,7 @@ export function ProposalSectionShell({
 
       <div className={cn("relative z-10", gutter)}>
         {editorCanvas ? (
-          <div className={PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES}>{inner}</div>
+          <div className={BUILDER_BAND_CONTENT_INSET_CLASSES}>{inner}</div>
         ) : (
           inner
         )}
