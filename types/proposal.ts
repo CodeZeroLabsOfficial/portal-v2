@@ -496,6 +496,11 @@ export type ProposalAgreementChildBlock = Exclude<ProposalContentBlock, Agreemen
 export interface SectionBlock extends ProposalBlockBase {
   type: "section";
   children: ProposalContentBlock[];
+  /**
+   * `group` (default) — multi-child section band with insert seams.
+   * `single` — one fixed child from a root canvas insert (text, image, etc.).
+   */
+  layout?: "group" | "single";
   /** Editor/outline label; not rendered on the public proposal. */
   title?: string;
   /** Optional hero / layout styling (same shape as quote & plans blocks). */

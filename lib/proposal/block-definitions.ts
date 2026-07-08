@@ -4,11 +4,44 @@ import { PROPOSAL_IMAGE_BLOCK_PLACEHOLDER_URL } from "@/lib/proposal/media/image
 import { DEFAULT_HIGHLIGHT_COLOR, DEFAULT_PRIMARY_COLOR } from "@/lib/proposal/block-style";
 import { defaultNewSectionBackground } from "@/lib/proposal/section-background";
 import { defaultSplashBlock } from "@/lib/proposal/splash-block";
-import type { ColumnsBlock, ProposalBlock } from "@/types/proposal";
+import type { ColumnsBlock, ProposalBlock, ProposalContentBlock, SectionBlock } from "@/types/proposal";
 import type { ColumnLayoutCount } from "@/lib/proposal/columns";
 
 export { DEFAULT_PRIMARY_COLOR };
 export const DEFAULT_PACKAGES_UPFRONT_COST_12_MINOR = 0;
+
+/** Leaf types inserted from the root canvas as a single-child section band. */
+export const SINGLE_CHILD_SECTION_CONTENT_TYPES = [
+  "text",
+  "header",
+  "pricing",
+  "packages",
+  "image",
+  "form",
+  "embed",
+  "payment",
+  "divider",
+  "spacer",
+] as const satisfies readonly ProposalContentBlock["type"][];
+
+export type SingleChildSectionContentType = (typeof SINGLE_CHILD_SECTION_CONTENT_TYPES)[number];
+
+export function isSingleChildSectionContentType(
+  type: ProposalBlock["type"],
+): type is SingleChildSectionContentType {
+  return (SINGLE_CHILD_SECTION_CONTENT_TYPES as readonly string[]).includes(type);
+}
+
+/** Root-canvas insert: white section band with exactly one nested content block. */
+export function createSingleChildSection(childType: SingleChildSectionContentType): SectionBlock {
+  return {
+    id: newProposalBlockId(),
+    type: "section",
+    layout: "single",
+    background: defaultNewSectionBackground(),
+    children: [createProposalBlock(childType) as ProposalContentBlock],
+  };
+}
 
 export function newProposalBlockId(): string {
   return uuidv4();

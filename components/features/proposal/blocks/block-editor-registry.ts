@@ -52,7 +52,7 @@ export const TEXT_BLOCK_DEFINITION = defineBlock({
   label: "Text",
   createDefault: () => createProposalBlock("text"),
   allowedProfiles: ["proposal", "template", "contract-template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: TextBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -61,7 +61,7 @@ export const HEADER_BLOCK_DEFINITION = defineBlock({
   label: "Heading",
   createDefault: () => createProposalBlock("header") as Extract<ProposalBlock, { type: "header" }>,
   allowedProfiles: ["proposal", "template", "contract-template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: HeaderBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -70,7 +70,7 @@ export const DIVIDER_BLOCK_DEFINITION = defineBlock({
   label: "Divider",
   createDefault: () => createProposalBlock("divider") as Extract<ProposalBlock, { type: "divider" }>,
   allowedProfiles: ["proposal", "template", "contract-template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: DividerBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -79,7 +79,7 @@ export const SPACER_BLOCK_DEFINITION = defineBlock({
   label: "Spacer",
   createDefault: () => createProposalBlock("spacer") as Extract<ProposalBlock, { type: "spacer" }>,
   allowedProfiles: ["proposal", "template", "contract-template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: SpacerBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -97,7 +97,7 @@ export const IMAGE_BLOCK_DEFINITION = defineBlock({
   label: "Image",
   createDefault: () => createProposalBlock("image") as Extract<ProposalBlock, { type: "image" }>,
   allowedProfiles: ["proposal", "template", "contract-template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: ImageBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -106,7 +106,7 @@ export const VIDEO_BLOCK_DEFINITION = defineBlock({
   label: "Video",
   createDefault: () => createProposalBlock("video") as Extract<ProposalBlock, { type: "video" }>,
   allowedProfiles: ["proposal", "template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: VideoBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -115,7 +115,7 @@ export const ICON_BLOCK_DEFINITION = defineBlock({
   label: "Icon",
   createDefault: () => createProposalBlock("icon") as Extract<ProposalBlock, { type: "icon" }>,
   allowedProfiles: ["proposal", "template"],
-  allowedParents: ["root", "section", "column"],
+  allowedParents: ["section", "column"],
   Editor: IconBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -151,7 +151,7 @@ export const PACKAGES_BLOCK_DEFINITION = defineBlock({
   label: "Plans",
   createDefault: () => createProposalBlock("packages") as Extract<ProposalBlock, { type: "packages" }>,
   allowedProfiles: ["proposal", "template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: PackagesBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -160,7 +160,7 @@ export const PRICING_BLOCK_DEFINITION = defineBlock({
   label: "Pricing",
   createDefault: () => createProposalBlock("pricing") as Extract<ProposalBlock, { type: "pricing" }>,
   allowedProfiles: ["proposal", "template"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: PricingBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -178,7 +178,7 @@ export const FORM_BLOCK_DEFINITION = defineBlock({
   label: "Form",
   createDefault: () => createProposalBlock("form") as Extract<ProposalBlock, { type: "form" }>,
   allowedProfiles: ["proposal"],
-  allowedParents: ["root", "section", "column"],
+  allowedParents: ["section", "column"],
   Editor: FormBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -187,7 +187,7 @@ export const SIGNATURE_BLOCK_DEFINITION = defineBlock({
   label: "Signature",
   createDefault: () => createProposalBlock("signature") as Extract<ProposalBlock, { type: "signature" }>,
   allowedProfiles: ["proposal"],
-  allowedParents: ["root", "section", "column", "agreement"],
+  allowedParents: ["section", "column", "agreement"],
   Editor: SignatureBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -196,7 +196,7 @@ export const PAYMENT_BLOCK_DEFINITION = defineBlock({
   label: "Payment",
   createDefault: () => createProposalBlock("payment") as Extract<ProposalBlock, { type: "payment" }>,
   allowedProfiles: ["proposal"],
-  allowedParents: ["root", "section", "column"],
+  allowedParents: ["section", "column"],
   Editor: PaymentBlockEditor as ProposalBlockDefinition["Editor"],
 });
 
@@ -205,7 +205,7 @@ export const EMBED_BLOCK_DEFINITION = defineBlock({
   label: "Embed",
   createDefault: () => createProposalBlock("embed") as Extract<ProposalBlock, { type: "embed" }>,
   allowedProfiles: ["proposal", "template"],
-  allowedParents: ["root", "section", "column"],
+  allowedParents: ["section", "column"],
   Editor: EmbedBlockEditor as ProposalBlockDefinition["Editor"],
 });
 

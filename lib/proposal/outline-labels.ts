@@ -1,4 +1,5 @@
 import type { HeaderBlock, ProposalBlock, SectionBlock } from "@/types/proposal";
+import { getBlockDefinition } from "@/components/features/proposal/blocks/block-editor-registry";
 
 /** Top-level section bands — same units the builder Outline lists with section headings. */
 export function countOutlineSections(blocks: ProposalBlock[]): number {
@@ -29,6 +30,14 @@ function headerBlockPlainText(block: HeaderBlock): string {
 export function sectionOutlineLabel(block: SectionBlock, outlineIndex: number): string {
   const explicit = block.title?.trim();
   if (explicit) return explicit;
+
+  if (block.layout === "single") {
+    const child = block.children[0];
+    if (child) {
+      const childLabel = getBlockDefinition(child.type)?.label;
+      if (childLabel) return childLabel;
+    }
+  }
 
   const firstHeader = block.children.find((c): c is HeaderBlock => c.type === "header");
   if (firstHeader) {

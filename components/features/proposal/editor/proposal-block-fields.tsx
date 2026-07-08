@@ -52,7 +52,7 @@ import {
   normalizeColumnFlexForStorage,
   PROPOSAL_COLUMN_FR_MIN,
 } from "@/lib/proposal/columns";
-import { PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES } from "@/lib/proposal/public/public-layout";
+import { PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES, PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -927,8 +927,34 @@ export function SectionBlockFields({
     onSelectBlock(null);
   }
 
-  const sectionStack =
-    children.length === 0 ? (
+  const isSingleLayout = block.layout === "single";
+
+  const sectionStack = isSingleLayout ? (
+    children[0] ? (
+      <div
+        className={cn("min-w-0", PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES)}
+        data-proposal-section-child-content
+      >
+        <ProposalBlockFields
+          block={children[0]}
+          onChange={(next) => updateChild(children[0]!.id, next as ProposalContentBlock)}
+          selection={{
+            selectedId: selectedBlockId,
+            onSelect: onSelectBlock,
+          }}
+          getBlockStyle={getBlockStyle}
+          applyBlockStyle={applyBlockStyle}
+          columnsLayoutEditing={{
+            activeId: columnsLayoutEditingId,
+            setActiveId: setColumnsLayoutEditingId,
+          }}
+          columnsInnerCellCallbacks={
+            children[0].type === "columns" ? columnsChrome.callbacksFor(children[0].id) : undefined
+          }
+        />
+      </div>
+    ) : null
+  ) : children.length === 0 ? (
       <div className="flex flex-col items-center gap-5 py-14 text-center">
         <div className="max-w-[20rem] space-y-1">
           <p className="text-sm font-medium text-foreground">Group related content</p>

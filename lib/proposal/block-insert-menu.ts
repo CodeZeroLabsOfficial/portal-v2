@@ -25,7 +25,11 @@ import {
   PROPOSAL_BLOCK_DEFINITIONS,
   type ProposalBlockDefinition,
 } from "@/components/features/proposal/blocks/block-editor-registry";
-import { createColumnsBlock } from "@/lib/proposal/block-definitions";
+import {
+  createColumnsBlock,
+  createSingleChildSection,
+  isSingleChildSectionContentType,
+} from "@/lib/proposal/block-definitions";
 import type { ProposalBlock } from "@/types/proposal";
 
 export interface BlockInsertOption {
@@ -141,8 +145,29 @@ function blockFactory(type: ProposalBlock["type"], preset: InsertMenuPreset): ((
   if (type === "columns" && preset === "root-library") {
     return () => createColumnsBlock(2);
   }
+  if (
+    (preset === "root-primary" || preset === "root-library") &&
+    isSingleChildSectionContentType(type)
+  ) {
+    return () => createSingleChildSection(type);
+  }
   const def = getBlockDefinition(type);
   return def ? () => def.createDefault() : undefined;
+}
+
+function rootMenuAllowedTypes(
+  profile: BlockMenuProfile,
+  preset: InsertMenuPreset,
+): Set<ProposalBlock["type"]> {
+  const allowedTypes = new Set(listBlocksForMenu(profile, "root").map((def) => def.type));
+  if (preset === "root-primary" || preset === "root-library") {
+    for (const type of MENU_PRESET_ORDER[profile][preset]) {
+      if (isSingleChildSectionContentType(type) && getBlockDefinition(type)) {
+        allowedTypes.add(type);
+      }
+    }
+  }
+  return allowedTypes;
 }
 
 function toInsertOption(
@@ -169,7 +194,10 @@ export function blockInsertOptions(
   parent: "root" | "section" | "column" | "agreement",
   preset: InsertMenuPreset,
 ): BlockInsertOption[] {
-  const allowedTypes = new Set(listBlocksForMenu(profile, parent).map((def) => def.type));
+  const allowedTypes =
+    parent === "root"
+      ? rootMenuAllowedTypes(profile, preset)
+      : new Set(listBlocksForMenu(profile, parent).map((def) => def.type));
   const order = MENU_PRESET_ORDER[profile][preset];
   const options: BlockInsertOption[] = [];
 

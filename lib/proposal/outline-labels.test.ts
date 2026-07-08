@@ -34,6 +34,14 @@ test("sectionOutlineLabel strips header html", () => {
   assert.equal(sectionOutlineLabel(block, 0), "Scope & timeline");
 });
 
+test("sectionOutlineLabel uses child type label for single-layout sections", () => {
+  const block = baseSection({
+    layout: "single",
+    children: [{ id: "t1", type: "text", html: "<p></p>" }],
+  });
+  assert.equal(sectionOutlineLabel(block, 0), "Text");
+});
+
 test("sectionOutlineLabel falls back to outline index", () => {
   const block = baseSection();
   assert.equal(sectionOutlineLabel(block, 0), "Section 1");

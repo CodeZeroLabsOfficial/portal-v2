@@ -675,6 +675,7 @@ const sectionBlockSchema = z.object({
   id: idSchema,
   type: z.literal("section"),
   children: z.array(nestedBlockSchema).default([]),
+  layout: z.enum(["group", "single"]).optional(),
   title: z.string().optional(),
   style: blockStyleSchema.optional(),
   background: sectionBackgroundSchema.optional(),
@@ -791,10 +792,14 @@ export function parseProposalDocument(input: unknown): ProposalDocument {
           if (bgSafe.success) backgroundSafe = bgSafe.data as SectionBackground;
         }
         const titleRaw = typeof o.title === "string" ? o.title.trim() : "";
+        const layoutRaw = o.layout;
+        const layoutSafe =
+          layoutRaw === "single" || layoutRaw === "group" ? layoutRaw : undefined;
         blocks.push({
           id,
           type: "section",
           children,
+          ...(layoutSafe ? { layout: layoutSafe } : {}),
           ...(titleRaw ? { title: titleRaw } : {}),
           ...(styleSafe.success &&
           (styleSafe.data.variant !== undefined ||
