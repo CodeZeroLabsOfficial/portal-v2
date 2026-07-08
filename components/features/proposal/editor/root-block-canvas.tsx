@@ -25,6 +25,10 @@ import {
   blockLabel,
 } from "@/components/features/proposal/editor/block-toolbar-factory";
 import { SectionBandShell } from "@/components/features/proposal/editor/section-band-shell";
+import {
+  SingleSectionRichTextEditorProvider,
+  SingleSectionToolbarStack,
+} from "@/components/features/proposal/editor/single-section-toolbar";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
@@ -32,8 +36,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { rootBlockChrome } from "@/lib/proposal/block-chrome";
 import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
+import { isSingleLayoutSection, singleLayoutSectionChild } from "@/lib/proposal/single-section";
 import { cn } from "@/lib/utils";
-import type { BlockStyle, ProposalBlock, SectionBackground } from "@/types/proposal";
+import type { BlockStyle, ProposalBlock, SectionBackground, SectionBlock } from "@/types/proposal";
 
 export interface RootColumnsInnerCellChrome {
   isInnerCellActive: (blockId: string) => boolean;
@@ -143,45 +148,89 @@ export function RootBlockCanvas({
                             !toolbarSuppressed &&
                             (isSelected ||
                               (chrome.toolbarVisibility === "hover-or-selected" && ctx.hovered));
+
+                          const singleSection = isSingleLayoutSection(block);
+                          const singleChild = singleSection ? singleLayoutSectionChild(block) : undefined;
+                          const bandToolbarActive =
+                            toolbarActive ||
+                            Boolean(singleChild && selectedBlockId === singleChild.id);
+
+                          const sectionToolbar = (
+                            <BlockToolbarForBlock
+                              scope="root"
+                              block={block}
+                              index={idx}
+                              count={blocks.length}
+                              dragHandle={
+                                <ProposalToolbarDragHandle
+                                  ariaLabel={`Reorder ${blockLabel(block.type)}`}
+                                  tooltip="Drag to reposition · arrows nudge precisely"
+                                  dragAttributes={ctx.dragAttributes}
+                                  dragListeners={ctx.dragListeners}
+                                />
+                              }
+                              update={(next) => updateBlock(block.id, next)}
+                              remove={() => removeBlock(block.id)}
+                              move={(direction) => moveBlock(block.id, direction)}
+                              duplicate={() => duplicateBlock(block.id)}
+                              getBlockStyle={getBlockStyle}
+                              applyBlockStyle={applyBlockStyle}
+                              onPatchBackground={(next) => patchBlockBackground(block.id, next)}
+                              columnsLayout={
+                                block.type === "columns"
+                                  ? {
+                                      editing: rootColumnsLayoutEditingId === block.id,
+                                      onStartEdit: () => setRootColumnsLayoutEditingId(block.id),
+                                      onEndEdit: () => setRootColumnsLayoutEditingId(null),
+                                    }
+                                  : undefined
+                              }
+                            />
+                          );
+
                           const toolbar = toolbarSuppressed ? null : (
                             <BlockToolbarHost
                               placement={chrome.toolbarPlacement}
-                              active={toolbarActive}
+                              active={bandToolbarActive}
                             >
-                              <BlockToolbarForBlock
-                                scope="root"
-                                block={block}
-                                index={idx}
-                                count={blocks.length}
-                                dragHandle={
-                                  <ProposalToolbarDragHandle
-                                    ariaLabel={`Reorder ${blockLabel(block.type)}`}
-                                    tooltip="Drag to reposition · arrows nudge precisely"
-                                    dragAttributes={ctx.dragAttributes}
-                                    dragListeners={ctx.dragListeners}
-                                  />
-                                }
-                                update={(next) => updateBlock(block.id, next)}
-                                remove={() => removeBlock(block.id)}
-                                move={(direction) => moveBlock(block.id, direction)}
-                                duplicate={() => duplicateBlock(block.id)}
-                                getBlockStyle={getBlockStyle}
-                                applyBlockStyle={applyBlockStyle}
-                                onPatchBackground={(next) => patchBlockBackground(block.id, next)}
-                                columnsLayout={
-                                  block.type === "columns"
-                                    ? {
-                                        editing: rootColumnsLayoutEditingId === block.id,
-                                        onStartEdit: () => setRootColumnsLayoutEditingId(block.id),
-                                        onEndEdit: () => setRootColumnsLayoutEditingId(null),
-                                      }
-                                    : undefined
-                                }
-                              />
+                              {singleSection && singleChild ? (
+                                <SingleSectionToolbarStack
+                                  sectionToolbar={sectionToolbar}
+                                  child={singleChild}
+                                  active={bandToolbarActive}
+                                  onUpdateChild={(next) =>
+                                    updateBlock(block.id, {
+                                      ...(block as SectionBlock),
+                                      children: [next],
+                                    })
+                                  }
+                                  getBlockStyle={getBlockStyle}
+                                  applyBlockStyle={applyBlockStyle}
+                                />
+                              ) : (
+                                sectionToolbar
+                              )}
                             </BlockToolbarHost>
                           );
 
-                          const fields = (
+                          const fields = singleSection ? (
+                            <SingleSectionRichTextEditorProvider>
+                              <ProposalBlockFields
+                                block={block}
+                                onChange={(next) => updateBlock(block.id, next)}
+                                selection={{
+                                  selectedId: selectedBlockId,
+                                  onSelect: onSelectBlock,
+                                }}
+                                getBlockStyle={getBlockStyle}
+                                applyBlockStyle={applyBlockStyle}
+                                columnsLayoutEditing={{
+                                  activeId: rootColumnsLayoutEditingId,
+                                  setActiveId: setRootColumnsLayoutEditingId,
+                                }}
+                              />
+                            </SingleSectionRichTextEditorProvider>
+                          ) : (
                             <ProposalBlockFields
                               block={block}
                               onChange={(next) => updateBlock(block.id, next)}

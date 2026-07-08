@@ -298,17 +298,18 @@ function pickerDefaultPrimary(mode: StylePickerMode): string {
   return mode === "agreement" ? DEFAULT_AGREEMENT_BUTTON_COLOR : DEFAULT_PRIMARY_COLOR;
 }
 
-function StylePickerTrigger({
+export function ProposalBlockStylePickerTrigger({
   style,
   onStyleChange,
-  appearance,
+  appearance: appearanceProp,
   mode = "packages",
 }: {
   style?: BlockStyle;
   onStyleChange: (next: BlockStyle | undefined) => void;
-  appearance: ProposalToolbarAppearance;
+  appearance?: ProposalToolbarAppearance;
   mode?: StylePickerMode;
 }) {
+  const appearance = useResolvedProposalToolbarAppearance(appearanceProp);
   const triggerColor =
     mode === "agreement"
       ? (style?.primaryColor?.trim() || DEFAULT_AGREEMENT_BUTTON_COLOR)
@@ -347,6 +348,27 @@ function StylePickerTrigger({
         />
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function StylePickerTrigger({
+  style,
+  onStyleChange,
+  appearance,
+  mode = "packages",
+}: {
+  style?: BlockStyle;
+  onStyleChange: (next: BlockStyle | undefined) => void;
+  appearance: ProposalToolbarAppearance;
+  mode?: StylePickerMode;
+}) {
+  return (
+    <ProposalBlockStylePickerTrigger
+      style={style}
+      onStyleChange={onStyleChange}
+      appearance={appearance}
+      mode={mode}
+    />
   );
 }
 

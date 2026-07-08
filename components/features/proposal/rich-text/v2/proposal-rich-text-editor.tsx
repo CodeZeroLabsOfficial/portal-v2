@@ -66,6 +66,7 @@ import {
   type ProposalLetterCase,
 } from "@/lib/proposal/rich-text/tiptap-typography";
 import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
+import { useSingleSectionRichTextEditor } from "@/components/features/proposal/editor/single-section-rich-text-bridge";
 import {
   ProposalToolbarIconButton,
   ProposalToolbarSectionLabel,
@@ -1026,6 +1027,93 @@ export interface ProposalRichTextProps {
   bubbleMenuRequiresTextSelection?: boolean;
   /** When true, also show the bubble while this block is selected (drag notch / row chrome). */
   showBubbleWhenBlockSelected?: boolean;
+  /**
+   * `bubble` (default) — TipTap selection bubble. `band` — fixed toolbar in the
+   * single-section chrome stack (shared with image/pricing controls).
+   */
+  formattingChrome?: "bubble" | "band";
+}
+
+/** Shared formatting controls for rich-text blocks (bubble menu or section-band stack). */
+export function RichTextFormattingToolbar({ editor }: { editor: Editor }) {
+  return (
+    <>
+      <HeadingPicker editor={editor} />
+      <RichTextToolbarDivider />
+      <FontSizeControl editor={editor} />
+      <RichTextToolbarDivider />
+      <ColorControl editor={editor} />
+      <RichTextToolbarButton
+        active={editor.isActive("bold")}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        ariaLabel="Bold"
+      >
+        <Bold className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarButton
+        active={editor.isActive("italic")}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        ariaLabel="Italic"
+      >
+        <Italic className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarButton
+        active={editor.isActive("underline")}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        ariaLabel="Underline"
+      >
+        <UnderlineIcon className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarButton
+        active={editor.isActive("strike")}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+        ariaLabel="Strikethrough"
+      >
+        <Strikethrough className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarDivider />
+      <AlignmentPicker editor={editor} />
+      <LinkButton editor={editor} />
+      <RichTextToolbarDivider />
+      <MergeFieldMenu editor={editor} />
+      <RichTextToolbarButton
+        ariaLabel="Image from URL"
+        onClick={() => {
+          const next = window.prompt("Image URL (https)", "https://");
+          if (next === null) return;
+          const url = next.trim();
+          if (!url || !/^https:\/\//i.test(url)) return;
+          editor.chain().focus().setImage({ src: url, alt: "" }).run();
+        }}
+      >
+        <ImageIcon className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarDivider />
+      <RichTextToolbarButton
+        active={editor.isActive("bulletList")}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        ariaLabel="Bulleted list"
+      >
+        <List className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarButton
+        active={editor.isActive("orderedList")}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        ariaLabel="Numbered list"
+      >
+        <ListOrdered className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarButton
+        active={editor.isActive("blockquote")}
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        ariaLabel="Pull quote"
+      >
+        <Quote className="h-4 w-4" />
+      </RichTextToolbarButton>
+      <RichTextToolbarDivider />
+      <TypographyMoreMenu editor={editor} />
+    </>
+  );
 }
 
 const TEXT_EDITOR_RESIZE_MIN_PX = 52;
@@ -1101,8 +1189,11 @@ export function ProposalRichText({
   resizableHeight = false,
   bubbleMenuRequiresTextSelection = true,
   showBubbleWhenBlockSelected = false,
+  formattingChrome = "bubble",
 }: ProposalRichTextProps) {
   const sectionChrome = useProposalSectionEditorChrome();
+  const singleSectionRichText = useSingleSectionRichTextEditor();
+  const bandFormattingChrome = formattingChrome === "band";
   const toolbarAppearance = useProposalSectionEditorAppearance();
   const seamless = sectionChrome?.seamless ?? false;
   const elevatedSection = sectionChrome?.appearance === "elevated";
@@ -1190,12 +1281,20 @@ export function ProposalRichText({
   });
 
   React.useEffect(() => {
-    if (!showBubbleWhenBlockSelected || !editor) return;
+    if (!showBubbleWhenBlockSelected || !editor || bandFormattingChrome) return;
     const id = requestAnimationFrame(() => {
       if (!editor.isDestroyed && !editor.isFocused) editor.commands.focus("end");
     });
     return () => cancelAnimationFrame(id);
-  }, [showBubbleWhenBlockSelected, editor]);
+  }, [showBubbleWhenBlockSelected, editor, bandFormattingChrome]);
+
+  React.useEffect(() => {
+    if (!bandFormattingChrome || !singleSectionRichText || !editor) return;
+    singleSectionRichText.setEditor(editor);
+    return () => {
+      singleSectionRichText.setEditor(null);
+    };
+  }, [bandFormattingChrome, singleSectionRichText, editor]);
 
   React.useEffect(() => {
     if (!editor) return;
@@ -1230,110 +1329,39 @@ export function ProposalRichText({
 
   return (
     <div className="relative" ref={shellRef}>
-      <BubbleMenu
-        editor={editor}
-        tippyOptions={{
-          duration: 80,
-          placement: "top",
-          maxWidth: "none",
-          popperOptions: {
-            modifiers: [
-              { name: "preventOverflow", options: { padding: VIEWPORT_EDGE_PAD_PX, altAxis: true } },
-              { name: "flip", options: { fallbackPlacements: ["bottom", "top"] } },
-            ],
-          },
-        }}
-        shouldShow={({ editor: ed, from, to }) => {
-          if (!ed.isEditable) return false;
-          if (from !== to) return true;
-          if (showBubbleWhenBlockSelected) return true;
-          if (bubbleMenuRequiresTextSelection) return false;
-          if (headerVariant && ed.isActive("heading")) return true;
-          return ed.isFocused;
-        }}
-      >
-        <div
-          className={cn(
-            "flex w-max flex-nowrap items-center gap-0.5 rounded-lg border p-1",
-            proposalToolbarShellClasses(toolbarAppearance),
-          )}
+      {!bandFormattingChrome ? (
+        <BubbleMenu
+          editor={editor}
+          tippyOptions={{
+            duration: 80,
+            placement: "top",
+            maxWidth: "none",
+            popperOptions: {
+              modifiers: [
+                { name: "preventOverflow", options: { padding: VIEWPORT_EDGE_PAD_PX, altAxis: true } },
+                { name: "flip", options: { fallbackPlacements: ["bottom", "top"] } },
+              ],
+            },
+          }}
+          shouldShow={({ editor: ed, from, to }) => {
+            if (!ed.isEditable) return false;
+            if (from !== to) return true;
+            if (showBubbleWhenBlockSelected) return true;
+            if (bubbleMenuRequiresTextSelection) return false;
+            if (headerVariant && ed.isActive("heading")) return true;
+            return ed.isFocused;
+          }}
         >
-          <HeadingPicker editor={editor} />
-          <RichTextToolbarDivider />
-          <FontSizeControl editor={editor} />
-          <RichTextToolbarDivider />
-          <ColorControl editor={editor} />
-          <RichTextToolbarButton
-            active={editor.isActive("bold")}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            ariaLabel="Bold"
+          <div
+            className={cn(
+              "flex w-max flex-nowrap items-center gap-0.5 rounded-lg border p-1",
+              proposalToolbarShellClasses(toolbarAppearance),
+            )}
           >
-            <Bold className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarButton
-            active={editor.isActive("italic")}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            ariaLabel="Italic"
-          >
-            <Italic className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarButton
-            active={editor.isActive("underline")}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            ariaLabel="Underline"
-          >
-            <UnderlineIcon className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarButton
-            active={editor.isActive("strike")}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            ariaLabel="Strikethrough"
-          >
-            <Strikethrough className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarDivider />
-          <AlignmentPicker editor={editor} />
-          <LinkButton editor={editor} />
-          <RichTextToolbarDivider />
-          <MergeFieldMenu editor={editor} />
-          <RichTextToolbarButton
-            ariaLabel="Image from URL"
-            onClick={() => {
-              const next = window.prompt("Image URL (https)", "https://");
-              if (next === null) return;
-              const url = next.trim();
-              if (!url || !/^https:\/\//i.test(url)) return;
-              editor.chain().focus().setImage({ src: url, alt: "" }).run();
-            }}
-          >
-            <ImageIcon className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarDivider />
-          <RichTextToolbarButton
-            active={editor.isActive("bulletList")}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            ariaLabel="Bulleted list"
-          >
-            <List className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarButton
-            active={editor.isActive("orderedList")}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            ariaLabel="Numbered list"
-          >
-            <ListOrdered className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarButton
-            active={editor.isActive("blockquote")}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            ariaLabel="Pull quote"
-          >
-            <Quote className="h-4 w-4" />
-          </RichTextToolbarButton>
-          <RichTextToolbarDivider />
-          <TypographyMoreMenu editor={editor} />
-        </div>
-      </BubbleMenu>
+            <RichTextFormattingToolbar editor={editor} />
+          </div>
+        </BubbleMenu>
+      ) : null}
       <EditorContent editor={editor} />
       {showResize ? (
         <TextEditorResizeHandle shellRef={shellRef} onHeightChange={onEditorMinHeightPxChange} />

@@ -173,6 +173,7 @@ export type ProposalBlockFieldsProps = {
     onInnerCellActiveChange: (cellId: string | null) => void;
     registerClearCellSelection: (clear: (() => void) | null) => void;
   };
+  singleSectionBand?: boolean;
 };
 
 function useColumnsInnerCellChrome() {
@@ -944,6 +945,7 @@ export function SectionBlockFields({
           }}
           getBlockStyle={getBlockStyle}
           applyBlockStyle={applyBlockStyle}
+          singleSectionBand
           columnsLayoutEditing={{
             activeId: columnsLayoutEditingId,
             setActiveId: setColumnsLayoutEditingId,
@@ -1502,6 +1504,7 @@ export function ProposalBlockFields({
   columnsInnerCellCallbacks,
   imageColumnToolbar,
   iconColumnToolbar,
+  singleSectionBand,
 }: ProposalBlockFieldsProps) {
   const sectionChrome = useProposalSectionEditorChrome();
   const seamlessSection = sectionChrome?.seamless ?? false;
@@ -1516,6 +1519,7 @@ export function ProposalBlockFields({
       editableSurface={seamlessSection ? "section-child" : null}
       imageColumnToolbar={imageColumnToolbar}
       iconColumnToolbar={iconColumnToolbar}
+      singleSectionBand={singleSectionBand}
       getBlockStyle={getBlockStyle}
       applyBlockStyle={applyBlockStyle}
       columnsLayoutEditing={columnsLayoutEditing}

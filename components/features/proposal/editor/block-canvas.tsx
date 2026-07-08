@@ -65,6 +65,8 @@ export interface ProposalBlockCanvasProps {
   imageColumnToolbar?: ProposalColumnImageToolbarActions;
   /** Columns only: icon picker + remove on the floating toolbar when the cell is selected. */
   iconColumnToolbar?: ProposalColumnIconToolbarActions;
+  /** When true, rich-text uses the shared single-section band toolbar instead of a floating bubble. */
+  singleSectionBand?: boolean;
   getBlockStyle?: (b: ProposalBlock) => BlockStyle | undefined;
   applyBlockStyle?: (id: string, style: BlockStyle | undefined) => void;
   columnsLayoutEditing?: {
@@ -118,6 +120,7 @@ export function ProposalBlockCanvas({
   textPlaceholder,
   imageColumnToolbar,
   iconColumnToolbar,
+  singleSectionBand = false,
   getBlockStyle,
   applyBlockStyle,
   columnsLayoutEditing,
@@ -142,7 +145,8 @@ export function ProposalBlockCanvas({
           block={block as TextBlock}
           onChange={onChange as (next: TextBlock) => void}
           placeholder={textPlaceholder}
-          showBubbleWhenBlockSelected={selectedBlockId === block.id}
+          showBubbleWhenBlockSelected={!singleSectionBand && selectedBlockId === block.id}
+          formattingChrome={singleSectionBand ? "band" : "bubble"}
         />,
       );
     case "header":
@@ -150,7 +154,8 @@ export function ProposalBlockCanvas({
         <HeaderBlockEditor
           block={block as HeaderBlock}
           onChange={onChange as (next: HeaderBlock) => void}
-          showBubbleWhenBlockSelected={selectedBlockId === block.id}
+          showBubbleWhenBlockSelected={!singleSectionBand && selectedBlockId === block.id}
+          formattingChrome={singleSectionBand ? "band" : "bubble"}
         />,
       );
     case "divider":

@@ -8,12 +8,14 @@ import type { HeaderBlock } from "@/types/proposal";
 
 export interface HeaderBlockEditorProps extends BlockEditorProps<HeaderBlock> {
   showBubbleWhenBlockSelected?: boolean;
+  formattingChrome?: "bubble" | "band";
 }
 
 export function HeaderBlockEditor({
   block,
   onChange,
   showBubbleWhenBlockSelected,
+  formattingChrome,
 }: HeaderBlockEditorProps) {
   return (
     <ProposalRichText
@@ -22,6 +24,7 @@ export function HeaderBlockEditor({
       html={headerBlockEditorHtml(block)}
       placeholder="Heading"
       showBubbleWhenBlockSelected={showBubbleWhenBlockSelected}
+      formattingChrome={formattingChrome}
       onChange={(html) =>
         onChange({
           ...block,

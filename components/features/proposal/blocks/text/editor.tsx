@@ -8,6 +8,7 @@ import type { TextBlock } from "@/types/proposal";
 export interface TextBlockEditorProps extends BlockEditorProps<TextBlock> {
   placeholder?: string;
   showBubbleWhenBlockSelected?: boolean;
+  formattingChrome?: "bubble" | "band";
 }
 
 export function TextBlockEditor({
@@ -15,6 +16,7 @@ export function TextBlockEditor({
   onChange,
   placeholder,
   showBubbleWhenBlockSelected,
+  formattingChrome,
 }: TextBlockEditorProps) {
   return (
     <ProposalRichText
@@ -25,6 +27,7 @@ export function TextBlockEditor({
       resizableHeight
       placeholder={placeholder}
       showBubbleWhenBlockSelected={showBubbleWhenBlockSelected}
+      formattingChrome={formattingChrome}
       onChange={(html) => onChange({ ...block, html, body: undefined })}
     />
   );
