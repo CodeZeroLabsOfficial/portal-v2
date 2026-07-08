@@ -28,12 +28,6 @@ export function builderDesktopGridColumnsClass(
 }
 
 /**
- * Top reserve on the builder canvas so the first root block's floating toolbar is not
- * clipped by the scroller's top edge.
- */
-export const BUILDER_CANVAS_TOP_RESERVE_CLASSES = "pt-12";
-
-/**
  * Bottom scroll reserve on the builder canvas so the last block can be scrolled up
  * toward the top of the viewport while editing.
  */

@@ -2,10 +2,7 @@
 
 import * as React from "react";
 
-import {
-  BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES,
-  BUILDER_CANVAS_TOP_RESERVE_CLASSES,
-} from "@/lib/proposal/editor-canvas-layout";
+import { BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,13 +12,7 @@ import { cn } from "@/lib/utils";
  */
 export function BuilderCanvas({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={cn(
-        "@container/canvas w-full min-w-0",
-        BUILDER_CANVAS_TOP_RESERVE_CLASSES,
-        BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES,
-      )}
-    >
+    <div className={cn("@container/canvas w-full min-w-0", BUILDER_CANVAS_BOTTOM_RESERVE_CLASSES)}>
       {children}
     </div>
   );
