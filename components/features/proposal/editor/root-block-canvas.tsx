@@ -19,22 +19,30 @@ import {
 import {
   AgreementToolbarAgreementAux,
   ProposalBlockFields,
+  SortableShell,
+  blockLabel,
 } from "@/components/features/proposal/editor/proposal-block-fields";
-import { BlockRow } from "@/components/features/proposal/editor/block-row";
-import { buildRootBlockToolbar } from "@/components/features/proposal/editor/block-toolbar-factory";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
+import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
+import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
+import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
+import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
+import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
+import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposal/proposal-splash-editor";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { rootBlockChrome } from "@/lib/proposal/block-chrome";
-import { BUILDER_ROOT_BLOCK_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
+import { packagesAddonsSectionActive } from "@/lib/proposal/commerce/packages-totals";
 import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
-import { cn } from "@/lib/utils";
 import type {
   AgreementBlock,
   BlockStyle,
+  ColumnsBlock,
+  ImageBlock,
+  PackagesBlock,
   ProposalBlock,
   SectionBackground,
+  SplashBlock,
 } from "@/types/proposal";
 
 export interface RootColumnsInnerCellChrome {
@@ -83,9 +91,6 @@ export function RootBlockCanvas({
   getBlockStyle,
 }: RootBlockCanvasProps) {
   const sortableBlockIds = React.useMemo(() => blocks.map((b) => b.id), [blocks]);
-  // Match the leading seam to the first block: constrained for reading-column blocks, full-bleed
-  // when the first block is a flush band so the seam spans edge-to-edge like the band beneath it.
-  const leadingSeamConstrained = blocks.length > 0 && !proposalBlockRendersFlushEditorBand(blocks[0]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -100,20 +105,11 @@ export function RootBlockCanvas({
     onReorder(String(active.id), String(over.id));
   }
 
-  const renderAgreementAux = React.useCallback(
-    (agreementBlock: AgreementBlock, onAgreementChange: (next: AgreementBlock) => void) => (
-      <AgreementToolbarAgreementAux block={agreementBlock} onChange={onAgreementChange} />
-    ),
-    [],
-  );
-
   return (
     <div className={PROPOSAL_CANVAS_ROOT_CLASS}>
       <TooltipProvider delayDuration={280}>
         {blocks.length === 0 ? (
-          <div className={BUILDER_ROOT_BLOCK_INSET_CLASSES}>
-            <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
-          </div>
+          <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
         ) : (
           <div
             onClick={() => {
@@ -123,41 +119,34 @@ export function RootBlockCanvas({
           >
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={sortableBlockIds} strategy={verticalListSortingStrategy}>
-                <InsertBlockSlot
-                  onAdd={(b) => addBlockAt(b, 0)}
-                  constrained={leadingSeamConstrained}
-                />
+                <InsertBlockSlot onAdd={(b) => addBlockAt(b, 0)} />
                 {blocks.map((block, idx) => {
                   const isSelected = selectedBlockId === block.id;
+                  const supportsStyle = block.type === "packages" || block.type === "pricing";
                   const flushBand = proposalBlockRendersFlushEditorBand(block);
-                  const chrome = rootBlockChrome(block);
-                  const isColumns = block.type === "columns";
+                  const isSection = block.type === "section";
                   return (
-                    <div
-                      key={block.id}
-                      id={proposalBuilderBlockDomId(block.id)}
-                      className={cn("scroll-mt-28", !flushBand && BUILDER_ROOT_BLOCK_INSET_CLASSES)}
-                    >
-                      <BlockRow
+                    <div key={block.id} id={proposalBuilderBlockDomId(block.id)} className="scroll-mt-28">
+                      <SortableShell
                         id={block.id}
                         selected={isSelected}
                         flush={flushBand}
                         rootLightSurface={block.type !== "section"}
-                        toolbarPlacement={chrome.toolbarPlacement}
-                        toolbarVisibility={chrome.toolbarVisibility}
-                        selectionPolicy={chrome.selectionPolicy}
-                        suppressToolbar={isColumns && rootColumnsChrome.isInnerCellActive(block.id)}
+                        toolbarShowOnHover={block.type !== "image" && block.type !== "icon"}
+                        suppressToolbar={
+                          block.type === "columns" && rootColumnsChrome.isInnerCellActive(block.id)
+                        }
                         onSelect={() => {
                           setRootColumnsLayoutEditingId((prev) =>
                             prev !== null && prev !== block.id ? null : prev,
                           );
-                          if (isColumns) {
+                          if (block.type === "columns") {
                             rootColumnsChrome.clearBlockShellSelection(block.id);
                           }
                           onSelectBlock(block.id);
                         }}
                         onSelectFromNotch={
-                          isColumns
+                          block.type === "columns"
                             ? () => {
                                 setRootColumnsLayoutEditingId((prev) =>
                                   prev !== null && prev !== block.id ? null : prev,
@@ -166,25 +155,118 @@ export function RootBlockCanvas({
                               }
                             : undefined
                         }
-                        toolbar={({ dragAttributes, dragListeners }) =>
-                          buildRootBlockToolbar({
-                            block,
-                            index: idx,
-                            blockCount: blocks.length,
-                            dragAttributes,
-                            dragListeners,
-                            rootColumnsLayoutEditingId,
-                            setRootColumnsLayoutEditingId,
-                            updateBlock,
-                            removeBlock,
-                            moveBlock,
-                            duplicateBlock,
-                            applyBlockStyle,
-                            patchBlockBackground,
-                            getBlockStyle,
-                            renderAgreementAux,
-                          })
-                        }
+                        toolbar={({ dragAttributes, dragListeners }) => {
+                          const dragHandle = (
+                            <ProposalToolbarDragHandle
+                              ariaLabel={`Reorder ${blockLabel(block.type)}`}
+                              tooltip="Drag to reposition · arrows nudge precisely"
+                              dragAttributes={dragAttributes}
+                              dragListeners={dragListeners}
+                            />
+                          );
+                          const compactColumnsChrome = block.type === "columns";
+                          if (block.type === "image") {
+                            const ib = block as ImageBlock;
+                            return (
+                              <div className="flex w-full items-start justify-between gap-1.5">
+                                {dragHandle}
+                                <ProposalImageBlockToolbar
+                                  variant="shell"
+                                  block={ib}
+                                  onChange={(next) => updateBlock(block.id, next)}
+                                  onDelete={() => removeBlock(block.id)}
+                                />
+                              </div>
+                            );
+                          }
+                          return (
+                            <ProposalBlockToolbar
+                              blockType={
+                                block.type === "pricing"
+                                  ? "pricing"
+                                  : block.type === "packages"
+                                    ? "packages"
+                                    : block.type === "agreement"
+                                      ? "agreement"
+                                      : block.type === "section"
+                                        ? "section"
+                                        : "other"
+                              }
+                              deleteLabel={isSection ? "Remove section" : "Delete block"}
+                              canMoveUp={idx > 0}
+                              canMoveDown={idx < blocks.length - 1}
+                              onMoveUp={() => moveBlock(block.id, -1)}
+                              onMoveDown={() => moveBlock(block.id, 1)}
+                              onDuplicate={() => duplicateBlock(block.id)}
+                              onDelete={() => removeBlock(block.id)}
+                              compactChrome={compactColumnsChrome}
+                              compactPrimarySlot={
+                                compactColumnsChrome ? (
+                                  <ColumnsBlockToolbarPrimarySlot
+                                    block={block as ColumnsBlock}
+                                    editing={rootColumnsLayoutEditingId === block.id}
+                                    onStartEdit={() => setRootColumnsLayoutEditingId(block.id)}
+                                    onEndEdit={() => setRootColumnsLayoutEditingId(null)}
+                                    onPatch={(patch) => {
+                                      if (block.type !== "columns") return;
+                                      updateBlock(block.id, { ...block, ...patch });
+                                    }}
+                                  />
+                                ) : undefined
+                              }
+                              overflowLeadingAction={
+                                block.type === "packages" &&
+                                packagesAddonsSectionActive(block as PackagesBlock)
+                                  ? {
+                                      label: "Remove add-ons table",
+                                      onClick: () => {
+                                        const p = block as PackagesBlock;
+                                        updateBlock(block.id, { ...p, addonsSectionEnabled: false });
+                                      },
+                                    }
+                                  : undefined
+                              }
+                              auxiliarySlot={
+                                block.type === "agreement" ? (
+                                  <AgreementToolbarAgreementAux
+                                    block={block as AgreementBlock}
+                                    onChange={(next) => updateBlock(block.id, next)}
+                                  />
+                                ) : undefined
+                              }
+                              showOverflowMenu={!isSection && block.type !== "splash"}
+                              style={supportsStyle ? getBlockStyle(block) : undefined}
+                              onStyleChange={
+                                supportsStyle ? (next) => applyBlockStyle(block.id, next) : undefined
+                              }
+                              backdropPickerSlot={
+                                block.type === "section" ? (
+                                  <ProposalSectionBackgroundPicker
+                                    background={block.background}
+                                    onChange={(next) => patchBlockBackground(block.id, next)}
+                                  />
+                                ) : block.type === "packages" ? (
+                                  <ProposalSectionBackgroundPicker
+                                    background={(block as PackagesBlock).background}
+                                    onChange={(next) => patchBlockBackground(block.id, next)}
+                                  />
+                                ) : block.type === "agreement" ? (
+                                  <ProposalSectionBackgroundPicker
+                                    background={(block as AgreementBlock).background}
+                                    onChange={(next) => patchBlockBackground(block.id, next)}
+                                  />
+                                ) : block.type === "splash" ? (
+                                  <ProposalSplashBackgroundPickerWithBranding
+                                    block={block as SplashBlock}
+                                    onChange={(next) => updateBlock(block.id, next)}
+                                  />
+                                ) : undefined
+                              }
+                              leadingSlot={dragHandle}
+                              trailingSlot={undefined}
+                            />
+                          );
+                        }}
                       >
                         <ProposalBlockFields
                           block={block}
@@ -200,10 +282,12 @@ export function RootBlockCanvas({
                             setActiveId: setRootColumnsLayoutEditingId,
                           }}
                           columnsInnerCellCallbacks={
-                            isColumns ? rootColumnsChrome.callbacksFor(block.id) : undefined
+                            block.type === "columns"
+                              ? rootColumnsChrome.callbacksFor(block.id)
+                              : undefined
                           }
                         />
-                      </BlockRow>
+                      </SortableShell>
                       <InsertBlockSlot onAdd={(b) => addBlockAt(b, idx + 1)} />
                     </div>
                   );

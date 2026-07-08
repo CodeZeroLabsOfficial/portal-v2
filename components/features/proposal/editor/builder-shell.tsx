@@ -17,16 +17,11 @@ export interface BuilderShellProps {
   className?: string;
 }
 
-/**
- * Inline `grid-template-columns` for the desktop builder. Each side track is 20% when its panel
- * is open and collapses to `0px` when closed; the canvas takes the rest. Applied as an inline
- * style (not a Tailwind arbitrary class) so the tracks are always present and can never be dropped
- * by the JIT — the canvas therefore always reflows into the reserved space instead of being overlaid.
- */
-function builderDesktopGridTemplateColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
-  const left = outlineOpen ? "20%" : "0px";
-  const right = inspectorOpen ? "20%" : "0px";
-  return `${left} minmax(0, 1fr) ${right}`;
+function builderDesktopGridColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
+  if (outlineOpen && inspectorOpen) return "grid-cols-[20%_minmax(0,1fr)_20%]";
+  if (outlineOpen) return "grid-cols-[20%_minmax(0,1fr)_0px]";
+  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20%]";
+  return "grid-cols-[0px_minmax(0,1fr)_0px]";
 }
 
 function BuilderDesktopLayout({
@@ -42,8 +37,10 @@ function BuilderDesktopLayout({
 
   return (
     <div
-      style={{ gridTemplateColumns: builderDesktopGridTemplateColumns(outlineOpen, inspectorOpen) }}
-      className="grid min-h-0 flex-1 transition-[grid-template-columns] duration-200 ease-linear motion-reduce:transition-none"
+      className={cn(
+        "grid min-h-0 flex-1 transition-[grid-template-columns] duration-200 ease-linear motion-reduce:transition-none",
+        builderDesktopGridColumns(outlineOpen, inspectorOpen),
+      )}
     >
       <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
         {outline}
@@ -99,7 +96,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   }
 
   return (
-    <div className={cn("flex h-dvh flex-col overflow-hidden", className)}>
+    <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
       <BuilderSidePanelEdgeTriggers />
       <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />

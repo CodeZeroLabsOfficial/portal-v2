@@ -15,10 +15,7 @@ import {
   libraryBlockOptions,
   type BlockInsertOption,
 } from "@/lib/proposal/block-insert-menu";
-import {
-  PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES,
-  PROPOSAL_EDITOR_INSERT_ROW_OVERLAP_CLASSES,
-} from "@/lib/proposal/public/public-layout";
+import { PROPOSAL_EDITOR_INSERT_ROW_OVERLAP_CLASSES } from "@/lib/proposal/public/public-layout";
 import { cn } from "@/lib/utils";
 import type { ProposalBlock } from "@/types/proposal";
 
@@ -146,18 +143,15 @@ function LibraryRow({ option, onSelect }: { option: BlockOption; onSelect: () =>
 }
 
 /**
- * Insert seam between blocks (Qwilr-style): zero layout gap between stacked bands; hovering the row
- * highlights it and reveals the "+" control. `constrained` caps the seam to the shared reading
- * column (for non-flush neighbours); leave it off between full-bleed bands so the seam runs edge-to-edge.
+ * Full-width insert seam between blocks (Qwilr-style): zero layout gap between
+ * stacked section bands; hovering the row highlights it and reveals the "+" control.
  */
 export function InsertBlockSlot({
   onAdd,
   variant = "between",
-  constrained = false,
 }: {
   onAdd: (block: ProposalBlock) => void;
   variant?: "between" | "empty";
-  constrained?: boolean;
 }) {
   const blockMenuProfile = useBlockMenuProfile();
   if (variant === "empty") {
@@ -210,13 +204,7 @@ export function InsertBlockSlot({
   );
 
   return (
-    <div
-      className={cn(
-        "relative z-20 h-0 w-full",
-        PROPOSAL_EDITOR_INSERT_ROW_OVERLAP_CLASSES,
-        constrained && PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES,
-      )}
-    >
+    <div className={cn("relative z-20 h-0 w-full", PROPOSAL_EDITOR_INSERT_ROW_OVERLAP_CLASSES)}>
       <AddBlockMenu onAdd={onAdd} trigger={insertRowTrigger} />
     </div>
   );
