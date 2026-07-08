@@ -244,6 +244,8 @@ export function proposalToolbarBubbleMenuItemClasses(
   return cn(
     "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm outline-none",
     proposalToolbarMenuItemClasses("surface"),
+    // Non-active rows match the muted short-label color; the selected row goes full-strength.
+    "text-muted-foreground",
     proposalToolbarMenuItemHoverClasses("surface"),
     active && "bg-accent text-foreground",
   );
