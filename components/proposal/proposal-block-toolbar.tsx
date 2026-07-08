@@ -114,7 +114,9 @@ export function ProposalBlockToolbar({
   return (
     <ProposalToolbarShell
       appearance={appearance}
-      className="pointer-events-auto p-1"
+      // Wider horizontal padding keeps the first/last icon's hover chip clear of the
+      // rounded-full end caps, which otherwise clip the square hover background.
+      className="pointer-events-auto px-2 py-1"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
