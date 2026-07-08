@@ -335,6 +335,8 @@
       overflow: visible !important;
     }
 
+    /* `visibility:hidden` alone leaves min-height shells on page 1 — remove from layout. */
+    body.agreement-print-mode [data-proposal-public-shell-root],
     body.agreement-print-mode .proposal-print-root,
     body.agreement-print-mode [data-slot="dialog-overlay"] {
       display: none !important;

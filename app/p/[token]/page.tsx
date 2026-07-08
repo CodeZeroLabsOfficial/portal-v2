@@ -8,7 +8,10 @@ import { ProposalPasswordGate } from "@/components/features/proposal/viewer/prop
 import { ProposalPublicFooter } from "@/components/features/proposal/viewer/proposal-public-footer";
 import { hasAgreementBlock, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
 import { getStripePublishableKey } from "@/lib/stripe/publishable-key";
-import { PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES } from "@/lib/proposal/public/public-layout";
+import {
+  PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES,
+  PROPOSAL_PUBLIC_SHELL_ROOT_ATTR,
+} from "@/lib/proposal/public/public-layout";
 import { isProposalUnlockedForRequest } from "@/lib/proposal/public/public-session";
 import { listCatalogServicePickerOptionsForOrganizationId } from "@/server/firestore/catalog-services";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
@@ -78,7 +81,7 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
   const flushBottom = !showFooter && proposalEndsInFullBleedBand(publicDocument.blocks);
 
   return (
-    <div className={PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES}>
+    <div {...{ [PROPOSAL_PUBLIC_SHELL_ROOT_ATTR]: "" }} className={PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES}>
       <ProposalPublicPageShell
         locked={!unlocked}
         flushBottom={unlocked ? flushBottom : false}

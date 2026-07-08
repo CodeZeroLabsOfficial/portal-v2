@@ -7,6 +7,7 @@ import { Typography } from "@/components/ui/typography";
 import {
   PROPOSAL_PUBLIC_PAGE_COLUMN_CLASSES,
   PROPOSAL_PUBLIC_PREVIEW_BAR_CLASSES,
+  PROPOSAL_PUBLIC_SHELL_ROOT_ATTR,
 } from "@/lib/proposal/public/public-layout";
 
 export interface ProposalPublicPreviewBarProps {
@@ -52,7 +53,7 @@ export interface ProposalPublicPreviewFrameProps {
 /** Staff preview page wrapper — fixed bar + offset main. */
 export function ProposalPublicPreviewFrame({ bar, children }: ProposalPublicPreviewFrameProps) {
   return (
-    <div className="bg-background relative min-h-dvh">
+    <div {...{ [PROPOSAL_PUBLIC_SHELL_ROOT_ATTR]: "" }} className="bg-background relative min-h-dvh">
       {bar}
       {children}
     </div>

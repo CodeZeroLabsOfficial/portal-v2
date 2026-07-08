@@ -12,6 +12,9 @@ export const PROPOSAL_PUBLIC_PAGE_COLUMN_CLASSES = "mx-auto w-full max-w-6xl px-
 /** Typography / imagery column (logo, stray root blocks, footers). */
 export const PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES = PROPOSAL_PUBLIC_PAGE_COLUMN_CLASSES;
 
+/** Marks the min-height page shell hidden during agreement PDF print (see `app/globals.css`). */
+export const PROPOSAL_PUBLIC_SHELL_ROOT_ATTR = "data-proposal-public-shell-root";
+
 /** Full-page root behind password gate and public document body. */
 export const PROPOSAL_PUBLIC_PAGE_ROOT_CLASSES = "relative min-h-dvh bg-background";
 
