@@ -264,8 +264,8 @@ export function ProposalBlockToolbar({
         }}
         className={
           appearance === "elevated"
-            ? "hover:bg-red-500/20 hover:text-red-300"
-            : "text-destructive hover:bg-red-500/15 hover:text-destructive"
+            ? "hover:bg-red-500/20 hover:text-red-300 dark:hover:bg-red-500/20 dark:hover:text-red-300"
+            : "text-destructive hover:bg-red-500/15 hover:text-destructive dark:hover:bg-red-500/15 dark:hover:text-destructive"
         }
       >
         <Trash2 className="h-4 w-4" />

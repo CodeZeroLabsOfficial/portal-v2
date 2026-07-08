@@ -7,6 +7,7 @@ import {
   PROPOSAL_TOOLBAR_SHELL_ELEVATED_CLASSES,
   PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES,
 } from "@/lib/proposal/editor-glass";
+import { PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 
 /** Kit-aligned toolbar typography and sizing for proposal builder chrome. */
 export const PROPOSAL_TOOLBAR_TOKENS = {
@@ -41,15 +42,18 @@ function appearanceKey(appearance: ProposalToolbarAppearance): "surface" | "elev
 }
 
 export function proposalToolbarShellClasses(appearance: ProposalToolbarAppearance): string {
+  // Surface chrome re-establishes the light-token scope on itself so it stays light-on-light even
+  // when it escapes a light section band (e.g. a toolbar portaled to `document.body`, which would
+  // otherwise resolve semantic tokens against the dark admin root).
   return appearance === "elevated"
     ? cn(PROPOSAL_TOOLBAR_SHELL_ELEVATED_CLASSES, PROPOSAL_TOOLBAR_ELEVATED_SCOPE_CLASSES)
-    : PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES;
+    : cn(PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES, PROPOSAL_TOOLBAR_SHELL_SURFACE_CLASSES);
 }
 
 export function proposalToolbarPanelClasses(appearance: ProposalToolbarAppearance): string {
   return appearance === "elevated"
     ? cn(PROPOSAL_TOOLBAR_PANEL_ELEVATED_CLASSES, PROPOSAL_TOOLBAR_ELEVATED_SCOPE_CLASSES)
-    : PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES;
+    : cn(PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES, PROPOSAL_TOOLBAR_PANEL_SURFACE_CLASSES);
 }
 
 export function proposalToolbarSectionLabelClasses(appearance: ProposalToolbarAppearance): string {
@@ -85,16 +89,19 @@ export function proposalToolbarIconButtonClasses(
   appearance: ProposalToolbarAppearance,
   active?: boolean,
 ): string {
+  // The `dark:hover:*` utilities are required to beat the shadcn ghost variant's
+  // `dark:hover:bg-accent/50`, which tailwind-merge keeps (different variant group) and which
+  // otherwise out-specifies the plain `hover:` background in dark mode.
   if (appearance === "elevated") {
     return cn(
       PROPOSAL_TOOLBAR_TOKENS.shared.iconButton,
-      "text-[var(--proposal-toolbar-fg)] hover:bg-[var(--proposal-toolbar-hover-bg)] focus-visible:ring-white/40",
+      "text-[var(--proposal-toolbar-fg)] hover:bg-[var(--proposal-toolbar-hover-bg)] dark:hover:bg-[var(--proposal-toolbar-hover-bg)] focus-visible:ring-white/40",
       active && "bg-[var(--proposal-toolbar-active-bg)]",
     );
   }
   return cn(
     PROPOSAL_TOOLBAR_TOKENS.shared.iconButton,
-    "text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring",
+    "text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground focus-visible:ring-ring",
     active && "bg-muted text-foreground",
   );
 }
