@@ -2,11 +2,13 @@
 
 import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 
-import { BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS } from "@/components/features/proposal/editor/builder-side-panel";
 import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+/** Aligns with the `BuilderPanel` header row (top bar height + `pt-6`). */
+const EDGE_TRIGGER_TOP_CLASS = "top-[calc(theme(spacing.12)+theme(spacing.6))]";
 
 interface BuilderSidePanelEdgeTriggerProps {
   side: "left" | "right";
@@ -27,7 +29,7 @@ function BuilderSidePanelEdgeTrigger({ side, label, onClick }: BuilderSidePanelE
       onClick={onClick}
       className={cn(
         "fixed z-30 size-8 rounded-md border bg-background shadow-sm",
-        BUILDER_SIDE_PANEL_TOGGLE_TOP_CLASS,
+        EDGE_TRIGGER_TOP_CLASS,
         isLeft ? "left-0 rounded-l-none border-l-0" : "right-0 rounded-r-none border-r-0",
       )}
     >

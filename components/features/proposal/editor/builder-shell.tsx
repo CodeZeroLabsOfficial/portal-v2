@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { builderDesktopGridColumnsClass } from "@/lib/proposal/editor-canvas-layout";
 import { useBuilderSidePanels } from "@/components/features/proposal/editor/builder-side-panel-context";
 import { BuilderSidePanel } from "@/components/features/proposal/editor/builder-side-panel";
 import { BuilderSidePanelEdgeTriggers } from "@/components/features/proposal/editor/builder-side-panel-edge-triggers";
@@ -15,13 +16,6 @@ export interface BuilderShellProps {
   canvas: React.ReactNode;
   inspector: React.ReactNode;
   className?: string;
-}
-
-function builderDesktopGridColumns(outlineOpen: boolean, inspectorOpen: boolean): string {
-  if (outlineOpen && inspectorOpen) return "grid-cols-[20%_minmax(0,1fr)_20%]";
-  if (outlineOpen) return "grid-cols-[20%_minmax(0,1fr)_0px]";
-  if (inspectorOpen) return "grid-cols-[0px_minmax(0,1fr)_20%]";
-  return "grid-cols-[0px_minmax(0,1fr)_0px]";
 }
 
 function BuilderDesktopLayout({
@@ -38,15 +32,18 @@ function BuilderDesktopLayout({
   return (
     <div
       className={cn(
-        "grid min-h-0 flex-1 transition-[grid-template-columns] duration-200 ease-linear motion-reduce:transition-none",
-        builderDesktopGridColumns(outlineOpen, inspectorOpen),
+        "grid min-h-0 transition-[grid-template-columns] duration-200 ease-linear motion-reduce:transition-none",
+        builderDesktopGridColumnsClass(outlineOpen, inspectorOpen),
       )}
     >
       <BuilderSidePanel side="left" label="Outline" open={outlineOpen}>
         {outline}
       </BuilderSidePanel>
       <main className="relative min-h-0 min-w-0 overflow-hidden">
-        <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12">{canvas}</div>
+        {/* Symmetric scrollbar gutters keep left/right canvas margins identical. */}
+        <div className="h-full min-h-0 overflow-x-clip overflow-y-auto scroll-pt-12 [scrollbar-gutter:stable_both-edges]">
+          {canvas}
+        </div>
       </main>
       <BuilderSidePanel side="right" label="Properties" open={inspectorOpen}>
         {inspector}
@@ -96,7 +93,9 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   }
 
   return (
-    <div className={cn("flex min-h-dvh flex-col", className)}>
+    // Fixed-height shell: the canvas scroller is the ONLY vertical scroll container,
+    // so the in-flow side panels can never scroll away with the page.
+    <div className={cn("grid h-dvh grid-rows-[auto_minmax(0,1fr)]", className)}>
       {topBar}
       <BuilderSidePanelEdgeTriggers />
       <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />
