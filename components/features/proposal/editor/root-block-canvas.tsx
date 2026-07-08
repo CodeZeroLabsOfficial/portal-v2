@@ -83,6 +83,9 @@ export function RootBlockCanvas({
   getBlockStyle,
 }: RootBlockCanvasProps) {
   const sortableBlockIds = React.useMemo(() => blocks.map((b) => b.id), [blocks]);
+  // Match the leading seam to the first block: constrained for reading-column blocks, full-bleed
+  // when the first block is a flush band so the seam spans edge-to-edge like the band beneath it.
+  const leadingSeamConstrained = blocks.length > 0 && !proposalBlockRendersFlushEditorBand(blocks[0]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -108,7 +111,9 @@ export function RootBlockCanvas({
     <div className={PROPOSAL_CANVAS_ROOT_CLASS}>
       <TooltipProvider delayDuration={280}>
         {blocks.length === 0 ? (
-          <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
+          <div className={BUILDER_ROOT_BLOCK_INSET_CLASSES}>
+            <InsertBlockSlot variant="empty" onAdd={(b) => addBlockAt(b, 0)} />
+          </div>
         ) : (
           <div
             onClick={() => {
@@ -118,7 +123,10 @@ export function RootBlockCanvas({
           >
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={sortableBlockIds} strategy={verticalListSortingStrategy}>
-                <InsertBlockSlot onAdd={(b) => addBlockAt(b, 0)} />
+                <InsertBlockSlot
+                  onAdd={(b) => addBlockAt(b, 0)}
+                  constrained={leadingSeamConstrained}
+                />
                 {blocks.map((block, idx) => {
                   const isSelected = selectedBlockId === block.id;
                   const flushBand = proposalBlockRendersFlushEditorBand(block);

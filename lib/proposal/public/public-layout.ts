@@ -39,11 +39,12 @@ export const PROPOSAL_PUBLIC_GATE_WRAPPER_CLASSES =
   "flex min-h-[calc(100dvh-6rem)] flex-col items-center justify-center py-8";
 
 /**
- * Proposal *editor* section/packages backdrop canvas — matches the width of other blocks in the
- * builder (no page-column cap; light horizontal padding only).
+ * Proposal *editor* block content column — mirrors {@link PROPOSAL_PUBLIC_INNER_COLUMN_CLASSES}
+ * (centered `max-w-6xl` reading column) so the builder is WYSIWYG with the published view. Section
+ * and splash backgrounds bleed full-width in their own layers; only their content sits in this column.
  */
 export const PROPOSAL_EDITOR_BLOCK_CANVAS_INNER_CLASSES =
-  "mx-auto w-full min-w-0 max-w-none px-3 sm:px-4 md:px-6";
+  "mx-auto w-full min-w-0 max-w-6xl px-4 sm:px-6";
 
 /** Vertical inset at the top of a section band’s content column (editor + public). */
 export const PROPOSAL_EDITOR_SECTION_INNER_PAD_TOP_CLASSES = "pt-8 sm:pt-10 md:pt-12";
