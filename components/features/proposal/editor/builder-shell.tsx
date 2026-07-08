@@ -96,7 +96,7 @@ export function BuilderShell({ topBar, outline, canvas, inspector, className }: 
   }
 
   return (
-    <div className={cn("flex h-dvh flex-col overflow-hidden", className)}>
+    <div className={cn("flex min-h-dvh flex-col", className)}>
       {topBar}
       <BuilderSidePanelEdgeTriggers />
       <BuilderDesktopLayout outline={outline} canvas={canvas} inspector={inspector} />
