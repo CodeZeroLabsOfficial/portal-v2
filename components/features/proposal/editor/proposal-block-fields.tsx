@@ -1,100 +1,36 @@
 "use client";
 
 import * as React from "react";
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  type DragEndEvent,
-  type DraggableAttributes,
-  type DraggableSyntheticListeners,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { arrayMove } from "@dnd-kit/sortable";
 import {
   AlignCenter,
   AlignLeft,
   Check,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Coins,
-  CreditCard,
-  GripVertical,
-  Heading,
-  Image as ImageIcon,
-  Layers,
-  LayoutGrid,
-  LayoutTemplate,
-  ListTree,
-  Minus,
-  MonitorPlay,
-  MoveVertical,
-  Mountain,
-  Package,
   Pencil,
-  PenLine,
   Plus,
-  ScrollText,
-  SeparatorHorizontal,
-  SquarePen,
-  Star,
   type LucideIcon,
 } from "lucide-react";
 import type {
-  AccordionBlock,
   AgreementBlock,
   BlockStyle,
   ColumnsBlock,
-  HeaderBlock,
-  ImageBlock,
   PackagesBlock,
   ProposalBlock,
   ProposalAgreementChildBlock,
   ProposalColumnChildBlock,
   ProposalContentBlock,
-  SectionBackground,
   SectionBlock,
-  SplashBlock,
   TextBlock,
 } from "@/types/proposal";
 import { ProposalRichText } from "@/components/features/proposal/rich-text/proposal-rich-text";
 import { ProposalSectionShell } from "@/components/proposal/proposal-section-shell";
-import { PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import {
   type ProposalIconColumnToolbarActions,
 } from "@/components/proposal/proposal-icon-block-toolbar";
-import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
 import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
 import { useProposalSectionEditorAppearance, useProposalSectionEditorChrome } from "@/components/proposal/proposal-section-editor-chrome";
-import {
-  SectionChildBlockGutter,
-  SectionChildDragHandle,
-  SECTION_CHILD_GUTTER_INSET_CLASSES,
-  SectionChildInsertSlot,
-} from "@/components/proposal/proposal-section-child-chrome";
-import {
-  SectionChildFloatingGutterProvider,
-  useRegisterSectionChildFloatingRow,
-  useSectionChildFloatingGutterOptional,
-} from "@/components/proposal/section-child-floating-gutter";
-import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import {
-  AgreementToolbarAgreementAux,
-  blockLabel,
-  PackagesRemoveAddonsButton,
-} from "@/components/features/proposal/editor/block-toolbar-factory";
-import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
-import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
+import { BlockToolbarForBlock } from "@/components/features/proposal/editor/block-toolbar-factory";
+import { SectionChildStack } from "@/components/features/proposal/editor/section-child-stack";
 import {
   isRegistryCanvasBlock,
   ProposalBlockCanvas,
@@ -116,15 +52,7 @@ import {
   normalizeColumnFlexForStorage,
   PROPOSAL_COLUMN_FR_MIN,
 } from "@/lib/proposal/columns";
-import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
-import {
-  PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES,
-  PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
-  PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
-  proposalEditorSectionChildEdgePadClasses,
-} from "@/lib/proposal/public/public-layout";
-import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
-import { Button } from "@/components/ui/button";
+import { PROPOSAL_DOCUMENT_COLUMNS_ROW_GAP_CLASSES } from "@/lib/proposal/public/public-layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -146,11 +74,8 @@ import {
   resolveAgreementButtonColor,
   STYLE_PRESET_COLORS,
 } from "@/lib/proposal/block-style";
-import { packagesAddonsSectionActive } from "@/lib/proposal/commerce/packages-totals";
 import { createProposalBlock } from "@/lib/proposal/block-definitions";
 import { resolveSectionBackground } from "@/lib/proposal/section-background";
-import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposal/proposal-splash-editor";
-import { EditorTemplatePricingReadOnlyContext } from "@/components/proposal/editor-catalog-services-context";
 
 function newId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `b-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -226,203 +151,6 @@ export const BlockMenuProfileContext = React.createContext<BlockMenuProfile>("pr
 
 export function useBlockMenuProfile(): BlockMenuProfile {
   return React.useContext(BlockMenuProfileContext);
-}
-
-function SortableShell({
-  id,
-  children,
-  selected,
-  onSelect,
-  toolbar,
-  /** When false, the floating toolbar shows only while the block is selected (not on hover). Used for image blocks. */
-  toolbarShowOnHover = true,
-  /** Full-bleed section bands stack flush — no vertical padding on the sortable wrapper. */
-  flush = false,
-  /** Qwilr-style row inside a section: left drag notch + inline toolbar when selected. */
-  layout = "default",
-  /** Hide block toolbar while editing nested content (e.g. column cell rich text). */
-  suppressToolbar = false,
-  /** Drag notch: select row without clearing nested column cell focus (columns blocks). */
-  onSelectFromNotch,
-  /** Section-child row: `+` beside the drag notch (insert below this block). */
-  sectionChildInsertMenu,
-  /** Root-level block outside a section — remap tokens for dark admin chrome over a light canvas. */
-  rootLightSurface = false,
-}: {
-  id: string;
-  children: React.ReactNode;
-  selected: boolean;
-  onSelect: () => void;
-  onSelectFromNotch?: () => void;
-  sectionChildInsertMenu?: (plusTrigger: React.ReactNode) => React.ReactNode;
-  toolbar?: (ctx: {
-    dragAttributes: DraggableAttributes;
-    dragListeners: DraggableSyntheticListeners;
-  }) => React.ReactNode;
-  toolbarShowOnHover?: boolean;
-  flush?: boolean;
-  layout?: "default" | "section-child";
-  suppressToolbar?: boolean;
-  rootLightSurface?: boolean;
-}) {
-  const [hovered, setHovered] = React.useState(false);
-  const rowElRef = React.useRef<HTMLDivElement | null>(null);
-  const floatingGutter = useSectionChildFloatingGutterOptional();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const sectionChrome = useProposalSectionEditorChrome();
-  const seamless = sectionChrome?.seamless ?? false;
-  const elevatedSection = sectionChrome?.appearance === "elevated";
-  const flushEdges = flush ?? seamless;
-  const sectionChild = layout === "section-child";
-  const useFloatingGutter = sectionChild && Boolean(sectionChildInsertMenu && floatingGutter);
-
-  const setRowRef = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      rowElRef.current = node;
-      setNodeRef(node);
-    },
-    [setNodeRef],
-  );
-
-  useRegisterSectionChildFloatingRow(
-    useFloatingGutter
-      ? {
-          blockId: id,
-          getRowEl: () => rowElRef.current,
-          insertMenu: sectionChildInsertMenu!,
-          dragAttributes: attributes,
-          dragListeners: listeners,
-          onDragHandlePointerDown: () => (onSelectFromNotch ?? onSelect)(),
-          selected,
-          isDragging,
-        }
-      : null,
-  );
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-  const showToolbar = Boolean(
-    toolbar && !suppressToolbar && (selected || (toolbarShowOnHover && hovered)),
-  );
-  const showSectionGutter = sectionChild && !useFloatingGutter && (hovered || selected || isDragging);
-
-  const sectionChildRingClasses = elevatedSection
-    ? cn(
-        "rounded-sm ring-1 ring-offset-0 transition-[box-shadow] duration-150",
-        selected || isDragging
-          ? "ring-white/45"
-          : hovered
-            ? "ring-white/35"
-            : "ring-transparent",
-      )
-    : cn(
-        "rounded-sm ring-1 ring-offset-0 transition-[box-shadow] duration-150",
-        selected || isDragging
-          ? "ring-sky-500/70"
-          : hovered
-            ? "ring-border/55"
-            : "ring-transparent",
-      );
-
-  const ringClasses = seamless
-    ? cn(
-        "transition-none",
-        sectionChild
-          ? sectionChildRingClasses
-          : selected
-            ? elevatedSection
-              ? "rounded-sm ring-1 ring-white/40 ring-offset-0"
-              : "rounded-sm ring-1 ring-sky-500/70 ring-offset-0"
-            : "rounded-sm",
-        "!bg-transparent hover:!bg-transparent focus-within:!bg-transparent active:!bg-transparent",
-        "dark:!bg-transparent dark:hover:!bg-transparent dark:focus-within:!bg-transparent dark:active:!bg-transparent",
-      )
-    : cn(
-        "transition-colors",
-        selected
-          ? "rounded-sm ring-1 ring-primary/45 ring-offset-2 ring-offset-transparent"
-          : sectionChild
-            ? sectionChildRingClasses
-            : "rounded-[2px] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]",
-      );
-
-  return (
-    <div
-      ref={useFloatingGutter ? setRowRef : setNodeRef}
-      style={style}
-      data-section-child-row={useFloatingGutter ? id : undefined}
-      className={cn(
-        "group/sortblock relative scroll-mt-28",
-        sectionChild && !useFloatingGutter && "flex w-full",
-        sectionChild &&
-          !useFloatingGutter &&
-          "focus-within:[&_[data-section-drag-gutter]]:pointer-events-auto focus-within:[&_[data-section-drag-gutter]]:visible focus-within:[&_[data-section-drag-gutter]]:opacity-100",
-        isDragging && "opacity-55",
-        sectionChild && (selected || hovered) && "z-10",
-      )}
-      onMouseEnter={() => {
-        setHovered(true);
-        if (useFloatingGutter) floatingGutter?.notifyRowHover(id);
-      }}
-      onMouseLeave={() => {
-        setHovered(false);
-        if (useFloatingGutter) floatingGutter?.notifyRowUnhover();
-      }}
-    >
-      {sectionChild && sectionChildInsertMenu && !useFloatingGutter ? (
-        <SectionChildBlockGutter
-          visible={showSectionGutter}
-          insertMenu={sectionChildInsertMenu}
-          dragHandle={
-            <SectionChildDragHandle
-              aria-label="Drag to reorder"
-              onPointerDown={() => (onSelectFromNotch ?? onSelect)()}
-              {...attributes}
-              {...listeners}
-            />
-          }
-        />
-      ) : null}
-      <div className={cn("relative min-w-0", sectionChild ? "flex-1" : "w-full")}>
-        {showToolbar && toolbar && !sectionChild ? (
-          <div className="pointer-events-none absolute left-0 top-0 z-30 -translate-y-full pb-1.5 pt-2 sm:left-2">
-            <div className="pointer-events-auto">
-              {toolbar({ dragAttributes: attributes, dragListeners: listeners })}
-            </div>
-          </div>
-        ) : null}
-        {showToolbar && toolbar && sectionChild ? (
-          <div className="pointer-events-none absolute right-0 top-0 z-50 pb-1 pt-0.5">
-            <div className="pointer-events-auto">
-              {toolbar({ dragAttributes: attributes, dragListeners: listeners })}
-            </div>
-          </div>
-        ) : null}
-        <div
-          role="presentation"
-          onClick={(e) => {
-            const el = e.target as HTMLElement;
-            if (el.closest("[data-proposal-columns-content]")) return;
-            if (el.closest("[data-proposal-section-child-content]")) return;
-            e.stopPropagation();
-            onSelect();
-          }}
-          className={cn(
-            "relative min-w-0 [-webkit-tap-highlight-color:transparent]",
-            !sectionChild && "px-0",
-            !sectionChild && (flushEdges ? "py-0" : "py-1.5"),
-            sectionChild && "py-0.5",
-            rootLightSurface && PROPOSAL_CANVAS_SURFACE_LIGHT_CLASSES,
-            ringClasses,
-          )}
-        >
-          <div className="min-w-0">{children}</div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export type ProposalImageColumnToolbarActions = {
@@ -630,23 +358,6 @@ function findColumnCellMeta(
     if (si >= 0) return { ci, si, child: col.stacks[ci][si] };
   }
   return null;
-}
-
-/** True when `applyStyleToStacks`-style mapping replaced at least one cell reference. */
-function columnStacksHaveCellUpdates(
-  prevStacks: ProposalColumnChildBlock[][],
-  nextStacks: ProposalColumnChildBlock[][],
-): boolean {
-  if (prevStacks.length !== nextStacks.length) return true;
-  for (let i = 0; i < nextStacks.length; i++) {
-    const row = nextStacks[i];
-    const prevRow = prevStacks[i];
-    if (row.length !== prevRow.length) return true;
-    for (let j = 0; j < row.length; j++) {
-      if (row[j] !== prevRow[j]) return true;
-    }
-  }
-  return false;
 }
 
 function ColumnResizeGrip({
@@ -1167,15 +878,7 @@ export function SectionBlockFields({
   getBlockStyle: (b: ProposalBlock) => BlockStyle | undefined;
   applyBlockStyle: (id: string, style: BlockStyle | undefined) => void;
 }) {
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
   const children = block.children;
-  const sortableChildIds = React.useMemo(() => children.map((c) => c.id), [children]);
   const [columnsLayoutEditingId, setColumnsLayoutEditingId] = React.useState<string | null>(null);
   const columnsChrome = useColumnsInnerCellChrome();
 
@@ -1224,15 +927,6 @@ export function SectionBlockFields({
     onSelectBlock(null);
   }
 
-  function onChildDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = children.findIndex((c) => c.id === active.id);
-    const newIndex = children.findIndex((c) => c.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    setChildren(arrayMove(children, oldIndex, newIndex));
-  }
-
   const resolvedBg = resolveSectionBackground(block.background);
   const backdropOn = resolvedBg.active;
 
@@ -1263,207 +957,83 @@ export function SectionBlockFields({
         />
       </div>
     ) : (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onChildDragEnd}>
-        <SortableContext items={sortableChildIds} strategy={verticalListSortingStrategy}>
-          <SectionChildFloatingGutterProvider
-            className={cn(
-              "group/section-stack flex flex-col",
-              SECTION_CHILD_GUTTER_INSET_CLASSES,
-              PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
-              children.length > 0 && PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
-            )}
-          >
-          {children.map((child, idx) => {
-            const isSelected = selectedBlockId === child.id;
-            const supportsStyle = child.type === "packages" || child.type === "pricing";
-            return (
-              <div key={child.id} className="relative isolate min-w-0">
-                {idx === 0 ? (
-                  <SectionChildInsertSlot
-                    menu={(trigger) => (
-                      <SectionInsertMenu align="start" onAdd={(b) => addChildAt(b, 0)} trigger={trigger} />
-                    )}
-                  />
-                ) : null}
-                <div className={proposalEditorSectionChildEdgePadClasses(idx, children.length)}>
-                <SortableShell
-                  id={child.id}
-                  selected={isSelected}
-                  flush
-                  layout="section-child"
-                  toolbarShowOnHover={false}
-                  sectionChildInsertMenu={(trigger) => (
-                    <SectionInsertMenu
-                      align="start"
-                      onAdd={(b) => addChildAt(b, idx + 1)}
-                      trigger={trigger}
-                    />
-                  )}
-                  suppressToolbar={child.type === "columns" && columnsChrome.isInnerCellActive(child.id)}
-                  onSelect={() => {
-                    setColumnsLayoutEditingId((prev) =>
-                      prev !== null && prev !== child.id ? null : prev,
-                    );
-                    if (child.type === "columns") columnsChrome.clearBlockShellSelection(child.id);
-                    onSelectBlock(child.id);
-                  }}
-                  onSelectFromNotch={
-                    child.type === "columns"
-                      ? () => {
-                          setColumnsLayoutEditingId((prev) =>
-                            prev !== null && prev !== child.id ? null : prev,
-                          );
-                          onSelectBlock(child.id);
-                        }
-                      : undefined
+      <SectionChildStack
+        blocks={children}
+        selectedBlockId={selectedBlockId}
+        onReorder={(oldIndex, newIndex) => setChildren(arrayMove(children, oldIndex, newIndex))}
+        insertMenu={(index, trigger) => (
+          <SectionInsertMenu align="start" onAdd={(b) => addChildAt(b, index)} trigger={trigger} />
+        )}
+        suppressToolbar={(child) =>
+          child.type === "columns" && columnsChrome.isInnerCellActive(child.id)
+        }
+        onSelectChild={(child) => {
+          setColumnsLayoutEditingId((prev) => (prev !== null && prev !== child.id ? null : prev));
+          if (child.type === "columns") columnsChrome.clearBlockShellSelection(child.id);
+          onSelectBlock(child.id);
+        }}
+        onSelectChildFromNotch={(child) => {
+          // Notch select keeps nested column-cell focus (no clearBlockShellSelection).
+          setColumnsLayoutEditingId((prev) => (prev !== null && prev !== child.id ? null : prev));
+          onSelectBlock(child.id);
+        }}
+        renderToolbar={(child, idx) => (
+          <BlockToolbarForBlock
+            scope="section-child"
+            block={child}
+            index={idx}
+            count={children.length}
+            update={(next) => updateChild(child.id, next as ProposalContentBlock)}
+            remove={() => removeChild(child.id)}
+            move={(direction) => moveChild(child.id, direction)}
+            duplicate={() => duplicateChild(child.id)}
+            getBlockStyle={getBlockStyle}
+            applyBlockStyle={applyBlockStyle}
+            onPatchBackground={
+              child.type === "packages"
+                ? (next) => {
+                    const p = child as PackagesBlock;
+                    if (!next) {
+                      const { background: _b, ...rest } = p;
+                      void _b;
+                      updateChild(child.id, rest as ProposalContentBlock);
+                    } else {
+                      updateChild(child.id, { ...p, background: next } as ProposalContentBlock);
+                    }
                   }
-                  toolbar={({ dragAttributes, dragListeners }) => {
-                    const dragHandle = (
-                      <ProposalToolbarDragHandle
-                        ariaLabel={`Reorder ${blockLabel(child.type)}`}
-                        tooltip="Drag to move · arrows nudge precisely"
-                        dragAttributes={dragAttributes}
-                        dragListeners={dragListeners}
-                      />
-                    );
-                    const compactColumnsChrome = child.type === "columns";
-                    if (child.type === "image") {
-                      const ib = child as ImageBlock;
-                      return (
-                        <ProposalImageBlockToolbar
-                          variant="shell"
-                          block={ib}
-                          onChange={(next) => updateChild(child.id, next as ProposalContentBlock)}
-                          onDelete={() => removeChild(child.id)}
-                        />
-                      );
-                    }
-                    return (
-                      <ProposalBlockToolbar
-                        blockType={
-                          child.type === "pricing"
-                            ? "pricing"
-                            : child.type === "packages"
-                              ? "packages"
-                              : child.type === "agreement"
-                                ? "agreement"
-                                : "other"
-                        }
-                        canMoveUp={idx > 0}
-                        canMoveDown={idx < children.length - 1}
-                        onMoveUp={() => moveChild(child.id, -1)}
-                        onMoveDown={() => moveChild(child.id, 1)}
-                        onDuplicate={() => duplicateChild(child.id)}
-                        deleteLabel="Remove block"
-                        onDelete={() => removeChild(child.id)}
-                        compactChrome={compactColumnsChrome}
-                        compactPrimarySlot={
-                          compactColumnsChrome ? (
-                            <ColumnsBlockToolbarPrimarySlot
-                              block={child as ColumnsBlock}
-                              editing={columnsLayoutEditingId === child.id}
-                              onStartEdit={() => setColumnsLayoutEditingId(child.id)}
-                              onEndEdit={() => setColumnsLayoutEditingId(null)}
-                              onPatch={(patch) => {
-                                if (child.type !== "columns") return;
-                                updateChild(child.id, { ...child, ...patch } as ProposalContentBlock);
-                              }}
-                            />
-                          ) : undefined
-                        }
-                        // Inner blocks now mirror the section toolbar: drag handle leads,
-                        // overflow "more" menu is suppressed (Duplicate/Delete already
-                        // sit inline). The packages add-ons removal action is the only
-                        // overflow-only lever, so it's promoted into the visible row
-                        // via `auxiliarySlot` when applicable.
-                        showOverflowMenu={false}
-                        auxiliarySlot={(() => {
-                          const agreementMenu =
-                            child.type === "agreement" ? (
-                              <AgreementToolbarAgreementAux
-                                block={child as AgreementBlock}
-                                onChange={(next) => updateChild(child.id, next)}
-                              />
-                            ) : null;
-                          const packagesSlot =
-                            child.type === "packages" &&
-                            packagesAddonsSectionActive(child as PackagesBlock) ? (
-                              <PackagesRemoveAddonsButton
-                                onClick={() => {
-                                  const p = child as PackagesBlock;
-                                  updateChild(child.id, {
-                                    ...p,
-                                    addonsSectionEnabled: false,
-                                  } as ProposalContentBlock);
-                                }}
-                              />
-                            ) : null;
-                          if (!agreementMenu && !packagesSlot) return undefined;
-                          return (
-                            <span className="inline-flex flex-wrap items-center gap-1">
-                              {agreementMenu}
-                              {packagesSlot}
-                            </span>
-                          );
-                        })()}
-                        style={supportsStyle ? getBlockStyle(child) : undefined}
-                        onStyleChange={
-                          supportsStyle ? (next) => applyBlockStyle(child.id, next) : undefined
-                        }
-                        backdropPickerSlot={
-                          child.type === "splash" ? (
-                            <ProposalSplashBackgroundPickerWithBranding
-                              block={child as SplashBlock}
-                              onChange={(next) =>
-                                updateChild(child.id, next as ProposalContentBlock)
-                              }
-                            />
-                          ) : child.type === "packages" ? (
-                            <ProposalSectionBackgroundPicker
-                              background={(child as PackagesBlock).background}
-                              onChange={(next) => {
-                                const p = child as PackagesBlock;
-                                if (!next) {
-                                  const { background: _b, ...rest } = p;
-                                  void _b;
-                                  updateChild(child.id, rest as ProposalContentBlock);
-                                } else {
-                                  updateChild(child.id, { ...p, background: next } as ProposalContentBlock);
-                                }
-                              }}
-                            />
-                          ) : undefined
-                        }
-                        leadingSlot={undefined}
-                      />
-                    );
-                  }}
-                >
-                  <ProposalBlockFields
-                    block={child}
-                    onChange={(next) => updateChild(child.id, next as ProposalContentBlock)}
-                    selection={{
-                      selectedId: selectedBlockId,
-                      onSelect: onSelectBlock,
-                    }}
-                    getBlockStyle={getBlockStyle}
-                    applyBlockStyle={applyBlockStyle}
-                    columnsLayoutEditing={{
-                      activeId: columnsLayoutEditingId,
-                      setActiveId: setColumnsLayoutEditingId,
-                    }}
-                    columnsInnerCellCallbacks={
-                      child.type === "columns" ? columnsChrome.callbacksFor(child.id) : undefined
-                    }
-                  />
-                </SortableShell>
-                </div>
-              </div>
-            );
-          })}
-          </SectionChildFloatingGutterProvider>
-        </SortableContext>
-      </DndContext>
+                : undefined
+            }
+            columnsLayout={
+              child.type === "columns"
+                ? {
+                    editing: columnsLayoutEditingId === child.id,
+                    onStartEdit: () => setColumnsLayoutEditingId(child.id),
+                    onEndEdit: () => setColumnsLayoutEditingId(null),
+                  }
+                : undefined
+            }
+          />
+        )}
+        renderChild={(child) => (
+          <ProposalBlockFields
+            block={child}
+            onChange={(next) => updateChild(child.id, next as ProposalContentBlock)}
+            selection={{
+              selectedId: selectedBlockId,
+              onSelect: onSelectBlock,
+            }}
+            getBlockStyle={getBlockStyle}
+            applyBlockStyle={applyBlockStyle}
+            columnsLayoutEditing={{
+              activeId: columnsLayoutEditingId,
+              setActiveId: setColumnsLayoutEditingId,
+            }}
+            columnsInnerCellCallbacks={
+              child.type === "columns" ? columnsChrome.callbacksFor(child.id) : undefined
+            }
+          />
+        )}
+      />
     );
 
   return (
@@ -1720,15 +1290,7 @@ export function AgreementBlockFields({
   getBlockStyle: (b: ProposalBlock) => BlockStyle | undefined;
   applyBlockStyle: (id: string, style: BlockStyle | undefined) => void;
 }) {
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
   const children = block.children;
-  const sortableChildIds = React.useMemo(() => children.map((c) => c.id), [children]);
   const [columnsLayoutEditingId, setColumnsLayoutEditingId] = React.useState<string | null>(null);
   const columnsChrome = useColumnsInnerCellChrome();
 
@@ -1778,15 +1340,6 @@ export function AgreementBlockFields({
     onSelectBlock(null);
   }
 
-  function onChildDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = children.findIndex((c) => c.id === active.id);
-    const newIndex = children.findIndex((c) => c.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    setChildren(arrayMove(children, oldIndex, newIndex));
-  }
-
   const resolvedBg = resolveSectionBackground(block.background);
   const backdropOn = resolvedBg.active;
 
@@ -1817,187 +1370,83 @@ export function AgreementBlockFields({
         />
       </div>
     ) : (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onChildDragEnd}>
-        <SortableContext items={sortableChildIds} strategy={verticalListSortingStrategy}>
-          <SectionChildFloatingGutterProvider
-            className={cn(
-              "group/section-stack flex flex-col",
-              SECTION_CHILD_GUTTER_INSET_CLASSES,
-              PROPOSAL_EDITOR_SECTION_STACK_GAP_CLASSES,
-              children.length > 0 && PROPOSAL_EDITOR_SECTION_STACK_BOTTOM_PAD_CLASSES,
-            )}
-          >
-          {children.map((child, idx) => {
-            const isSelected = selectedBlockId === child.id;
-            const supportsStyle = child.type === "packages" || child.type === "pricing";
-            return (
-              <div key={child.id} className="relative isolate min-w-0">
-                {idx === 0 ? (
-                  <SectionChildInsertSlot
-                    menu={(trigger) => (
-                      <SectionInsertMenu align="start" onAdd={(b) => addChildAt(b, 0)} trigger={trigger} />
-                    )}
-                  />
-                ) : null}
-                <div className={proposalEditorSectionChildEdgePadClasses(idx, children.length)}>
-                <SortableShell
-                  id={child.id}
-                  selected={isSelected}
-                  flush
-                  layout="section-child"
-                  toolbarShowOnHover={false}
-                  sectionChildInsertMenu={(trigger) => (
-                    <SectionInsertMenu
-                      align="start"
-                      onAdd={(b) => addChildAt(b, idx + 1)}
-                      trigger={trigger}
-                    />
-                  )}
-                  suppressToolbar={child.type === "columns" && columnsChrome.isInnerCellActive(child.id)}
-                  onSelect={() => {
-                    setColumnsLayoutEditingId((prev) =>
-                      prev !== null && prev !== child.id ? null : prev,
-                    );
-                    if (child.type === "columns") columnsChrome.clearBlockShellSelection(child.id);
-                    onSelectBlock(child.id);
-                  }}
-                  onSelectFromNotch={
-                    child.type === "columns"
-                      ? () => {
-                          setColumnsLayoutEditingId((prev) =>
-                            prev !== null && prev !== child.id ? null : prev,
-                          );
-                          onSelectBlock(child.id);
-                        }
-                      : undefined
+      <SectionChildStack
+        blocks={children}
+        selectedBlockId={selectedBlockId}
+        onReorder={(oldIndex, newIndex) => setChildren(arrayMove(children, oldIndex, newIndex))}
+        insertMenu={(index, trigger) => (
+          <SectionInsertMenu align="start" onAdd={(b) => addChildAt(b, index)} trigger={trigger} />
+        )}
+        suppressToolbar={(child) =>
+          child.type === "columns" && columnsChrome.isInnerCellActive(child.id)
+        }
+        onSelectChild={(child) => {
+          setColumnsLayoutEditingId((prev) => (prev !== null && prev !== child.id ? null : prev));
+          if (child.type === "columns") columnsChrome.clearBlockShellSelection(child.id);
+          onSelectBlock(child.id);
+        }}
+        onSelectChildFromNotch={(child) => {
+          // Notch select keeps nested column-cell focus (no clearBlockShellSelection).
+          setColumnsLayoutEditingId((prev) => (prev !== null && prev !== child.id ? null : prev));
+          onSelectBlock(child.id);
+        }}
+        renderToolbar={(child, idx) => (
+          <BlockToolbarForBlock
+            scope="section-child"
+            block={child}
+            index={idx}
+            count={children.length}
+            update={(next) => updateChild(child.id, next as ProposalAgreementChildBlock)}
+            remove={() => removeChild(child.id)}
+            move={(direction) => moveChild(child.id, direction)}
+            duplicate={() => duplicateChild(child.id)}
+            getBlockStyle={getBlockStyle}
+            applyBlockStyle={applyBlockStyle}
+            onPatchBackground={
+              child.type === "packages"
+                ? (next) => {
+                    const p = child as PackagesBlock;
+                    if (!next) {
+                      const { background: _b, ...rest } = p;
+                      void _b;
+                      updateChild(child.id, rest as ProposalAgreementChildBlock);
+                    } else {
+                      updateChild(child.id, { ...p, background: next } as ProposalAgreementChildBlock);
+                    }
                   }
-                  toolbar={({ dragAttributes, dragListeners }) => {
-                    const dragHandle = (
-                      <ProposalToolbarDragHandle
-                        ariaLabel={`Reorder ${blockLabel(child.type)}`}
-                        tooltip="Drag to move · arrows nudge precisely"
-                        dragAttributes={dragAttributes}
-                        dragListeners={dragListeners}
-                      />
-                    );
-                    const compactColumnsChrome = child.type === "columns";
-                    if (child.type === "image") {
-                      const ib = child as ImageBlock;
-                      return (
-                        <ProposalImageBlockToolbar
-                          variant="shell"
-                          block={ib}
-                          onChange={(next) => updateChild(child.id, next as ProposalAgreementChildBlock)}
-                          onDelete={() => removeChild(child.id)}
-                        />
-                      );
-                    }
-                    return (
-                      <ProposalBlockToolbar
-                        blockType={
-                          child.type === "pricing"
-                            ? "pricing"
-                            : child.type === "packages"
-                              ? "packages"
-                              : "other"
-                        }
-                        canMoveUp={idx > 0}
-                        canMoveDown={idx < children.length - 1}
-                        onMoveUp={() => moveChild(child.id, -1)}
-                        onMoveDown={() => moveChild(child.id, 1)}
-                        onDuplicate={() => duplicateChild(child.id)}
-                        deleteLabel="Remove block"
-                        onDelete={() => removeChild(child.id)}
-                        compactChrome={compactColumnsChrome}
-                        compactPrimarySlot={
-                          compactColumnsChrome ? (
-                            <ColumnsBlockToolbarPrimarySlot
-                              block={child as ColumnsBlock}
-                              editing={columnsLayoutEditingId === child.id}
-                              onStartEdit={() => setColumnsLayoutEditingId(child.id)}
-                              onEndEdit={() => setColumnsLayoutEditingId(null)}
-                              onPatch={(patch) => {
-                                if (child.type !== "columns") return;
-                                updateChild(child.id, { ...child, ...patch } as ProposalAgreementChildBlock);
-                              }}
-                            />
-                          ) : undefined
-                        }
-                        showOverflowMenu={false}
-                        auxiliarySlot={(() => {
-                          const packagesSlot =
-                            child.type === "packages" &&
-                            packagesAddonsSectionActive(child as PackagesBlock) ? (
-                              <PackagesRemoveAddonsButton
-                                onClick={() => {
-                                  const p = child as PackagesBlock;
-                                  updateChild(child.id, {
-                                    ...p,
-                                    addonsSectionEnabled: false,
-                                  } as ProposalAgreementChildBlock);
-                                }}
-                              />
-                            ) : null;
-                          return packagesSlot ?? undefined;
-                        })()}
-                        style={supportsStyle ? getBlockStyle(child) : undefined}
-                        onStyleChange={
-                          supportsStyle ? (next) => applyBlockStyle(child.id, next) : undefined
-                        }
-                        backdropPickerSlot={
-                          child.type === "splash" ? (
-                            <ProposalSplashBackgroundPickerWithBranding
-                              block={child as SplashBlock}
-                              onChange={(next) =>
-                                updateChild(child.id, next as ProposalAgreementChildBlock)
-                              }
-                            />
-                          ) : child.type === "packages" ? (
-                            <ProposalSectionBackgroundPicker
-                              background={(child as PackagesBlock).background}
-                              onChange={(next) => {
-                                const p = child as PackagesBlock;
-                                if (!next) {
-                                  const { background: _b, ...rest } = p;
-                                  void _b;
-                                  updateChild(child.id, rest as ProposalAgreementChildBlock);
-                                } else {
-                                  updateChild(child.id, { ...p, background: next } as ProposalAgreementChildBlock);
-                                }
-                              }}
-                            />
-                          ) : undefined
-                        }
-                        leadingSlot={undefined}
-                      />
-                    );
-                  }}
-                >
-                  <ProposalBlockFields
-                    block={child}
-                    onChange={(next) => updateChild(child.id, next as ProposalAgreementChildBlock)}
-                    selection={{
-                      selectedId: selectedBlockId,
-                      onSelect: onSelectBlock,
-                    }}
-                    getBlockStyle={getBlockStyle}
-                    applyBlockStyle={applyBlockStyle}
-                    columnsLayoutEditing={{
-                      activeId: columnsLayoutEditingId,
-                      setActiveId: setColumnsLayoutEditingId,
-                    }}
-                    columnsInnerCellCallbacks={
-                      child.type === "columns" ? columnsChrome.callbacksFor(child.id) : undefined
-                    }
-                  />
-                </SortableShell>
-                </div>
-              </div>
-            );
-          })}
-          </SectionChildFloatingGutterProvider>
-        </SortableContext>
-      </DndContext>
+                : undefined
+            }
+            columnsLayout={
+              child.type === "columns"
+                ? {
+                    editing: columnsLayoutEditingId === child.id,
+                    onStartEdit: () => setColumnsLayoutEditingId(child.id),
+                    onEndEdit: () => setColumnsLayoutEditingId(null),
+                  }
+                : undefined
+            }
+          />
+        )}
+        renderChild={(child) => (
+          <ProposalBlockFields
+            block={child}
+            onChange={(next) => updateChild(child.id, next as ProposalAgreementChildBlock)}
+            selection={{
+              selectedId: selectedBlockId,
+              onSelect: onSelectBlock,
+            }}
+            getBlockStyle={getBlockStyle}
+            applyBlockStyle={applyBlockStyle}
+            columnsLayoutEditing={{
+              activeId: columnsLayoutEditingId,
+              setActiveId: setColumnsLayoutEditingId,
+            }}
+            columnsInnerCellCallbacks={
+              child.type === "columns" ? columnsChrome.callbacksFor(child.id) : undefined
+            }
+          />
+        )}
+      />
     );
 
   const settingsFooter = (
@@ -2025,7 +1474,7 @@ export function AgreementBlockFields({
     </ProposalSectionShell>
   );
 }
-export { useColumnsInnerCellChrome, columnStacksHaveCellUpdates, cloneBlockWithFreshIds, SortableShell };
+export { useColumnsInnerCellChrome };
 
 export function ProposalBlockFields({
   block,

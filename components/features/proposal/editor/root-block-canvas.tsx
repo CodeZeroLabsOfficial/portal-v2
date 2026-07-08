@@ -16,38 +16,24 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
+import { ProposalBlockFields } from "@/components/features/proposal/editor/proposal-block-fields";
+import { BlockRow } from "@/components/features/proposal/editor/block-row";
+import { BlockSelection } from "@/components/features/proposal/editor/block-selection";
+import { BlockToolbarHost } from "@/components/features/proposal/editor/block-toolbar-host";
 import {
-  ProposalBlockFields,
-  SortableShell,
-} from "@/components/features/proposal/editor/proposal-block-fields";
-import {
-  AgreementToolbarAgreementAux,
+  BlockToolbarForBlock,
   blockLabel,
 } from "@/components/features/proposal/editor/block-toolbar-factory";
+import { SectionBandShell } from "@/components/features/proposal/editor/section-band-shell";
 import { InsertBlockSlot } from "@/components/features/proposal/editor/document-insert-menu";
 import { proposalBuilderBlockDomId } from "@/components/features/proposal/editor/builder-canvas-navigation";
 import { ProposalToolbarDragHandle } from "@/components/features/proposal/editor/toolbar";
-import { ProposalBlockToolbar } from "@/components/proposal/proposal-block-toolbar";
-import { ColumnsBlockToolbarPrimarySlot } from "@/components/proposal/columns-block-layout-controls";
-import { ProposalImageBlockToolbar } from "@/components/proposal/proposal-image-block-toolbar";
-import { ProposalSectionBackgroundPicker } from "@/components/proposal/proposal-section-background-picker";
-import { ProposalSplashBackgroundPickerWithBranding } from "@/components/proposal/proposal-splash-editor";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { packagesAddonsSectionActive } from "@/lib/proposal/commerce/packages-totals";
-import { proposalBlockRendersFlushEditorBand } from "@/lib/proposal/blocks";
+import { rootBlockChrome } from "@/lib/proposal/block-chrome";
 import { BUILDER_BAND_CONTENT_INSET_CLASSES } from "@/lib/proposal/editor-canvas-layout";
 import { PROPOSAL_CANVAS_ROOT_CLASS } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
-import type {
-  AgreementBlock,
-  BlockStyle,
-  ColumnsBlock,
-  ImageBlock,
-  PackagesBlock,
-  ProposalBlock,
-  SectionBackground,
-  SplashBlock,
-} from "@/types/proposal";
+import type { BlockStyle, ProposalBlock, SectionBackground } from "@/types/proposal";
 
 export interface RootColumnsInnerCellChrome {
   isInnerCellActive: (blockId: string) => boolean;
@@ -128,9 +114,21 @@ export function RootBlockCanvas({
                 <InsertBlockSlot onAdd={(b) => addBlockAt(b, 0)} />
                 {blocks.map((block, idx) => {
                   const isSelected = selectedBlockId === block.id;
-                  const supportsStyle = block.type === "packages" || block.type === "pricing";
-                  const flushBand = proposalBlockRendersFlushEditorBand(block);
-                  const isSection = block.type === "section";
+                  const chrome = rootBlockChrome(block);
+                  const flushBand = chrome.toolbarPlacement === "inside-band";
+                  const toolbarSuppressed =
+                    block.type === "columns" && rootColumnsChrome.isInnerCellActive(block.id);
+
+                  const handleSelect = () => {
+                    setRootColumnsLayoutEditingId((prev) =>
+                      prev !== null && prev !== block.id ? null : prev,
+                    );
+                    if (block.type === "columns") {
+                      rootColumnsChrome.clearBlockShellSelection(block.id);
+                    }
+                    onSelectBlock(block.id);
+                  };
+
                   return (
                     <div
                       key={block.id}
@@ -139,167 +137,96 @@ export function RootBlockCanvas({
                       // edge-to-edge while the whole column reflows as one unit.
                       className={cn("scroll-mt-28", !flushBand && BUILDER_BAND_CONTENT_INSET_CLASSES)}
                     >
-                      <SortableShell
-                        id={block.id}
-                        selected={isSelected}
-                        flush={flushBand}
-                        rootLightSurface={block.type !== "section"}
-                        toolbarShowOnHover={block.type !== "image" && block.type !== "icon"}
-                        suppressToolbar={
-                          block.type === "columns" && rootColumnsChrome.isInnerCellActive(block.id)
-                        }
-                        onSelect={() => {
-                          setRootColumnsLayoutEditingId((prev) =>
-                            prev !== null && prev !== block.id ? null : prev,
-                          );
-                          if (block.type === "columns") {
-                            rootColumnsChrome.clearBlockShellSelection(block.id);
-                          }
-                          onSelectBlock(block.id);
-                        }}
-                        onSelectFromNotch={
-                          block.type === "columns"
-                            ? () => {
-                                setRootColumnsLayoutEditingId((prev) =>
-                                  prev !== null && prev !== block.id ? null : prev,
-                                );
-                                onSelectBlock(block.id);
-                              }
-                            : undefined
-                        }
-                        toolbar={({ dragAttributes, dragListeners }) => {
-                          const dragHandle = (
-                            <ProposalToolbarDragHandle
-                              ariaLabel={`Reorder ${blockLabel(block.type)}`}
-                              tooltip="Drag to reposition · arrows nudge precisely"
-                              dragAttributes={dragAttributes}
-                              dragListeners={dragListeners}
-                            />
-                          );
-                          const compactColumnsChrome = block.type === "columns";
-                          if (block.type === "image") {
-                            const ib = block as ImageBlock;
-                            return (
-                              <div className="flex w-full items-start justify-between gap-1.5">
-                                {dragHandle}
-                                <ProposalImageBlockToolbar
-                                  variant="shell"
-                                  block={ib}
-                                  onChange={(next) => updateBlock(block.id, next)}
-                                  onDelete={() => removeBlock(block.id)}
-                                />
-                              </div>
-                            );
-                          }
-                          return (
-                            <ProposalBlockToolbar
-                              blockType={
-                                block.type === "pricing"
-                                  ? "pricing"
-                                  : block.type === "packages"
-                                    ? "packages"
-                                    : block.type === "agreement"
-                                      ? "agreement"
-                                      : block.type === "section"
-                                        ? "section"
-                                        : "other"
-                              }
-                              deleteLabel={isSection ? "Remove section" : "Delete block"}
-                              canMoveUp={idx > 0}
-                              canMoveDown={idx < blocks.length - 1}
-                              onMoveUp={() => moveBlock(block.id, -1)}
-                              onMoveDown={() => moveBlock(block.id, 1)}
-                              onDuplicate={() => duplicateBlock(block.id)}
-                              onDelete={() => removeBlock(block.id)}
-                              compactChrome={compactColumnsChrome}
-                              compactPrimarySlot={
-                                compactColumnsChrome ? (
-                                  <ColumnsBlockToolbarPrimarySlot
-                                    block={block as ColumnsBlock}
-                                    editing={rootColumnsLayoutEditingId === block.id}
-                                    onStartEdit={() => setRootColumnsLayoutEditingId(block.id)}
-                                    onEndEdit={() => setRootColumnsLayoutEditingId(null)}
-                                    onPatch={(patch) => {
-                                      if (block.type !== "columns") return;
-                                      updateBlock(block.id, { ...block, ...patch });
-                                    }}
+                      <BlockRow id={block.id}>
+                        {(ctx) => {
+                          const toolbarActive =
+                            !toolbarSuppressed &&
+                            (isSelected ||
+                              (chrome.toolbarVisibility === "hover-or-selected" && ctx.hovered));
+                          const toolbar = toolbarSuppressed ? null : (
+                            <BlockToolbarHost
+                              placement={chrome.toolbarPlacement}
+                              active={toolbarActive}
+                            >
+                              <BlockToolbarForBlock
+                                scope="root"
+                                block={block}
+                                index={idx}
+                                count={blocks.length}
+                                dragHandle={
+                                  <ProposalToolbarDragHandle
+                                    ariaLabel={`Reorder ${blockLabel(block.type)}`}
+                                    tooltip="Drag to reposition · arrows nudge precisely"
+                                    dragAttributes={ctx.dragAttributes}
+                                    dragListeners={ctx.dragListeners}
                                   />
-                                ) : undefined
-                              }
-                              overflowLeadingAction={
-                                block.type === "packages" &&
-                                packagesAddonsSectionActive(block as PackagesBlock)
-                                  ? {
-                                      label: "Remove add-ons table",
-                                      onClick: () => {
-                                        const p = block as PackagesBlock;
-                                        updateBlock(block.id, { ...p, addonsSectionEnabled: false });
-                                      },
-                                    }
+                                }
+                                update={(next) => updateBlock(block.id, next)}
+                                remove={() => removeBlock(block.id)}
+                                move={(direction) => moveBlock(block.id, direction)}
+                                duplicate={() => duplicateBlock(block.id)}
+                                getBlockStyle={getBlockStyle}
+                                applyBlockStyle={applyBlockStyle}
+                                onPatchBackground={(next) => patchBlockBackground(block.id, next)}
+                                columnsLayout={
+                                  block.type === "columns"
+                                    ? {
+                                        editing: rootColumnsLayoutEditingId === block.id,
+                                        onStartEdit: () => setRootColumnsLayoutEditingId(block.id),
+                                        onEndEdit: () => setRootColumnsLayoutEditingId(null),
+                                      }
+                                    : undefined
+                                }
+                              />
+                            </BlockToolbarHost>
+                          );
+
+                          const fields = (
+                            <ProposalBlockFields
+                              block={block}
+                              onChange={(next) => updateBlock(block.id, next)}
+                              selection={{
+                                selectedId: selectedBlockId,
+                                onSelect: onSelectBlock,
+                              }}
+                              getBlockStyle={getBlockStyle}
+                              applyBlockStyle={applyBlockStyle}
+                              columnsLayoutEditing={{
+                                activeId: rootColumnsLayoutEditingId,
+                                setActiveId: setRootColumnsLayoutEditingId,
+                              }}
+                              columnsInnerCellCallbacks={
+                                block.type === "columns"
+                                  ? rootColumnsChrome.callbacksFor(block.id)
                                   : undefined
                               }
-                              auxiliarySlot={
-                                block.type === "agreement" ? (
-                                  <AgreementToolbarAgreementAux
-                                    block={block as AgreementBlock}
-                                    onChange={(next) => updateBlock(block.id, next)}
-                                  />
-                                ) : undefined
-                              }
-                              showOverflowMenu={!isSection && block.type !== "splash"}
-                              style={supportsStyle ? getBlockStyle(block) : undefined}
-                              onStyleChange={
-                                supportsStyle ? (next) => applyBlockStyle(block.id, next) : undefined
-                              }
-                              backdropPickerSlot={
-                                block.type === "section" ? (
-                                  <ProposalSectionBackgroundPicker
-                                    background={block.background}
-                                    onChange={(next) => patchBlockBackground(block.id, next)}
-                                  />
-                                ) : block.type === "packages" ? (
-                                  <ProposalSectionBackgroundPicker
-                                    background={(block as PackagesBlock).background}
-                                    onChange={(next) => patchBlockBackground(block.id, next)}
-                                  />
-                                ) : block.type === "agreement" ? (
-                                  <ProposalSectionBackgroundPicker
-                                    background={(block as AgreementBlock).background}
-                                    onChange={(next) => patchBlockBackground(block.id, next)}
-                                  />
-                                ) : block.type === "splash" ? (
-                                  <ProposalSplashBackgroundPickerWithBranding
-                                    block={block as SplashBlock}
-                                    onChange={(next) => updateBlock(block.id, next)}
-                                  />
-                                ) : undefined
-                              }
-                              leadingSlot={dragHandle}
-                              trailingSlot={undefined}
                             />
                           );
+
+                          return (
+                            <BlockSelection
+                              variant="root"
+                              selected={isSelected}
+                              hovered={ctx.hovered}
+                              isDragging={ctx.isDragging}
+                              flush={flushBand}
+                              lightSurface={block.type !== "section"}
+                              onSelect={handleSelect}
+                            >
+                              {flushBand ? (
+                                <SectionBandShell block={block} toolbar={toolbar}>
+                                  {fields}
+                                </SectionBandShell>
+                              ) : (
+                                <>
+                                  {toolbar}
+                                  {fields}
+                                </>
+                              )}
+                            </BlockSelection>
+                          );
                         }}
-                      >
-                        <ProposalBlockFields
-                          block={block}
-                          onChange={(next) => updateBlock(block.id, next)}
-                          selection={{
-                            selectedId: selectedBlockId,
-                            onSelect: onSelectBlock,
-                          }}
-                          getBlockStyle={getBlockStyle}
-                          applyBlockStyle={applyBlockStyle}
-                          columnsLayoutEditing={{
-                            activeId: rootColumnsLayoutEditingId,
-                            setActiveId: setRootColumnsLayoutEditingId,
-                          }}
-                          columnsInnerCellCallbacks={
-                            block.type === "columns"
-                              ? rootColumnsChrome.callbacksFor(block.id)
-                              : undefined
-                          }
-                        />
-                      </SortableShell>
+                      </BlockRow>
                       <InsertBlockSlot onAdd={(b) => addBlockAt(b, idx + 1)} />
                     </div>
                   );
