@@ -64,9 +64,8 @@ export interface SignedAgreementRecord {
   clientSignedAt?: number;
   /** Intro HTML snapshotted at sign time. */
   introHtmlSnapshot?: string;
-  /** Legal HTML only — agreement PDF (excludes intro). Falls back to `fullAgreementText` on older rows. */
+  /** Legal HTML only — agreement PDF (excludes intro). */
   legalHtmlSnapshot?: string;
-  fullAgreementText?: string;
   /** Inline PNG data URL when Storage upload was skipped or failed (small images). */
   signatureImage?: string;
   /** Firebase Storage object path when upload succeeded. */

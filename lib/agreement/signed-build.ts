@@ -6,19 +6,6 @@ import { buildPackageSelectionSummariesForProposal } from "@/lib/proposal/agreem
 import type { PackageSelectionSummary } from "@/lib/proposal/agreement/package-selection-summary";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 
-const FULL_AGREEMENT_TEXT_MAX = 120_000;
-
-const DEFAULT_LEGAL_SNAPSHOT = [
-  "1. Parties — Service provider and customer as identified on the proposal.",
-  "2. Scope — Products, services, and deliverables in the proposal including selected plan and add-ons.",
-  "3. Pricing & Payment — Fees per proposal schedule; invoices due within 14 days unless stated.",
-  "4. Term — Begins on signature; renews per proposal commitment unless non-renewal notice.",
-  "5. Termination — Material breach with cure period; fees accrued through termination date.",
-  "6. Confidentiality — Non-public information treated as confidential.",
-  "7. Warranties & Liability — As stated in proposal; capped liability.",
-  "8. Governing Law — Provider jurisdiction.",
-].join("\n\n");
-
 export interface SignedAgreementAddonSnapshot {
   label: string;
   quantity: number;
@@ -60,24 +47,6 @@ export function buildLegalAgreementHtmlSnapshot(proposal: ProposalRecord): strin
     return sanitizeProposalHtmlServer(agreement.legalHtml.trim());
   }
   return undefined;
-}
-
-/** Plain-ish snapshot for audit (truncated HTML or default section summary). */
-export function buildFullAgreementTextSnapshot(proposal: ProposalRecord): string | undefined {
-  const agreement = findFirstAgreementBlock(proposal.document.blocks);
-  if (!agreement) return undefined;
-  const chunks: string[] = [];
-  if (agreement.introHtml?.trim()) {
-    chunks.push(sanitizeProposalHtmlServer(agreement.introHtml.trim()));
-  }
-  if (agreement.legalHtml?.trim()) {
-    chunks.push(sanitizeProposalHtmlServer(agreement.legalHtml.trim()));
-  } else {
-    chunks.push(DEFAULT_LEGAL_SNAPSHOT);
-  }
-  const out = chunks.join("\n\n");
-  if (out.length <= FULL_AGREEMENT_TEXT_MAX) return out;
-  return `${out.slice(0, FULL_AGREEMENT_TEXT_MAX)}\n…`;
 }
 
 export function buildSignedAgreementCommerceSnapshot(

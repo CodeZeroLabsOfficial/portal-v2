@@ -39,7 +39,6 @@ import {
   deleteProposalWithTemplateUsageDecrement,
 } from "@/lib/templates/proposal-template-usage";
 import {
-  buildFullAgreementTextSnapshot,
   buildIntroAgreementHtmlSnapshot,
   buildLegalAgreementHtmlSnapshot,
   buildSignedAgreementCommerceSnapshot,
@@ -372,7 +371,6 @@ export async function acceptProposalPublicAction(
 
   if (hasSignaturePayload && sigUrl) {
     const commerce = commerceSnapshot;
-    const fullAgreementText = buildFullAgreementTextSnapshot(proposalForAgreement);
     const introHtmlSnapshot = buildIntroAgreementHtmlSnapshot(proposalForAgreement);
     const legalHtmlSnapshot = buildLegalAgreementHtmlSnapshot(proposalForAgreement);
 
@@ -429,7 +427,6 @@ export async function acceptProposalPublicAction(
       signatureMethod: sigMethod ?? null,
       signedAt: now,
       clientSignedAt: typeof clientSignedAt === "number" ? clientSignedAt : null,
-      fullAgreementText: fullAgreementText ?? null,
       introHtmlSnapshot: introHtmlSnapshot ?? null,
       legalHtmlSnapshot: legalHtmlSnapshot ?? null,
       signatureImage,
