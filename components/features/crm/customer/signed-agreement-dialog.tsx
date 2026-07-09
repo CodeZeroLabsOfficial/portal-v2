@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Typography } from "@/components/ui/typography";
-import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
+import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
 import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
-import { ProposalRichTextHtml } from "@/components/shared/proposal-rich-text-html";
 import {
   AGREEMENT_PRINT_EXCLUDE_ATTR,
   AGREEMENT_PRINT_TARGET_ATTR,
   printAgreementDocument,
-  useAgreementPrintMode
+  useAgreementPrintMode,
 } from "@/hooks/use-agreement-print-mode";
 import { AGREEMENT_MODAL_HEADER_TITLE_CLASSES } from "@/lib/proposal/agreement/chrome-typography";
+import { AGREEMENT_PRINT_TARGET_SHELL_CLASSES } from "@/lib/proposal/agreement/print-layout";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { cn } from "@/lib/utils";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
@@ -24,16 +24,22 @@ import type { SignedAgreementRecord } from "@/types/signed-agreement";
 interface SignedAgreementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: { record: SignedAgreementRecord; signatureSrc: string | null } | null;
+  data: {
+    record: SignedAgreementRecord;
+    signatureSrc: string | null;
+    companyPrintName?: string;
+  } | null;
 }
 
 export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreementDialogProps) {
   const signatureRef = React.useRef<HTMLDivElement | null>(null);
   useAgreementPrintMode();
 
+  const agreementTitle =
+    data?.record.agreementTitle?.trim() || data?.record.proposalTitle?.trim() || "Services Agreement";
+
   function printSignedAgreement() {
-    const title = data?.record.proposalTitle?.trim() || "Services Agreement";
-    printAgreementDocument({ documentTitle: title });
+    printAgreementDocument({ documentTitle: agreementTitle });
   }
 
   function scrollToSignature() {
@@ -89,7 +95,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
             <div className="min-h-0 overflow-y-auto print:overflow-visible">
               <div
                 {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }}
-                className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-10 sm:py-14">
+                className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}>
                 <header {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="text-center print:hidden">
                   <h2 className="font-serif text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl">
                     Signed agreement
@@ -102,7 +108,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                     {data.record.signedAt > 0
                       ? new Date(data.record.signedAt).toLocaleString(undefined, {
                           dateStyle: "medium",
-                          timeStyle: "short"
+                          timeStyle: "short",
                         })
                       : "—"}{" "}
                     · Signer: {data.record.signerName}
@@ -112,37 +118,10 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                   </Typography>
                 </header>
 
-                <section className="mt-10">
-                  <AgreementSectionLabel>Agreement</AgreementSectionLabel>
-                  {(() => {
-                    const rawBody = data.record.fullAgreementText?.trim() ?? "";
-                    const bodyIsHtml = rawBody.includes("<");
-                    if (!rawBody) {
-                      return (
-                        <Typography variant="muted" className="mt-3">
-                          No agreement text snapshot for this record.
-                        </Typography>
-                      );
-                    }
-                    if (bodyIsHtml) {
-                      return (
-                        <ProposalRichTextHtml
-                          html={rawBody}
-                          tone="muted"
-                          layout="body"
-                          className="mt-4"
-                        />
-                      );
-                    }
-                    return (
-                      <Typography className="mt-4 whitespace-pre-wrap">
-                        {rawBody}
-                      </Typography>
-                    );
-                  })()}
-                </section>
-
-                <AgreementPrintSignatureBlock
+                <AgreementPrintDocumentContent
+                  agreementTitle={agreementTitle}
+                  companyPrintName={data.companyPrintName}
+                  legalHtml={data.record.fullAgreementText}
                   signatureSrc={data.signatureSrc}
                   signerName={data.record.signerName}
                   signedAt={data.record.signedAt}

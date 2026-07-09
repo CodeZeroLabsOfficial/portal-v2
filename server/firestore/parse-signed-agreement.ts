@@ -63,6 +63,7 @@ export function parseSignedAgreementRecord(id: string, data: Record<string, unkn
     proposalId,
     shareToken: asString(data.shareToken),
     proposalTitle: asString(data.proposalTitle)?.trim() || "Signed agreement",
+    agreementTitle: asString(data.agreementTitle),
     customerId: asString(data.customerId),
     customerEmail: asString(data.customerEmail),
     customerName: asString(data.customerName),

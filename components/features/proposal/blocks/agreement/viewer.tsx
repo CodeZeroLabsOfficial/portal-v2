@@ -37,6 +37,7 @@ export function renderAgreementBlock({
       customerSignerPrefill={proposalContext?.customerSignerPrefill}
       catalogServices={proposalContext?.catalogServices}
       stripePublishableKey={proposalContext?.stripePublishableKey}
+      companyPrintName={proposalContext?.companyPrintName}
       renderAgreementChild={(child) => renderBlock(child)}
     />
   );

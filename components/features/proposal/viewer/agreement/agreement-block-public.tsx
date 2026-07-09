@@ -44,6 +44,7 @@ import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public
 import { AgreementDocumentTitle } from "@/components/features/proposal/agreement/agreement-document-title";
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
 import { AgreementLegalContent, defaultAgreementLegalNavItems } from "@/components/features/proposal/agreement/agreement-legal-content";
+import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
 import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
 import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
 import {
@@ -54,6 +55,7 @@ import {
 import {
   AGREEMENT_PRINT_TITLE_PAGE_ATTR,
   AGREEMENT_PRINT_TITLE_PAGE_CLASSES,
+  AGREEMENT_PRINT_TARGET_SHELL_CLASSES,
 } from "@/lib/proposal/agreement/print-layout";
 import {
   AGREEMENT_PRINT_EXCLUDE_ATTR,
@@ -88,6 +90,8 @@ export interface AgreementBlockPublicProps {
   /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
   catalogServices?: readonly CatalogServicePickerOption[];
   stripePublishableKey?: string;
+  /** Settings → Company name — agreement PDF footer. */
+  companyPrintName?: string;
   /** When false (editor / preview) the CTA is disabled and the sign form is read-only. */
   interactive?: boolean;
   /** Renders nested blocks above the sign button (same pipeline as the public document viewer). */
@@ -309,6 +313,7 @@ export function AgreementBlockPublic({
   customerSignerPrefill = null,
   catalogServices = [],
   stripePublishableKey,
+  companyPrintName,
   renderAgreementChild,
 }: AgreementBlockPublicProps) {
   const router = useRouter();
@@ -669,7 +674,7 @@ export function AgreementBlockPublic({
             >
             <div
               data-agreement-print-target=""
-              className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-10 sm:py-16"
+              className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}
             >
               <div id="agreement-top" aria-hidden />
 
@@ -705,9 +710,9 @@ export function AgreementBlockPublic({
                 ) : null}
               </section>
 
-              <section id="agreement-legal" className="mt-12">
-                <AgreementSectionLabel>The agreement</AgreementSectionLabel>
-                <div className="mt-6">
+              <section id="agreement-legal" className="mt-12 print:mt-0">
+                <AgreementSectionLabel className="print:hidden">The agreement</AgreementSectionLabel>
+                <div className="mt-6 print:mt-0">
                   <AgreementLegalContent legalHtml={legalWithHeadingIds.html} />
                 </div>
               </section>
@@ -719,6 +724,8 @@ export function AgreementBlockPublic({
                   signedAt={signedAtMs}
                 />
               ) : null}
+
+              <AgreementPrintFooter companyName={companyPrintName} />
 
               <section
                 ref={signRef}

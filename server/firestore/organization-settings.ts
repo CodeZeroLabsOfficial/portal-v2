@@ -28,6 +28,29 @@ const emptySettings = (organizationDocId: string): WorkspaceCompanySettings => (
   updatedAt: 0,
 });
 
+function organizationDocIdFromString(organizationId: string | undefined): string {
+  const id = organizationId?.trim();
+  return id && id.length > 0 ? id : "default";
+}
+
+/** Settings → Company name for agreement PDF footers and public branding. */
+export async function getCompanyDisplayName(
+  organizationId: string | undefined,
+): Promise<string | undefined> {
+  const db = getFirebaseAdminFirestore();
+  if (!db) return undefined;
+
+  const docId = organizationDocIdFromString(organizationId);
+  try {
+    const snap = await db.collection(COLLECTIONS.organizations).doc(docId).get();
+    if (!snap.exists) return undefined;
+    const name = asString(snap.data()?.name)?.trim();
+    return name || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getWorkspaceCompanySettings(user: PortalUser): Promise<WorkspaceCompanySettings | null> {
   const db = getFirebaseAdminFirestore();
   if (!db) {

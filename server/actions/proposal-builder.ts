@@ -14,7 +14,7 @@ import { encodeProposalDocumentForFirestore } from "@/lib/proposal/firestore-doc
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
 import { hydrateAgreementBlocksInDocument } from "@/server/proposal/hydrate-agreement-contract-templates";
 import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
-import { findProposalBlockById } from "@/lib/proposal/blocks";
+import { findFirstAgreementBlock, findProposalBlockById } from "@/lib/proposal/blocks";
 import { hashSharePassword, sealProposalAccess, verifySharePassword } from "@/lib/proposal/public/share-crypto";
 import { getAdminProposalRecord } from "@/server/firestore/portal-data";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
@@ -403,6 +403,9 @@ export async function acceptProposalPublicAction(
       proposalId: proposal.id,
       shareToken: proposal.shareToken,
       proposalTitle: proposal.title,
+      agreementTitle:
+        findFirstAgreementBlock(proposalForAgreement.document.blocks)?.agreementTitle?.trim() ||
+        null,
       customerId: proposal.customerId ?? null,
       customerEmail: proposal.recipientEmail?.trim().toLowerCase() ?? null,
       customerName: customerName ?? null,

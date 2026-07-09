@@ -22,6 +22,8 @@ export interface SignedAgreementRecord {
   proposalId: string;
   shareToken?: string;
   proposalTitle: string;
+  /** Agreement block title at sign time — PDF title page (falls back to `proposalTitle`). */
+  agreementTitle?: string;
   customerId?: string;
   customerEmail?: string;
   customerName?: string;

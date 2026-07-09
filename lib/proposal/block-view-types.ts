@@ -21,6 +21,7 @@ export interface ProposalRenderContext {
   customerSignerPrefill?: import("@/types/proposal").ProposalCustomerSignerPrefill | null;
   catalogServices?: readonly CatalogServicePickerOption[];
   stripePublishableKey?: string;
+  companyPrintName?: string;
 }
 
 export interface ProposalBlockViewProps {

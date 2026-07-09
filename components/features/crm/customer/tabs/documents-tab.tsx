@@ -24,6 +24,7 @@ export function CustomerDocumentsTab({ customer, signedAgreements }: CustomerDoc
   const [modalData, setModalData] = React.useState<{
     record: SignedAgreementRecord;
     signatureSrc: string | null;
+    companyPrintName?: string;
   } | null>(null);
 
   async function openSignedAgreementModal(doc: SignedAgreementRecord) {
@@ -38,7 +39,11 @@ export function CustomerDocumentsTab({ customer, signedAgreements }: CustomerDoc
       toast.error(res.message);
       return;
     }
-    setModalData({ record: res.record, signatureSrc: res.signatureSrc });
+    setModalData({
+      record: res.record,
+      signatureSrc: res.signatureSrc,
+      companyPrintName: res.companyPrintName,
+    });
     setModalOpen(true);
   }
 

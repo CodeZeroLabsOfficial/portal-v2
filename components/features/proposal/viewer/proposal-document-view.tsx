@@ -54,6 +54,8 @@ export interface ProposalDocumentViewProps {
   /** Active catalogue — recurring vs one-off add-on labels in the agreement summary. */
   catalogServices?: readonly CatalogServicePickerOption[];
   stripePublishableKey?: string;
+  /** Settings → Company name — agreement PDF footer. */
+  companyPrintName?: string;
   /** In-editor live preview — first section band sits flush under the preview frame. */
   flushTop?: boolean;
 }
@@ -119,6 +121,7 @@ export function ProposalDocumentView({
   customerSignerPrefill = null,
   catalogServices = [],
   stripePublishableKey,
+  companyPrintName,
   flushTop = false,
 }: ProposalDocumentViewProps) {
   const style = React.useMemo(() => {
@@ -152,6 +155,7 @@ export function ProposalDocumentView({
       customerSignerPrefill,
       catalogServices,
       stripePublishableKey,
+      companyPrintName,
     }),
     [
       document.blocks,
@@ -166,6 +170,7 @@ export function ProposalDocumentView({
       customerSignerPrefill,
       catalogServices,
       stripePublishableKey,
+      companyPrintName,
     ],
   );
 

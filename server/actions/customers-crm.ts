@@ -20,6 +20,7 @@ import {
   updateCustomerDocument,
   enableCustomerPortalAccess,
 } from "@/server/firestore/crm-customers";
+import { getCompanyDisplayName } from "@/server/firestore/organization-settings";
 import type { CustomerRecord } from "@/types/customer";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 import { getStripe } from "@/lib/stripe/server";
@@ -298,7 +299,7 @@ const signedAgreementViewSchema = z.object({
 export async function getSignedAgreementModalPayloadAction(
   raw: unknown,
 ): Promise<
-  | { ok: true; record: SignedAgreementRecord; signatureSrc: string | null }
+  | { ok: true; record: SignedAgreementRecord; signatureSrc: string | null; companyPrintName?: string }
   | { ok: false; message: string }
 > {
   const user = await requireStaffSession();
@@ -332,5 +333,6 @@ export async function getSignedAgreementModalPayloadAction(
   }
 
   const { signatureImage: _sig, signatureImageStoragePath: _path, ...rest } = row;
-  return { ok: true, record: rest as SignedAgreementRecord, signatureSrc };
+  const companyPrintName = await getCompanyDisplayName(row.organizationId);
+  return { ok: true, record: rest as SignedAgreementRecord, signatureSrc, companyPrintName };
 }
