@@ -33,15 +33,13 @@ export function SignedAgreementSummaryCard({ record }: SignedAgreementSummaryCar
             {signedLabel ? (
               <div>
                 <AgreementSectionLabel>Signed</AgreementSectionLabel>
-                <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">{signedLabel}</p>
+                <p className="mt-1 text-sm text-zinc-900">{signedLabel}</p>
               </div>
             ) : null}
             {record.signerName?.trim() ? (
               <div className={signedLabel ? "text-right sm:text-left" : undefined}>
                 <AgreementSectionLabel>Signer</AgreementSectionLabel>
-                <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">
-                  {record.signerName.trim()}
-                </p>
+                <p className="mt-1 text-sm text-zinc-900">{record.signerName.trim()}</p>
                 {record.signerOrganization?.trim() ? (
                   <p className="text-sm text-zinc-500">{record.signerOrganization.trim()}</p>
                 ) : null}
@@ -53,9 +51,7 @@ export function SignedAgreementSummaryCard({ record }: SignedAgreementSummaryCar
         {record.signerEmail?.trim() ? (
           <div>
             <AgreementSectionLabel>Email</AgreementSectionLabel>
-            <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900 break-all">
-              {record.signerEmail.trim()}
-            </p>
+            <p className="mt-1 break-all text-sm text-zinc-900">{record.signerEmail.trim()}</p>
           </div>
         ) : null}
 
