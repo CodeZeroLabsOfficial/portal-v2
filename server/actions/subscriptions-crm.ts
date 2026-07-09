@@ -5,6 +5,7 @@ import { requireStaffSession } from "@/lib/auth/server-session";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { getStripe } from "@/lib/stripe/server";
 import { logError } from "@/lib/common/logging";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { resolveStripePriceIdForSubscription } from "@/lib/catalog/service-resolve";
 import { createSubscriptionSchema } from "@/lib/schemas/subscription";
 import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalog-services";
@@ -113,6 +114,20 @@ export async function createSubscriptionAction(
 
     if (!scheduleResult.ok) return scheduleResult;
 
+    await notifyStaffAction({
+      actor: user,
+      organizationId: user.organizationId ?? customer.organizationId,
+      summary: `created a subscription for ${customer.name || "a customer"}`,
+      category: "subscription",
+      entity: {
+        type: "subscription",
+        id: scheduleResult.subscriptionId,
+        label: customer.name,
+      },
+      href: "/admin/subscriptions",
+      idempotencyKey: `subscription:created:${scheduleResult.subscriptionId}`,
+    });
+
     revalidateSubscriptionPaths(customer.id);
     return scheduleResult;
   } catch (error) {
@@ -135,6 +150,17 @@ export async function cancelSubscriptionAction(
   if (!subId.startsWith("sub_")) return { ok: false, message: "Invalid subscription id." };
   try {
     await cancelSubscriptionAtPeriodEnd(stripe, db, subId);
+
+    await notifyStaffAction({
+      actor: user,
+      organizationId: user.organizationId,
+      summary: `canceled subscription ${subId}`,
+      category: "subscription",
+      entity: { type: "subscription", id: subId },
+      href: "/admin/subscriptions",
+      idempotencyKey: `subscription:canceled:${subId}`,
+    });
+
     revalidateSubscriptionPaths();
     return { ok: true };
   } catch (error) {

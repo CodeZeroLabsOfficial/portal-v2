@@ -33,6 +33,7 @@ import {
 import { loadBillingCatalogForOrganization } from "@/server/catalog/billing-catalog";
 import { resolveSubscriptionStripePriceIdForProposalWithStripe } from "@/server/stripe/resolve-proposal-subscription-with-catalog";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
+import { notifyStaffAction, notifySystem } from "@/lib/notification/notify";
 import { uploadSignedAgreementSignaturePng } from "@/lib/firebase/admin-storage";
 import {
   commitNewProposalWithTemplateUsage,
@@ -180,6 +181,17 @@ export async function sendProposalAction(
       /* pipeline stage is best-effort */
     }
   }
+
+  const proposalTitle = existing.title?.trim() || "proposal";
+  await notifyStaffAction({
+    actor: user,
+    organizationId: existing.organizationId ?? user.organizationId,
+    summary: `sent proposal "${proposalTitle}"`,
+    category: "proposal",
+    entity: { type: "proposal", id: proposalId, label: proposalTitle },
+    href: `/admin/proposals/${proposalId}`,
+    idempotencyKey: `proposal:sent:${proposalId}`,
+  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/proposals");
@@ -352,6 +364,17 @@ export async function acceptProposalPublicAction(
   }
 
   await applyProposalAcceptCrmSideEffects(db, proposal, parsed.data.signerName);
+
+  const acceptedTitle = proposal.title?.trim() || "proposal";
+  await notifySystem({
+    organizationId: proposal.organizationId,
+    summary: `accepted proposal "${acceptedTitle}"`,
+    category: "proposal",
+    actorName: parsed.data.signerName.trim() || "Client",
+    entity: { type: "proposal", id: proposal.id, label: acceptedTitle },
+    href: `/admin/proposals/${proposal.id}`,
+    idempotencyKey: `proposal:accepted:${proposal.id}`,
+  });
 
   const stripeSubscriptionPriceId = await resolveSubscriptionStripePriceIdForProposalWithStripe(proposal);
   const billingCatalog = await loadBillingCatalogForOrganization(proposal.organizationId);

@@ -8,6 +8,7 @@ import {
   type OpportunityStageChangeAttribution,
 } from "@/lib/crm/opportunity-stage-activity";
 import { normalizeOpportunityStage, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { batchGetCustomerRecordsForStaff } from "@/server/firestore/crm-customers";
@@ -301,6 +302,16 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
     createdAt: activityAt,
   });
 
+  await notifyStaffAction({
+    actor: user,
+    organizationId: user.organizationId ?? asString(customerData.organizationId),
+    summary: "converted lead to contact",
+    category: "crm",
+    entity: { type: "customer", id: customerId, label: detailLabel },
+    href: `/admin/customers/${customerId}`,
+    idempotencyKey: `customer:converted:${customerId}`,
+  });
+
   return { ok: true, customerId };
 }
 
@@ -354,6 +365,28 @@ export async function updateOpportunityStage(
     logError("crm_opportunity_stage_activity_failed", {
       opportunityId,
       message: error instanceof Error ? error.message : "unknown",
+    });
+  }
+
+  // Proposal send also bumps stage with attribution "system" — notify from sendProposalAction instead.
+  if (attribution === "user") {
+    const stageSummary =
+      stage === "won"
+        ? "marked deal as won"
+        : stage === "lost"
+          ? "marked deal as lost"
+          : `moved deal to ${opportunityStageLabel(stage)}`;
+    await notifyStaffAction({
+      actor: user,
+      organizationId: existing.organizationId ?? user.organizationId,
+      summary: stageSummary,
+      category: "crm",
+      entity: {
+        type: "opportunity",
+        id: opportunityId,
+        label: existing.name || opportunityId,
+      },
+      href: `/admin/opportunities/${opportunityId}`,
     });
   }
 
@@ -546,6 +579,22 @@ export async function appendOpportunityNote(
     .collection(COLLECTIONS.opportunities)
     .doc(opportunityId)
     .update({ updatedAt: FieldValue.serverTimestamp() });
+
+  const noteSummary =
+    input.kind === "call"
+      ? "logged a call"
+      : input.kind === "email"
+        ? "logged an email"
+        : "added a note";
+  await notifyStaffAction({
+    actor: user,
+    organizationId: opp.organizationId ?? user.organizationId,
+    summary: `${noteSummary} on deal ${opp.name || opportunityId}`,
+    category: "crm",
+    entity: { type: "opportunity", id: opportunityId, label: opp.name },
+    href: `/admin/opportunities/${opportunityId}`,
+  });
+
   return { ok: true, noteId: ref.id };
 }
 

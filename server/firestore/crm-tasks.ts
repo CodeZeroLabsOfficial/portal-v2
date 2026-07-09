@@ -1,6 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { isStaff } from "@/lib/auth/server-session";
 import { logError } from "@/lib/common/logging";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { enrichTaskRecordsForStaff } from "@/lib/tasks/enrich-task-records";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
@@ -184,6 +185,20 @@ export async function updateTaskForStaff(
 
   await db.collection(COLLECTIONS.tasks).doc(taskId).update(payload);
 
+  const assigneeChanged =
+    input.assignedToUid !== undefined &&
+    (input.assignedToUid || undefined) !== (existing.assignedToUid || undefined);
+  if (assigneeChanged && input.assignedToUid) {
+    await notifyStaffAction({
+      actor: user,
+      organizationId: user.organizationId ?? existing.organizationId,
+      summary: `assigned task "${title}"`,
+      category: "task",
+      entity: { type: "task", id: taskId, label: title },
+      href: "/admin/tasks",
+    });
+  }
+
   return { ok: true };
 }
 
@@ -242,6 +257,15 @@ export async function createTaskForStaff(
   }
 
   const docRef = await db.collection(COLLECTIONS.tasks).add(docPayload);
+
+  await notifyStaffAction({
+    actor: user,
+    summary: `created task "${title}"`,
+    category: "task",
+    entity: { type: "task", id: docRef.id, label: title },
+    href: "/admin/tasks",
+    idempotencyKey: `task:created:${docRef.id}`,
+  });
 
   return { ok: true, taskId: docRef.id };
 }

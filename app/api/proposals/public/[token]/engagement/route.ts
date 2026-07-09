@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { PUBLIC_ANALYTICS_RATE_MAX, PUBLIC_ANALYTICS_RATE_WINDOW_SEC } from "@/config/constants";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
+import { notifySystem } from "@/lib/notification/notify";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
 
@@ -79,10 +80,24 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
       lastViewedAt: now,
       updatedAt: FieldValue.serverTimestamp(),
     };
-    if (proposal.status === "published") {
+    const isFirstView = proposal.status === "published";
+    if (isFirstView) {
       pack.status = "viewed";
     }
     await ref.update(pack);
+
+    if (isFirstView && proposal.organizationId) {
+      const viewedTitle = proposal.title?.trim() || "proposal";
+      await notifySystem({
+        organizationId: proposal.organizationId,
+        summary: `viewed proposal "${viewedTitle}"`,
+        category: "proposal",
+        actorName: "Client",
+        entity: { type: "proposal", id: proposal.id, label: viewedTitle },
+        href: `/admin/proposals/${proposal.id}`,
+        idempotencyKey: `proposal:first_view:${proposal.id}`,
+      });
+    }
   } else {
     const delta = Math.min(secondsDelta ?? 0, 60);
     if (delta <= 0) {

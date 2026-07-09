@@ -6,6 +6,7 @@ import { isStaff } from "@/lib/auth/server-session";
 import { asNumber, asString, asStringStringMap } from "@/lib/firestore/coerce";
 import { logError } from "@/lib/common/logging";
 import { coerceTimestampToMillis, millisFromFirestore } from "@/lib/firestore/timestamp";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
@@ -1160,6 +1161,16 @@ export async function createCustomerDocument(
 
   await syncStripeCustomerIdFromCrmCustomerDoc(db, docRef.id);
 
+  const createdLabel = input.name.trim() || payload.email || docRef.id;
+  await notifyStaffAction({
+    actor: user,
+    summary: crmType === "lead" ? "created a new lead" : "created a new contact",
+    category: "crm",
+    entity: { type: "customer", id: docRef.id, label: createdLabel },
+    href: `/admin/customers/${docRef.id}`,
+    idempotencyKey: `customer:created:${docRef.id}`,
+  });
+
   return {
     ok: true,
     customerId: docRef.id,
@@ -1215,6 +1226,16 @@ export async function updateCustomerDocument(
   });
 
   await syncStripeCustomerIdFromCrmCustomerDoc(db, customerId);
+
+  const updatedLabel = rest.name.trim() || existing.name || customerId;
+  await notifyStaffAction({
+    actor: user,
+    organizationId: user.organizationId ?? existing.organizationId,
+    summary: existing.crmType === "lead" ? "updated lead" : "updated contact",
+    category: "crm",
+    entity: { type: "customer", id: customerId, label: updatedLabel },
+    href: `/admin/customers/${customerId}`,
+  });
 
   return { ok: true };
 }
@@ -1332,6 +1353,22 @@ export async function appendCustomerNote(
     actorUid: user.uid,
     createdAt: Timestamp.fromMillis(noteAt.toMillis() + 1),
   });
+
+  const noteSummary =
+    input.kind === "call"
+      ? "logged a call"
+      : input.kind === "email"
+        ? "logged an email"
+        : "added a note";
+  await notifyStaffAction({
+    actor: user,
+    organizationId: user.organizationId ?? customer.organizationId,
+    summary: `${noteSummary} on ${customer.name || "a contact"}`,
+    category: "crm",
+    entity: { type: "customer", id: customerId, label: customer.name },
+    href: `/admin/customers/${customerId}`,
+  });
+
   return { ok: true };
 }
 

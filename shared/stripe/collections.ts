@@ -7,4 +7,6 @@ export const COLLECTIONS = {
   payments: "payments",
   stripeCustomers: "stripe_customers",
   stripeWebhookEvents: "stripe_webhook_events",
+  /** Staff in-app inbox — written from webhook fan-out when org metadata is present. */
+  notifications: "notifications",
 } as const;

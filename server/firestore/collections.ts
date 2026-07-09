@@ -8,6 +8,8 @@
  * - `opportunities`: staff-only reads/writes (Admin SDK in this app); add rules matching `customers` if exposed to clients.
  * - `proposals`, `proposal_templates`, `contract_templates`, `services`: org-scoped staff;
  *   public proposal flows use Admin SDK (not client reads). See `firestore.rules`.
+ * - `tasks`: staff-only; mutations mostly Admin SDK (limited client status updates).
+ * - `notifications`: staff inbox; recipient may read own docs; writes Admin SDK only.
  * - `analytics_events`: insert from authenticated viewer session or validated public token; reads restricted to proposal owners.
  * - `signedAgreements`: append-only snapshots when a proposal is accepted with a signature (Admin SDK).
  */
@@ -42,6 +44,8 @@ export const COLLECTIONS = {
   analyticsEvents: "analytics_events",
   /** Optional — admin dashboard aggregates when present. */
   tasks: "tasks",
+  /** Staff in-app inbox — one doc per recipient per event (Admin SDK writes). */
+  notifications: "notifications",
   supportTickets: "support_tickets",
   /** Workspace company profile — one doc per org (`organizations/{orgId}`). */
   organizations: "organizations",

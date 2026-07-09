@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Building2, Globe, Palette, Puzzle, User, Users } from "lucide-react";
+import { Bell, Building2, Globe, Palette, Puzzle, User, Users } from "lucide-react";
 
 export interface SettingsNavItem {
   id: string;
@@ -15,6 +15,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   { id: "company", href: "/admin/settings/company", label: "Company", icon: Building2 },
   { id: "profile", href: "/admin/settings/profile", label: "Profile", icon: User },
   { id: "appearance", href: "/admin/settings/appearance", label: "Appearance", icon: Palette },
+  { id: "notifications", href: "/admin/settings/notifications", label: "Notifications", icon: Bell },
   { id: "team", href: "/admin/settings/team", label: "Team", icon: Users },
   { id: "locality", href: "/admin/settings/locality", label: "Locality", icon: Globe },
   { id: "integrations", href: ADMIN_SETTINGS_INTEGRATIONS_HREF, label: "Integrations", icon: Puzzle },

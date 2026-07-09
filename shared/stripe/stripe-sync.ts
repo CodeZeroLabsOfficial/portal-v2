@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import type Stripe from "stripe";
 
 import { COLLECTIONS } from "./collections";
+import { notifyOrgStaffSystemEvent } from "./notify-staff";
 import type { InvoiceStatus, SubscriptionStatus } from "./status-types";
 import { syncStripeCustomerIdFromCrmCustomerDoc } from "./sync-portal-user-stripe";
 
@@ -519,9 +520,37 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
           if (uid) {
             await db.collection(COLLECTIONS.users).doc(uid).collection("subscriptions").doc(sub.id).set(patch, { merge: true });
           }
+          const deletedOrgId = metadataOrganizationId(sub);
+          if (deletedOrgId) {
+            await notifyOrgStaffSystemEvent(db, {
+              organizationId: deletedOrgId,
+              summary: `subscription ${sub.id} was canceled`,
+              category: "subscription",
+              entityType: "subscription",
+              entityId: sub.id,
+              href: "/admin/subscriptions",
+              idempotencyKey: `stripe:sub:deleted:${sub.id}:${event.id}`,
+            });
+          }
           return;
         }
         await upsertSubscriptionMirror(db, sub);
+        const subOrgId = metadataOrganizationId(sub);
+        if (subOrgId && (event.type === "customer.subscription.created" || sub.status === "past_due" || sub.status === "unpaid")) {
+          const summary =
+            event.type === "customer.subscription.created"
+              ? `subscription ${sub.id} was created`
+              : `subscription ${sub.id} is ${sub.status}`;
+          await notifyOrgStaffSystemEvent(db, {
+            organizationId: subOrgId,
+            summary,
+            category: "subscription",
+            entityType: "subscription",
+            entityId: sub.id,
+            href: "/admin/subscriptions",
+            idempotencyKey: `stripe:sub:${event.type}:${sub.id}:${event.id}`,
+          });
+        }
         return;
       }
       case "invoice.created":
@@ -532,6 +561,28 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
       case "invoice.voided": {
         const invoice = event.data.object as Stripe.Invoice;
         await upsertInvoiceMirror(db, invoice);
+        if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
+          const orgId = metadataOrganizationId(invoice);
+          if (orgId) {
+            const label =
+              typeof invoice.number === "string" && invoice.number.trim()
+                ? invoice.number.trim()
+                : invoice.id;
+            await notifyOrgStaffSystemEvent(db, {
+              organizationId: orgId,
+              summary:
+                event.type === "invoice.paid"
+                  ? `payment received for invoice ${label}`
+                  : `payment failed for invoice ${label}`,
+              category: "billing",
+              entityType: "invoice",
+              entityId: invoice.id,
+              entityLabel: label,
+              href: "/admin/financials",
+              idempotencyKey: `stripe:invoice:${event.type}:${invoice.id}:${event.id}`,
+            });
+          }
+        }
         return;
       }
       case "payment_intent.succeeded":

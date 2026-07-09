@@ -7,6 +7,7 @@ import { getCurrentSessionUser } from "@/lib/auth/server-session";
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { updateUserProfileSchema } from "@/lib/schemas/user-profile";
 import { COLLECTIONS } from "@/server/firestore/collections";
 
@@ -71,6 +72,15 @@ export async function updateCurrentUserProfileAction(
       }
     }
   }
+
+  await notifyStaffAction({
+    actor: user,
+    organizationId: user.organizationId,
+    summary: "updated profile",
+    category: "system",
+    entity: { type: "user", id: user.uid, label: displayName || user.email },
+    href: "/admin/settings/profile",
+  });
 
   revalidatePath("/admin/settings", "layout");
   revalidatePath("/admin/settings/profile");

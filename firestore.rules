@@ -154,5 +154,18 @@ service cloud.firestore {
         ]);
       allow create, delete: if false;
     }
+
+    // MARK: Notifications (staff inbox; writes via Admin SDK only)
+
+    match /notifications/{notificationId} {
+      allow read: if isStaff()
+        && userOrgId() is string
+        && resource.data.organizationId is string
+        && resource.data.organizationId == userOrgId()
+        && resource.data.recipientUid is string
+        && resource.data.recipientUid == request.auth.uid;
+
+      allow create, update, delete: if false;
+    }
   }
 }

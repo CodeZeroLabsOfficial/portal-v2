@@ -6,6 +6,7 @@ import { updateCompanySettingsSchema } from "@/lib/schemas/company-settings";
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { runAdminWrite } from "@/lib/firebase/admin-write";
+import { notifyStaffAction } from "@/lib/notification/notify";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { workspaceOrganizationDocId } from "@/server/firestore/organization-settings";
 
@@ -57,6 +58,15 @@ export async function updateWorkspaceCompanySettingsAction(
       ),
   );
   if (!write.ok) return write;
+
+  await notifyStaffAction({
+    actor: user,
+    organizationId: user.organizationId,
+    summary: "updated company settings",
+    category: "system",
+    entity: { type: "organization", id: docId, label: v.name.trim() },
+    href: "/admin/settings/company",
+  });
 
   revalidatePath("/admin/settings", "layout");
   revalidatePath("/admin/settings/company");
