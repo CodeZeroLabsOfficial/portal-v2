@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
+import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
 import { AgreementSummarySection } from "@/components/features/proposal/agreement/agreement-summary-section";
 import {
   AGREEMENT_PRINT_TARGET_ATTR,
@@ -81,22 +82,23 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                 </DialogClose>
               </div>
             </div>
-            <div className="min-h-0 overflow-y-auto print:overflow-visible">
+            <div className="min-h-0 overflow-y-auto print:min-h-0 print:overflow-visible">
               <div
                 {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }}
                 className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}>
                 <div id="agreement-top" aria-hidden />
                 <AgreementPrintDocumentContent
                   agreementTitle={agreementTitle}
-                  companyPrintName={data.companyPrintName}
                   legalHtml={legalHtml}
                   signatureSrc={data.signatureSrc}
                   signerName={data.record.signerName}
+                  signerOrganization={data.record.signerOrganization}
                   signedAt={data.record.signedAt}
                   showLegalSectionLabel
                   afterTitle={<AgreementSummarySection record={data.record} />}
                 />
               </div>
+              <AgreementPrintFooter companyName={data.companyPrintName} />
             </div>
           </>
         ) : null}

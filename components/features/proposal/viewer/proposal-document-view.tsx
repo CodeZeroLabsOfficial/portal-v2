@@ -42,7 +42,8 @@ export interface ProposalDocumentViewProps {
   proposalStatus?: ProposalStatus;
   /** Name of the buyer that already signed the agreement (when status is `accepted`). */
   acceptedByName?: string;
-  /** E-signature image (data URL) stored on the proposal when accepted. */
+  /** Organization entered on the public Accept form at sign time. */
+  acceptedSignerOrganization?: string;
   acceptedSignatureDataUrl?: string;
   acceptedAt?: number;
   /** IANA zone from Settings → Locality — agreement dates and previews use this when set. */
@@ -114,6 +115,7 @@ export function ProposalDocumentView({
   viewportSectionBleed = true,
   proposalStatus,
   acceptedByName,
+  acceptedSignerOrganization,
   acceptedSignatureDataUrl,
   acceptedAt,
   localityTimeZone,
@@ -148,6 +150,7 @@ export function ProposalDocumentView({
       firstRootSplashBlockId: splashLogoBlockId,
       proposalStatus,
       acceptedByName,
+      acceptedSignerOrganization,
       acceptedSignatureDataUrl,
       acceptedAt,
       localityTimeZone,
@@ -163,6 +166,7 @@ export function ProposalDocumentView({
       splashLogoBlockId,
       proposalStatus,
       acceptedByName,
+      acceptedSignerOrganization,
       acceptedSignatureDataUrl,
       acceptedAt,
       localityTimeZone,

@@ -578,6 +578,8 @@ export interface ProposalRecord {
   /** After explicit acceptance on the public page. */
   acceptedAt?: number;
   acceptedByName?: string;
+  /** Organization entered on the public Accept form (optional). */
+  acceptedSignerOrganization?: string;
   /** PNG data URL captured at acceptance when the buyer signs via the agreement modal. */
   acceptedSignatureDataUrl?: string;
   /** How the signature image was produced (`draw`, `type`, or `upload`). */

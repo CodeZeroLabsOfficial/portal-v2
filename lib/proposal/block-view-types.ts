@@ -14,6 +14,7 @@ export interface ProposalRenderContext {
   firstRootSplashBlockId?: string | null;
   proposalStatus?: ProposalStatus;
   acceptedByName?: string;
+  acceptedSignerOrganization?: string;
   acceptedSignatureDataUrl?: string;
   acceptedAt?: number;
   localityTimeZone?: string;

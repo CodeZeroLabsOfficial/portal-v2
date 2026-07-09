@@ -4,13 +4,15 @@ import { Typography } from "@/components/ui/typography";
 export interface AgreementPrintSignatureBlockProps {
   signatureSrc: string | null | undefined;
   signerName?: string | null;
+  signerOrganization?: string | null;
   signedAt?: number | null;
 }
 
-/** Shown in print/PDF after the agreement is signed — mirrors the e-signature capture. */
+/** Shown in print/PDF after the agreement is signed. */
 export function AgreementPrintSignatureBlock({
   signatureSrc,
   signerName,
+  signerOrganization,
   signedAt,
 }: AgreementPrintSignatureBlockProps) {
   if (!signatureSrc?.trim()) return null;
@@ -26,18 +28,8 @@ export function AgreementPrintSignatureBlock({
   return (
     <section className="mt-12 hidden print:block">
       <AgreementSectionLabel>Signature</AgreementSectionLabel>
-      <div className="mt-6 border-t pt-8">
-        {signerName?.trim() ? (
-          <Typography variant="small" className="text-sm font-semibold text-foreground">
-            {signerName.trim()}
-          </Typography>
-        ) : null}
-        {signedLabel ? (
-          <Typography variant="muted" className="mt-1 text-xs">
-            Signed {signedLabel}
-          </Typography>
-        ) : null}
-        <div className="mt-4">
+      <div className="mt-6 space-y-4">
+        <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={signatureSrc}
@@ -45,6 +37,21 @@ export function AgreementPrintSignatureBlock({
             className="max-h-36 max-w-full object-contain object-left"
           />
         </div>
+        {signerName?.trim() ? (
+          <Typography variant="small" className="text-sm font-semibold text-foreground">
+            {signerName.trim()}
+          </Typography>
+        ) : null}
+        {signerOrganization?.trim() ? (
+          <Typography variant="muted" className="text-sm text-zinc-600">
+            {signerOrganization.trim()}
+          </Typography>
+        ) : null}
+        {signedLabel ? (
+          <Typography variant="muted" className="text-xs">
+            Signed {signedLabel}
+          </Typography>
+        ) : null}
       </div>
     </section>
   );

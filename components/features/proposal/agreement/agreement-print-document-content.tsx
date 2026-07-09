@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { AgreementDocumentTitle } from "@/components/features/proposal/agreement/agreement-document-title";
 import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
 import { AgreementLegalContent } from "@/components/features/proposal/agreement/agreement-legal-content";
-import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
 import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -12,10 +11,10 @@ import {
 
 export interface AgreementPrintDocumentContentProps {
   agreementTitle: string;
-  companyPrintName?: string;
   legalHtml?: string;
   signatureSrc?: string | null;
   signerName?: string | null;
+  signerOrganization?: string | null;
   signedAt?: number | null;
   /** Screen-only blocks inserted after the title page (intro, agreement summary, etc.). */
   afterTitle?: ReactNode;
@@ -24,15 +23,15 @@ export interface AgreementPrintDocumentContentProps {
 }
 
 /**
- * Shared agreement PDF body — title page, legal (no section label), optional signature, company footer.
- * Used by staff CRM signed-agreement download; mirrors the public agreement print structure.
+ * Shared agreement PDF body — title page, legal, optional signature.
+ * Company page footer is rendered outside the print target by the parent.
  */
 export function AgreementPrintDocumentContent({
   agreementTitle,
-  companyPrintName,
   legalHtml,
   signatureSrc,
   signerName,
+  signerOrganization,
   signedAt,
   afterTitle,
   showLegalSectionLabel = false,
@@ -67,10 +66,9 @@ export function AgreementPrintDocumentContent({
       <AgreementPrintSignatureBlock
         signatureSrc={signatureSrc}
         signerName={signerName}
+        signerOrganization={signerOrganization}
         signedAt={signedAt}
       />
-
-      <AgreementPrintFooter companyName={companyPrintName} />
     </>
   );
 }

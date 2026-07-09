@@ -29,6 +29,7 @@ import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-sur
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
 import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
+import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
 import {
   AgreementSelectionSection,
   NoPackageSelectionCard,
@@ -66,7 +67,7 @@ export interface AgreementBlockPublicProps {
   /** Current proposal status — drives the “accepted” state in the modal footer. */
   proposalStatus?: ProposalStatus;
   acceptedByName?: string;
-  /** Captured e-signature image (data URL) after acceptance — used for print/PDF. */
+  acceptedSignerOrganization?: string;
   acceptedSignatureDataUrl?: string;
   /** Server acceptance timestamp (ms). */
   acceptedAt?: number;
@@ -119,6 +120,7 @@ export function AgreementBlockPublic({
   publicSelections,
   proposalStatus,
   acceptedByName,
+  acceptedSignerOrganization,
   acceptedSignatureDataUrl,
   acceptedAt,
   localityTimeZone,
@@ -134,6 +136,7 @@ export function AgreementBlockPublic({
   const [open, setOpen] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [localAcceptedName, setLocalAcceptedName] = React.useState<string | null>(null);
+  const [localAcceptedOrganization, setLocalAcceptedOrganization] = React.useState<string | null>(null);
   const [localSignatureDataUrl, setLocalSignatureDataUrl] = React.useState<string | null>(null);
   const [localDone, setLocalDone] = React.useState(proposalStatus === "accepted");
 
@@ -217,6 +220,7 @@ export function AgreementBlockPublic({
     return items;
   }, [packageSummaries.length, agreementTitle, agreementLegalChildren, accepted]);
   const displayName = localAcceptedName ?? acceptedByName;
+  const displayOrganization = localAcceptedOrganization ?? acceptedSignerOrganization;
   const signatureDataUrl = localSignatureDataUrl ?? acceptedSignatureDataUrl ?? null;
   const signedAtMs = accepted ? (acceptedAt ?? null) : null;
   const blockAgreementUntilPlanPicked = interactive && !accepted && !planSelectionComplete;
@@ -265,6 +269,9 @@ export function AgreementBlockPublic({
     if (!shareToken || !interactive) return;
     setError(null);
     setLocalAcceptedName(payload.signerName);
+    if (payload.signerOrganization?.trim()) {
+      setLocalAcceptedOrganization(payload.signerOrganization.trim());
+    }
     if (payload.signatureDataUrl) {
       setLocalSignatureDataUrl(payload.signatureDataUrl);
     }
@@ -494,10 +501,10 @@ export function AgreementBlockPublic({
 
               <AgreementPrintDocumentContent
                 agreementTitle={agreementTitle}
-                companyPrintName={companyPrintName}
                 legalHtml={legalWithHeadingIds.html}
                 signatureSrc={accepted ? signatureDataUrl : null}
                 signerName={accepted ? displayName : null}
+                signerOrganization={accepted ? displayOrganization : null}
                 signedAt={signedAtMs}
                 showLegalSectionLabel
                 afterTitle={
@@ -586,6 +593,7 @@ export function AgreementBlockPublic({
                 )}
               </section>
             </div>
+            <AgreementPrintFooter companyName={companyPrintName} />
             </div>
           </div>
         </DialogContent>

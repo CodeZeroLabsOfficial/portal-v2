@@ -126,6 +126,7 @@ export function parseProposalRecord(id: string, data: Record<string, unknown>): 
     lastViewedAt: asNumber(data.lastViewedAt),
     acceptedAt: asNumber(data.acceptedAt),
     acceptedByName: asString(data.acceptedByName),
+    acceptedSignerOrganization: asString(data.acceptedSignerOrganization),
     acceptedSignatureDataUrl: asString(data.acceptedSignatureDataUrl),
     acceptedSignatureMethod:
       data.acceptedSignatureMethod === "draw" ||

@@ -29,6 +29,7 @@ export function renderAgreementBlock({
       publicSelections={publicSelections}
       proposalStatus={proposalContext?.proposalStatus}
       acceptedByName={proposalContext?.acceptedByName}
+      acceptedSignerOrganization={proposalContext?.acceptedSignerOrganization}
       acceptedSignatureDataUrl={proposalContext?.acceptedSignatureDataUrl}
       acceptedAt={proposalContext?.acceptedAt}
       localityTimeZone={proposalContext?.localityTimeZone}

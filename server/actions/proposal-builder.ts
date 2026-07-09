@@ -332,6 +332,9 @@ export async function acceptProposalPublicAction(
           status: "accepted",
           acceptedAt: now,
           acceptedByName: parsed.data.signerName,
+          ...(parsed.data.signerOrganization?.trim()
+            ? { acceptedSignerOrganization: parsed.data.signerOrganization.trim() }
+            : {}),
           ...(hasSignaturePayload
             ? {
                 acceptedSignatureDataUrl: sigUrl,
