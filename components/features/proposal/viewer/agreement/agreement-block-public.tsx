@@ -42,7 +42,7 @@ import {
   buildFrozenBuyerJumpNavItems,
   resolveFrozenAgreementView,
 } from "@/lib/proposal/agreement/frozen-agreement-view";
-import { AGREEMENT_SIGN_SECTION_ID } from "@/lib/proposal/agreement/modal-layout";
+import { AGREEMENT_SIGN_SECTION_ID, AGREEMENT_TOP_ANCHOR_ID } from "@/lib/proposal/agreement/modal-layout";
 import {
   buildPackageSelectionSummary,
   packagesBlocksFromDocument,
@@ -52,6 +52,7 @@ import { AGREEMENT_PRINT_EXCLUDE_ATTR, printAgreementDocument } from "@/hooks/us
 import { isDocumentPackageSelectionComplete } from "@/lib/proposal/commerce/package-selection";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -89,6 +90,36 @@ export interface AgreementBlockPublicProps {
 
 const DEFAULT_BUTTON_LABEL = "View Agreement";
 const DEFAULT_AGREEMENT_TITLE = "Services Agreement";
+
+function AgreementModalPendingBody() {
+  return (
+    <div
+      {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }}
+      className="mx-auto w-full max-w-6xl space-y-8 px-5 py-12 sm:px-10 sm:py-16 print:hidden"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <Skeleton className="mx-auto h-12 w-2/3 max-w-md" />
+      <div className="mx-auto mt-10 max-w-2xl space-y-3">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-4/6" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-11/12" />
+      </div>
+      <p className="text-center text-sm text-muted-foreground">Loading your signed agreement…</p>
+    </div>
+  );
+}
+
+const PENDING_FROZEN_JUMP_NAV_ITEMS = [
+  { kind: "link" as const, id: AGREEMENT_TOP_ANCHOR_ID, label: "Top of agreement" },
+  { kind: "link" as const, id: AGREEMENT_SIGN_SECTION_ID, label: "Signature" },
+];
 
 export function AgreementBlockPublic({
   block,
@@ -167,6 +198,15 @@ export function AgreementBlockPublic({
     });
   }, [accepted, frozenSignedAgreement, companyPrintName]);
 
+  const hasSignatureOnRecord = Boolean(
+    acceptedSignatureDataUrl?.trim() ||
+      localSignatureDataUrl?.trim() ||
+      frozenSignedAgreement?.signatureSrc,
+  );
+
+  const frozenAgreementRequired = accepted && hasSignatureOnRecord;
+  const frozenAgreementPending = frozenAgreementRequired && !frozenView;
+
   const liveHasCustomLegal = Boolean(block.legalHtml?.trim());
 
   const introWithHeadingIds = React.useMemo(() => {
@@ -186,6 +226,9 @@ export function AgreementBlockPublic({
   const modalHasCustomLegal = frozenView?.hasCustomLegal ?? liveHasCustomLegal;
 
   const jumpNavItems = React.useMemo(() => {
+    if (frozenAgreementPending) {
+      return PENDING_FROZEN_JUMP_NAV_ITEMS;
+    }
     if (frozenView) {
       return buildFrozenBuyerJumpNavItems(frozenView);
     }
@@ -200,6 +243,7 @@ export function AgreementBlockPublic({
       accepted,
     });
   }, [
+    frozenAgreementPending,
     frozenView,
     liveAgreementTitle,
     livePackageSummaries.length,
@@ -225,7 +269,7 @@ export function AgreementBlockPublic({
   }
 
   function onDownload() {
-    if (accepted) {
+    if (frozenAgreementRequired) {
       if (!frozenView) {
         toast.error("Your signed agreement is still loading. Please try again in a moment.");
         return;
@@ -367,8 +411,10 @@ export function AgreementBlockPublic({
           )
         }
       >
-        {accepted && frozenView ? (
+        {frozenView ? (
           <FrozenAgreementPrintBody frozenView={frozenView} afterTitle={buyerScreenAfterTitle} />
+        ) : frozenAgreementPending ? (
+          <AgreementModalPendingBody />
         ) : (
           <AgreementModalPrintBody
             agreementTitle={modalAgreementTitle}
@@ -417,7 +463,7 @@ export function AgreementBlockPublic({
                   variant="outline"
                   className="gap-2"
                   onClick={onDownload}
-                  disabled={!frozenView}
+                  disabled={frozenAgreementRequired && !frozenView}
                 >
                   <Download className="size-4" aria-hidden />
                   Download PDF

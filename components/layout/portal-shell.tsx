@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
 import type { PortalShellProps } from "@/components/layout/nav-types";
+import { PORTAL_SHELL_ROOT_ATTR } from "@/lib/layout/portal-shell-layout";
 
 export function PortalShell({
   user,
@@ -17,6 +18,7 @@ export function PortalShell({
 }: PortalShellProps & { defaultOpen: boolean; children: React.ReactNode }) {
   return (
     <SidebarProvider
+      {...{ [PORTAL_SHELL_ROOT_ATTR]: "" }}
       defaultOpen={defaultOpen}
       style={
         {
