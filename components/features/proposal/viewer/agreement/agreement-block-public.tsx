@@ -10,10 +10,7 @@ import { DialogClose } from "@/components/ui/dialog";
 import { AgreementModalShell } from "@/components/features/proposal/agreement/agreement-modal-shell";
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
 import { AgreementModalPrintBody } from "@/components/features/proposal/agreement/agreement-modal-print-body";
-import {
-  FrozenAgreementPrintBody,
-  printFrozenAgreementDocument,
-} from "@/components/features/proposal/agreement/frozen-agreement-print-body";
+import { SignedAgreementPrintBody } from "@/components/features/proposal/agreement/signed-agreement-print-body";
 import {
   AgreementSelectionSection,
   NoPackageSelectionCard,
@@ -28,7 +25,7 @@ import type {
   ProposalPublicSelections,
   ProposalStatus,
 } from "@/types/proposal";
-import type { FrozenSignedAgreementContext } from "@/lib/proposal/block-view-types";
+import type { SignedAgreementContext } from "@/lib/proposal/block-view-types";
 import { readableForeground, resolveAgreementButtonColor } from "@/lib/proposal/block-style";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
 import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
@@ -39,9 +36,9 @@ import {
   scrollAgreementContainerToRef,
 } from "@/lib/proposal/agreement/jump-nav";
 import {
-  buildFrozenBuyerJumpNavItems,
-  resolveFrozenAgreementView,
-} from "@/lib/proposal/agreement/frozen-agreement-view";
+  buildSignedBuyerJumpNavItems,
+  resolveSignedAgreementView,
+} from "@/lib/proposal/agreement/signed-agreement-view";
 import { AGREEMENT_SIGN_SECTION_ID, AGREEMENT_TOP_ANCHOR_ID } from "@/lib/proposal/agreement/modal-layout";
 import {
   buildPackageSelectionSummary,
@@ -80,8 +77,8 @@ export interface AgreementBlockPublicProps {
   stripePublishableKey?: string;
   /** Settings → Company name — agreement PDF footer. */
   companyPrintName?: string;
-  /** Frozen signedAgreements row — post-sign modal reads contract copy from here. */
-  frozenSignedAgreement?: FrozenSignedAgreementContext | null;
+  /** signedAgreements row — post-sign modal reads contract copy from here. */
+  signedAgreement?: SignedAgreementContext | null;
   /** When false (editor / preview) the CTA is disabled and the sign form is read-only. */
   interactive?: boolean;
   /** Renders nested blocks above the sign button (same pipeline as the public document viewer). */
@@ -116,7 +113,7 @@ function AgreementModalPendingBody() {
   );
 }
 
-const PENDING_FROZEN_JUMP_NAV_ITEMS = [
+const PENDING_SIGNED_JUMP_NAV_ITEMS = [
   { kind: "link" as const, id: AGREEMENT_TOP_ANCHOR_ID, label: "Top of agreement" },
   { kind: "link" as const, id: AGREEMENT_SIGN_SECTION_ID, label: "Signature" },
 ];
@@ -138,7 +135,7 @@ export function AgreementBlockPublic({
   catalogServices = [],
   stripePublishableKey,
   companyPrintName,
-  frozenSignedAgreement = null,
+  signedAgreement = null,
   renderAgreementChild,
 }: AgreementBlockPublicProps) {
   const router = useRouter();
@@ -189,23 +186,23 @@ export function AgreementBlockPublic({
 
   const accepted = localDone || proposalStatus === "accepted";
 
-  const frozenView = React.useMemo(() => {
-    if (!accepted || !frozenSignedAgreement) return null;
-    return resolveFrozenAgreementView({
-      record: frozenSignedAgreement.record,
-      signatureSrc: frozenSignedAgreement.signatureSrc,
+  const signedView = React.useMemo(() => {
+    if (!accepted || !signedAgreement) return null;
+    return resolveSignedAgreementView({
+      record: signedAgreement.record,
+      signatureSrc: signedAgreement.signatureSrc,
       companyPrintName,
     });
-  }, [accepted, frozenSignedAgreement, companyPrintName]);
+  }, [accepted, signedAgreement, companyPrintName]);
 
   const hasSignatureOnRecord = Boolean(
     acceptedSignatureDataUrl?.trim() ||
       localSignatureDataUrl?.trim() ||
-      frozenSignedAgreement?.signatureSrc,
+      signedAgreement?.signatureSrc,
   );
 
-  const frozenAgreementRequired = accepted && hasSignatureOnRecord;
-  const frozenAgreementPending = frozenAgreementRequired && !frozenView;
+  const signedAgreementRequired = accepted && hasSignatureOnRecord;
+  const signedAgreementPending = signedAgreementRequired && !signedView;
 
   const liveHasCustomLegal = Boolean(block.legalHtml?.trim());
 
@@ -219,18 +216,18 @@ export function AgreementBlockPublic({
     return injectAgreementLegalHeadingIds(block.legalHtml.trim());
   }, [block.legalHtml]);
 
-  const modalAgreementTitle = frozenView?.agreementTitle ?? liveAgreementTitle;
-  const modalIntroHtml = frozenView?.introHtmlWithIds ?? introWithHeadingIds.html;
-  const modalLegalHtml = frozenView?.legalHtmlWithIds ?? legalWithHeadingIds.html;
-  const modalPackageSummaries = frozenView?.packageSummaries ?? livePackageSummaries;
-  const modalHasCustomLegal = frozenView?.hasCustomLegal ?? liveHasCustomLegal;
+  const modalAgreementTitle = signedView?.agreementTitle ?? liveAgreementTitle;
+  const modalIntroHtml = signedView?.introHtmlWithIds ?? introWithHeadingIds.html;
+  const modalLegalHtml = signedView?.legalHtmlWithIds ?? legalWithHeadingIds.html;
+  const modalPackageSummaries = signedView?.packageSummaries ?? livePackageSummaries;
+  const modalHasCustomLegal = signedView?.hasCustomLegal ?? liveHasCustomLegal;
 
   const jumpNavItems = React.useMemo(() => {
-    if (frozenAgreementPending) {
-      return PENDING_FROZEN_JUMP_NAV_ITEMS;
+    if (signedAgreementPending) {
+      return PENDING_SIGNED_JUMP_NAV_ITEMS;
     }
-    if (frozenView) {
-      return buildFrozenBuyerJumpNavItems(frozenView);
+    if (signedView) {
+      return buildSignedBuyerJumpNavItems(signedView);
     }
     return buildBuyerAgreementJumpNavItems({
       agreementTitle: liveAgreementTitle,
@@ -243,8 +240,8 @@ export function AgreementBlockPublic({
       accepted,
     });
   }, [
-    frozenAgreementPending,
-    frozenView,
+    signedAgreementPending,
+    signedView,
     liveAgreementTitle,
     livePackageSummaries.length,
     introWithHeadingIds.headings,
@@ -253,13 +250,13 @@ export function AgreementBlockPublic({
     accepted,
   ]);
 
-  const displayName = frozenView?.signerName ?? localAcceptedName ?? acceptedByName;
+  const displayName = signedView?.signerName ?? localAcceptedName ?? acceptedByName;
   const displayOrganization =
-    frozenView?.signerOrganization ?? localAcceptedOrganization ?? acceptedSignerOrganization;
+    signedView?.signerOrganization ?? localAcceptedOrganization ?? acceptedSignerOrganization;
   const signatureDataUrl =
-    frozenView?.signatureSrc ?? localSignatureDataUrl ?? acceptedSignatureDataUrl ?? null;
+    signedView?.signatureSrc ?? localSignatureDataUrl ?? acceptedSignatureDataUrl ?? null;
   const signedAtMs =
-    frozenView?.signedAt ?? (accepted && acceptedAt ? acceptedAt : null);
+    signedView?.signedAt ?? (accepted && acceptedAt ? acceptedAt : null);
   const blockAgreementUntilPlanPicked = interactive && !accepted && !planSelectionComplete;
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const signRef = React.useRef<HTMLDivElement | null>(null);
@@ -269,12 +266,12 @@ export function AgreementBlockPublic({
   }
 
   function onDownload() {
-    if (frozenAgreementRequired) {
-      if (!frozenView) {
+    if (signedAgreementRequired) {
+      if (!signedView) {
         toast.error("Your signed agreement is still loading. Please try again in a moment.");
         return;
       }
-      printFrozenAgreementDocument(frozenView);
+      printAgreementDocument(signedView);
       return;
     }
     printAgreementDocument({ documentTitle: modalAgreementTitle });
@@ -310,7 +307,7 @@ export function AgreementBlockPublic({
     router.refresh();
   }
 
-  const printFooterName = frozenView?.companyPrintName ?? companyPrintName;
+  const printFooterName = signedView?.companyPrintName ?? companyPrintName;
 
   const buyerScreenAfterTitle = (
     <>
@@ -411,9 +408,9 @@ export function AgreementBlockPublic({
           )
         }
       >
-        {frozenView ? (
-          <FrozenAgreementPrintBody frozenView={frozenView} afterTitle={buyerScreenAfterTitle} />
-        ) : frozenAgreementPending ? (
+        {signedView ? (
+          <SignedAgreementPrintBody signedView={signedView} afterTitle={buyerScreenAfterTitle} />
+        ) : signedAgreementPending ? (
           <AgreementModalPendingBody />
         ) : (
           <AgreementModalPrintBody
@@ -463,7 +460,7 @@ export function AgreementBlockPublic({
                   variant="outline"
                   className="gap-2"
                   onClick={onDownload}
-                  disabled={frozenAgreementRequired && !frozenView}
+                  disabled={signedAgreementRequired && !signedView}
                 >
                   <Download className="size-4" aria-hidden />
                   Download PDF

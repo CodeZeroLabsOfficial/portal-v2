@@ -5,14 +5,12 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { AgreementModalShell } from "@/components/features/proposal/agreement/agreement-modal-shell";
 import { AgreementSummarySection } from "@/components/features/proposal/agreement/agreement-summary-section";
+import { SignedAgreementPrintBody } from "@/components/features/proposal/agreement/signed-agreement-print-body";
+import { printAgreementDocument } from "@/hooks/use-agreement-print-mode";
 import {
-  FrozenAgreementPrintBody,
-  printFrozenAgreementDocument,
-} from "@/components/features/proposal/agreement/frozen-agreement-print-body";
-import {
-  buildFrozenStaffJumpNavItems,
-  resolveFrozenAgreementView,
-} from "@/lib/proposal/agreement/frozen-agreement-view";
+  buildSignedStaffJumpNavItems,
+  resolveSignedAgreementView,
+} from "@/lib/proposal/agreement/signed-agreement-view";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
 interface SignedAgreementDialogProps {
@@ -26,10 +24,10 @@ interface SignedAgreementDialogProps {
 }
 
 export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreementDialogProps) {
-  const frozenView = React.useMemo(
+  const signedView = React.useMemo(
     () =>
       data
-        ? resolveFrozenAgreementView({
+        ? resolveSignedAgreementView({
             record: data.record,
             signatureSrc: data.signatureSrc,
             companyPrintName: data.companyPrintName,
@@ -39,20 +37,20 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
   );
 
   const jumpNavItems = React.useMemo(
-    () => (frozenView ? buildFrozenStaffJumpNavItems(frozenView) : []),
-    [frozenView],
+    () => (signedView ? buildSignedStaffJumpNavItems(signedView) : []),
+    [signedView],
   );
 
   function printSignedAgreement() {
-    if (!frozenView) return;
-    printFrozenAgreementDocument(frozenView);
+    if (!signedView) return;
+    printAgreementDocument(signedView);
   }
 
   return (
     <AgreementModalShell
       open={open}
       onOpenChange={onOpenChange}
-      agreementTitle={frozenView?.agreementTitle ?? "Services Agreement"}
+      agreementTitle={signedView?.agreementTitle ?? "Services Agreement"}
       jumpNavItems={jumpNavItems}
       onDownload={printSignedAgreement}
       closeLabel="Close signed agreement"
@@ -62,10 +60,10 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
         </Badge>
       }
     >
-      {frozenView ? (
-        <FrozenAgreementPrintBody
-          frozenView={frozenView}
-          afterTitle={<AgreementSummarySection record={frozenView.record} />}
+      {signedView ? (
+        <SignedAgreementPrintBody
+          signedView={signedView}
+          afterTitle={<AgreementSummarySection record={signedView.record} />}
         />
       ) : null}
     </AgreementModalShell>

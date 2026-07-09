@@ -12,13 +12,13 @@ import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
 const DEFAULT_AGREEMENT_TITLE = "Services Agreement";
 
-export interface FrozenAgreementViewInput {
+export interface SignedAgreementViewInput {
   record: SignedAgreementRecord;
   signatureSrc: string | null;
   companyPrintName?: string;
 }
 
-export interface FrozenAgreementView {
+export interface SignedAgreementView {
   record: SignedAgreementRecord;
   agreementTitle: string;
   introHtml: string | undefined;
@@ -36,25 +36,25 @@ export interface FrozenAgreementView {
   companyPrintName?: string;
 }
 
-function resolveFrozenIntroHtml(record: SignedAgreementRecord): string | undefined {
+function resolveSignedIntroHtml(record: SignedAgreementRecord): string | undefined {
   const intro = record.introHtmlSnapshot?.trim();
   return intro || undefined;
 }
 
-function resolveFrozenLegalHtml(record: SignedAgreementRecord): string | undefined {
+function resolveSignedLegalHtml(record: SignedAgreementRecord): string | undefined {
   const legal = record.legalHtmlSnapshot?.trim();
   return legal || undefined;
 }
 
 /** Normalizes a signedAgreements row for buyer/staff modal + PDF rendering. */
-export function resolveFrozenAgreementView(input: FrozenAgreementViewInput): FrozenAgreementView {
+export function resolveSignedAgreementView(input: SignedAgreementViewInput): SignedAgreementView {
   const { record, signatureSrc, companyPrintName } = input;
 
   const agreementTitle =
     record.agreementTitle?.trim() || record.proposalTitle?.trim() || DEFAULT_AGREEMENT_TITLE;
 
-  const introHtml = resolveFrozenIntroHtml(record);
-  const legalHtml = resolveFrozenLegalHtml(record);
+  const introHtml = resolveSignedIntroHtml(record);
+  const legalHtml = resolveSignedLegalHtml(record);
   const hasCustomLegal = Boolean(record.legalHtmlSnapshot?.trim());
 
   const introWithHeadingIds = introHtml
@@ -87,7 +87,7 @@ export function resolveFrozenAgreementView(input: FrozenAgreementViewInput): Fro
   };
 }
 
-export function buildFrozenBuyerJumpNavItems(view: FrozenAgreementView): AgreementJumpItem[] {
+export function buildSignedBuyerJumpNavItems(view: SignedAgreementView): AgreementJumpItem[] {
   return buildBuyerAgreementJumpNavItems({
     agreementTitle: view.agreementTitle,
     hasPackageSummaries: view.packageSummaries.length > 0,
@@ -100,7 +100,7 @@ export function buildFrozenBuyerJumpNavItems(view: FrozenAgreementView): Agreeme
   });
 }
 
-export function buildFrozenStaffJumpNavItems(view: FrozenAgreementView): AgreementJumpItem[] {
+export function buildSignedStaffJumpNavItems(view: SignedAgreementView): AgreementJumpItem[] {
   return buildStaffAgreementJumpNavItems({
     agreementTitle: view.agreementTitle,
     legalChildren: buildAgreementLegalNavChildren({

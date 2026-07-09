@@ -2,6 +2,10 @@
 
 import * as React from "react";
 
+import type { SignedAgreementView } from "@/lib/proposal/agreement/signed-agreement-view";
+
+export type PrintAgreementDocumentInput = { documentTitle?: string } | SignedAgreementView;
+
 /** Applied to `document.body` while printing an agreement modal (see `app/globals.css`). */
 export const AGREEMENT_PRINT_BODY_CLASS = "agreement-print-mode";
 
@@ -33,9 +37,17 @@ export function useAgreementPrintMode() {
   }, []);
 }
 
-export function printAgreementDocument(options?: { documentTitle?: string }) {
+function resolvePrintDocumentTitle(input?: PrintAgreementDocumentInput): string | undefined {
+  if (!input) return undefined;
+  if ("record" in input) {
+    return input.agreementTitle?.trim() || undefined;
+  }
+  return input.documentTitle?.trim() || undefined;
+}
+
+export function printAgreementDocument(input?: PrintAgreementDocumentInput) {
   const previousTitle = document.title;
-  const nextTitle = options?.documentTitle?.trim();
+  const nextTitle = resolvePrintDocumentTitle(input);
   if (nextTitle) {
     document.title = nextTitle;
   }

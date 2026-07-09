@@ -31,7 +31,7 @@ function publicSignedAgreementRecord(row: SignedAgreementRecord): SignedAgreemen
 }
 
 /**
- * Loads the frozen signed agreement for a public proposal share link.
+ * Loads the signed agreement for a public proposal share link.
  * Returns null when no matching row exists or proposalId does not match.
  */
 export async function getSignedAgreementForPublicShare(

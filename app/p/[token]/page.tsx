@@ -68,7 +68,7 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
     : proposal.document;
 
   const agreementPresent = hasAgreementBlock(publicDocument.blocks);
-  const frozenSignedAgreement =
+  const signedAgreement =
     unlocked && agreementPresent && proposal.status === "accepted"
       ? await getSignedAgreementForPublicShare(proposal.shareToken, proposal.id)
       : null;
@@ -113,13 +113,13 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
               catalogServices={catalogServices}
               stripePublishableKey={stripePublishableKey}
               companyPrintName={
-                frozenSignedAgreement?.companyPrintName ?? companyPrintName
+                signedAgreement?.companyPrintName ?? companyPrintName
               }
-              frozenSignedAgreement={
-                frozenSignedAgreement
+              signedAgreement={
+                signedAgreement
                   ? {
-                      record: frozenSignedAgreement.record,
-                      signatureSrc: frozenSignedAgreement.signatureSrc,
+                      record: signedAgreement.record,
+                      signatureSrc: signedAgreement.signatureSrc,
                     }
                   : null
               }

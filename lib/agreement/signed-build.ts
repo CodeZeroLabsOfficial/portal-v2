@@ -42,7 +42,7 @@ export interface SignedAgreementCommerceSnapshot {
   };
 }
 
-/** Intro HTML — frozen for post-sign agreement views. */
+/** Intro HTML snapshotted at sign time for post-sign agreement views. */
 export function buildIntroAgreementHtmlSnapshot(proposal: ProposalRecord): string | undefined {
   const agreement = findFirstAgreementBlock(proposal.document.blocks);
   if (!agreement?.introHtml?.trim()) return undefined;
@@ -50,7 +50,7 @@ export function buildIntroAgreementHtmlSnapshot(proposal: ProposalRecord): strin
 }
 
 /**
- * Legal HTML only — frozen for post-sign agreement views (intro excluded).
+ * Legal HTML only — snapshotted for post-sign agreement views (intro excluded).
  * When empty, returns undefined so UI uses built-in default sections.
  */
 export function buildLegalAgreementHtmlSnapshot(proposal: ProposalRecord): string | undefined {
