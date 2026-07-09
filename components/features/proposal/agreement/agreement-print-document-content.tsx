@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { AgreementDocumentTitle } from "@/components/features/proposal/agreement/agreement-document-title";
+import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
 import { AgreementLegalContent } from "@/components/features/proposal/agreement/agreement-legal-content";
 import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
 import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
@@ -15,6 +17,10 @@ export interface AgreementPrintDocumentContentProps {
   signatureSrc?: string | null;
   signerName?: string | null;
   signedAt?: number | null;
+  /** Screen-only blocks inserted after the title page (intro, agreement summary, etc.). */
+  afterTitle?: ReactNode;
+  /** When set, shows “The agreement” label on screen above legal (hidden in print). */
+  showLegalSectionLabel?: boolean;
 }
 
 /**
@@ -28,6 +34,8 @@ export function AgreementPrintDocumentContent({
   signatureSrc,
   signerName,
   signedAt,
+  afterTitle,
+  showLegalSectionLabel = false,
 }: AgreementPrintDocumentContentProps) {
   const title = agreementTitle.trim() || "Services Agreement";
   const rawBody = legalHtml?.trim() ?? "";
@@ -39,8 +47,13 @@ export function AgreementPrintDocumentContent({
         <AgreementDocumentTitle title={title} />
       </div>
 
+      {afterTitle}
+
       <section id="agreement-legal" className="mt-12 print:mt-0">
-        <div className="mt-6 print:mt-0">
+        {showLegalSectionLabel ? (
+          <AgreementSectionLabel className="print:hidden">The agreement</AgreementSectionLabel>
+        ) : null}
+        <div className={showLegalSectionLabel ? "mt-6 print:mt-0" : "print:mt-0"}>
           {!rawBody ? (
             <AgreementLegalContent />
           ) : bodyIsHtml ? (

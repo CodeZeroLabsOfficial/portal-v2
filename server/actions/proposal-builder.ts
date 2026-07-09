@@ -40,6 +40,7 @@ import {
 } from "@/lib/templates/proposal-template-usage";
 import {
   buildFullAgreementTextSnapshot,
+  buildLegalAgreementHtmlSnapshot,
   buildSignedAgreementCommerceSnapshot,
 } from "@/lib/agreement/signed-build";
 import type { ProposalRecord } from "@/types/proposal";
@@ -368,6 +369,7 @@ export async function acceptProposalPublicAction(
   if (hasSignaturePayload && sigUrl) {
     const commerce = commerceSnapshot;
     const fullAgreementText = buildFullAgreementTextSnapshot(proposalForAgreement);
+    const legalHtmlSnapshot = buildLegalAgreementHtmlSnapshot(proposalForAgreement);
 
     let customerName: string | undefined;
     if (proposal.customerId) {
@@ -411,6 +413,7 @@ export async function acceptProposalPublicAction(
       customerName: customerName ?? null,
       selectedPlan: commerce.selectedPlan,
       addons: commerce.addons,
+      packageSnapshots: commerce.packageSnapshots,
       totalAmount: commerce.totalAmount,
       signerName: parsed.data.signerName,
       signerEmail:
@@ -422,6 +425,7 @@ export async function acceptProposalPublicAction(
       signedAt: now,
       clientSignedAt: typeof clientSignedAt === "number" ? clientSignedAt : null,
       fullAgreementText: fullAgreementText ?? null,
+      legalHtmlSnapshot: legalHtmlSnapshot ?? null,
       signatureImage,
       signatureImageStoragePath,
       stripeSubscriptionPriceId: stripeSubscriptionPriceId ?? null,

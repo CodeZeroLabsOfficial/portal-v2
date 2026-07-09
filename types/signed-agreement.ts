@@ -5,6 +5,28 @@ export interface SignedAgreementAddonSnapshot {
   lineTotalMinor: number;
   currency: string;
   packageBlockTitle?: string;
+  billingKind?: "recurring" | "one_off";
+}
+
+export interface SignedAgreementPackageSnapshot {
+  blockId: string;
+  blockTitle: string;
+  currency: string;
+  tierName: string;
+  termLabel: string;
+  monthlyMinor: number;
+  monthlyTotalMinor: number;
+  upfrontMinor: number;
+  oneOffAddonsMinor: number;
+  addonLines: Array<{
+    id: string;
+    label: string;
+    quantity: number;
+    unitAmountMinor: number;
+    lineTotalMinor: number;
+    billingKind: "recurring" | "one_off";
+  }>;
+  stripePriceId?: string;
 }
 
 export interface SignedAgreementTotalAmount {
@@ -29,6 +51,8 @@ export interface SignedAgreementRecord {
   customerName?: string;
   selectedPlan: string;
   addons: SignedAgreementAddonSnapshot[];
+  /** Structured plan cards — mirrors buyer “Your selection” at sign time. */
+  packageSnapshots?: SignedAgreementPackageSnapshot[];
   totalAmount: SignedAgreementTotalAmount;
   signerName: string;
   /** Email entered on the public Accept form (may differ from CRM recipient). */
@@ -38,6 +62,8 @@ export interface SignedAgreementRecord {
   signatureMethod: "draw" | "type" | "upload" | null;
   signedAt: number;
   clientSignedAt?: number;
+  /** Legal HTML only — agreement PDF (excludes intro). Falls back to `fullAgreementText` on older rows. */
+  legalHtmlSnapshot?: string;
   fullAgreementText?: string;
   /** Inline PNG data URL when Storage upload was skipped or failed (small images). */
   signatureImage?: string;

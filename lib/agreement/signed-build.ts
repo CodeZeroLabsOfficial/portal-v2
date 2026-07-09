@@ -1,17 +1,9 @@
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
-import type { PackagesBlock, ProposalRecord } from "@/types/proposal";
-import { resolveProposalAddonBillingKind } from "@/lib/proposal/commerce/addon-billing";
-import { effectiveCatalogAddonUnitAmount } from "@/lib/catalog/service-tier";
-import { findFirstAgreementBlock, iterateProposalContentBlocks } from "@/lib/proposal/blocks";
-import {
-  packageMonthlyTotalMinor,
-  packageOneOffAddonsTotalMinor,
-  packageTierUpfrontMinor,
-  packagesAddonsSectionActive,
-  packagesSelectionTermLabel,
-} from "@/lib/proposal/commerce/packages-totals";
-import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
+import type { ProposalRecord } from "@/types/proposal";
+import { findFirstAgreementBlock } from "@/lib/proposal/blocks";
 import { formatCurrencyAmount } from "@/lib/common/format";
+import { buildPackageSelectionSummariesForProposal } from "@/lib/proposal/agreement/package-selection-summary";
+import type { PackageSelectionSummary } from "@/lib/proposal/agreement/package-selection-summary";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 
 const FULL_AGREEMENT_TEXT_MAX = 120_000;
@@ -40,6 +32,7 @@ export interface SignedAgreementAddonSnapshot {
 export interface SignedAgreementCommerceSnapshot {
   selectedPlan: string;
   addons: SignedAgreementAddonSnapshot[];
+  packageSnapshots: PackageSelectionSummary[];
   upfrontOneOffMinor: number;
   oneOffAddonsTotalMinor: number;
   totalAmount: {
@@ -47,6 +40,16 @@ export interface SignedAgreementCommerceSnapshot {
     monthlyTotalMinor: number;
     formatted: string;
   };
+}
+
+/** Legal HTML only — used for agreement PDF (intro excluded). */
+export function buildLegalAgreementHtmlSnapshot(proposal: ProposalRecord): string | undefined {
+  const agreement = findFirstAgreementBlock(proposal.document.blocks);
+  if (!agreement) return undefined;
+  if (agreement.legalHtml?.trim()) {
+    return sanitizeProposalHtmlServer(agreement.legalHtml.trim());
+  }
+  return DEFAULT_LEGAL_SNAPSHOT;
 }
 
 /** Plain-ish snapshot for audit (truncated HTML or default section summary). */
@@ -71,57 +74,33 @@ export function buildSignedAgreementCommerceSnapshot(
   proposal: ProposalRecord,
   catalogServices: readonly CatalogServicePickerOption[] = [],
 ): SignedAgreementCommerceSnapshot {
-  const blocks = proposal.document.blocks;
-  const selections = proposal.publicSelections;
-  const planParts: string[] = [];
+  const packageSnapshots = buildPackageSelectionSummariesForProposal(proposal, catalogServices);
+  const planParts = packageSnapshots.map(
+    (s) =>
+      `${s.blockTitle}: ${s.tierName} — ${s.termLabel} (${formatCurrencyAmount(s.monthlyMinor, s.currency)}/mo)`,
+  );
+
   const addons: SignedAgreementAddonSnapshot[] = [];
   let sumMonthly = 0;
   let upfrontOneOffMinor = 0;
   let oneOffAddonsTotalMinor = 0;
   let currency = "AUD";
 
-  for (const block of iterateProposalContentBlocks(blocks)) {
-    if (block.type !== "packages") continue;
-    const pb = block as PackagesBlock;
-    const sel = selections?.[pb.id];
-    if (!sel) continue;
-    const tier = pb.tiers.find((t) => t.id === sel.tierId);
-    if (!tier) continue;
-    const cur = (pb.currency || "aud").toUpperCase();
-    currency = cur;
-    const monthly =
-      sel.term === "24_months"
-        ? (tier.monthlyCost24Minor ?? 0)
-        : (tier.monthlyCost12Minor ?? 0);
-    const monthlyTotal = packageMonthlyTotalMinor(pb, sel, undefined, undefined, catalogServices);
-    sumMonthly += monthlyTotal;
-    upfrontOneOffMinor += packageTierUpfrontMinor(pb, sel);
-    oneOffAddonsTotalMinor += packageOneOffAddonsTotalMinor(pb, sel, undefined, undefined, catalogServices);
-    const blockTitle = pb.title?.trim() || "Plan";
-    planParts.push(
-      `${blockTitle}: ${tier.name?.trim() || "Plan"} — ${packagesSelectionTermLabel(pb, sel.term)} (${formatCurrencyAmount(monthly, cur)}/mo)`,
-    );
-    if (packagesAddonsSectionActive(pb)) {
-      for (const li of pb.addonLineItems ?? []) {
-        const rawQ = sel.addonQuantities?.[li.id];
-        const quantity =
-          typeof rawQ === "number" && Number.isFinite(rawQ) && rawQ >= 0
-            ? Math.floor(rawQ)
-            : effectivePricingLineQuantity(li);
-        if (quantity <= 0) continue;
-        const billingKind = resolveProposalAddonBillingKind(li, catalogServices);
-        const unitAmountMinor = effectiveCatalogAddonUnitAmount(li, sel.term);
-        const lineTotal = Math.round(unitAmountMinor * quantity);
-        addons.push({
-          label: li.label?.trim() || "Add-on",
-          quantity,
-          unitAmountMinor,
-          lineTotalMinor: lineTotal,
-          currency: cur,
-          packageBlockTitle: blockTitle,
-          billingKind: billingKind === "one_off" ? "one_off" : "recurring",
-        });
-      }
+  for (const snapshot of packageSnapshots) {
+    currency = snapshot.currency;
+    sumMonthly += snapshot.monthlyTotalMinor;
+    upfrontOneOffMinor += snapshot.upfrontMinor;
+    oneOffAddonsTotalMinor += snapshot.oneOffAddonsMinor;
+    for (const line of snapshot.addonLines) {
+      addons.push({
+        label: line.label,
+        quantity: line.quantity,
+        unitAmountMinor: line.unitAmountMinor,
+        lineTotalMinor: line.lineTotalMinor,
+        currency: snapshot.currency,
+        packageBlockTitle: snapshot.blockTitle,
+        billingKind: line.billingKind,
+      });
     }
   }
 
@@ -131,6 +110,7 @@ export function buildSignedAgreementCommerceSnapshot(
   return {
     selectedPlan,
     addons,
+    packageSnapshots,
     upfrontOneOffMinor,
     oneOffAddonsTotalMinor,
     totalAmount: {

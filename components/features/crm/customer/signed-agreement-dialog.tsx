@@ -1,16 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Download, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Typography } from "@/components/ui/typography";
 import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
-import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
+import { AgreementSummarySection } from "@/components/features/proposal/agreement/agreement-summary-section";
 import {
-  AGREEMENT_PRINT_EXCLUDE_ATTR,
   AGREEMENT_PRINT_TARGET_ATTR,
   printAgreementDocument,
   useAgreementPrintMode,
@@ -32,18 +30,16 @@ interface SignedAgreementDialogProps {
 }
 
 export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreementDialogProps) {
-  const signatureRef = React.useRef<HTMLDivElement | null>(null);
   useAgreementPrintMode();
 
   const agreementTitle =
     data?.record.agreementTitle?.trim() || data?.record.proposalTitle?.trim() || "Services Agreement";
 
+  const legalHtml =
+    data?.record.legalHtmlSnapshot?.trim() || data?.record.fullAgreementText?.trim() || undefined;
+
   function printSignedAgreement() {
     printAgreementDocument({ documentTitle: agreementTitle });
-  }
-
-  function scrollToSignature() {
-    signatureRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -64,9 +60,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
         {data ? (
           <>
             <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6 print:hidden">
-              <DialogTitle className={AGREEMENT_MODAL_HEADER_TITLE_CLASSES}>
-                {data.record.proposalTitle}
-              </DialogTitle>
+              <DialogTitle className={AGREEMENT_MODAL_HEADER_TITLE_CLASSES}>{agreementTitle}</DialogTitle>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Button
                   type="button"
@@ -77,14 +71,9 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
                   <Download aria-hidden className="opacity-60 sm:-ms-1" size={16} />
                   <span className="max-sm:sr-only">Download</span>
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={scrollToSignature}
-                  className="gap-1.5">
-                  Next
-                  <ArrowRight className="size-4" aria-hidden />
-                </Button>
+                <Badge variant="success" className="h-8 px-3 text-sm">
+                  Signed
+                </Badge>
                 <DialogClose asChild>
                   <Button type="button" variant="ghost" size="icon-sm" aria-label="Close signed agreement">
                     <X className="size-5" aria-hidden />
@@ -96,64 +85,17 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
               <div
                 {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }}
                 className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}>
-                <header {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="text-center print:hidden">
-                  <h2 className="font-serif text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl">
-                    Signed agreement
-                  </h2>
-                  <Typography variant="muted" className="mt-2 font-medium">
-                    Re: <span className="text-foreground">{data.record.proposalTitle}</span>
-                  </Typography>
-                  <Typography variant="muted" className="mt-3 text-xs">
-                    Signed{" "}
-                    {data.record.signedAt > 0
-                      ? new Date(data.record.signedAt).toLocaleString(undefined, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })
-                      : "—"}{" "}
-                    · Signer: {data.record.signerName}
-                    {data.record.signerEmail ? <> · Email: {data.record.signerEmail}</> : null}
-                    {data.record.signerOrganization ? <> · Org: {data.record.signerOrganization}</> : null} ·
-                    Monthly total: {data.record.totalAmount.formatted}
-                  </Typography>
-                </header>
-
+                <div id="agreement-top" aria-hidden />
                 <AgreementPrintDocumentContent
                   agreementTitle={agreementTitle}
                   companyPrintName={data.companyPrintName}
-                  legalHtml={data.record.fullAgreementText}
+                  legalHtml={legalHtml}
                   signatureSrc={data.signatureSrc}
                   signerName={data.record.signerName}
                   signedAt={data.record.signedAt}
+                  showLegalSectionLabel
+                  afterTitle={<AgreementSummarySection record={data.record} />}
                 />
-
-                <section
-                  ref={signatureRef}
-                  id="customer-signed-agreement-signature"
-                  className="mt-12 scroll-mt-24 print:hidden">
-                  <AgreementSectionLabel>Signature</AgreementSectionLabel>
-                  {data.signatureSrc ? (
-                    <Card className="mt-4 border-dashed bg-muted/30 py-4 shadow-none">
-                      <CardContent>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={data.signatureSrc}
-                          alt={`Signature of ${data.record.signerName}`}
-                          className="max-h-40 max-w-full object-contain object-left"
-                        />
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Typography variant="muted" className="mt-4">
-                      No signature image on file (or it could not be loaded from storage).
-                    </Typography>
-                  )}
-                  {data.record.signatureMethod ? (
-                    <Typography variant="muted" className="mt-2 text-xs capitalize">
-                      Method: {data.record.signatureMethod}
-                    </Typography>
-                  ) : null}
-                </section>
               </div>
             </div>
           </>

@@ -16,47 +16,36 @@ import { AgreementSignatureForm } from "@/components/features/proposal/viewer/ag
 import { Typography } from "@/components/ui/typography";
 import type {
   AgreementBlock,
-  PackagesBlock,
-  PackagesPublicSelection,
   ProposalAgreementChildBlock,
   ProposalBlock,
   ProposalCustomerSignerPrefill,
   ProposalPublicSelections,
   ProposalStatus,
 } from "@/types/proposal";
-import { iterateProposalContentBlocks } from "@/lib/proposal/blocks";
 import { readableForeground, resolveAgreementButtonColor } from "@/lib/proposal/block-style";
-import { formatCurrencyAmount } from "@/lib/common/format";
-import { effectiveCatalogAddonUnitAmount } from "@/lib/catalog/service-tier";
-import { effectivePricingLineQuantity } from "@/lib/proposal/commerce/pricing-line-quantity";
-import { resolveProposalAddonBillingKind } from "@/lib/proposal/commerce/addon-billing";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
-import {
-  packageMonthlyTotalMinor,
-  packageOneOffAddonsTotalMinor,
-  packageTierUpfrontMinor,
-  packagesAddonsSectionActive,
-  packagesSelectionTermLabel,
-} from "@/lib/proposal/commerce/packages-totals";
 import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
 import { AGREEMENT_MODAL_LIGHT_SURFACE_CLASSES } from "@/lib/proposal/editor-surface-tokens";
 import { PROPOSAL_EDITOR_SECTION_INNER_PAD_CLASSES } from "@/lib/proposal/public/public-layout";
-import { AgreementDocumentTitle } from "@/components/features/proposal/agreement/agreement-document-title";
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
-import { AgreementLegalContent, defaultAgreementLegalNavItems } from "@/components/features/proposal/agreement/agreement-legal-content";
-import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
-import { AgreementPrintSignatureBlock } from "@/components/features/proposal/agreement/agreement-print-signature-block";
+import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
+import {
+  AgreementSelectionSection,
+  NoPackageSelectionCard,
+} from "@/components/features/proposal/agreement/agreement-selection-section";
+import { defaultAgreementLegalNavItems } from "@/components/features/proposal/agreement/agreement-legal-content";
 import { AgreementSectionLabel } from "@/components/features/proposal/agreement/agreement-section-label";
+import {
+  buildPackageSelectionSummary,
+  packagesBlocksFromDocument,
+} from "@/lib/proposal/agreement/package-selection-summary";
+import type { PackageSelectionSummary } from "@/lib/proposal/agreement/package-selection-summary";
 import {
   AGREEMENT_MODAL_HEADER_TITLE_CLASSES,
   AGREEMENT_NAV_CHILD_LINK_CLASSES,
   AGREEMENT_NAV_LINK_CLASSES,
 } from "@/lib/proposal/agreement/chrome-typography";
-import {
-  AGREEMENT_PRINT_TITLE_PAGE_ATTR,
-  AGREEMENT_PRINT_TITLE_PAGE_CLASSES,
-  AGREEMENT_PRINT_TARGET_SHELL_CLASSES,
-} from "@/lib/proposal/agreement/print-layout";
+import { AGREEMENT_PRINT_TARGET_SHELL_CLASSES } from "@/lib/proposal/agreement/print-layout";
 import {
   AGREEMENT_PRINT_EXCLUDE_ATTR,
   printAgreementDocument,
@@ -122,181 +111,6 @@ type AgreementJumpGroup = {
   children: Array<{ id: string; label: string }>;
 };
 type AgreementJumpItem = AgreementJumpLink | AgreementJumpGroup;
-
-interface PackageSelectionSummary {
-  blockId: string;
-  blockTitle: string;
-  currency: string;
-  tierName: string;
-  termLabel: string;
-  monthlyMinor: number;
-  monthlyTotalMinor: number;
-  upfrontMinor: number;
-  oneOffAddonsMinor: number;
-  addonLines: Array<{
-    id: string;
-    label: string;
-    quantity: number;
-    unitAmountMinor: number;
-    lineTotalMinor: number;
-    billingKind: "recurring" | "one_off";
-  }>;
-  /** When set, public subscription checkout can use this Stripe Price id. */
-  stripePriceId?: string;
-}
-
-function packagesBlocksFromDocument(blocks: ProposalBlock[]): PackagesBlock[] {
-  const out: PackagesBlock[] = [];
-  for (const b of iterateProposalContentBlocks(blocks)) {
-    if (b.type === "packages") out.push(b);
-  }
-  return out;
-}
-
-function buildPackageSelectionSummary(
-  block: PackagesBlock,
-  selection: PackagesPublicSelection,
-  catalogServices: readonly CatalogServicePickerOption[] = [],
-): PackageSelectionSummary | null {
-  const tier = block.tiers.find((t) => t.id === selection.tierId);
-  if (!tier) return null;
-
-  const monthly =
-    selection.term === "24_months"
-      ? (tier.monthlyCost24Minor ?? 0)
-      : (tier.monthlyCost12Minor ?? 0);
-  const monthlyTotal = packageMonthlyTotalMinor(block, selection, undefined, undefined, catalogServices);
-  const upfrontMinor = packageTierUpfrontMinor(block, selection);
-  const oneOffAddonsMinor = packageOneOffAddonsTotalMinor(
-    block,
-    selection,
-    undefined,
-    undefined,
-    catalogServices,
-  );
-
-  const addonLines: PackageSelectionSummary["addonLines"] = [];
-  if (packagesAddonsSectionActive(block)) {
-    const lines = block.addonLineItems ?? [];
-    for (const li of lines) {
-      const rawQ = selection.addonQuantities?.[li.id];
-      const quantity =
-        typeof rawQ === "number" && Number.isFinite(rawQ) && rawQ >= 0
-          ? Math.floor(rawQ)
-          : effectivePricingLineQuantity(li);
-      if (quantity <= 0) continue;
-      const billingKind = resolveProposalAddonBillingKind(li, catalogServices);
-      const unitAmountMinor = effectiveCatalogAddonUnitAmount(li, selection.term);
-      addonLines.push({
-        id: li.id,
-        label: li.label?.trim() || "Add-on",
-        quantity,
-        unitAmountMinor,
-        lineTotalMinor: Math.round(unitAmountMinor * quantity),
-        billingKind: billingKind === "one_off" ? "one_off" : "recurring",
-      });
-    }
-  }
-
-  return {
-    blockId: block.id,
-    blockTitle: block.title?.trim() || "Plan",
-    currency: (block.currency || "aud").toUpperCase(),
-    tierName: tier.name?.trim() || "Plan",
-    termLabel: packagesSelectionTermLabel(block, selection.term),
-    monthlyMinor: monthly,
-    monthlyTotalMinor: monthlyTotal,
-    upfrontMinor,
-    oneOffAddonsMinor,
-    addonLines,
-    stripePriceId: tier.stripePriceId?.trim() || undefined,
-  };
-}
-
-function PackageSummaryCard({ summary }: { summary: PackageSelectionSummary }) {
-  return (
-    <Card className="gap-0 overflow-hidden rounded-2xl border-zinc-200 bg-white py-0 shadow-sm">
-      <CardContent className="space-y-5 p-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <div>
-            <AgreementSectionLabel>{summary.blockTitle}</AgreementSectionLabel>
-            <p className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">{summary.tierName}</p>
-            <p className="text-sm text-zinc-500">Term: {summary.termLabel}</p>
-          </div>
-          <div className="text-right">
-            <AgreementSectionLabel>Monthly subscription</AgreementSectionLabel>
-            <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900">
-              {formatCurrencyAmount(summary.monthlyMinor, summary.currency)}
-            </p>
-          </div>
-        </div>
-
-        {summary.addonLines.length > 0 ? (
-          <div className="border-t border-zinc-200 pt-4">
-            <AgreementSectionLabel>Add-ons</AgreementSectionLabel>
-            <ul className="mt-2 space-y-2">
-              {summary.addonLines.map((line) => (
-                <li
-                  key={line.id}
-                  className="flex items-baseline justify-between gap-3 text-sm text-zinc-900"
-                >
-                  <span>
-                    {line.label}
-                    {line.quantity > 1 ? (
-                      <span className="text-zinc-500"> × {line.quantity}</span>
-                    ) : null}
-                  </span>
-                  <span className="tabular-nums text-zinc-900">
-                    {formatCurrencyAmount(line.lineTotalMinor, summary.currency)}
-                    {line.billingKind === "one_off" ? (
-                      <span className="text-zinc-500"> one-time</span>
-                    ) : (
-                      <span className="text-zinc-500">/mo</span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {summary.upfrontMinor > 0 ? (
-          <div className="flex items-baseline justify-between border-t border-zinc-200 pt-4 text-sm">
-            <span className="font-medium text-zinc-900">Upfront fee</span>
-            <span className="tabular-nums font-semibold text-zinc-900">
-              {formatCurrencyAmount(summary.upfrontMinor, summary.currency)}
-              <span className="font-normal text-zinc-500"> one-time</span>
-            </span>
-          </div>
-        ) : null}
-
-        <div className="flex items-baseline justify-between rounded-xl bg-zinc-100 px-4 py-3">
-          <span className="text-sm font-semibold text-zinc-900">Monthly subscription</span>
-          <span className="text-lg font-semibold tabular-nums text-zinc-900">
-            {formatCurrencyAmount(summary.monthlyTotalMinor, summary.currency)}
-          </span>
-        </div>
-        {summary.oneOffAddonsMinor > 0 ? (
-          <p className="!mt-2 text-right text-xs text-zinc-500">
-            Plus {formatCurrencyAmount(summary.oneOffAddonsMinor, summary.currency)} in one-time add-ons due at
-            signing.
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-}
-
-function NoPackageSelectionCard() {
-  return (
-    <Card className="rounded-2xl border-dashed border-zinc-200 bg-zinc-50 py-5 shadow-none">
-      <CardContent className="text-sm text-zinc-500">
-        No plan selected yet. Choose a plan in the proposal above before signing —
-        your selection will appear here automatically.
-      </CardContent>
-    </Card>
-  );
-}
 
 export function AgreementBlockPublic({
   block,
@@ -678,54 +492,26 @@ export function AgreementBlockPublic({
             >
               <div id="agreement-top" aria-hidden />
 
-              <div
-                {...{ [AGREEMENT_PRINT_TITLE_PAGE_ATTR]: "" }}
-                className={AGREEMENT_PRINT_TITLE_PAGE_CLASSES}
-              >
-                <AgreementDocumentTitle title={agreementTitle} />
-              </div>
-
-              <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
-                <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
-              </div>
-
-              {packageSummaries.length > 0 ? (
-                <section
-                  id="agreement-plan"
-                  data-agreement-print-exclude=""
-                  className="mt-12 space-y-4 print:hidden"
-                >
-                  <AgreementSectionLabel>Your selection</AgreementSectionLabel>
-                  <div className="space-y-4">
-                    {packageSummaries.map((summary) => (
-                      <PackageSummaryCard key={summary.blockId} summary={summary} />
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-
-              <section data-agreement-print-exclude="" className="mt-12 space-y-2 print:hidden">
-                {!packageSummaries.length && !block.legalHtml?.trim() ? (
-                  <NoPackageSelectionCard />
-                ) : null}
-              </section>
-
-              <section id="agreement-legal" className="mt-12 print:mt-0">
-                <AgreementSectionLabel className="print:hidden">The agreement</AgreementSectionLabel>
-                <div className="mt-6 print:mt-0">
-                  <AgreementLegalContent legalHtml={legalWithHeadingIds.html} />
-                </div>
-              </section>
-
-              {accepted ? (
-                <AgreementPrintSignatureBlock
-                  signatureSrc={signatureDataUrl}
-                  signerName={displayName}
-                  signedAt={signedAtMs}
-                />
-              ) : null}
-
-              <AgreementPrintFooter companyName={companyPrintName} />
+              <AgreementPrintDocumentContent
+                agreementTitle={agreementTitle}
+                companyPrintName={companyPrintName}
+                legalHtml={legalWithHeadingIds.html}
+                signatureSrc={accepted ? signatureDataUrl : null}
+                signerName={accepted ? displayName : null}
+                signedAt={signedAtMs}
+                showLegalSectionLabel
+                afterTitle={
+                  <>
+                    <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
+                      <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
+                    </div>
+                    <AgreementSelectionSection summaries={packageSummaries} />
+                    {!packageSummaries.length && !block.legalHtml?.trim() ? (
+                      <NoPackageSelectionCard />
+                    ) : null}
+                  </>
+                }
+              />
 
               <section
                 ref={signRef}
