@@ -7,6 +7,12 @@ import type {
   ProposalStatus,
 } from "@/types/proposal";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
+import type { SignedAgreementRecord } from "@/types/signed-agreement";
+
+export interface FrozenSignedAgreementContext {
+  record: SignedAgreementRecord;
+  signatureSrc: string | null;
+}
 
 export interface ProposalRenderContext {
   allBlocks: ProposalBlock[];
@@ -23,6 +29,8 @@ export interface ProposalRenderContext {
   catalogServices?: readonly CatalogServicePickerOption[];
   stripePublishableKey?: string;
   companyPrintName?: string;
+  /** Frozen signedAgreements row — post-sign agreement modal reads this instead of live block copy. */
+  frozenSignedAgreement?: FrozenSignedAgreementContext | null;
 }
 
 export interface ProposalBlockViewProps {

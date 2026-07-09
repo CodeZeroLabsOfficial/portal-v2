@@ -4,20 +4,13 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { AgreementModalShell } from "@/components/features/proposal/agreement/agreement-modal-shell";
-import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
-import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
+import { AgreementModalPrintBody } from "@/components/features/proposal/agreement/agreement-modal-print-body";
 import { AgreementSummarySection } from "@/components/features/proposal/agreement/agreement-summary-section";
+import { printAgreementDocument } from "@/hooks/use-agreement-print-mode";
 import {
-  AGREEMENT_PRINT_TARGET_ATTR,
-  printAgreementDocument,
-} from "@/hooks/use-agreement-print-mode";
-import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
-import {
-  buildAgreementLegalNavChildren,
-  buildStaffAgreementJumpNavItems,
-} from "@/lib/proposal/agreement/jump-nav";
-import { AGREEMENT_TOP_ANCHOR_ID } from "@/lib/proposal/agreement/modal-layout";
-import { AGREEMENT_PRINT_TARGET_SHELL_CLASSES } from "@/lib/proposal/agreement/print-layout";
+  buildFrozenStaffJumpNavItems,
+  resolveFrozenAgreementView,
+} from "@/lib/proposal/agreement/frozen-agreement-view";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
 interface SignedAgreementDialogProps {
@@ -31,41 +24,33 @@ interface SignedAgreementDialogProps {
 }
 
 export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreementDialogProps) {
-  const agreementTitle =
-    data?.record.agreementTitle?.trim() || data?.record.proposalTitle?.trim() || "Services Agreement";
-
-  const rawLegalHtml =
-    data?.record.legalHtmlSnapshot?.trim() || data?.record.fullAgreementText?.trim() || "";
-
-  const legalWithHeadingIds = React.useMemo(() => {
-    if (!rawLegalHtml) return { html: undefined, headings: [] as Array<{ id: string; label: string }> };
-    if (rawLegalHtml.includes("<")) {
-      return injectAgreementLegalHeadingIds(rawLegalHtml);
-    }
-    return { html: rawLegalHtml, headings: [] as Array<{ id: string; label: string }> };
-  }, [rawLegalHtml]);
+  const frozenView = React.useMemo(
+    () =>
+      data
+        ? resolveFrozenAgreementView({
+            record: data.record,
+            signatureSrc: data.signatureSrc,
+            companyPrintName: data.companyPrintName,
+          })
+        : null,
+    [data],
+  );
 
   const jumpNavItems = React.useMemo(
-    () =>
-      buildStaffAgreementJumpNavItems({
-        agreementTitle,
-        legalChildren: buildAgreementLegalNavChildren({
-          hasCustomLegal: Boolean(rawLegalHtml),
-          legalHeadings: legalWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label })),
-        }),
-      }),
-    [agreementTitle, legalWithHeadingIds.headings, rawLegalHtml],
+    () => (frozenView ? buildFrozenStaffJumpNavItems(frozenView) : []),
+    [frozenView],
   );
 
   function printSignedAgreement() {
-    printAgreementDocument({ documentTitle: agreementTitle });
+    if (!frozenView) return;
+    printAgreementDocument({ documentTitle: frozenView.agreementTitle });
   }
 
   return (
     <AgreementModalShell
       open={open}
       onOpenChange={onOpenChange}
-      agreementTitle={agreementTitle}
+      agreementTitle={frozenView?.agreementTitle ?? "Services Agreement"}
       jumpNavItems={jumpNavItems}
       onDownload={printSignedAgreement}
       closeLabel="Close signed agreement"
@@ -75,26 +60,18 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
         </Badge>
       }
     >
-      {data ? (
-        <>
-          <div
-            {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }}
-            className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}
-          >
-            <div id={AGREEMENT_TOP_ANCHOR_ID} aria-hidden />
-            <AgreementPrintDocumentContent
-              agreementTitle={agreementTitle}
-              legalHtml={legalWithHeadingIds.html}
-              signatureSrc={data.signatureSrc}
-              signerName={data.record.signerName}
-              signerOrganization={data.record.signerOrganization}
-              signedAt={data.record.signedAt}
-              showLegalSectionLabel
-              afterTitle={<AgreementSummarySection record={data.record} />}
-            />
-          </div>
-          <AgreementPrintFooter companyName={data.companyPrintName} />
-        </>
+      {frozenView ? (
+        <AgreementModalPrintBody
+          agreementTitle={frozenView.agreementTitle}
+          legalHtml={frozenView.legalHtmlWithIds}
+          signatureSrc={frozenView.signatureSrc}
+          signerName={frozenView.signerName}
+          signerOrganization={frozenView.signerOrganization}
+          signedAt={frozenView.signedAt}
+          showLegalSectionLabel
+          companyPrintName={frozenView.companyPrintName}
+          afterTitle={<AgreementSummarySection record={frozenView.record} />}
+        />
       ) : null}
     </AgreementModalShell>
   );

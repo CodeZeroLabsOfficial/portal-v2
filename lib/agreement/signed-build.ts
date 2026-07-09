@@ -42,14 +42,24 @@ export interface SignedAgreementCommerceSnapshot {
   };
 }
 
-/** Legal HTML only — used for agreement PDF (intro excluded). */
+/** Intro HTML — frozen for post-sign agreement views. */
+export function buildIntroAgreementHtmlSnapshot(proposal: ProposalRecord): string | undefined {
+  const agreement = findFirstAgreementBlock(proposal.document.blocks);
+  if (!agreement?.introHtml?.trim()) return undefined;
+  return sanitizeProposalHtmlServer(agreement.introHtml.trim());
+}
+
+/**
+ * Legal HTML only — frozen for post-sign agreement views (intro excluded).
+ * When empty, returns undefined so UI uses built-in default sections.
+ */
 export function buildLegalAgreementHtmlSnapshot(proposal: ProposalRecord): string | undefined {
   const agreement = findFirstAgreementBlock(proposal.document.blocks);
   if (!agreement) return undefined;
   if (agreement.legalHtml?.trim()) {
     return sanitizeProposalHtmlServer(agreement.legalHtml.trim());
   }
-  return DEFAULT_LEGAL_SNAPSHOT;
+  return undefined;
 }
 
 /** Plain-ish snapshot for audit (truncated HTML or default section summary). */

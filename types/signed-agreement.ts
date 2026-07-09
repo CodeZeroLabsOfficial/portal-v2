@@ -62,6 +62,8 @@ export interface SignedAgreementRecord {
   signatureMethod: "draw" | "type" | "upload" | null;
   signedAt: number;
   clientSignedAt?: number;
+  /** Intro HTML frozen at sign time. */
+  introHtmlSnapshot?: string;
   /** Legal HTML only — agreement PDF (excludes intro). Falls back to `fullAgreementText` on older rows. */
   legalHtmlSnapshot?: string;
   fullAgreementText?: string;

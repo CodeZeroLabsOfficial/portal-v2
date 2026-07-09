@@ -5,7 +5,7 @@ import { requireStaffSession } from "@/lib/auth/server-session";
 import { addCustomerNoteSchema, createCustomerSchema, updateCustomerFormSchema } from "@/lib/schemas/customer";
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { z } from "zod";
-import { getStorageFileSignedReadUrl } from "@/lib/firebase/admin-storage";
+import { resolveSignedAgreementSignatureSrc } from "@/server/firestore/signed-agreements-public";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { COLLECTIONS } from "@/server/firestore/collections";
@@ -325,12 +325,7 @@ export async function getSignedAgreementModalPayloadAction(
     return { ok: false, message: "Signed agreement not found." };
   }
 
-  let signatureSrc: string | null = null;
-  if (row.signatureImage?.startsWith("data:image/")) {
-    signatureSrc = row.signatureImage;
-  } else if (row.signatureImageStoragePath) {
-    signatureSrc = await getStorageFileSignedReadUrl(row.signatureImageStoragePath);
-  }
+  const signatureSrc = await resolveSignedAgreementSignatureSrc(row);
 
   const { signatureImage: _sig, signatureImageStoragePath: _path, ...rest } = row;
   const companyPrintName = await getCompanyDisplayName(row.organizationId);

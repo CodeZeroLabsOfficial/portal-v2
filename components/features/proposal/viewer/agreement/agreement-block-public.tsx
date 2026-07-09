@@ -9,8 +9,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { DialogClose } from "@/components/ui/dialog";
 import { AgreementModalShell } from "@/components/features/proposal/agreement/agreement-modal-shell";
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
-import { AgreementPrintDocumentContent } from "@/components/features/proposal/agreement/agreement-print-document-content";
-import { AgreementPrintFooter } from "@/components/features/proposal/agreement/agreement-print-footer";
+import { AgreementModalPrintBody } from "@/components/features/proposal/agreement/agreement-modal-print-body";
 import {
   AgreementSelectionSection,
   NoPackageSelectionCard,
@@ -25,6 +24,7 @@ import type {
   ProposalPublicSelections,
   ProposalStatus,
 } from "@/types/proposal";
+import type { FrozenSignedAgreementContext } from "@/lib/proposal/block-view-types";
 import { readableForeground, resolveAgreementButtonColor } from "@/lib/proposal/block-style";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
 import { injectAgreementLegalHeadingIds } from "@/lib/agreement/legal-headings";
@@ -35,20 +35,16 @@ import {
   scrollAgreementContainerToRef,
 } from "@/lib/proposal/agreement/jump-nav";
 import {
-  AGREEMENT_SIGN_SECTION_ID,
-  AGREEMENT_TOP_ANCHOR_ID,
-} from "@/lib/proposal/agreement/modal-layout";
-import { AGREEMENT_PRINT_TARGET_SHELL_CLASSES } from "@/lib/proposal/agreement/print-layout";
+  buildFrozenBuyerJumpNavItems,
+  resolveFrozenAgreementView,
+} from "@/lib/proposal/agreement/frozen-agreement-view";
+import { AGREEMENT_SIGN_SECTION_ID } from "@/lib/proposal/agreement/modal-layout";
 import {
   buildPackageSelectionSummary,
   packagesBlocksFromDocument,
 } from "@/lib/proposal/agreement/package-selection-summary";
 import type { PackageSelectionSummary } from "@/lib/proposal/agreement/package-selection-summary";
-import {
-  AGREEMENT_PRINT_EXCLUDE_ATTR,
-  AGREEMENT_PRINT_TARGET_ATTR,
-  printAgreementDocument,
-} from "@/hooks/use-agreement-print-mode";
+import { AGREEMENT_PRINT_EXCLUDE_ATTR, printAgreementDocument } from "@/hooks/use-agreement-print-mode";
 import { isDocumentPackageSelectionComplete } from "@/lib/proposal/commerce/package-selection";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -79,6 +75,8 @@ export interface AgreementBlockPublicProps {
   stripePublishableKey?: string;
   /** Settings → Company name — agreement PDF footer. */
   companyPrintName?: string;
+  /** Frozen signedAgreements row — post-sign modal reads contract copy from here. */
+  frozenSignedAgreement?: FrozenSignedAgreementContext | null;
   /** When false (editor / preview) the CTA is disabled and the sign form is read-only. */
   interactive?: boolean;
   /** Renders nested blocks above the sign button (same pipeline as the public document viewer). */
@@ -105,6 +103,7 @@ export function AgreementBlockPublic({
   catalogServices = [],
   stripePublishableKey,
   companyPrintName,
+  frozenSignedAgreement = null,
   renderAgreementChild,
 }: AgreementBlockPublicProps) {
   const router = useRouter();
@@ -121,7 +120,7 @@ export function AgreementBlockPublic({
 
   const buttonLabel = block.buttonLabel?.trim() || DEFAULT_BUTTON_LABEL;
   const buttonAlign = block.buttonAlign ?? "center";
-  const agreementTitle = block.agreementTitle?.trim() || DEFAULT_AGREEMENT_TITLE;
+  const liveAgreementTitle = block.agreementTitle?.trim() || DEFAULT_AGREEMENT_TITLE;
   const eSignaturesEnabled = block.eSignaturesEnabled !== false;
   const electronicSignatureDisclaimerEnabled = block.electronicSignatureDisclaimerEnabled !== false;
   const termsReadDisclaimerEnabled = block.termsReadDisclaimerEnabled !== false;
@@ -129,7 +128,7 @@ export function AgreementBlockPublic({
   const ctaColor = resolveAgreementButtonColor(block.style);
   const ctaForeground = readableForeground(ctaColor);
 
-  const packageSummaries = React.useMemo(() => {
+  const livePackageSummaries = React.useMemo(() => {
     const blocks = packagesBlocksFromDocument(allBlocks);
     const out: PackageSelectionSummary[] = [];
     for (const pb of blocks) {
@@ -147,14 +146,24 @@ export function AgreementBlockPublic({
   );
 
   const subscriptionMonthly = React.useMemo(() => {
-    if (packageSummaries.length === 0) return null;
-    const total = packageSummaries.reduce((acc, s) => acc + s.monthlyTotalMinor, 0);
-    const currency = packageSummaries[0]?.currency ?? "AUD";
+    if (livePackageSummaries.length === 0) return null;
+    const total = livePackageSummaries.reduce((acc, s) => acc + s.monthlyTotalMinor, 0);
+    const currency = livePackageSummaries[0]?.currency ?? "AUD";
     return { total, currency };
-  }, [packageSummaries]);
+  }, [livePackageSummaries]);
 
   const accepted = localDone || proposalStatus === "accepted";
-  const hasCustomLegal = Boolean(block.legalHtml?.trim());
+
+  const frozenView = React.useMemo(() => {
+    if (!accepted || !frozenSignedAgreement) return null;
+    return resolveFrozenAgreementView({
+      record: frozenSignedAgreement.record,
+      signatureSrc: frozenSignedAgreement.signatureSrc,
+      companyPrintName,
+    });
+  }, [accepted, frozenSignedAgreement, companyPrintName]);
+
+  const liveHasCustomLegal = Boolean(block.legalHtml?.trim());
 
   const introWithHeadingIds = React.useMemo(() => {
     if (!block.introHtml?.trim()) return { html: "", headings: [] };
@@ -166,32 +175,43 @@ export function AgreementBlockPublic({
     return injectAgreementLegalHeadingIds(block.legalHtml.trim());
   }, [block.legalHtml]);
 
-  const jumpNavItems = React.useMemo(
-    () =>
-      buildBuyerAgreementJumpNavItems({
-        agreementTitle,
-        hasPackageSummaries: packageSummaries.length > 0,
-        legalChildren: buildAgreementLegalNavChildren({
-          introHeadings: introWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label })),
-          legalHeadings: legalWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label })),
-          hasCustomLegal,
-        }),
-        accepted,
-      }),
-    [
-      packageSummaries.length,
-      agreementTitle,
-      introWithHeadingIds.headings,
-      legalWithHeadingIds.headings,
-      hasCustomLegal,
-      accepted,
-    ],
-  );
+  const modalAgreementTitle = frozenView?.agreementTitle ?? liveAgreementTitle;
+  const modalIntroHtml = frozenView?.introHtmlWithIds ?? introWithHeadingIds.html;
+  const modalLegalHtml = frozenView?.legalHtmlWithIds ?? legalWithHeadingIds.html;
+  const modalPackageSummaries = frozenView?.packageSummaries ?? livePackageSummaries;
+  const modalHasCustomLegal = frozenView?.hasCustomLegal ?? liveHasCustomLegal;
 
-  const displayName = localAcceptedName ?? acceptedByName;
-  const displayOrganization = localAcceptedOrganization ?? acceptedSignerOrganization;
-  const signatureDataUrl = localSignatureDataUrl ?? acceptedSignatureDataUrl ?? null;
-  const signedAtMs = accepted ? (acceptedAt ?? null) : null;
+  const jumpNavItems = React.useMemo(() => {
+    if (frozenView) {
+      return buildFrozenBuyerJumpNavItems(frozenView);
+    }
+    return buildBuyerAgreementJumpNavItems({
+      agreementTitle: liveAgreementTitle,
+      hasPackageSummaries: livePackageSummaries.length > 0,
+      legalChildren: buildAgreementLegalNavChildren({
+        introHeadings: introWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label })),
+        legalHeadings: legalWithHeadingIds.headings.map((h) => ({ id: h.id, label: h.label })),
+        hasCustomLegal: liveHasCustomLegal,
+      }),
+      accepted,
+    });
+  }, [
+    frozenView,
+    liveAgreementTitle,
+    livePackageSummaries.length,
+    introWithHeadingIds.headings,
+    legalWithHeadingIds.headings,
+    liveHasCustomLegal,
+    accepted,
+  ]);
+
+  const displayName = frozenView?.signerName ?? localAcceptedName ?? acceptedByName;
+  const displayOrganization =
+    frozenView?.signerOrganization ?? localAcceptedOrganization ?? acceptedSignerOrganization;
+  const signatureDataUrl =
+    frozenView?.signatureSrc ?? localSignatureDataUrl ?? acceptedSignatureDataUrl ?? null;
+  const signedAtMs =
+    frozenView?.signedAt ?? (accepted && acceptedAt ? acceptedAt : null);
   const blockAgreementUntilPlanPicked = interactive && !accepted && !planSelectionComplete;
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const signRef = React.useRef<HTMLDivElement | null>(null);
@@ -201,7 +221,7 @@ export function AgreementBlockPublic({
   }
 
   function onDownload() {
-    printAgreementDocument({ documentTitle: agreementTitle });
+    printAgreementDocument({ documentTitle: modalAgreementTitle });
   }
 
   async function onSign(
@@ -233,6 +253,8 @@ export function AgreementBlockPublic({
     }
     router.refresh();
   }
+
+  const printFooterName = frozenView?.companyPrintName ?? companyPrintName;
 
   return (
     <div className="w-full">
@@ -300,7 +322,7 @@ export function AgreementBlockPublic({
       <AgreementModalShell
         open={open}
         onOpenChange={setOpen}
-        agreementTitle={agreementTitle}
+        agreementTitle={modalAgreementTitle}
         jumpNavItems={jumpNavItems}
         onDownload={onDownload}
         scrollContainerRef={scrollRef}
@@ -323,30 +345,27 @@ export function AgreementBlockPublic({
           )
         }
       >
-        <div {...{ [AGREEMENT_PRINT_TARGET_ATTR]: "" }} className={AGREEMENT_PRINT_TARGET_SHELL_CLASSES}>
-          <div id={AGREEMENT_TOP_ANCHOR_ID} aria-hidden />
-
-          <AgreementPrintDocumentContent
-            agreementTitle={agreementTitle}
-            legalHtml={legalWithHeadingIds.html}
-            signatureSrc={accepted ? signatureDataUrl : null}
-            signerName={accepted ? displayName : null}
-            signerOrganization={accepted ? displayOrganization : null}
-            signedAt={signedAtMs}
-            showLegalSectionLabel
-            afterTitle={
-              <>
-                <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
-                  <AgreementDocumentIntro introHtml={introWithHeadingIds.html} />
-                </div>
-                <AgreementSelectionSection summaries={packageSummaries} />
-                {!packageSummaries.length && !block.legalHtml?.trim() ? (
-                  <NoPackageSelectionCard />
-                ) : null}
-              </>
-            }
-          />
-
+        <AgreementModalPrintBody
+          agreementTitle={modalAgreementTitle}
+          legalHtml={modalLegalHtml}
+          signatureSrc={accepted ? signatureDataUrl : null}
+          signerName={accepted ? displayName : null}
+          signerOrganization={accepted ? displayOrganization : null}
+          signedAt={signedAtMs}
+          showLegalSectionLabel
+          companyPrintName={printFooterName}
+          afterTitle={
+            <>
+              <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
+                <AgreementDocumentIntro introHtml={modalIntroHtml} />
+              </div>
+              <AgreementSelectionSection summaries={modalPackageSummaries} />
+              {!modalPackageSummaries.length && !modalHasCustomLegal ? (
+                <NoPackageSelectionCard />
+              ) : null}
+            </>
+          }
+        >
           <section
             ref={signRef}
             id={AGREEMENT_SIGN_SECTION_ID}
@@ -403,7 +422,7 @@ export function AgreementBlockPublic({
                 prefillSignerEmail={block.prefillSignerEmail}
                 prefillSignerOrganization={block.prefillSignerOrganization}
                 customerSignerPrefill={customerSignerPrefill}
-                agreementTitle={agreementTitle}
+                agreementTitle={modalAgreementTitle}
                 ctaColor={ctaColor}
                 ctaForeground={ctaForeground}
                 localityTimeZone={localityTimeZone}
@@ -419,8 +438,7 @@ export function AgreementBlockPublic({
               />
             )}
           </section>
-        </div>
-        <AgreementPrintFooter companyName={companyPrintName} />
+        </AgreementModalPrintBody>
       </AgreementModalShell>
     </div>
   );

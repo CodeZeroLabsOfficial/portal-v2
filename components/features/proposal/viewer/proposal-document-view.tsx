@@ -23,7 +23,7 @@ import {
 } from "@/lib/proposal/public/public-layout";
 import { firstRootSplashBlockId, proposalEndsInFullBleedBand } from "@/lib/proposal/blocks";
 import { renderProposalBlockFromRegistry } from "@/components/features/proposal/blocks/block-editor-registry";
-import type { ProposalRenderContext } from "@/lib/proposal/block-view-types";
+import type { ProposalRenderContext, FrozenSignedAgreementContext } from "@/lib/proposal/block-view-types";
 import { isSectionBackgroundActive } from "@/lib/proposal/section-background";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,8 @@ export interface ProposalDocumentViewProps {
   stripePublishableKey?: string;
   /** Settings → Company name — agreement PDF footer. */
   companyPrintName?: string;
+  /** Frozen signedAgreements row when proposal is accepted with signature. */
+  frozenSignedAgreement?: FrozenSignedAgreementContext | null;
   /** In-editor live preview — first section band sits flush under the preview frame. */
   flushTop?: boolean;
 }
@@ -124,6 +126,7 @@ export function ProposalDocumentView({
   catalogServices = [],
   stripePublishableKey,
   companyPrintName,
+  frozenSignedAgreement = null,
   flushTop = false,
 }: ProposalDocumentViewProps) {
   const style = React.useMemo(() => {
@@ -159,6 +162,7 @@ export function ProposalDocumentView({
       catalogServices,
       stripePublishableKey,
       companyPrintName,
+      frozenSignedAgreement,
     }),
     [
       document.blocks,
@@ -175,6 +179,7 @@ export function ProposalDocumentView({
       catalogServices,
       stripePublishableKey,
       companyPrintName,
+      frozenSignedAgreement,
     ],
   );
 

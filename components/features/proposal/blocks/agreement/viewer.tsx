@@ -39,6 +39,7 @@ export function renderAgreementBlock({
       catalogServices={proposalContext?.catalogServices}
       stripePublishableKey={proposalContext?.stripePublishableKey}
       companyPrintName={proposalContext?.companyPrintName}
+      frozenSignedAgreement={proposalContext?.frozenSignedAgreement}
       renderAgreementChild={(child) => renderBlock(child)}
     />
   );

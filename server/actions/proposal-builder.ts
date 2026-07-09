@@ -40,6 +40,7 @@ import {
 } from "@/lib/templates/proposal-template-usage";
 import {
   buildFullAgreementTextSnapshot,
+  buildIntroAgreementHtmlSnapshot,
   buildLegalAgreementHtmlSnapshot,
   buildSignedAgreementCommerceSnapshot,
 } from "@/lib/agreement/signed-build";
@@ -372,6 +373,7 @@ export async function acceptProposalPublicAction(
   if (hasSignaturePayload && sigUrl) {
     const commerce = commerceSnapshot;
     const fullAgreementText = buildFullAgreementTextSnapshot(proposalForAgreement);
+    const introHtmlSnapshot = buildIntroAgreementHtmlSnapshot(proposalForAgreement);
     const legalHtmlSnapshot = buildLegalAgreementHtmlSnapshot(proposalForAgreement);
 
     let customerName: string | undefined;
@@ -428,6 +430,7 @@ export async function acceptProposalPublicAction(
       signedAt: now,
       clientSignedAt: typeof clientSignedAt === "number" ? clientSignedAt : null,
       fullAgreementText: fullAgreementText ?? null,
+      introHtmlSnapshot: introHtmlSnapshot ?? null,
       legalHtmlSnapshot: legalHtmlSnapshot ?? null,
       signatureImage,
       signatureImageStoragePath,

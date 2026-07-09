@@ -15,6 +15,7 @@ import {
 import { isProposalUnlockedForRequest } from "@/lib/proposal/public/public-session";
 import { listCatalogServicePickerOptionsForOrganizationId } from "@/server/firestore/catalog-services";
 import { getCompanyDisplayName } from "@/server/firestore/organization-settings";
+import { getSignedAgreementForPublicShare } from "@/server/firestore/signed-agreements-public";
 import { getProposalRecordByShareToken } from "@/server/firestore/parse-proposal";
 import { getUserStoredTimeZone } from "@/server/firestore/user-locality";
 import { hydrateAgreementBlocksInDocument } from "@/server/proposal/hydrate-agreement-contract-templates";
@@ -67,6 +68,11 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
     : proposal.document;
 
   const agreementPresent = hasAgreementBlock(publicDocument.blocks);
+  const frozenSignedAgreement =
+    unlocked && agreementPresent && proposal.status === "accepted"
+      ? await getSignedAgreementForPublicShare(proposal.shareToken, proposal.id)
+      : null;
+
   const [publicSubscriptionUi, customerSignerPrefill, catalogServices, stripePublishableKey, companyPrintName] =
     unlocked
     ? await Promise.all([
@@ -106,7 +112,17 @@ export default async function PublicProposalPage(props: PublicProposalPageProps)
               customerSignerPrefill={customerSignerPrefill}
               catalogServices={catalogServices}
               stripePublishableKey={stripePublishableKey}
-              companyPrintName={companyPrintName}
+              companyPrintName={
+                frozenSignedAgreement?.companyPrintName ?? companyPrintName
+              }
+              frozenSignedAgreement={
+                frozenSignedAgreement
+                  ? {
+                      record: frozenSignedAgreement.record,
+                      signatureSrc: frozenSignedAgreement.signatureSrc,
+                    }
+                  : null
+              }
             />
           ) : (
             <ProposalPasswordGate shareToken={proposal.shareToken} />
