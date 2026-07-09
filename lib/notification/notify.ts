@@ -48,7 +48,7 @@ export interface NotifySystemInput {
 
 /**
  * Fan-out an in-app notification for a staff-initiated mutation.
- * Excludes the actor (they already get Sonner feedback). Respects recipient prefs.
+ * Includes the actor (Sonner remains immediate UX feedback only). Respects recipient prefs.
  */
 export async function notifyStaffAction(input: NotifyStaffActionInput): Promise<void> {
   const organizationId = input.organizationId ?? input.actor.organizationId;
@@ -57,9 +57,7 @@ export async function notifyStaffAction(input: NotifyStaffActionInput): Promise<
   try {
     const staff = await listStaffUidsForOrganization(organizationId);
     const actorName = staffActorName(input.actor);
-    const recipients = staff.filter(
-      (s) => s.uid !== input.actor.uid && s.prefs.inAppScope !== "none",
-    );
+    const recipients = staff.filter((s) => s.prefs.inAppScope !== "none");
     if (recipients.length === 0) return;
 
     const docs: CreateNotificationInput[] = recipients.map((r) => ({

@@ -334,3 +334,4 @@ export const portalFunctionsHealth = functions.region("australia-southeast1").ht
 });
 
 export { stripeWebhook } from "./stripe/webhook";
+export { processTaskReminders } from "./tasks/process-reminders";

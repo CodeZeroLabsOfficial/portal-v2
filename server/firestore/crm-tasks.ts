@@ -182,6 +182,10 @@ export async function updateTaskForStaff(
   }
   applyOptionalEpochField(payload, "dueAt", input.dueAt);
   applyOptionalEpochField(payload, "reminderAt", input.reminderAt);
+  // Reschedule clears the sent marker so the cron can fire again.
+  if (input.reminderAt !== undefined) {
+    payload.reminderSentAt = FieldValue.delete();
+  }
 
   await db.collection(COLLECTIONS.tasks).doc(taskId).update(payload);
 

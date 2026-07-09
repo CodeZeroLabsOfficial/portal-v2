@@ -10,9 +10,9 @@ export interface TaskRecord {
   dueAt?: number;
   /** Optional schedule start (epoch ms) for board display. */
   startAt?: number;
-  /** When to nudge assignee (epoch ms); notifications-ready, no sender yet. */
+  /** When to nudge assignee (epoch ms). */
   reminderAt?: number;
-  /** Idempotency marker for future scheduled reminder jobs. */
+  /** Set by the scheduled reminder job after notify (or skip for prefs). */
   reminderSentAt?: number;
   updatedAt: number;
   description?: string;
