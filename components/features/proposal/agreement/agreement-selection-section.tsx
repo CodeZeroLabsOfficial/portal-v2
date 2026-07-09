@@ -2,6 +2,7 @@ import { AgreementSectionLabel } from "@/components/features/proposal/agreement/
 import { PackageSummaryCard } from "@/components/features/proposal/agreement/package-summary-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { AGREEMENT_PRINT_EXCLUDE_ATTR } from "@/hooks/use-agreement-print-mode";
+import { AGREEMENT_PLAN_SECTION_ID } from "@/lib/proposal/agreement/modal-layout";
 import type { PackageSelectionSummary } from "@/lib/proposal/agreement/package-selection-summary";
 
 export interface AgreementSelectionSectionProps {
@@ -14,7 +15,7 @@ export function AgreementSelectionSection({ summaries }: AgreementSelectionSecti
 
   return (
     <section
-      id="agreement-plan"
+      id={AGREEMENT_PLAN_SECTION_ID}
       {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }}
       className="mt-12 space-y-4 print:hidden"
     >
