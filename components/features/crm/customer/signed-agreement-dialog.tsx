@@ -4,9 +4,11 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { AgreementModalShell } from "@/components/features/proposal/agreement/agreement-modal-shell";
-import { AgreementModalPrintBody } from "@/components/features/proposal/agreement/agreement-modal-print-body";
 import { AgreementSummarySection } from "@/components/features/proposal/agreement/agreement-summary-section";
-import { printAgreementDocument } from "@/hooks/use-agreement-print-mode";
+import {
+  FrozenAgreementPrintBody,
+  printFrozenAgreementDocument,
+} from "@/components/features/proposal/agreement/frozen-agreement-print-body";
 import {
   buildFrozenStaffJumpNavItems,
   resolveFrozenAgreementView,
@@ -43,7 +45,7 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
 
   function printSignedAgreement() {
     if (!frozenView) return;
-    printAgreementDocument({ documentTitle: frozenView.agreementTitle });
+    printFrozenAgreementDocument(frozenView);
   }
 
   return (
@@ -61,15 +63,8 @@ export function SignedAgreementDialog({ open, onOpenChange, data }: SignedAgreem
       }
     >
       {frozenView ? (
-        <AgreementModalPrintBody
-          agreementTitle={frozenView.agreementTitle}
-          legalHtml={frozenView.legalHtmlWithIds}
-          signatureSrc={frozenView.signatureSrc}
-          signerName={frozenView.signerName}
-          signerOrganization={frozenView.signerOrganization}
-          signedAt={frozenView.signedAt}
-          showLegalSectionLabel
-          companyPrintName={frozenView.companyPrintName}
+        <FrozenAgreementPrintBody
+          frozenView={frozenView}
           afterTitle={<AgreementSummarySection record={frozenView.record} />}
         />
       ) : null}

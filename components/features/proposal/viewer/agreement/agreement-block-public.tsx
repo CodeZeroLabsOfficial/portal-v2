@@ -11,6 +11,10 @@ import { AgreementModalShell } from "@/components/features/proposal/agreement/ag
 import { AgreementDocumentIntro } from "@/components/features/proposal/agreement/agreement-document-intro";
 import { AgreementModalPrintBody } from "@/components/features/proposal/agreement/agreement-modal-print-body";
 import {
+  FrozenAgreementPrintBody,
+  printFrozenAgreementDocument,
+} from "@/components/features/proposal/agreement/frozen-agreement-print-body";
+import {
   AgreementSelectionSection,
   NoPackageSelectionCard,
 } from "@/components/features/proposal/agreement/agreement-selection-section";
@@ -221,6 +225,14 @@ export function AgreementBlockPublic({
   }
 
   function onDownload() {
+    if (accepted) {
+      if (!frozenView) {
+        toast.error("Your signed agreement is still loading. Please try again in a moment.");
+        return;
+      }
+      printFrozenAgreementDocument(frozenView);
+      return;
+    }
     printAgreementDocument({ documentTitle: modalAgreementTitle });
   }
 
@@ -255,6 +267,16 @@ export function AgreementBlockPublic({
   }
 
   const printFooterName = frozenView?.companyPrintName ?? companyPrintName;
+
+  const buyerScreenAfterTitle = (
+    <>
+      <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
+        <AgreementDocumentIntro introHtml={modalIntroHtml} />
+      </div>
+      <AgreementSelectionSection summaries={modalPackageSummaries} />
+      {!modalPackageSummaries.length && !modalHasCustomLegal ? <NoPackageSelectionCard /> : null}
+    </>
+  );
 
   return (
     <div className="w-full">
@@ -345,100 +367,99 @@ export function AgreementBlockPublic({
           )
         }
       >
-        <AgreementModalPrintBody
-          agreementTitle={modalAgreementTitle}
-          legalHtml={modalLegalHtml}
-          signatureSrc={accepted ? signatureDataUrl : null}
-          signerName={accepted ? displayName : null}
-          signerOrganization={accepted ? displayOrganization : null}
-          signedAt={signedAtMs}
-          showLegalSectionLabel
-          companyPrintName={printFooterName}
-          afterTitle={
-            <>
-              <div {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }} className="print:hidden">
-                <AgreementDocumentIntro introHtml={modalIntroHtml} />
-              </div>
-              <AgreementSelectionSection summaries={modalPackageSummaries} />
-              {!modalPackageSummaries.length && !modalHasCustomLegal ? (
-                <NoPackageSelectionCard />
-              ) : null}
-            </>
-          }
+        {accepted && frozenView ? (
+          <FrozenAgreementPrintBody frozenView={frozenView} afterTitle={buyerScreenAfterTitle} />
+        ) : (
+          <AgreementModalPrintBody
+            agreementTitle={modalAgreementTitle}
+            legalHtml={modalLegalHtml}
+            signatureSrc={accepted ? signatureDataUrl : null}
+            signerName={accepted ? displayName : null}
+            signerOrganization={accepted ? displayOrganization : null}
+            signedAt={signedAtMs}
+            showLegalSectionLabel
+            companyPrintName={printFooterName}
+            afterTitle={buyerScreenAfterTitle}
+          />
+        )}
+        <section
+          ref={signRef}
+          id={AGREEMENT_SIGN_SECTION_ID}
+          {...{ [AGREEMENT_PRINT_EXCLUDE_ATTR]: "" }}
+          className="mt-16 print:hidden"
         >
-          <section
-            ref={signRef}
-            id={AGREEMENT_SIGN_SECTION_ID}
-            data-agreement-print-exclude=""
-            className="mt-16 print:hidden"
-          >
-            {accepted ? (
-              <Card className="text-center shadow-sm">
-                <CardContent className="flex flex-col items-center pt-8 sm:px-8">
-                  <span className="flex size-12 items-center justify-center rounded-full bg-green-100 text-green-800">
-                    <CheckCircle2 className="size-6" aria-hidden />
-                  </span>
-                  <Typography variant="h2" className="mt-4 text-xl">
-                    Agreement Signed
-                  </Typography>
-                  <Typography variant="muted" className="mt-2">
-                    {displayName ? (
-                      <>
-                        Thank you, <span className="font-semibold text-foreground">{displayName}</span>.
-                        Your signature has been recorded.
-                      </>
-                    ) : (
-                      <>Thank you — your signature has been recorded.</>
-                    )}
-                  </Typography>
-                  <Typography variant="muted" className="mt-2">
-                    We&apos;ll follow up with next steps shortly.
-                  </Typography>
-                </CardContent>
-                <CardFooter className="flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-                  <Button type="button" variant="outline" className="gap-2" onClick={onDownload}>
-                    <Download className="size-4" aria-hidden />
-                    Download PDF
+          {accepted ? (
+            <Card className="text-center shadow-sm">
+              <CardContent className="flex flex-col items-center pt-8 sm:px-8">
+                <span className="flex size-12 items-center justify-center rounded-full bg-green-100 text-green-800">
+                  <CheckCircle2 className="size-6" aria-hidden />
+                </span>
+                <Typography variant="h2" className="mt-4 text-xl">
+                  Agreement Signed
+                </Typography>
+                <Typography variant="muted" className="mt-2">
+                  {displayName ? (
+                    <>
+                      Thank you, <span className="font-semibold text-foreground">{displayName}</span>.
+                      Your signature has been recorded.
+                    </>
+                  ) : (
+                    <>Thank you — your signature has been recorded.</>
+                  )}
+                </Typography>
+                <Typography variant="muted" className="mt-2">
+                  We&apos;ll follow up with next steps shortly.
+                </Typography>
+              </CardContent>
+              <CardFooter className="flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={onDownload}
+                  disabled={!frozenView}
+                >
+                  <Download className="size-4" aria-hidden />
+                  Download PDF
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Close
                   </Button>
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">
-                      Close
-                    </Button>
-                  </DialogClose>
-                </CardFooter>
-              </Card>
-            ) : (
-              <AgreementSignatureForm
-                disabled={!interactive || !shareToken}
-                busy={false}
-                eSignaturesEnabled={eSignaturesEnabled}
-                electronicSignatureDisclaimerEnabled={electronicSignatureDisclaimerEnabled}
-                termsReadDisclaimerEnabled={termsReadDisclaimerEnabled}
-                requireAcceptTerms={requireAcceptTerms}
-                prefillSignerNameEnabled={Boolean(block.prefillSignerNameEnabled)}
-                prefillSignerEmailEnabled={Boolean(block.prefillSignerEmailEnabled)}
-                prefillSignerOrganizationEnabled={Boolean(block.prefillSignerOrganizationEnabled)}
-                prefillSignerName={block.prefillSignerName}
-                prefillSignerEmail={block.prefillSignerEmail}
-                prefillSignerOrganization={block.prefillSignerOrganization}
-                customerSignerPrefill={customerSignerPrefill}
-                agreementTitle={modalAgreementTitle}
-                ctaColor={ctaColor}
-                ctaForeground={ctaForeground}
-                localityTimeZone={localityTimeZone}
-                shareToken={shareToken}
-                publicSubscriptionUi={publicSubscriptionUi}
-                stripePublishableKey={stripePublishableKey}
-                paymentDetailsSectionEnabled={block.paymentDetailsSectionEnabled !== false}
-                monthlyTotalMinor={subscriptionMonthly?.total}
-                monthlyCurrency={subscriptionMonthly?.currency}
-                error={error}
-                onDismissError={() => setError(null)}
-                onSubmit={onSign}
-              />
-            )}
-          </section>
-        </AgreementModalPrintBody>
+                </DialogClose>
+              </CardFooter>
+            </Card>
+          ) : (
+            <AgreementSignatureForm
+              disabled={!interactive || !shareToken}
+              busy={false}
+              eSignaturesEnabled={eSignaturesEnabled}
+              electronicSignatureDisclaimerEnabled={electronicSignatureDisclaimerEnabled}
+              termsReadDisclaimerEnabled={termsReadDisclaimerEnabled}
+              requireAcceptTerms={requireAcceptTerms}
+              prefillSignerNameEnabled={Boolean(block.prefillSignerNameEnabled)}
+              prefillSignerEmailEnabled={Boolean(block.prefillSignerEmailEnabled)}
+              prefillSignerOrganizationEnabled={Boolean(block.prefillSignerOrganizationEnabled)}
+              prefillSignerName={block.prefillSignerName}
+              prefillSignerEmail={block.prefillSignerEmail}
+              prefillSignerOrganization={block.prefillSignerOrganization}
+              customerSignerPrefill={customerSignerPrefill}
+              agreementTitle={modalAgreementTitle}
+              ctaColor={ctaColor}
+              ctaForeground={ctaForeground}
+              localityTimeZone={localityTimeZone}
+              shareToken={shareToken}
+              publicSubscriptionUi={publicSubscriptionUi}
+              stripePublishableKey={stripePublishableKey}
+              paymentDetailsSectionEnabled={block.paymentDetailsSectionEnabled !== false}
+              monthlyTotalMinor={subscriptionMonthly?.total}
+              monthlyCurrency={subscriptionMonthly?.currency}
+              error={error}
+              onDismissError={() => setError(null)}
+              onSubmit={onSign}
+            />
+          )}
+        </section>
       </AgreementModalShell>
     </div>
   );

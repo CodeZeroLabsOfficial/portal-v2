@@ -43,10 +43,7 @@ function resolveFrozenIntroHtml(record: SignedAgreementRecord): string | undefin
 
 function resolveFrozenLegalHtml(record: SignedAgreementRecord): string | undefined {
   const legal = record.legalHtmlSnapshot?.trim();
-  if (legal) return legal;
-  const full = record.fullAgreementText?.trim();
-  if (!full) return undefined;
-  return full;
+  return legal || undefined;
 }
 
 /** Normalizes a signedAgreements row for buyer/staff modal + PDF rendering. */
@@ -58,7 +55,7 @@ export function resolveFrozenAgreementView(input: FrozenAgreementViewInput): Fro
 
   const introHtml = resolveFrozenIntroHtml(record);
   const legalHtml = resolveFrozenLegalHtml(record);
-  const hasCustomLegal = Boolean(legalHtml);
+  const hasCustomLegal = Boolean(record.legalHtmlSnapshot?.trim());
 
   const introWithHeadingIds = introHtml
     ? injectAgreementLegalHeadingIds(introHtml, { idPrefix: "agreement-intro" })

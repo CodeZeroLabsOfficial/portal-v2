@@ -372,6 +372,7 @@
       overflow: visible !important;
       padding-top: 0 !important;
       padding-bottom: 18mm !important;
+      font-family: var(--font-sans);
     }
 
     /* Dialog shells must not reserve viewport height in print (staff CRM blank pages). */
