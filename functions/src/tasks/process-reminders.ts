@@ -78,7 +78,8 @@ async function notifyAssigneeTaskReminder(
   await ref.create({
     organizationId: input.organizationId,
     recipientUid: input.recipientUid,
-    summary: `Task reminder: "${input.title}"`,
+    title: "Task reminder",
+    message: input.title,
     category: "task",
     source: "system",
     entityType: "task",

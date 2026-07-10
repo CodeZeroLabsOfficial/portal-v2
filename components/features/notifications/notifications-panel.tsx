@@ -15,9 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  formatNotificationTime,
-  formatNotificationTitle,
+  formatNotificationDateTime,
   notificationCategoryLabel,
+  notificationDisplayActor,
+  notificationDisplayMessage,
+  notificationDisplayTitle,
 } from "@/lib/notification/format";
 import { cn } from "@/lib/utils";
 import {
@@ -129,7 +131,7 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
       {
         id: "search",
         accessorFn: (row) =>
-          `${formatNotificationTitle(row)} ${row.summary} ${row.category} ${row.entityLabel ?? ""}`,
+          `${notificationDisplayTitle(row)} ${notificationDisplayMessage(row)} ${notificationDisplayActor(row)} ${row.category}`,
         header: () => null,
         cell: () => null,
         enableHiding: true,
@@ -144,12 +146,14 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
       },
       {
         id: "notification",
-        accessorFn: (row) => formatNotificationTitle(row),
+        accessorFn: (row) => notificationDisplayTitle(row),
         header: "Notification",
         cell: ({ row }) => {
           const n = row.original;
           const unread = n.readAt == null;
-          const title = formatNotificationTitle(n);
+          const title = notificationDisplayTitle(n);
+          const message = notificationDisplayMessage(n);
+          const actor = notificationDisplayActor(n);
           return (
             <button
               type="button"
@@ -169,13 +173,14 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
                   )}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0 flex-1 space-y-1">
+              <div className="min-w-0 flex-1 space-y-0.5">
                 <div className={cn("text-sm", unread ? "font-semibold" : "font-medium")}>
                   {title}
                 </div>
-                {n.entityLabel ? (
-                  <div className="text-muted-foreground line-clamp-1 text-xs">{n.entityLabel}</div>
+                {message ? (
+                  <div className="text-muted-foreground line-clamp-2 text-xs">{message}</div>
                 ) : null}
+                <div className="text-muted-foreground text-xs">By {actor}</div>
               </div>
               {unread ? (
                 <span className="bg-primary mt-1.5 size-2 shrink-0 rounded-full" aria-label="Unread" />
@@ -215,15 +220,14 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
       },
       {
         accessorKey: "createdAt",
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Time" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="When" />,
         cell: ({ row }) => (
           <span className="text-muted-foreground text-sm whitespace-nowrap">
-            {formatNotificationTime(row.original.createdAt)}
+            {formatNotificationDateTime(row.original.createdAt)}
           </span>
         ),
       },
     ],
-    // handleOpen closes over setRows/router; columns recreate when rows identity changes is fine
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable handlers via refs would be overkill
     [rows],
   );

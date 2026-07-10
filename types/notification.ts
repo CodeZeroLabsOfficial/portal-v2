@@ -26,8 +26,15 @@ export interface NotificationRecord {
   recipientUid: string;
   actorUid?: string;
   actorName?: string;
-  /** Past-tense verb phrase, e.g. `created a new lead` (UI prefixes actor when present). */
-  summary: string;
+  /** Event headline, e.g. `Profile updated` or `Proposal "Acme" sent to Sam Lee`. */
+  title: string;
+  /** What changed — short detail line under the title. */
+  message: string;
+  /**
+   * Legacy fused verb phrase from early inbox rows.
+   * Prefer `title` / `message`; kept for read fallback only.
+   */
+  summary?: string;
   category: NotificationCategory;
   entityType?: NotificationEntityType;
   entityId?: string;

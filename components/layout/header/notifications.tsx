@@ -17,8 +17,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  formatNotificationTime,
-  formatNotificationTitle,
+  formatNotificationDateTime,
+  notificationDisplayActor,
+  notificationDisplayMessage,
+  notificationDisplayTitle,
 } from "@/lib/notification/format";
 import { cn } from "@/lib/utils";
 import {
@@ -108,7 +110,9 @@ export default function Notifications() {
           ) : (
             items.map((item) => {
               const unread = item.readAt == null;
-              const title = formatNotificationTitle(item);
+              const title = notificationDisplayTitle(item);
+              const message = notificationDisplayMessage(item);
+              const actor = notificationDisplayActor(item);
               return (
                 <DropdownMenuItem
                   key={item.id}
@@ -132,7 +136,7 @@ export default function Notifications() {
                         )}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <div
                         className={cn(
                           "line-clamp-2 text-sm",
@@ -141,9 +145,13 @@ export default function Notifications() {
                       >
                         {title}
                       </div>
+                      {message ? (
+                        <div className="text-muted-foreground line-clamp-2 text-xs">{message}</div>
+                      ) : null}
+                      <div className="text-muted-foreground text-xs">By {actor}</div>
                       <div className="text-muted-foreground flex items-center gap-1 text-xs">
                         <ClockIcon className="size-3!" />
-                        {formatNotificationTime(item.createdAt)}
+                        {formatNotificationDateTime(item.createdAt)}
                       </div>
                     </div>
                   </div>

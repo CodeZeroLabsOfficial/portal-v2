@@ -117,7 +117,8 @@ export async function createSubscriptionAction(
     await notifyStaffAction({
       actor: user,
       organizationId: user.organizationId ?? customer.organizationId,
-      summary: `created a subscription for ${customer.name || "a customer"}`,
+      title: "Subscription created",
+      message: customer.name || scheduleResult.subscriptionId,
       category: "subscription",
       entity: {
         type: "subscription",
@@ -154,7 +155,8 @@ export async function cancelSubscriptionAction(
     await notifyStaffAction({
       actor: user,
       organizationId: user.organizationId,
-      summary: `canceled subscription ${subId}`,
+      title: "Subscription canceled",
+      message: subId,
       category: "subscription",
       entity: { type: "subscription", id: subId },
       href: "/admin/subscriptions",

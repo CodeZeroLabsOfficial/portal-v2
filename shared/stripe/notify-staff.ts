@@ -11,7 +11,8 @@ export async function notifyOrgStaffSystemEvent(
   db: Firestore,
   input: {
     organizationId: string;
-    summary: string;
+    title: string;
+    message: string;
     category: "billing" | "subscription";
     entityType?: "invoice" | "subscription" | "payment";
     entityId?: string;
@@ -47,7 +48,8 @@ export async function notifyOrgStaffSystemEvent(
       const payload: Record<string, unknown> = {
         organizationId: input.organizationId,
         recipientUid,
-        summary: input.summary,
+        title: input.title,
+        message: input.message,
         category: input.category,
         source: "system",
         createdAt: now,

@@ -196,7 +196,8 @@ export async function updateTaskForStaff(
     await notifyStaffAction({
       actor: user,
       organizationId: user.organizationId ?? existing.organizationId,
-      summary: `assigned task "${title}"`,
+      title: "Task assigned",
+      message: title,
       category: "task",
       entity: { type: "task", id: taskId, label: title },
       href: "/admin/tasks",
@@ -264,7 +265,8 @@ export async function createTaskForStaff(
 
   await notifyStaffAction({
     actor: user,
-    summary: `created task "${title}"`,
+    title: "Task created",
+    message: title,
     category: "task",
     entity: { type: "task", id: docRef.id, label: title },
     href: "/admin/tasks",

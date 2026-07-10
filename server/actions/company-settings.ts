@@ -62,7 +62,8 @@ export async function updateWorkspaceCompanySettingsAction(
   await notifyStaffAction({
     actor: user,
     organizationId: user.organizationId,
-    summary: "updated company settings",
+    title: "Company updated",
+    message: v.name.trim() || "Company settings",
     category: "system",
     entity: { type: "organization", id: docId, label: v.name.trim() },
     href: "/admin/settings/company",

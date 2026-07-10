@@ -305,7 +305,8 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
   await notifyStaffAction({
     actor: user,
     organizationId: user.organizationId ?? asString(customerData.organizationId),
-    summary: "converted lead to contact",
+    title: "Lead converted to contact",
+    message: detailLabel,
     category: "crm",
     entity: { type: "customer", id: customerId, label: detailLabel },
     href: `/admin/customers/${customerId}`,
@@ -370,21 +371,23 @@ export async function updateOpportunityStage(
 
   // Proposal send also bumps stage with attribution "system" — notify from sendProposalAction instead.
   if (attribution === "user") {
-    const stageSummary =
+    const dealLabel = existing.name || opportunityId;
+    const stageTitle =
       stage === "won"
-        ? "marked deal as won"
+        ? "Deal won"
         : stage === "lost"
-          ? "marked deal as lost"
-          : `moved deal to ${opportunityStageLabel(stage)}`;
+          ? "Deal lost"
+          : `Deal moved to ${opportunityStageLabel(stage)}`;
     await notifyStaffAction({
       actor: user,
       organizationId: existing.organizationId ?? user.organizationId,
-      summary: stageSummary,
+      title: stageTitle,
+      message: dealLabel,
       category: "crm",
       entity: {
         type: "opportunity",
         id: opportunityId,
-        label: existing.name || opportunityId,
+        label: dealLabel,
       },
       href: `/admin/opportunities/${opportunityId}`,
     });
@@ -580,16 +583,13 @@ export async function appendOpportunityNote(
     .doc(opportunityId)
     .update({ updatedAt: FieldValue.serverTimestamp() });
 
-  const noteSummary =
-    input.kind === "call"
-      ? "logged a call"
-      : input.kind === "email"
-        ? "logged an email"
-        : "added a note";
+  const noteKindLabel =
+    input.kind === "call" ? "Call logged" : input.kind === "email" ? "Email logged" : "Note added";
   await notifyStaffAction({
     actor: user,
     organizationId: opp.organizationId ?? user.organizationId,
-    summary: `${noteSummary} on deal ${opp.name || opportunityId}`,
+    title: noteKindLabel,
+    message: opp.name || opportunityId,
     category: "crm",
     entity: { type: "opportunity", id: opportunityId, label: opp.name },
     href: `/admin/opportunities/${opportunityId}`,

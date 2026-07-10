@@ -24,6 +24,7 @@ import {
 } from "@/server/firestore/proposal-accept-crm";
 import { getProposalTemplateNameForOrganization } from "@/server/firestore/proposal-templates";
 import { updateOpportunityStage } from "@/server/firestore/crm-opportunities";
+import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
 import { PROPOSAL_UNLOCK_COOKIE } from "@/lib/proposal/public/public-session";
 import { cloneProposalDocument } from "@/lib/proposal/clone-document";
 import {
@@ -182,11 +183,22 @@ export async function sendProposalAction(
     }
   }
 
-  const proposalTitle = existing.title?.trim() || "proposal";
+  const proposalTitle = existing.title?.trim() || "Proposal";
+  let contactLabel = existing.recipientEmail?.trim() || "";
+  if (!contactLabel && existing.customerId) {
+    try {
+      const customer = await getCustomerRecordForOrg(user, existing.customerId);
+      contactLabel = customer?.name?.trim() || customer?.email?.trim() || "";
+    } catch {
+      /* best-effort contact label */
+    }
+  }
+  if (!contactLabel) contactLabel = "recipient";
   await notifyStaffAction({
     actor: user,
     organizationId: existing.organizationId ?? user.organizationId,
-    summary: `sent proposal "${proposalTitle}"`,
+    title: `Proposal "${proposalTitle}" sent to ${contactLabel}`,
+    message: "Status set to published",
     category: "proposal",
     entity: { type: "proposal", id: proposalId, label: proposalTitle },
     href: `/admin/proposals/${proposalId}`,
@@ -365,12 +377,14 @@ export async function acceptProposalPublicAction(
 
   await applyProposalAcceptCrmSideEffects(db, proposal, parsed.data.signerName);
 
-  const acceptedTitle = proposal.title?.trim() || "proposal";
+  const acceptedTitle = proposal.title?.trim() || "Proposal";
+  const signerLabel = parsed.data.signerName.trim() || "Client";
   await notifySystem({
     organizationId: proposal.organizationId,
-    summary: `accepted proposal "${acceptedTitle}"`,
+    title: `Proposal "${acceptedTitle}" accepted`,
+    message: `Signed by ${signerLabel}`,
     category: "proposal",
-    actorName: parsed.data.signerName.trim() || "Client",
+    actorName: signerLabel,
     entity: { type: "proposal", id: proposal.id, label: acceptedTitle },
     href: `/admin/proposals/${proposal.id}`,
     idempotencyKey: `proposal:accepted:${proposal.id}`,

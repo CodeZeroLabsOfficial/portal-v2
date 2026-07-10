@@ -87,10 +87,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     await ref.update(pack);
 
     if (isFirstView && proposal.organizationId) {
-      const viewedTitle = proposal.title?.trim() || "proposal";
+      const viewedTitle = proposal.title?.trim() || "Proposal";
       await notifySystem({
         organizationId: proposal.organizationId,
-        summary: `viewed proposal "${viewedTitle}"`,
+        title: `Proposal "${viewedTitle}" viewed`,
+        message: "Opened by recipient",
         category: "proposal",
         actorName: "Client",
         entity: { type: "proposal", id: proposal.id, label: viewedTitle },

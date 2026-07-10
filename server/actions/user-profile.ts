@@ -76,7 +76,8 @@ export async function updateCurrentUserProfileAction(
   await notifyStaffAction({
     actor: user,
     organizationId: user.organizationId,
-    summary: "updated profile",
+    title: "Profile updated",
+    message: displayName || user.email,
     category: "system",
     entity: { type: "user", id: user.uid, label: displayName || user.email },
     href: "/admin/settings/profile",

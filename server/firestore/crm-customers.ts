@@ -1164,7 +1164,8 @@ export async function createCustomerDocument(
   const createdLabel = input.name.trim() || payload.email || docRef.id;
   await notifyStaffAction({
     actor: user,
-    summary: crmType === "lead" ? "created a new lead" : "created a new contact",
+    title: crmType === "lead" ? "Lead created" : "Contact created",
+    message: createdLabel,
     category: "crm",
     entity: { type: "customer", id: docRef.id, label: createdLabel },
     href: `/admin/customers/${docRef.id}`,
@@ -1231,7 +1232,8 @@ export async function updateCustomerDocument(
   await notifyStaffAction({
     actor: user,
     organizationId: user.organizationId ?? existing.organizationId,
-    summary: existing.crmType === "lead" ? "updated lead" : "updated contact",
+    title: existing.crmType === "lead" ? "Lead updated" : "Contact updated",
+    message: updatedLabel,
     category: "crm",
     entity: { type: "customer", id: customerId, label: updatedLabel },
     href: `/admin/customers/${customerId}`,
@@ -1354,16 +1356,13 @@ export async function appendCustomerNote(
     createdAt: Timestamp.fromMillis(noteAt.toMillis() + 1),
   });
 
-  const noteSummary =
-    input.kind === "call"
-      ? "logged a call"
-      : input.kind === "email"
-        ? "logged an email"
-        : "added a note";
+  const noteKindLabel =
+    input.kind === "call" ? "Call logged" : input.kind === "email" ? "Email logged" : "Note added";
   await notifyStaffAction({
     actor: user,
     organizationId: user.organizationId ?? customer.organizationId,
-    summary: `${noteSummary} on ${customer.name || "a contact"}`,
+    title: noteKindLabel,
+    message: customer.name || "Contact",
     category: "crm",
     entity: { type: "customer", id: customerId, label: customer.name },
     href: `/admin/customers/${customerId}`,

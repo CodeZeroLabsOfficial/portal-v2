@@ -524,7 +524,8 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
           if (deletedOrgId) {
             await notifyOrgStaffSystemEvent(db, {
               organizationId: deletedOrgId,
-              summary: `subscription ${sub.id} was canceled`,
+              title: "Subscription canceled",
+              message: sub.id,
               category: "subscription",
               entityType: "subscription",
               entityId: sub.id,
@@ -537,13 +538,14 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
         await upsertSubscriptionMirror(db, sub);
         const subOrgId = metadataOrganizationId(sub);
         if (subOrgId && (event.type === "customer.subscription.created" || sub.status === "past_due" || sub.status === "unpaid")) {
-          const summary =
+          const title =
             event.type === "customer.subscription.created"
-              ? `subscription ${sub.id} was created`
-              : `subscription ${sub.id} is ${sub.status}`;
+              ? "Subscription created"
+              : `Subscription ${sub.status.replace(/_/g, " ")}`;
           await notifyOrgStaffSystemEvent(db, {
             organizationId: subOrgId,
-            summary,
+            title,
+            message: sub.id,
             category: "subscription",
             entityType: "subscription",
             entityId: sub.id,
@@ -570,10 +572,9 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
                 : invoice.id;
             await notifyOrgStaffSystemEvent(db, {
               organizationId: orgId,
-              summary:
-                event.type === "invoice.paid"
-                  ? `payment received for invoice ${label}`
-                  : `payment failed for invoice ${label}`,
+              title:
+                event.type === "invoice.paid" ? "Payment received" : "Payment failed",
+              message: `Invoice ${label}`,
               category: "billing",
               entityType: "invoice",
               entityId: invoice.id,

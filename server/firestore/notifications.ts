@@ -58,13 +58,18 @@ export function parseNotificationRecord(
   data: Record<string, unknown>,
 ): NotificationRecord {
   const readAt = millisFromFirestore(data, "readAt");
+  const title = asString(data.title);
+  const message = asString(data.message);
+  const summary = asString(data.summary);
   return {
     id,
     organizationId: asString(data.organizationId) ?? "",
     recipientUid: asString(data.recipientUid) ?? "",
     actorUid: asString(data.actorUid),
     actorName: asString(data.actorName),
-    summary: asString(data.summary) ?? "Notification",
+    title: title ?? summary ?? "Notification",
+    message: message ?? "",
+    summary,
     category: parseCategory(data.category),
     entityType: asString(data.entityType) as NotificationEntityType | undefined,
     entityId: asString(data.entityId),
@@ -138,7 +143,8 @@ export async function listStaffUidsForOrganization(
 export interface CreateNotificationInput {
   organizationId: string;
   recipientUid: string;
-  summary: string;
+  title: string;
+  message: string;
   category: NotificationCategory;
   source: NotificationSource;
   actorUid?: string;
@@ -157,7 +163,8 @@ function notificationPayload(
   const payload: Record<string, unknown> = {
     organizationId: input.organizationId,
     recipientUid: input.recipientUid,
-    summary: input.summary,
+    title: input.title,
+    message: input.message,
     category: input.category,
     source: input.source,
     createdAt: now,

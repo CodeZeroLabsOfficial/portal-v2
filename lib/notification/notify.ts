@@ -29,7 +29,10 @@ export interface NotifyEntityRef {
 export interface NotifyStaffActionInput {
   actor: PortalUser;
   organizationId?: string;
-  summary: string;
+  /** Event headline shown as the primary line. */
+  title: string;
+  /** What changed — detail under the title. */
+  message: string;
   category: NotificationCategory;
   entity?: NotifyEntityRef;
   href?: string;
@@ -38,10 +41,12 @@ export interface NotifyStaffActionInput {
 
 export interface NotifySystemInput {
   organizationId: string;
-  summary: string;
+  title: string;
+  message: string;
   category: NotificationCategory;
   entity?: NotifyEntityRef;
   href?: string;
+  /** Defaults to System in the UI when omitted. */
   actorName?: string;
   idempotencyKey?: string;
 }
@@ -63,7 +68,8 @@ export async function notifyStaffAction(input: NotifyStaffActionInput): Promise<
     const docs: CreateNotificationInput[] = recipients.map((r) => ({
       organizationId,
       recipientUid: r.uid,
-      summary: input.summary,
+      title: input.title,
+      message: input.message,
       category: input.category,
       source: "staff_action",
       actorUid: input.actor.uid,
@@ -80,7 +86,7 @@ export async function notifyStaffAction(input: NotifyStaffActionInput): Promise<
     await createNotificationDocs(docs);
   } catch (error) {
     logError("notify_staff_action_failed", {
-      summary: input.summary,
+      title: input.title,
       message: error instanceof Error ? error.message : "unknown",
     });
   }
@@ -100,7 +106,8 @@ export async function notifySystem(input: NotifySystemInput): Promise<void> {
     const docs: CreateNotificationInput[] = recipients.map((r) => ({
       organizationId: input.organizationId,
       recipientUid: r.uid,
-      summary: input.summary,
+      title: input.title,
+      message: input.message,
       category: input.category,
       source: "system",
       actorName: input.actorName,
@@ -116,7 +123,7 @@ export async function notifySystem(input: NotifySystemInput): Promise<void> {
     await createNotificationDocs(docs);
   } catch (error) {
     logError("notify_system_failed", {
-      summary: input.summary,
+      title: input.title,
       message: error instanceof Error ? error.message : "unknown",
     });
   }
