@@ -151,6 +151,9 @@ export async function createDraftProposalFromCustomerAction(
   if (tid) {
     const template = await getProposalTemplateForStaff(user, tid);
     if (!template) return { ok: false, message: "Template not found." };
+    if (template.stage !== "published" || template.templateType === "contract") {
+      return { ok: false, message: "Only published proposal templates can be used." };
+    }
     document = applyProposalTokensToDocument(cloneProposalDocument(template.document), {
       customer,
       timeZone: user.timeZone?.trim() || undefined,
@@ -261,6 +264,9 @@ export async function createDraftProposalFromOpportunityAction(
   if (tid) {
     const template = await getProposalTemplateForStaff(user, tid);
     if (!template) return { ok: false, message: "Template not found." };
+    if (template.stage !== "published" || template.templateType === "contract") {
+      return { ok: false, message: "Only published proposal templates can be used." };
+    }
     document = applyProposalTokensToDocument(cloneProposalDocument(template.document), {
       customer,
       opportunity,
