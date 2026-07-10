@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BellIcon, ClockIcon, FileText } from "lucide-react";
+import { BellIcon, ClockIcon } from "lucide-react";
 
+import { NotificationVisual } from "@/components/features/notifications/notification-visual";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
@@ -14,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   formatNotificationDateTime,
@@ -28,12 +28,6 @@ import {
   markNotificationReadAction,
 } from "@/server/actions/notifications";
 import type { NotificationRecord } from "@/types/notification";
-
-function actorInitials(name?: string): string {
-  if (!name?.trim()) return "?";
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  return parts.map((p) => p.charAt(0).toUpperCase()).join("") || "?";
-}
 
 export default function Notifications() {
   const isMobile = useIsMobile();
@@ -65,9 +59,7 @@ export default function Notifications() {
       const result = await markNotificationReadAction(notification.id);
       if (result.ok) {
         setItems((prev) =>
-          prev.map((n) =>
-            n.id === notification.id ? { ...n, readAt: Date.now() } : n,
-          ),
+          prev.map((n) => (n.id === notification.id ? { ...n, readAt: Date.now() } : n)),
         );
       }
     }
@@ -123,19 +115,11 @@ export default function Notifications() {
                   }}
                 >
                   <div className="flex flex-1 items-start gap-2">
-                    <Avatar className="size-8 shrink-0">
-                      <AvatarFallback
-                        className={cn(
-                          item.source === "system" ? "bg-muted" : "bg-primary/10 text-primary",
-                        )}
-                      >
-                        {item.source === "system" ? (
-                          <FileText className="size-3.5" />
-                        ) : (
-                          actorInitials(item.actorName)
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
+                    <NotificationVisual
+                      notification={item}
+                      className="size-8"
+                      iconClassName="size-3.5"
+                    />
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <div
                         className={cn(

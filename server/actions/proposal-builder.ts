@@ -184,16 +184,18 @@ export async function sendProposalAction(
   }
 
   const proposalTitle = existing.title?.trim() || "Proposal";
-  let contactLabel = existing.recipientEmail?.trim() || "";
-  if (!contactLabel && existing.customerId) {
+  let contactLabel = "";
+  if (existing.customerId) {
     try {
       const customer = await getCustomerRecordForOrg(user, existing.customerId);
-      contactLabel = customer?.name?.trim() || customer?.email?.trim() || "";
+      contactLabel = customer?.name?.trim() || "";
     } catch {
       /* best-effort contact label */
     }
   }
-  if (!contactLabel) contactLabel = "recipient";
+  if (!contactLabel) {
+    contactLabel = existing.recipientEmail?.trim() || "recipient";
+  }
   await notifyStaffAction({
     actor: user,
     organizationId: existing.organizationId ?? user.organizationId,
