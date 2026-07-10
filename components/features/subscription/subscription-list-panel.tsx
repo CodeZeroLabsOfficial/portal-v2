@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef, Table } from "@tanstack/react-table";
-import { MoreHorizontal, Plus, Trash2, X } from "lucide-react";
+import { Ban, ExternalLink, MoreHorizontal, Pause, Play, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddSubscriptionDialog } from "@/components/features/subscription/add-subscription-dialog";
@@ -16,7 +16,6 @@ import { DataTableViewOptions } from "@/components/shared/data-table/data-table-
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +38,6 @@ import {
 } from "@/lib/subscription/status-badge";
 import {
   cancelSubscriptionAction,
-  deleteSubscriptionAction,
   pauseSubscriptionAction,
   resumeSubscriptionAction
 } from "@/server/actions/subscriptions-crm";
@@ -155,17 +153,12 @@ function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[]
 
 function SubscriptionListToolbar({
   table,
-  productOptions,
-  onBulkDelete,
-  bulkDeleteDisabled
+  productOptions
 }: {
   table: Table<SubscriptionListTableRow>;
   productOptions: { value: string; label: string }[];
-  onBulkDelete: () => void;
-  bulkDeleteDisabled: boolean;
 }) {
   const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -198,12 +191,6 @@ function SubscriptionListToolbar({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        {selectedCount > 0 ? (
-          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        ) : null}
         <DataTableViewOptions table={table} />
       </div>
     </div>
@@ -221,11 +208,9 @@ export function SubscriptionListPanel({
   const searchParams = useSearchParams();
   const [addOpen, setAddOpen] = React.useState(false);
   const [pendingId, setPendingId] = React.useState<string | null>(null);
-  const [bulkBusy, setBulkBusy] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
-  const tableRef = React.useRef<Table<SubscriptionListTableRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -311,68 +296,18 @@ export function SubscriptionListPanel({
       {
         title: "Cancel subscription",
         description:
-          "Cancel this subscription at the end of the current billing period? No refund will be issued."
+          "Cancel this subscription now? This immediately cancels it in Stripe and cannot be undone."
       },
       async () => {
         setPendingId(row.id);
         try {
           const res = await cancelSubscriptionAction(row.id);
           if (!res.ok) throw new Error(res.message ?? "Action failed.");
-          toast.success("Subscription set to cancel at period end.");
+          toast.success("Subscription canceled.");
           router.refresh();
         } finally {
           setPendingId(null);
         }
-      }
-    );
-  }
-
-  function handleDelete(row: SubscriptionListTableRow) {
-    openConfirm(
-      {
-        title: "Delete subscription",
-        description:
-          "Delete this subscription now? This immediately cancels it in Stripe and cannot be undone."
-      },
-      async () => {
-        setPendingId(row.id);
-        try {
-          const res = await deleteSubscriptionAction(row.id);
-          if (!res.ok) throw new Error(res.message ?? "Action failed.");
-          toast.success("Subscription deleted.");
-          router.refresh();
-        } finally {
-          setPendingId(null);
-        }
-      }
-    );
-  }
-
-  function handleBulkDelete() {
-    const table = tableRef.current;
-    if (!table) return;
-    const ids = table.getFilteredSelectedRowModel().rows.map((r) => r.original.id);
-    if (ids.length === 0) return;
-    openConfirm(
-      {
-        title: `Delete ${ids.length} subscription${ids.length === 1 ? "" : "s"}`,
-        description: `Delete selected subscriptions now? This immediately cancels them in Stripe.`
-      },
-      async () => {
-        setBulkBusy(true);
-        const failed: string[] = [];
-        for (const id of ids) {
-          const res = await deleteSubscriptionAction(id);
-          if (!res.ok) failed.push(id);
-        }
-        setBulkBusy(false);
-        if (failed.length > 0) {
-          toast.error(`Deleted ${ids.length - failed.length} of ${ids.length}. ${failed.length} failed.`);
-        } else {
-          toast.success(`Deleted ${ids.length} subscription${ids.length === 1 ? "" : "s"}.`);
-          table.resetRowSelection();
-        }
-        router.refresh();
       }
     );
   }
@@ -380,30 +315,7 @@ export function SubscriptionListPanel({
   const columns = React.useMemo<ColumnDef<SubscriptionListTableRow>[]>(
     () => [
       {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label={`Select subscription for ${row.original.accountName}`}
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false
-      },
-      {
-        id: "accountName",
-        accessorKey: "accountName",
+        id: "accountName",        accessorKey: "accountName",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Account name" />,
         cell: ({ row }) => {
           const { accountName, crmCustomerId } = row.original;
@@ -505,7 +417,7 @@ export function SubscriptionListPanel({
         id: "actions",
         cell: ({ row }) => {
           const subscription = row.original.subscription;
-          const busy = pendingId === subscription.id || bulkBusy;
+          const busy = pendingId === subscription.id;
           const stripeUrl = subscriptionStripeDashboardUrl(subscription.id);
           const showPause = canPauseSubscription(subscription);
           const showResume = Boolean(subscription.paymentCollectionPaused);
@@ -522,32 +434,41 @@ export function SubscriptionListPanel({
                 {stripeUrl ? (
                   <DropdownMenuItem asChild>
                     <a href={stripeUrl} target="_blank" rel="noopener noreferrer">
-                      Open in Stripe
+                      <ExternalLink />
+                      Open
                     </a>
                   </DropdownMenuItem>
                 ) : null}
                 {showPause ? (
-                  <DropdownMenuItem onClick={() => handlePause(subscription.id)}>Pause</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handlePause(subscription.id)}>
+                    <Pause />
+                    Pause
+                  </DropdownMenuItem>
                 ) : null}
                 {showResume ? (
-                  <DropdownMenuItem onClick={() => handleResume(subscription.id)}>Resume</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleResume(subscription.id)}>
+                    <Play />
+                    Resume
+                  </DropdownMenuItem>
                 ) : null}
                 {showCancel ? (
-                  <DropdownMenuItem onClick={() => handleCancel(row.original)}>Cancel</DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => handleCancel(row.original)}>
+                      <Ban />
+                      Cancel
+                    </DropdownMenuItem>
+                  </>
                 ) : null}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => handleDelete(row.original)}>
-                  Delete
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );
         }
       }
     ],
-    [pendingId, bulkBusy]
+    [pendingId]
   );
 
   return (
@@ -589,17 +510,9 @@ export function SubscriptionListPanel({
         initialPageSize={25}
         initialSorting={[{ id: "createdAt", desc: true }]}
         emptyMessage={rows.length === 0 ? "No subscriptions yet." : "No subscriptions match your filters."}
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <SubscriptionListToolbar
-              table={table}
-              productOptions={productOptions}
-              onBulkDelete={handleBulkDelete}
-              bulkDeleteDisabled={bulkBusy}
-            />
-          );
-        }}
+        toolbar={(table) => (
+          <SubscriptionListToolbar table={table} productOptions={productOptions} />
+        )}
       />
     </div>
   );

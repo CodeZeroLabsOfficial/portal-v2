@@ -12,16 +12,17 @@ import { listCatalogServicePickerOptionsForOrg } from "@/server/firestore/catalo
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import { getCustomerRecordForOrg, syncStripeCustomerBasics } from "@/server/firestore/crm-customers";
 import { ensureStripeCustomer } from "@/server/stripe/proposal-billing";
-import { cancelSubscriptionAtPeriodEnd } from "@/server/stripe/subscription-cancel-at-period-end";
 import {
   pauseSubscriptionPaymentCollection,
   resumeSubscriptionPaymentCollection,
 } from "@/server/stripe/subscription-payment-collection";
-import { deleteSubscriptionMirrorFromFirestore } from "@/server/stripe/stripe-sync";
+import { upsertSubscriptionMirror } from "@/server/stripe/stripe-sync";
 import {
   createSubscriptionScheduleForCustomer,
   parseStartDateToUtcMs,
 } from "@/server/stripe/subscription-schedule-create";
+import { COLLECTIONS } from "@/server/firestore/collections";
+import { FieldValue } from "firebase-admin/firestore";
 
 function revalidateSubscriptionPaths(customerId?: string) {
   revalidatePath("/admin/subscriptions", "layout");
@@ -138,6 +139,7 @@ export async function createSubscriptionAction(
   }
 }
 
+/** Immediately cancels in Stripe and retains the Firestore mirror (status → canceled via upsert/webhook). */
 export async function cancelSubscriptionAction(
   subscriptionId: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -150,7 +152,25 @@ export async function cancelSubscriptionAction(
   const subId = subscriptionId.trim();
   if (!subId.startsWith("sub_")) return { ok: false, message: "Invalid subscription id." };
   try {
-    await cancelSubscriptionAtPeriodEnd(stripe, db, subId);
+    if (subId.startsWith("sub_sched_")) {
+      await stripe.subscriptionSchedules.cancel(subId, {
+        invoice_now: false,
+        prorate: false,
+      });
+      await db.collection(COLLECTIONS.subscriptions).doc(subId).set(
+        {
+          status: "canceled",
+          cancelAtPeriodEnd: false,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+    } else {
+      const canceled = await stripe.subscriptions.cancel(subId, {
+        expand: ["default_payment_method", "items.data.price.product"],
+      });
+      await upsertSubscriptionMirror(db, canceled);
+    }
 
     await notifyStaffAction({
       actor: user,
@@ -212,38 +232,6 @@ export async function resumeSubscriptionAction(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not resume subscription.";
     logError("subscription_resume_failed", { subscriptionId: subId, message });
-    return { ok: false, message };
-  }
-}
-
-export async function deleteSubscriptionAction(
-  subscriptionId: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-  const stripe = getStripe();
-  if (!stripe) return { ok: false, message: "Stripe is not configured on the server." };
-  const db = getFirebaseAdminFirestore();
-  if (!db) return { ok: false, message: "Database unavailable." };
-  const subId = subscriptionId.trim();
-  if (!subId.startsWith("sub_")) return { ok: false, message: "Invalid subscription id." };
-  try {
-    if (subId.startsWith("sub_sched_")) {
-      await stripe.subscriptionSchedules.cancel(subId);
-      await deleteSubscriptionMirrorFromFirestore(db, subId);
-      revalidateSubscriptionPaths();
-      return { ok: true };
-    }
-
-    const canceled = await stripe.subscriptions.cancel(subId);
-    const customerId =
-      typeof canceled.customer === "string" ? canceled.customer : canceled.customer?.id ?? "";
-    await deleteSubscriptionMirrorFromFirestore(db, subId, customerId);
-    revalidateSubscriptionPaths();
-    return { ok: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not delete subscription.";
-    logError("subscription_delete_failed", { subscriptionId: subId, message });
     return { ok: false, message };
   }
 }

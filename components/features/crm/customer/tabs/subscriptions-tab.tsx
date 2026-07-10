@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DateRange } from "react-day-picker";
-import { MoreHorizontal } from "lucide-react";
+import { Ban, ExternalLink, MoreHorizontal, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 
 import { CustomerSubscriptionTableToolbar } from "@/components/features/crm/customer/customer-subscription-table-toolbar";
@@ -38,7 +38,6 @@ import {
 } from "@/lib/subscription/status-badge";
 import {
   cancelSubscriptionAction,
-  deleteSubscriptionAction,
   pauseSubscriptionAction,
   resumeSubscriptionAction
 } from "@/server/actions/subscriptions-crm";
@@ -121,23 +120,10 @@ export function CustomerSubscriptionsTab({
       {
         title: "Cancel subscription",
         description:
-          "Cancel this subscription at the end of the current billing period? The customer will keep access until then."
+          "Cancel this subscription now? This immediately cancels it in Stripe and cannot be undone."
       },
       () => cancelSubscriptionAction(subscription.id),
-      "Subscription set to cancel at period end.",
-      subscription.id
-    );
-  }
-
-  function handleDelete(subscription: SubscriptionTableRow) {
-    openConfirm(
-      {
-        title: "Delete subscription",
-        description:
-          "Immediately cancel this subscription in Stripe and remove it from the portal? This cannot be undone."
-      },
-      () => deleteSubscriptionAction(subscription.id),
-      "Subscription deleted.",
+      "Subscription canceled.",
       subscription.id
     );
   }
@@ -235,25 +221,34 @@ export function CustomerSubscriptionsTab({
                 {stripeUrl ? (
                   <DropdownMenuItem asChild>
                     <a href={stripeUrl} target="_blank" rel="noopener noreferrer">
-                      Open in Stripe
+                      <ExternalLink />
+                      Open
                     </a>
                   </DropdownMenuItem>
                 ) : null}
                 {showPause ? (
-                  <DropdownMenuItem onClick={() => handlePause(subscription.id)}>Pause</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handlePause(subscription.id)}>
+                    <Pause />
+                    Pause
+                  </DropdownMenuItem>
                 ) : null}
                 {showResume ? (
-                  <DropdownMenuItem onClick={() => handleResume(subscription.id)}>Resume</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleResume(subscription.id)}>
+                    <Play />
+                    Resume
+                  </DropdownMenuItem>
                 ) : null}
                 {showCancel ? (
-                  <DropdownMenuItem onClick={() => handleCancel(subscription)}>Cancel</DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => handleCancel(subscription)}>
+                      <Ban />
+                      Cancel
+                    </DropdownMenuItem>
+                  </>
                 ) : null}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => handleDelete(subscription)}>
-                  Delete
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );

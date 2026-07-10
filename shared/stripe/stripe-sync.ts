@@ -338,7 +338,12 @@ export async function upsertSubscriptionMirror(db: Firestore, sub: Stripe.Subscr
     currency: (sub.currency ?? price?.currency ?? "aud").toLowerCase(),
     ...(interval ? { interval } : {}),
     ...(typeof sub.start_date === "number" ? { subscriptionStart: sub.start_date * 1000 } : {}),
-    ...(typeof sub.cancel_at === "number" ? { subscriptionEnd: sub.cancel_at * 1000 } : {}),
+    ...(() => {
+      if (typeof sub.cancel_at === "number") return { subscriptionEnd: sub.cancel_at * 1000 };
+      if (typeof sub.ended_at === "number") return { subscriptionEnd: sub.ended_at * 1000 };
+      if (typeof sub.canceled_at === "number") return { subscriptionEnd: sub.canceled_at * 1000 };
+      return {};
+    })(),
     ...(() => {
       const currentPeriodEnd = (sub as Stripe.Subscription & { current_period_end?: number })
         .current_period_end;
@@ -510,8 +515,17 @@ export async function applyStripeWebhookEvent(db: Firestore, event: Stripe.Event
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
         if (event.type === "customer.subscription.deleted") {
+          // Retain the mirror; only mark terminal status so account/product/amount/dates stay intact.
+          const endedAt =
+            typeof sub.ended_at === "number"
+              ? sub.ended_at * 1000
+              : typeof sub.canceled_at === "number"
+                ? sub.canceled_at * 1000
+                : undefined;
           const patch = {
             status: "canceled" as const,
+            cancelAtPeriodEnd: false,
+            ...(typeof endedAt === "number" ? { subscriptionEnd: endedAt } : {}),
             updatedAt: FieldValue.serverTimestamp(),
           };
           await db.collection(COLLECTIONS.subscriptions).doc(sub.id).set(patch, { merge: true });
