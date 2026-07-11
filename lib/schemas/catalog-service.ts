@@ -29,6 +29,7 @@ const catalogServiceFieldsSchema = z.object({
   includedLocations: z.number().int().min(0).max(1_000_000).default(0),
   includedAdmins: z.number().int().min(0).max(1_000_000).default(0),
   upfrontCost12Minor: z.number().finite().min(0).optional(),
+  upfrontCost24Minor: z.number().finite().min(0).optional(),
 });
 
 function refineCatalogServicePricing<

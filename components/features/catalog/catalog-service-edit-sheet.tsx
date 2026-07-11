@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import {
   CatalogServiceFormFields,
+  catalogServiceFormInvalidIsPricing,
   catalogServiceFormInvalidMessage,
   useCatalogServicePricingFlags,
 } from "@/components/features/catalog/catalog-service-form-fields";
@@ -22,8 +23,8 @@ import { CatalogServiceStripePanel } from "@/components/features/catalog/catalog
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetActionsEndClass,
-  sheetContentWideClass,
+  sheetActionsRowClass,
+  sheetContentMediumClass,
   sheetFormClass,
   sheetTabsClass,
 } from "@/components/shared/sheet-layout";
@@ -79,7 +80,8 @@ export function CatalogServiceEditSheet({
   const [lookupKeyBase, setLookupKeyBase] = React.useState(service.slug);
   const [lookupTouched, setLookupTouched] = React.useState(false);
   const [flatPrice, setFlatPrice] = React.useState("");
-  const [upfrontPrice, setUpfrontPrice] = React.useState("");
+  const [upfront12, setUpfront12] = React.useState("");
+  const [upfront24, setUpfront24] = React.useState("");
   const [monthly12, setMonthly12] = React.useState("");
   const [monthly24, setMonthly24] = React.useState("");
   const [featuresDraft, setFeaturesDraft] = React.useState<string[]>(() => [...service.features]);
@@ -130,7 +132,8 @@ export function CatalogServiceEditSheet({
     setLookupKeyBase(service.slug);
     setLookupTouched(true);
     setFlatPrice(prices.flatPrice);
-    setUpfrontPrice(prices.upfrontPrice);
+    setUpfront12(prices.upfront12);
+    setUpfront24(prices.upfront24);
     setMonthly12(prices.monthly12);
     setMonthly24(prices.monthly24);
     setFeaturesDraft([...service.features]);
@@ -142,13 +145,20 @@ export function CatalogServiceEditSheet({
     if (isFlat) {
       form.setValue("flatAmountMinor", majorInputToMinor(flatPrice), { shouldValidate: false });
       form.setValue("upfrontCost12Minor", undefined, { shouldValidate: false });
+      form.setValue("upfrontCost24Minor", undefined, { shouldValidate: false });
     } else {
       form.setValue("monthlyCost12Minor", majorInputToMinor(monthly12), { shouldValidate: false });
       form.setValue("monthlyCost24Minor", majorInputToMinor(monthly24), { shouldValidate: false });
-      const upfrontMinor = majorInputToMinor(upfrontPrice);
+      const upfront12Minor = majorInputToMinor(upfront12);
+      const upfront24Minor = majorInputToMinor(upfront24);
       form.setValue(
         "upfrontCost12Minor",
-        showUpfront && upfrontMinor > 0 ? upfrontMinor : undefined,
+        showUpfront && upfront12Minor > 0 ? upfront12Minor : undefined,
+        { shouldValidate: false },
+      );
+      form.setValue(
+        "upfrontCost24Minor",
+        showUpfront && upfront24Minor > 0 ? upfront24Minor : undefined,
         { shouldValidate: false },
       );
     }
@@ -156,7 +166,7 @@ export function CatalogServiceEditSheet({
 
   function onInvalid(errors: FieldErrors<CreateCatalogServiceInput>) {
     setServerError(catalogServiceFormInvalidMessage(errors));
-    setActiveTab("overview");
+    setActiveTab(catalogServiceFormInvalidIsPricing(errors) ? "pricing" : "overview");
   }
 
   async function onSubmit(values: CreateCatalogServiceInput) {
@@ -179,7 +189,8 @@ export function CatalogServiceEditSheet({
       isByTerm,
       showUpfront,
       flatPrice,
-      upfrontPrice,
+      upfront12,
+      upfront24,
       monthly12,
       monthly24,
     });
@@ -233,10 +244,32 @@ export function CatalogServiceEditSheet({
   const busy = form.formState.isSubmitting;
   const serviceName = service.name.trim();
 
+  const formFieldProps = {
+    form,
+    mode: "edit" as const,
+    serviceType,
+    busy: busy || fieldsDisabled,
+    lookupKeyBase,
+    setLookupKeyBase,
+    lookupTouched,
+    setLookupTouched,
+    flatPrice,
+    setFlatPrice,
+    upfront12,
+    setUpfront12,
+    upfront24,
+    setUpfront24,
+    monthly12,
+    setMonthly12,
+    monthly24,
+    setMonthly24,
+    idPrefix: "edit-catalog",
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className={sheetContentWideClass}>
+        <SheetContent className={sheetContentMediumClass}>
           <SheetHeader>
             <SheetTitle>Edit service</SheetTitle>
           </SheetHeader>
@@ -252,6 +285,9 @@ export function CatalogServiceEditSheet({
                 <TabsTrigger value="overview" className="flex-none px-0 pb-3">
                   Overview
                 </TabsTrigger>
+                <TabsTrigger value="pricing" className="flex-none px-0 pb-3">
+                  Pricing
+                </TabsTrigger>
                 {isPlan ? (
                   <TabsTrigger value="features" className="flex-none px-0 pb-3">
                     Features
@@ -263,25 +299,11 @@ export function CatalogServiceEditSheet({
               </TabsList>
 
               <TabsContent value="overview" className="mt-0">
-                <CatalogServiceFormFields
-                  form={form}
-                  mode="edit"
-                  serviceType={serviceType}
-                  busy={busy || fieldsDisabled}
-                  lookupKeyBase={lookupKeyBase}
-                  setLookupKeyBase={setLookupKeyBase}
-                  lookupTouched={lookupTouched}
-                  setLookupTouched={setLookupTouched}
-                  flatPrice={flatPrice}
-                  setFlatPrice={setFlatPrice}
-                  upfrontPrice={upfrontPrice}
-                  setUpfrontPrice={setUpfrontPrice}
-                  monthly12={monthly12}
-                  setMonthly12={setMonthly12}
-                  monthly24={monthly24}
-                  setMonthly24={setMonthly24}
-                  idPrefix="edit-catalog"
-                />
+                <CatalogServiceFormFields {...formFieldProps} section="overview" />
+              </TabsContent>
+
+              <TabsContent value="pricing" className="mt-0">
+                <CatalogServiceFormFields {...formFieldProps} section="pricing" />
               </TabsContent>
 
               {isPlan ? (
@@ -303,7 +325,7 @@ export function CatalogServiceEditSheet({
               </TabsContent>
             </Tabs>
 
-            <div className={sheetActionsEndClass}>
+            <div className={sheetActionsRowClass}>
               <Button
                 type="button"
                 variant="destructive"
@@ -312,10 +334,20 @@ export function CatalogServiceEditSheet({
               >
                 Delete
               </Button>
-              <Button type="submit" disabled={busy || fieldsDisabled} className="min-w-[7rem] gap-2">
-                {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                Save
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={busy}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={busy || fieldsDisabled} className="min-w-[7rem] gap-2">
+                  {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+                  Save
+                </Button>
+              </div>
             </div>
           </form>
         </SheetContent>

@@ -40,6 +40,7 @@ export interface CatalogServiceRecord {
   includedLocations: number;
   includedAdmins: number;
   upfrontCost12Minor?: number;
+  upfrontCost24Minor?: number;
   features: string[];
   terms: CatalogServiceTerm[];
   stripeProductId?: string;
@@ -67,5 +68,6 @@ export interface CatalogServicePickerOption {
   includedLocations: number;
   includedAdmins: number;
   upfrontCost12Minor?: number;
+  upfrontCost24Minor?: number;
   features: string[];
 }

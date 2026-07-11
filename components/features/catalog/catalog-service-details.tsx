@@ -39,7 +39,10 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
   const description = service.description?.trim() || "—";
   const infoItems = buildServiceDetailInfoItems(service);
-  const upfrontLabel = catalogUpfrontCostLabel(service);
+  const upfrontLabel = catalogUpfrontCostLabel(
+    service,
+    isByTerm ? selectedTermMonths : undefined,
+  );
 
   return (
     <div className="space-y-6">

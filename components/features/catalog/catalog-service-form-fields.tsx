@@ -8,6 +8,7 @@ import { DecimalStepper } from "@/components/ui/decimal-stepper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericStepper } from "@/components/ui/numeric-stepper";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   normalizeLookupKeyBase,
@@ -16,10 +17,12 @@ import {
 } from "@/lib/catalog/service-slug";
 import type { CreateCatalogServiceInput } from "@/lib/schemas/catalog-service";
 import { cn } from "@/lib/utils";
-import type { CatalogServiceKind } from "@/types/catalog-service";
+import type { CatalogServiceKind, CatalogServiceTermMonths } from "@/types/catalog-service";
 
 export const CATALOG_SERVICE_SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
+export type CatalogServiceFormSection = "all" | "overview" | "pricing";
 
 function lookupKeyBaseFromName(name: string): string {
   const trimmed = name.trim();
@@ -47,7 +50,7 @@ function PricingRow({
   placeholder?: string;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5 first:border-t-0">
       <Label htmlFor={id} className="font-normal">
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
@@ -90,7 +93,7 @@ function PricingStepperRow({
   allowEmpty?: boolean;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5 first:border-t-0">
       <Label htmlFor={id} className="font-normal">
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
@@ -125,7 +128,7 @@ function EntitlementRow({
   disabled?: boolean;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5">
+    <li className="flex items-center justify-between gap-3 border-t px-3 py-2.5 first:border-t-0">
       <Label htmlFor={id} className="font-normal">
         {label}
       </Label>
@@ -152,13 +155,16 @@ export interface CatalogServiceFormFieldsProps {
   setLookupTouched: React.Dispatch<React.SetStateAction<boolean>>;
   flatPrice: string;
   setFlatPrice: React.Dispatch<React.SetStateAction<string>>;
-  upfrontPrice: string;
-  setUpfrontPrice: React.Dispatch<React.SetStateAction<string>>;
+  upfront12: string;
+  setUpfront12: React.Dispatch<React.SetStateAction<string>>;
+  upfront24: string;
+  setUpfront24: React.Dispatch<React.SetStateAction<string>>;
   monthly12: string;
   setMonthly12: React.Dispatch<React.SetStateAction<string>>;
   monthly24: string;
   setMonthly24: React.Dispatch<React.SetStateAction<string>>;
   idPrefix?: string;
+  section?: CatalogServiceFormSection;
 }
 
 export function CatalogServiceFormFields({
@@ -172,14 +178,19 @@ export function CatalogServiceFormFields({
   setLookupTouched,
   flatPrice,
   setFlatPrice,
-  upfrontPrice,
-  setUpfrontPrice,
+  upfront12,
+  setUpfront12,
+  upfront24,
+  setUpfront24,
   monthly12,
   setMonthly12,
   monthly24,
   setMonthly24,
   idPrefix = "catalog",
+  section = "all",
 }: CatalogServiceFormFieldsProps) {
+  const [termMonths, setTermMonths] = React.useState<CatalogServiceTermMonths>(12);
+
   const name = form.watch("name");
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
@@ -193,6 +204,8 @@ export function CatalogServiceFormFields({
   const isFlat = isOneOff || pricingModel === "flat";
   const isByTerm = !isOneOff && pricingModel === "by_term";
   const showUpfront = isPlan && isByTerm;
+  const showOverview = section === "all" || section === "overview";
+  const showPricing = section === "all" || section === "pricing";
 
   const resolvedLookupBase =
     normalizeLookupKeyBase(lookupKeyBase) || lookupKeyBaseFromName(name);
@@ -218,242 +231,262 @@ export function CatalogServiceFormFields({
     }
   }, [isOneOff, pricingModel, form]);
 
+  const activeUpfront = termMonths === 12 ? upfront12 : upfront24;
+  const setActiveUpfront = termMonths === 12 ? setUpfront12 : setUpfront24;
+  const activeMonthly = termMonths === 12 ? monthly12 : monthly24;
+  const setActiveMonthly = termMonths === 12 ? setMonthly12 : setMonthly24;
+  const activeMonthlyError =
+    termMonths === 12
+      ? typeof errors.monthlyCost12Minor?.message === "string"
+        ? errors.monthlyCost12Minor.message
+        : undefined
+      : typeof errors.monthlyCost24Minor?.message === "string"
+        ? errors.monthlyCost24Minor.message
+        : undefined;
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-service-name`}>
-            Service or product name <span className="text-destructive">*</span>
-          </Label>
-          {mode === "create" ? (
-            <div className="flex overflow-hidden rounded-md border border-input focus-within:ring-2 focus-within:ring-ring">
-              <div className="relative shrink-0 border-r border-input">
-                <select
-                  id={`${idPrefix}-service-type`}
-                  className="h-9 appearance-none bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+      {showOverview ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-service-name`}>
+                Service or product name <span className="text-destructive">*</span>
+              </Label>
+              {mode === "create" ? (
+                <div className="flex overflow-hidden rounded-md border border-input focus-within:ring-2 focus-within:ring-ring">
+                  <div className="relative shrink-0 border-r border-input">
+                    <select
+                      id={`${idPrefix}-service-type`}
+                      className="h-9 appearance-none bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={busy}
+                      value={serviceType}
+                      aria-label="Service type"
+                      onChange={(event) =>
+                        form.setValue("serviceType", event.target.value as CatalogServiceKind, {
+                          shouldDirty: true,
+                        })
+                      }
+                    >
+                      <option value="plan">Plan</option>
+                      <option value="addon">Add-on</option>
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden
+                    />
+                  </div>
+                  <Input
+                    id={`${idPrefix}-service-name`}
+                    autoComplete="off"
+                    className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+                    placeholder="Service or product name"
+                    disabled={busy}
+                    {...form.register("name")}
+                  />
+                </div>
+              ) : (
+                <Input
+                  id={`${idPrefix}-service-name`}
+                  autoComplete="off"
                   disabled={busy}
-                  value={serviceType}
-                  aria-label="Service type"
-                  onChange={(event) =>
-                    form.setValue("serviceType", event.target.value as CatalogServiceKind, {
+                  placeholder="Service or product name"
+                  {...form.register("name")}
+                />
+              )}
+              {typeof errors.name?.message === "string" ? (
+                <p className="text-xs leading-tight text-destructive">{errors.name.message}</p>
+              ) : null}
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-lookup-key`}>
+                Lookup key <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={`${idPrefix}-lookup-key`}
+                autoComplete="off"
+                className="font-mono"
+                placeholder="e.g. premium_monthly"
+                value={lookupKeyBase}
+                disabled={busy}
+                onChange={(event) => {
+                  setLookupTouched(true);
+                  setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+                }}
+              />
+              {typeof errors.lookupKeyBase?.message === "string" ? (
+                <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
+              ) : null}
+              {mode === "create" && resolvedLookupBase ? (
+                <p className="text-xs leading-snug text-muted-foreground">
+                  Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
+                  <span className="font-mono">{lookupPreview.join(" · ")}</span>
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
+            <Textarea
+              id={`${idPrefix}-service-description`}
+              rows={2}
+              disabled={busy}
+              className="min-h-[3.25rem] resize-none"
+              placeholder="Provide a brief description of the product or service"
+              {...form.register("description")}
+            />
+          </div>
+
+          {isPlan ? (
+            <div className="overflow-hidden rounded-lg border">
+              <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
+                Entitlements
+              </p>
+              <ul>
+                <EntitlementRow
+                  id={`${idPrefix}-included-users`}
+                  label="Included users"
+                  value={includedUsers}
+                  disabled={busy}
+                  onChange={(next) =>
+                    form.setValue("includedUsers", next, { shouldDirty: true, shouldValidate: true })
+                  }
+                />
+                <EntitlementRow
+                  id={`${idPrefix}-included-locations`}
+                  label="Included locations"
+                  value={includedLocations}
+                  disabled={busy}
+                  onChange={(next) =>
+                    form.setValue("includedLocations", next, {
                       shouldDirty: true,
+                      shouldValidate: true,
                     })
                   }
-                >
-                  <option value="plan">Plan</option>
-                  <option value="addon">Add-on</option>
-                </select>
-                <ChevronDown
-                  className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden
                 />
-              </div>
-              <Input
-                id={`${idPrefix}-service-name`}
-                autoComplete="off"
-                className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-                placeholder="Service or product name"
-                disabled={busy}
-                {...form.register("name")}
-              />
+                <EntitlementRow
+                  id={`${idPrefix}-included-admins`}
+                  label="Included admins"
+                  value={includedAdmins}
+                  disabled={busy}
+                  onChange={(next) =>
+                    form.setValue("includedAdmins", next, { shouldDirty: true, shouldValidate: true })
+                  }
+                />
+              </ul>
             </div>
-          ) : (
-            <Input
-              id={`${idPrefix}-service-name`}
-              autoComplete="off"
-              disabled={busy}
-              placeholder="Service or product name"
-              {...form.register("name")}
-            />
-          )}
-          {typeof errors.name?.message === "string" ? (
-            <p className="text-xs leading-tight text-destructive">{errors.name.message}</p>
           ) : null}
-        </div>
+        </>
+      ) : null}
 
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-lookup-key`}>
-            Lookup key <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id={`${idPrefix}-lookup-key`}
-            autoComplete="off"
-            className="font-mono"
-            placeholder="e.g. premium_monthly"
-            value={lookupKeyBase}
-            disabled={busy}
-            onChange={(event) => {
-              setLookupTouched(true);
-              setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-            }}
-          />
-          {typeof errors.lookupKeyBase?.message === "string" ? (
-            <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
-          ) : null}
-          {mode === "create" && resolvedLookupBase ? (
-            <p className="text-xs leading-snug text-muted-foreground">
-              Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
-              <span className="font-mono">{lookupPreview.join(" · ")}</span>
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
-        <Textarea
-          id={`${idPrefix}-service-description`}
-          rows={2}
-          disabled={busy}
-          className="min-h-[3.25rem] resize-none"
-          placeholder="Provide a brief description of the product or service"
-          {...form.register("description")}
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-billing-type`}>Billing</Label>
-          <select
-            id={`${idPrefix}-billing-type`}
-            className={CATALOG_SERVICE_SELECT_CLASS}
-            disabled={busy}
-            value={billingType}
-            onChange={(event) =>
-              form.setValue("billingType", event.target.value as "recurring" | "one_off", {
-                shouldDirty: true,
-              })
-            }
-          >
-            <option value="recurring">Recurring</option>
-            <option value="one_off">One-off</option>
-          </select>
-        </div>
-
-        <div className={cn("flex flex-col gap-1.5", isOneOff && "opacity-50")}>
-          <Label htmlFor={`${idPrefix}-pricing-model`}>Pricing model</Label>
-          <select
-            id={`${idPrefix}-pricing-model`}
-            className={CATALOG_SERVICE_SELECT_CLASS}
-            disabled={busy || isOneOff}
-            value={isOneOff ? "flat" : pricingModel}
-            onChange={(event) =>
-              form.setValue("pricingModel", event.target.value as "flat" | "by_term", {
-                shouldDirty: true,
-              })
-            }
-          >
-            <option value="flat">Flat rate (one price)</option>
-            <option value="by_term">Fixed term</option>
-          </select>
-          {isOneOff ? (
-            <p className="text-xs text-muted-foreground">One-off charges use a single flat price.</p>
-          ) : null}
-        </div>
-      </div>
-
-      <div className={cn("grid gap-4", isPlan ? "md:grid-cols-2" : "md:grid-cols-1")}>
-        <div className="overflow-hidden rounded-lg border">
-          <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">Pricing</p>
-          <ul>
-            {isFlat ? (
-              <PricingRow
-                id={`${idPrefix}-flat-price`}
-                label={isOneOff ? "One-off price (AUD)" : "Monthly price (AUD)"}
-                value={flatPrice}
+      {showPricing ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-billing-type`}>Billing</Label>
+              <select
+                id={`${idPrefix}-billing-type`}
+                className={CATALOG_SERVICE_SELECT_CLASS}
                 disabled={busy}
-                required
-                error={
-                  typeof errors.flatAmountMinor?.message === "string"
-                    ? errors.flatAmountMinor.message
-                    : undefined
-                }
-                onChange={setFlatPrice}
-              />
-            ) : (
-              <>
-                {showUpfront ? (
-                  <PricingStepperRow
-                    id={`${idPrefix}-upfront-price`}
-                    label="Upfront price (AUD)"
-                    value={upfrontPrice}
-                    disabled={busy}
-                    placeholder="0.00"
-                    allowEmpty
-                    onChange={setUpfrontPrice}
-                  />
-                ) : null}
-                <PricingStepperRow
-                  id={`${idPrefix}-m12`}
-                  label="12-month price (AUD)"
-                  value={monthly12}
-                  disabled={busy}
-                  required
-                  error={
-                    typeof errors.monthlyCost12Minor?.message === "string"
-                      ? errors.monthlyCost12Minor.message
-                      : undefined
-                  }
-                  onChange={setMonthly12}
-                />
-                <PricingStepperRow
-                  id={`${idPrefix}-m24`}
-                  label="24-month price (AUD)"
-                  value={monthly24}
-                  disabled={busy}
-                  required
-                  error={
-                    typeof errors.monthlyCost24Minor?.message === "string"
-                      ? errors.monthlyCost24Minor.message
-                      : undefined
-                  }
-                  onChange={setMonthly24}
-                />
-              </>
-            )}
-          </ul>
-        </div>
-
-        {isPlan ? (
-          <div className="overflow-hidden rounded-lg border">
-            <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
-              Entitlements
-            </p>
-            <ul>
-              <EntitlementRow
-                id={`${idPrefix}-included-users`}
-                label="Included users"
-                value={includedUsers}
-                disabled={busy}
-                onChange={(next) =>
-                  form.setValue("includedUsers", next, { shouldDirty: true, shouldValidate: true })
-                }
-              />
-              <EntitlementRow
-                id={`${idPrefix}-included-locations`}
-                label="Included locations"
-                value={includedLocations}
-                disabled={busy}
-                onChange={(next) =>
-                  form.setValue("includedLocations", next, {
+                value={billingType}
+                onChange={(event) =>
+                  form.setValue("billingType", event.target.value as "recurring" | "one_off", {
                     shouldDirty: true,
-                    shouldValidate: true,
                   })
                 }
-              />
-              <EntitlementRow
-                id={`${idPrefix}-included-admins`}
-                label="Included admins"
-                value={includedAdmins}
-                disabled={busy}
-                onChange={(next) =>
-                  form.setValue("includedAdmins", next, { shouldDirty: true, shouldValidate: true })
+              >
+                <option value="recurring">Recurring</option>
+                <option value="one_off">One-off</option>
+              </select>
+            </div>
+
+            <div className={cn("flex flex-col gap-1.5", isOneOff && "opacity-50")}>
+              <Label htmlFor={`${idPrefix}-pricing-model`}>Pricing model</Label>
+              <select
+                id={`${idPrefix}-pricing-model`}
+                className={CATALOG_SERVICE_SELECT_CLASS}
+                disabled={busy || isOneOff}
+                value={isOneOff ? "flat" : pricingModel}
+                onChange={(event) =>
+                  form.setValue("pricingModel", event.target.value as "flat" | "by_term", {
+                    shouldDirty: true,
+                  })
                 }
-              />
+              >
+                <option value="flat">Flat rate (one price)</option>
+                <option value="by_term">Fixed term</option>
+              </select>
+              {isOneOff ? (
+                <p className="text-xs text-muted-foreground">One-off charges use a single flat price.</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border">
+            {isByTerm ? (
+              <div className="border-b px-3 py-2">
+                <Tabs
+                  value={String(termMonths)}
+                  onValueChange={(value) => setTermMonths(value === "24" ? 24 : 12)}
+                >
+                  <TabsList variant="line" className="h-auto w-full justify-start gap-4 rounded-none bg-transparent p-0">
+                    <TabsTrigger value="12" className="flex-none px-0 pb-1" disabled={busy}>
+                      12 months
+                    </TabsTrigger>
+                    <TabsTrigger value="24" className="flex-none px-0 pb-1" disabled={busy}>
+                      24 months
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            ) : (
+              <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">Pricing</p>
+            )}
+            <ul>
+              {isFlat ? (
+                <PricingRow
+                  id={`${idPrefix}-flat-price`}
+                  label={isOneOff ? "One-off price" : "Monthly price"}
+                  value={flatPrice}
+                  disabled={busy}
+                  required
+                  error={
+                    typeof errors.flatAmountMinor?.message === "string"
+                      ? errors.flatAmountMinor.message
+                      : undefined
+                  }
+                  onChange={setFlatPrice}
+                />
+              ) : (
+                <>
+                  {showUpfront ? (
+                    <PricingStepperRow
+                      id={`${idPrefix}-upfront-${termMonths}`}
+                      label="Upfront price"
+                      value={activeUpfront}
+                      disabled={busy}
+                      placeholder="0.00"
+                      allowEmpty
+                      onChange={setActiveUpfront}
+                    />
+                  ) : null}
+                  <PricingStepperRow
+                    id={`${idPrefix}-monthly-${termMonths}`}
+                    label="Monthly price"
+                    value={activeMonthly}
+                    disabled={busy}
+                    required
+                    error={activeMonthlyError}
+                    onChange={setActiveMonthly}
+                  />
+                </>
+              )}
             </ul>
           </div>
-        ) : null}
-      </div>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -470,6 +503,21 @@ export function catalogServiceFormInvalidMessage(
     errors.pricingModel?.message,
   ].filter((message): message is string => typeof message === "string" && message.length > 0);
   return messages[0] ?? "Please check the form and try again.";
+}
+
+/** True when the first invalid field belongs on the Pricing tab. */
+export function catalogServiceFormInvalidIsPricing(
+  errors: FieldErrors<CreateCatalogServiceInput>,
+): boolean {
+  return Boolean(
+    errors.flatAmountMinor ||
+      errors.monthlyCost12Minor ||
+      errors.monthlyCost24Minor ||
+      errors.pricingModel ||
+      errors.billingType ||
+      errors.upfrontCost12Minor ||
+      errors.upfrontCost24Minor,
+  );
 }
 
 export function useCatalogServicePricingFlags(

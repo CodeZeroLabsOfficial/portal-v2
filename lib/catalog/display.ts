@@ -60,8 +60,12 @@ export function catalogHeroPriceLabel(
 }
 
 /** Formatted one-time upfront for by-term plans; null when not applicable. */
-export function catalogUpfrontCostLabel(service: CatalogServiceRecord): string | null {
-  const amount = service.upfrontCost12Minor;
+export function catalogUpfrontCostLabel(
+  service: CatalogServiceRecord,
+  termMonths?: CatalogServiceTermMonths,
+): string | null {
+  const amount =
+    termMonths === 24 ? service.upfrontCost24Minor : service.upfrontCost12Minor;
   if (typeof amount !== "number" || amount <= 0) return null;
   return formatCurrencyAmount(amount, service.currency);
 }

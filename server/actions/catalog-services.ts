@@ -106,6 +106,11 @@ export async function createCatalogServiceAction(
         parsed.data.upfrontCost12Minor > 0
           ? { upfrontCost12Minor: Math.round(parsed.data.upfrontCost12Minor) }
           : {}),
+        ...(parsed.data.serviceType === "plan" &&
+        typeof parsed.data.upfrontCost24Minor === "number" &&
+        parsed.data.upfrontCost24Minor > 0
+          ? { upfrontCost24Minor: Math.round(parsed.data.upfrontCost24Minor) }
+          : {}),
         terms,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -172,6 +177,14 @@ export async function updateCatalogServiceAction(
       payload.upfrontCost12Minor = Math.round(parsed.data.upfrontCost12Minor);
     } else {
       payload.upfrontCost12Minor = FieldValue.delete();
+    }
+    if (
+      typeof parsed.data.upfrontCost24Minor === "number" &&
+      parsed.data.upfrontCost24Minor > 0
+    ) {
+      payload.upfrontCost24Minor = Math.round(parsed.data.upfrontCost24Minor);
+    } else {
+      payload.upfrontCost24Minor = FieldValue.delete();
     }
   }
 

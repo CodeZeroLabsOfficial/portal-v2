@@ -66,9 +66,14 @@ export function parseCatalogServiceRecord(id: string, data: Record<string, unkno
             .slice(0, 40)
         : [];
 
-  const upfront =
+  const upfront12 =
     typeof data.upfrontCost12Minor === "number" && Number.isFinite(data.upfrontCost12Minor)
       ? Math.max(0, Math.round(data.upfrontCost12Minor))
+      : undefined;
+
+  const upfront24 =
+    typeof data.upfrontCost24Minor === "number" && Number.isFinite(data.upfrontCost24Minor)
+      ? Math.max(0, Math.round(data.upfrontCost24Minor))
       : undefined;
 
   const billingTypeRaw = asString(data.billingType);
@@ -113,7 +118,8 @@ export function parseCatalogServiceRecord(id: string, data: Record<string, unkno
         : typeof data.includedAdmins === "number" && Number.isFinite(data.includedAdmins)
           ? Math.max(0, Math.floor(data.includedAdmins))
           : 0,
-    ...(typeof upfront === "number" ? { upfrontCost12Minor: upfront } : {}),
+    ...(typeof upfront12 === "number" ? { upfrontCost12Minor: upfront12 } : {}),
+    ...(typeof upfront24 === "number" ? { upfrontCost24Minor: upfront24 } : {}),
     features,
     terms,
     ...(asString(data.stripeProductId)?.trim()
@@ -171,6 +177,7 @@ export function catalogServiceToPickerOption(service: CatalogServiceRecord): Cat
     includedLocations: service.includedLocations,
     includedAdmins: service.includedAdmins,
     ...(typeof service.upfrontCost12Minor === "number" ? { upfrontCost12Minor: service.upfrontCost12Minor } : {}),
+    ...(typeof service.upfrontCost24Minor === "number" ? { upfrontCost24Minor: service.upfrontCost24Minor } : {}),
     features: service.features,
   };
 }

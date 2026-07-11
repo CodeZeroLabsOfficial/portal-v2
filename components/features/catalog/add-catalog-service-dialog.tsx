@@ -55,7 +55,8 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
   const [lookupKeyBase, setLookupKeyBase] = React.useState("");
   const [lookupTouched, setLookupTouched] = React.useState(false);
   const [flatPrice, setFlatPrice] = React.useState("");
-  const [upfrontPrice, setUpfrontPrice] = React.useState("");
+  const [upfront12, setUpfront12] = React.useState("");
+  const [upfront24, setUpfront24] = React.useState("");
   const [monthly12, setMonthly12] = React.useState("");
   const [monthly24, setMonthly24] = React.useState("");
 
@@ -81,7 +82,8 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
       setLookupKeyBase("");
       setLookupTouched(false);
       setFlatPrice("");
-      setUpfrontPrice("");
+      setUpfront12("");
+      setUpfront24("");
       setMonthly12("");
       setMonthly24("");
       setServerError(null);
@@ -93,13 +95,20 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
     if (isFlat) {
       form.setValue("flatAmountMinor", majorInputToMinor(flatPrice), { shouldValidate: false });
       form.setValue("upfrontCost12Minor", undefined, { shouldValidate: false });
+      form.setValue("upfrontCost24Minor", undefined, { shouldValidate: false });
     } else {
       form.setValue("monthlyCost12Minor", majorInputToMinor(monthly12), { shouldValidate: false });
       form.setValue("monthlyCost24Minor", majorInputToMinor(monthly24), { shouldValidate: false });
-      const upfrontMinor = majorInputToMinor(upfrontPrice);
+      const upfront12Minor = majorInputToMinor(upfront12);
+      const upfront24Minor = majorInputToMinor(upfront24);
       form.setValue(
         "upfrontCost12Minor",
-        showUpfront && upfrontMinor > 0 ? upfrontMinor : undefined,
+        showUpfront && upfront12Minor > 0 ? upfront12Minor : undefined,
+        { shouldValidate: false },
+      );
+      form.setValue(
+        "upfrontCost24Minor",
+        showUpfront && upfront24Minor > 0 ? upfront24Minor : undefined,
         { shouldValidate: false },
       );
     }
@@ -119,7 +128,8 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
       isByTerm,
       showUpfront,
       flatPrice,
-      upfrontPrice,
+      upfront12,
+      upfront24,
       monthly12,
       monthly24,
     }) as CreateCatalogServiceInput;
@@ -164,8 +174,10 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
               setLookupTouched={setLookupTouched}
               flatPrice={flatPrice}
               setFlatPrice={setFlatPrice}
-              upfrontPrice={upfrontPrice}
-              setUpfrontPrice={setUpfrontPrice}
+              upfront12={upfront12}
+              setUpfront12={setUpfront12}
+              upfront24={upfront24}
+              setUpfront24={setUpfront24}
               monthly12={monthly12}
               setMonthly12={setMonthly12}
               monthly24={monthly24}

@@ -35,12 +35,14 @@ export function serviceToEditDefaults(service: CatalogServiceRecord): UpdateCata
     includedLocations: service.includedLocations,
     includedAdmins: service.includedAdmins,
     upfrontCost12Minor: service.upfrontCost12Minor,
+    upfrontCost24Minor: service.upfrontCost24Minor,
   };
 }
 
 export function servicePriceControlDefaults(service: CatalogServiceRecord): {
   flatPrice: string;
-  upfrontPrice: string;
+  upfront12: string;
+  upfront24: string;
   monthly12: string;
   monthly24: string;
 } {
@@ -50,7 +52,8 @@ export function servicePriceControlDefaults(service: CatalogServiceRecord): {
 
   return {
     flatPrice: isFlat ? minorToMajorInput(defaults.flatAmountMinor) : "",
-    upfrontPrice: minorToMajorInput(defaults.upfrontCost12Minor),
+    upfront12: minorToMajorInput(defaults.upfrontCost12Minor),
+    upfront24: minorToMajorInput(defaults.upfrontCost24Minor),
     monthly12: !isFlat ? minorToMajorInput(defaults.monthlyCost12Minor) : "",
     monthly24: !isFlat ? minorToMajorInput(defaults.monthlyCost24Minor) : "",
   };
@@ -64,7 +67,8 @@ interface BuildCatalogPayloadOptions {
   isByTerm: boolean;
   showUpfront: boolean;
   flatPrice: string;
-  upfrontPrice: string;
+  upfront12: string;
+  upfront24: string;
   monthly12: string;
   monthly24: string;
 }
@@ -81,13 +85,15 @@ export function buildCatalogServicePayload(
     isByTerm,
     showUpfront,
     flatPrice,
-    upfrontPrice,
+    upfront12,
+    upfront24,
     monthly12,
     monthly24,
   } = options;
 
   const effectivePricing = values.billingType === "one_off" ? "flat" : values.pricingModel;
-  const upfrontMinor = showUpfront ? majorInputToMinor(upfrontPrice) : 0;
+  const upfront12Minor = showUpfront ? majorInputToMinor(upfront12) : 0;
+  const upfront24Minor = showUpfront ? majorInputToMinor(upfront24) : 0;
 
   return {
     ...values,
@@ -98,7 +104,8 @@ export function buildCatalogServicePayload(
     flatAmountMinor: isFlat ? majorInputToMinor(flatPrice) : undefined,
     monthlyCost12Minor: isByTerm ? majorInputToMinor(monthly12) : undefined,
     monthlyCost24Minor: isByTerm ? majorInputToMinor(monthly24) : undefined,
-    upfrontCost12Minor: showUpfront && upfrontMinor > 0 ? upfrontMinor : undefined,
+    upfrontCost12Minor: showUpfront && upfront12Minor > 0 ? upfront12Minor : undefined,
+    upfrontCost24Minor: showUpfront && upfront24Minor > 0 ? upfront24Minor : undefined,
     includedUsers: isPlan ? Math.max(0, Math.floor(Number(values.includedUsers) || 0)) : 0,
     includedLocations: isPlan ? Math.max(0, Math.floor(Number(values.includedLocations) || 0)) : 0,
     includedAdmins: isPlan ? Math.max(0, Math.floor(Number(values.includedAdmins) || 0)) : 0,
