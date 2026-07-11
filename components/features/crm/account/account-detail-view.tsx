@@ -3,10 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Plus } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 
 import { AccountCompanyDetailsCard } from "@/components/features/crm/account/account-company-details-card";
+import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
 import { AddCustomerSheet } from "@/components/features/crm/customer/add-customer-sheet";
+import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,7 @@ interface AccountDetailViewProps {
 export function AccountDetailView({ account }: AccountDetailViewProps) {
   const router = useRouter();
   const [addContactOpen, setAddContactOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
   const activeBadge = customerStatusBadgeDisplay("active");
 
   const addContactInitialValues = React.useMemo(
@@ -42,16 +45,10 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <Button asChild variant="outline">
           <Link href="/admin/accounts" aria-label="Back to accounts">
             <ChevronLeft />
-          </Link>
-        </Button>
-        <Button asChild>
-          <Link href={`/admin/accounts/${account.key}/edit`}>
-            <Pencil />
-            Edit
           </Link>
         </Button>
       </div>
@@ -61,10 +58,13 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
           <CardHeader>
             <CardTitle className="font-display text-2xl">{account.displayName}</CardTitle>
             <StatusBadge label={activeBadge.label} variant={activeBadge.variant} />
+            <CardAction>
+              <SettingsEditButton onClick={() => setEditOpen(true)} ariaLabel="Edit account" />
+            </CardAction>
           </CardHeader>
           <CardContent>
             <Separator className="mb-4" />
-            <AccountCompanyDetailsCard account={account} accountKey={account.key} />
+            <AccountCompanyDetailsCard account={account} />
           </CardContent>
         </Card>
 
@@ -112,6 +112,13 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      <AccountEditSheet
+        account={account}
+        accountKey={account.key}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
 
       <AddCustomerSheet
         open={addContactOpen}

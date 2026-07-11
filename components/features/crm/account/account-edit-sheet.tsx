@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { AccountFormFields, type AccountFormFieldsProps } from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetContentWideClass,
+  sheetContentMediumClass,
   sheetFormClass,
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,9 @@ export function AccountEditSheet({
 
     toast.success("Account saved");
     onOpenChange(false);
+    if (result.newAccountKey !== accountKey) {
+      router.push(`/admin/accounts/${result.newAccountKey}`);
+    }
     router.refresh();
   }
 
@@ -71,7 +74,7 @@ export function AccountEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={sheetContentWideClass}>
+      <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Edit account</SheetTitle>
           <SheetDescription>
