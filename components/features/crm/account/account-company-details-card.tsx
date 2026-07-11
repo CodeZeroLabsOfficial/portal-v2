@@ -13,6 +13,8 @@ export function AccountCompanyDetailsCard({ account }: AccountCompanyDetailsCard
   const companyPhone = account.companyPhone?.trim();
   const companyEmail = account.companyEmail?.trim();
   const companyWebsite = account.companyWebsite?.trim();
+  const companyAbn = account.companyAbn?.trim();
+  const companyAcn = account.companyAcn?.trim();
   const websiteUrl = companyWebsite ? websiteHref(companyWebsite) : "";
   const addressLines = formatAddressLines({
     addressLine1: account.companyAddressLine1,
@@ -65,6 +67,14 @@ export function AccountCompanyDetailsCard({ account }: AccountCompanyDetailsCard
             <EmptyValue />
           )}
         </dd>
+      </div>
+      <div className="space-y-1">
+        <dt className="text-muted-foreground text-sm">ABN</dt>
+        <dd className="font-medium">{companyAbn || <EmptyValue />}</dd>
+      </div>
+      <div className="space-y-1">
+        <dt className="text-muted-foreground text-sm">ACN</dt>
+        <dd className="font-medium">{companyAcn || <EmptyValue />}</dd>
       </div>
       <div className="space-y-1 sm:col-span-2 lg:col-span-3">
         <dt className="text-muted-foreground text-sm">Company address</dt>

@@ -33,6 +33,8 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
       companyPhone: account.companyPhone,
       companyEmail: account.companyEmail,
       companyWebsite: account.companyWebsite,
+      companyAbn: account.companyAbn,
+      companyAcn: account.companyAcn,
       companyAddressLine1: account.companyAddressLine1 ?? "",
       companyAddressLine2: account.companyAddressLine2 ?? "",
       companyCity: account.companyCity ?? "",

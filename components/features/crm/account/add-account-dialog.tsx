@@ -29,6 +29,8 @@ const defaultValues: CreateAccountFormInput = {
   companyPhone: "",
   companyEmail: "",
   companyWebsite: "",
+  companyAbn: "",
+  companyAcn: "",
   companyAddressLine1: "",
   companyAddressLine2: "",
   companyCity: "",

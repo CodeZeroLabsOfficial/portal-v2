@@ -74,6 +74,26 @@ export function AccountFormFields({ form, idPrefix, disabled }: AccountFormField
             <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
           ) : null}
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-company-abn`}>ABN</Label>
+          <Input
+            id={`${idPrefix}-company-abn`}
+            autoComplete="off"
+            disabled={disabled}
+            {...form.register("companyAbn")}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-company-acn`}>ACN</Label>
+          <Input
+            id={`${idPrefix}-company-acn`}
+            autoComplete="off"
+            disabled={disabled}
+            {...form.register("companyAcn")}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">

@@ -422,6 +422,8 @@ export interface AccountDetailAggregate {
   companyPhone: string;
   companyEmail: string;
   companyWebsite: string;
+  companyAbn: string;
+  companyAcn: string;
   companyAddressLine1?: string;
   companyAddressLine2?: string;
   companyCity?: string;
@@ -453,6 +455,8 @@ export async function getAccountDetailForKey(
     companyPhone: pickLatestNonEmpty(sorted, (r) => r.companyPhone),
     companyEmail: pickLatestNonEmpty(sorted, (r) => r.companyEmail),
     companyWebsite: pickLatestNonEmpty(sorted, (r) => r.companyWebsite),
+    companyAbn: pickLatestNonEmpty(sorted, (r) => r.companyAbn),
+    companyAcn: pickLatestNonEmpty(sorted, (r) => r.companyAcn),
     companyAddressLine1: pickLatestNonEmpty(sorted, (r) => r.companyAddressLine1) || undefined,
     companyAddressLine2: pickLatestNonEmpty(sorted, (r) => r.companyAddressLine2) || undefined,
     companyCity: pickLatestNonEmpty(sorted, (r) => r.companyCity) || undefined,
@@ -504,6 +508,8 @@ export async function createAccountDocument(
     companyPhone: input.companyPhone?.trim() || null,
     companyEmail: input.companyEmail?.trim()?.toLowerCase() || null,
     companyWebsite: input.companyWebsite?.trim() || null,
+    companyAbn: input.companyAbn?.trim() || null,
+    companyAcn: input.companyAcn?.trim() || null,
     companyAddressLine1: input.companyAddressLine1?.trim() || null,
     companyAddressLine2: input.companyAddressLine2?.trim() || null,
     companyCity: input.companyCity?.trim() || null,
@@ -584,6 +590,8 @@ export async function updateAccountDetailsForGroup(
     companyPhone: input.companyPhone?.trim() || null,
     companyEmail: input.companyEmail?.trim()?.toLowerCase() || null,
     companyWebsite: input.companyWebsite?.trim() || null,
+    companyAbn: input.companyAbn?.trim() || null,
+    companyAcn: input.companyAcn?.trim() || null,
     companyAddressLine1: input.companyAddressLine1?.trim() || null,
     companyAddressLine2: input.companyAddressLine2?.trim() || null,
     companyCity: input.companyCity?.trim() || null,
