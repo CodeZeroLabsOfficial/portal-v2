@@ -27,8 +27,10 @@ export interface CatalogServiceRecord {
   organizationId: string;
   createdByUid: string;
   name: string;
-  /** Base segment for Stripe lookup keys (e.g. `professional` → `professional_plan_12_months`). */
+  /** Base segment for Stripe lookup keys (e.g. `professional` → `chauffeur_professional_plan_12_months`). */
   slug: string;
+  /** Product line — controlled slug from `CATALOG_CATEGORIES`. */
+  category: string;
   /** Omitted on pre-migration documents (legacy `{slug}_12_months` keys). */
   serviceType?: CatalogServiceKind;
   description?: string;
@@ -55,6 +57,7 @@ export interface CatalogServicePickerOption {
   serviceName: string;
   currency: string;
   status: CatalogServiceStatus;
+  category: string;
   serviceType?: CatalogServiceKind;
   billingType?: CatalogServiceBillingType;
   pricingModel?: CatalogServicePricingModel;

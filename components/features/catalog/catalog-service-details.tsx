@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { Separator } from "@/components/ui/separator";
+import { catalogCategoryLabel } from "@/lib/catalog/categories";
 import {
   catalogAvailableTermMonths,
   catalogBillingLabel,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 function buildServiceDetailInfoItems(service: CatalogServiceRecord) {
   return [
+    { label: "Category", value: catalogCategoryLabel(service.category) },
     { label: "Type", value: catalogServiceTypeLabel(service) },
     { label: "Billing", value: catalogBillingLabel(service) },
     { label: "Pricing model", value: catalogPricingModelLabel(service) },

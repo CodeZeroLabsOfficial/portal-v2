@@ -559,6 +559,11 @@ export interface ProposalRecord {
   customerId?: string;
   /** Optional — links to `opportunities/{opportunityId}` when created from pipeline. */
   opportunityId?: string;
+  /**
+   * Product-line category (same slugs as catalogue services).
+   * Scopes plan/addon pickers in the packages editor.
+   */
+  category?: string;
   /** Optional — when set, associates the proposal with a CRM / billing contact email. */
   recipientEmail?: string;
   status: ProposalStatus;

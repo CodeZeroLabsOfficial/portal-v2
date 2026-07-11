@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { buildCatalogServicePayload, majorInputToMinor } from "@/lib/catalog/form-defaults";
+import { DEFAULT_CATALOG_CATEGORY_ID } from "@/lib/catalog/categories";
 import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
 import {
   createCatalogServiceSchema,
@@ -35,6 +36,7 @@ interface AddCatalogServiceDialogProps {
 
 const defaultValues: CreateCatalogServiceInput = {
   serviceType: "plan",
+  category: DEFAULT_CATALOG_CATEGORY_ID,
   name: "",
   description: "",
   billingType: "recurring",

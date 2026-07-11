@@ -89,6 +89,7 @@ export async function createCatalogServiceAction(
         createdByUid: user.uid,
         name,
         slug,
+        category: parsed.data.category,
         serviceType: parsed.data.serviceType,
         description,
         billingType: parsed.data.billingType,
@@ -156,6 +157,7 @@ export async function updateCatalogServiceAction(
   const payload: Record<string, unknown> = {
     name,
     slug,
+    category: parsed.data.category,
     description,
     billingType: parsed.data.billingType,
     pricingModel,

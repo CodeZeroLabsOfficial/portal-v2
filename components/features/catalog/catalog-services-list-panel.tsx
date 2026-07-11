@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { CATALOG_CATEGORIES, catalogCategoryLabel } from "@/lib/catalog/categories";
 import { catalogPricingLabel, formatCatalogTableDate } from "@/lib/catalog/display";
 import {
   catalogServiceKindBadgeDisplay,
@@ -80,6 +81,13 @@ function CatalogServicesToolbar({
               { label: "Plan", value: "plan" },
               { label: "Add-on", value: "addon" }
             ]}
+          />
+        )}
+        {table.getColumn("category") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("category")}
+            title="Category"
+            options={CATALOG_CATEGORIES.map((c) => ({ label: c.label, value: c.id }))}
           />
         )}
         {isFiltered && (
@@ -238,6 +246,8 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
           const hay = [
             s.name,
             s.slug,
+            s.category,
+            catalogCategoryLabel(s.category),
             s.serviceType,
             s.status,
             s.stripeProductId,
@@ -249,6 +259,17 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
             .join(" ")
             .toLowerCase();
           return hay.includes(q);
+        }
+      },
+      {
+        accessorKey: "category",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{catalogCategoryLabel(row.original.category)}</span>
+        ),
+        filterFn: (row, id, value) => {
+          const filters = value as string[];
+          return filters.includes(row.getValue(id));
         }
       },
       {

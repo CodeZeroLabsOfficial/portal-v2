@@ -21,6 +21,19 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CATALOG_CATEGORIES,
+  DEFAULT_CATALOG_CATEGORY_ID,
+  type CatalogCategoryId,
+} from "@/lib/catalog/categories";
 import {
   filterProposalTemplatesForPicker,
   proposalTemplateRecordToPickerRow,
@@ -50,6 +63,7 @@ export function AddProposalDialog({
 }: AddProposalDialogProps) {
   const router = useRouter();
   const [pendingTemplateId, setPendingTemplateId] = React.useState<string | null>(null);
+  const [category, setCategory] = React.useState<CatalogCategoryId>(DEFAULT_CATALOG_CATEGORY_ID);
 
   const visible = React.useMemo(
     () =>
@@ -66,17 +80,22 @@ export function AddProposalDialog({
   React.useEffect(() => {
     if (!open) {
       setPendingTemplateId(null);
+      setCategory(DEFAULT_CATALOG_CATEGORY_ID);
     }
   }, [open]);
 
   async function handleUseTemplate(templateId: string) {
     if (pendingTemplateId) return;
+    if (!category) {
+      toast.error("Select a product category for this proposal.");
+      return;
+    }
 
     setPendingTemplateId(templateId);
     try {
       const res = opportunityId
-        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId)
-        : await createDraftProposalFromCustomerAction(customerId, templateId);
+        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId, category)
+        : await createDraftProposalFromCustomerAction(customerId, templateId, category);
       if (!res.ok) {
         toast.error(res.message);
         setPendingTemplateId(null);
@@ -102,6 +121,31 @@ export function AddProposalDialog({
         <DialogHeader className="shrink-0 border-b px-6 py-4 text-left">
           <DialogTitle>Add proposal</DialogTitle>
         </DialogHeader>
+
+        <div className="shrink-0 space-y-2 border-b px-6 py-4">
+          <Label htmlFor="add-proposal-category">
+            Product category <span className="text-destructive">*</span>
+          </Label>
+          <Select
+            value={category}
+            onValueChange={(value) => setCategory(value as CatalogCategoryId)}
+            disabled={pendingTemplateId !== null}
+          >
+            <SelectTrigger id="add-proposal-category" className="w-full max-w-sm">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATALOG_CATEGORIES.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-xs">
+            Package plans and add-ons in the editor are limited to this category.
+          </p>
+        </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {visible.length === 0 ? (

@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  CATALOG_CATEGORIES,
+  type CatalogCategoryId,
+} from "@/lib/catalog/categories";
+import {
   applyCatalogServiceTermLookupKeys,
   normalizeLookupKeyBase,
   slugifyCatalogServiceName,
@@ -12,10 +16,16 @@ const lookupKeyBaseField = trimmed
   .max(40)
   .regex(/^[a-z0-9_]+$/, "Use lowercase letters, numbers, and underscores only");
 
+const catalogCategoryIds = CATALOG_CATEGORIES.map((c) => c.id) as [
+  CatalogCategoryId,
+  ...CatalogCategoryId[],
+];
+
 const STRIPE_MIN_MINOR = 50;
 
 const catalogServiceFieldsSchema = z.object({
   serviceType: z.enum(["plan", "addon"]),
+  category: z.enum(catalogCategoryIds),
   name: trimmed.min(1, "Name is required").max(120),
   description: trimmed.max(500).optional(),
   billingType: z.enum(["recurring", "one_off"]),
@@ -125,7 +135,12 @@ function buildTermsFromPricingInput(
   serviceType: CatalogServiceKind,
   input: Pick<
     CreateCatalogServiceInput,
-    "billingType" | "pricingModel" | "flatAmountMinor" | "monthlyCost12Minor" | "monthlyCost24Minor"
+    | "category"
+    | "billingType"
+    | "pricingModel"
+    | "flatAmountMinor"
+    | "monthlyCost12Minor"
+    | "monthlyCost24Minor"
   >,
 ): CatalogServiceTerm[] {
   const pricingModel = input.billingType === "one_off" ? "flat" : input.pricingModel;
@@ -151,6 +166,7 @@ function buildTermsFromPricingInput(
   return applyCatalogServiceTermLookupKeys(
     {
       slug,
+      category: input.category,
       serviceType,
       billingType: input.billingType,
       pricingModel,

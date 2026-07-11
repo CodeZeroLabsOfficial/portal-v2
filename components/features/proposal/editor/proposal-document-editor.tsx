@@ -23,7 +23,11 @@ import {
   useRegisterBuilderPropertiesDetails,
 } from "@/components/features/proposal/editor/builder-properties-details-slot";
 import { ProposalBrandingProvider } from "@/components/features/proposal/editor/branding/proposal-branding-context";
-import { EditorCatalogServicesContext, EditorTemplatePricingReadOnlyContext } from "@/components/features/proposal/editor/catalog/editor-catalog-services-context";
+import {
+  EditorCatalogServicesContext,
+  EditorProposalCategoryContext,
+  EditorTemplatePricingReadOnlyContext,
+} from "@/components/features/proposal/editor/catalog/editor-catalog-services-context";
 import { ProposalEditorLibraryScope } from "@/components/features/proposal/editor/media/proposal-editor-library-scope";
 import { ContractTemplatePickerProvider } from "@/components/features/templates/contract-template-picker-provider";
 import { ProposalDocumentView } from "@/components/features/proposal/viewer/proposal-document-view";
@@ -61,6 +65,8 @@ export interface ProposalDocumentEditorProps {
   proposalEditMiddleSlot?: ReactNode;
   localityTimeZone?: string;
   catalogServiceOptions?: CatalogServicePickerOption[];
+  /** Filters packages plan/addon pickers when editing a proposal (not templates). */
+  proposalCategory?: string;
   initialBranding?: ProposalBranding;
   embeddedInBuilder?: boolean;
 }
@@ -82,6 +88,7 @@ export function ProposalDocumentEditor({
   proposalEditMiddleSlot,
   localityTimeZone,
   catalogServiceOptions = [],
+  proposalCategory,
   initialBranding,
   embeddedInBuilder = false,
 }: ProposalDocumentEditorProps) {
@@ -306,6 +313,7 @@ export function ProposalDocumentEditor({
 
   return (
     <EditorCatalogServicesContext.Provider value={catalogServiceOptions}>
+      <EditorProposalCategoryContext.Provider value={proposalCategory}>
       <EditorTemplatePricingReadOnlyContext.Provider value={true}>
         <ProposalEditorLibraryScope>
           <ProposalMediaLibraryProvider>
@@ -387,6 +395,7 @@ export function ProposalDocumentEditor({
           </ProposalMediaLibraryProvider>
         </ProposalEditorLibraryScope>
       </EditorTemplatePricingReadOnlyContext.Provider>
+      </EditorProposalCategoryContext.Provider>
     </EditorCatalogServicesContext.Provider>
   );
 }

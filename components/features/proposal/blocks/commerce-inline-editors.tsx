@@ -36,7 +36,8 @@ import {
 } from "@/lib/proposal/commerce/packages-totals";
 import { Input } from "@/components/ui/input";
 import type { CatalogServicePickerOption } from "@/types/catalog-service";
-import { useEditorCatalogServices, useEditorTemplatePricingReadOnly } from "@/components/features/proposal/editor/catalog/editor-catalog-services-context";
+import { useEditorCatalogServices, useEditorProposalCategory, useEditorTemplatePricingReadOnly } from "@/components/features/proposal/editor/catalog/editor-catalog-services-context";
+import { catalogCategoryLabel } from "@/lib/catalog/categories";
 import {
   catalogAddonUnitAmountForTerm,
   effectiveCatalogAddonUnitAmount,
@@ -312,6 +313,11 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
   const tiers = block.tiers ?? [];
   const currency = (block.currency ?? "aud").toUpperCase();
   const catalogServices = useEditorCatalogServices();
+  const proposalCategory = useEditorProposalCategory();
+  const categoryScopedServices = React.useMemo(() => {
+    if (!proposalCategory) return catalogServices;
+    return catalogServices.filter((s) => s.category === proposalCategory);
+  }, [catalogServices, proposalCategory]);
   const orderedCatalogServices = React.useMemo(() => {
     const rank = (name: string): number => {
       const n = name.trim().toLowerCase();
@@ -321,7 +327,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
       if (n === "enterprise") return 3;
       return 100;
     };
-    return [...catalogServices]
+    return [...categoryScopedServices]
       .filter(isCatalogServicePlanPickerOption)
       .sort((a, b) => {
         const ra = rank(a.serviceName);
@@ -329,16 +335,25 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
         if (ra !== rb) return ra - rb;
         return a.serviceName.localeCompare(b.serviceName, undefined, { sensitivity: "base" });
       });
-  }, [catalogServices]);
+  }, [categoryScopedServices]);
   const catalogAddons = React.useMemo(
     () =>
-      [...catalogServices]
+      [...categoryScopedServices]
         .filter(isCatalogServiceAddonPickerOption)
         .sort((a, b) =>
           a.serviceName.localeCompare(b.serviceName, undefined, { sensitivity: "base" }),
         ),
-    [catalogServices],
+    [categoryScopedServices],
   );
+  const categoryLabel = proposalCategory ? catalogCategoryLabel(proposalCategory) : null;
+  const noPlanMatchCopy =
+    proposalCategory && orderedCatalogServices.length === 0
+      ? `No active ${categoryLabel} plans in the catalogue.`
+      : null;
+  const noAddonMatchCopy =
+    proposalCategory && catalogAddons.length === 0
+      ? `No active ${categoryLabel} add-ons in the catalogue.`
+      : null;
   const [term, setTerm] = React.useState<"12_months" | "24_months">("24_months");
   const setTermWithAddonSync = React.useCallback(
     (next: "12_months" | "24_months") => {
@@ -529,6 +544,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
             highlightColor={style.primaryColor}
             tableBackground={style.tableBackground}
             catalogServices={orderedCatalogServices}
+            catalogEmptyMessage={noPlanMatchCopy}
             onChange={(next) => patchTier(tier.id, next)}
             onRemove={() => removeTier(tier.id)}
             onToggleRecommended={() => toggleRecommended(tier.id)}
@@ -749,7 +765,8 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
                       <td colSpan={editableAddonQty ? 5 : 4} className="px-4 py-2">
                         {catalogAddons.length === 0 ? (
                           <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
-                            Add active add-ons in Admin → Services (activate to sync Stripe prices).
+                            {noAddonMatchCopy ??
+                              "Add active add-ons in Admin → Services (activate to sync Stripe prices)."}
                           </p>
                         ) : availableCatalogAddons.length === 0 ? (
                           <p className="px-2 py-1.5 text-sm" style={{ color: tableSurface.mutedForeground }}>
@@ -936,6 +953,7 @@ function TierCard({
   highlightColor,
   tableBackground,
   catalogServices,
+  catalogEmptyMessage,
   onChange,
   onRemove,
   onToggleRecommended,
@@ -947,6 +965,8 @@ function TierCard({
   highlightColor: string;
   tableBackground: string;
   catalogServices: readonly CatalogServicePickerOption[];
+  /** Shown when the filtered catalogue list is empty (e.g. no services for proposal category). */
+  catalogEmptyMessage?: string | null;
   onChange: (next: Partial<PackageTier>) => void;
   onRemove: () => void;
   onToggleRecommended: () => void;
@@ -1176,6 +1196,17 @@ function TierCard({
                 Link a catalogue service to load pricing from Admin → Services.
               </p>
             ) : null}
+          </div>
+        ) : catalogEmptyMessage ? (
+          <div
+            className="mt-3 border-t border-dashed pt-3"
+            style={{
+              borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
+            }}
+          >
+            <p className="text-xs" style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}>
+              {catalogEmptyMessage}
+            </p>
           </div>
         ) : null}
 

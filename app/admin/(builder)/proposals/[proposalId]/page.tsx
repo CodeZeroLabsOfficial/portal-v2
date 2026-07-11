@@ -82,6 +82,7 @@ export default async function AdminProposalBuilderPage({ params, searchParams }:
       initialStatus={proposal.status}
       localityTimeZone={user.timeZone?.trim() || undefined}
       catalogServiceOptions={catalogServiceOptions}
+      proposalCategory={proposal.category}
       proposalEditShellToolbar={{
         customerBackHref: customerBackId
           ? `/admin/customers/${encodeURIComponent(customerBackId)}`

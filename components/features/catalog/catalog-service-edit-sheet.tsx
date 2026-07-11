@@ -99,6 +99,7 @@ export function CatalogServiceEditSheet({
 
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
+  const category = form.watch("category");
   const { isPlan, isFlat, isByTerm, showUpfront } = useCatalogServicePricingFlags(
     serviceType,
     billingType,
@@ -111,11 +112,12 @@ export function CatalogServiceEditSheet({
   const lookupPreviewKeys = React.useMemo(() => {
     return previewCatalogServiceLookupKeys({
       lookupKeyBase: resolvedLookupBase,
+      category,
       serviceType,
       billingType,
       pricingModel: isOneOff ? "flat" : pricingModel,
     });
-  }, [resolvedLookupBase, serviceType, billingType, pricingModel, isOneOff]);
+  }, [resolvedLookupBase, category, serviceType, billingType, pricingModel, isOneOff]);
 
   React.useEffect(() => {
     if (!open) {

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { requireStaffSession } from "@/lib/auth/server-session";
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getCustomerRecordForOrg } from "@/server/firestore/crm-customers";
@@ -128,6 +129,7 @@ function proposalSaveErrorMessage(err: unknown): string {
 export async function createDraftProposalFromCustomerAction(
   customerId: string,
   templateId?: string | null,
+  category?: string | null,
 ): Promise<{ ok: true; proposalId: string } | { ok: false; message: string }> {
   const user = await requireStaffSession();
   if (!user) return { ok: false, message: "Unauthorized." };
@@ -138,6 +140,11 @@ export async function createDraftProposalFromCustomerAction(
   const recipientEmail = (customer.email ?? "").trim().toLowerCase();
   if (!recipientEmail) {
     return { ok: false, message: "Add an email address to this contact before creating a proposal." };
+  }
+
+  const categoryId = category?.trim() ?? "";
+  if (!categoryId || !isCatalogCategoryId(categoryId)) {
+    return { ok: false, message: "Select a product category for this proposal." };
   }
 
   const db = getFirebaseAdminFirestore();
@@ -177,6 +184,7 @@ export async function createDraftProposalFromCustomerAction(
       title: document.title,
       customerId: customer.id,
       recipientEmail,
+      category: categoryId,
       status: "draft",
       shareToken,
       document: omitUndefinedDeep(encodeProposalDocumentForFirestore(document)),
@@ -235,6 +243,7 @@ export async function createDraftProposalFromCustomerAction(
 export async function createDraftProposalFromOpportunityAction(
   opportunityId: string,
   templateId?: string | null,
+  category?: string | null,
 ): Promise<{ ok: true; proposalId: string } | { ok: false; message: string }> {
   const user = await requireStaffSession();
   if (!user) return { ok: false, message: "Unauthorized." };
@@ -251,6 +260,11 @@ export async function createDraftProposalFromOpportunityAction(
       ok: false,
       message: "This opportunity's contact needs an email address before creating a proposal.",
     };
+  }
+
+  const categoryId = category?.trim() ?? "";
+  if (!categoryId || !isCatalogCategoryId(categoryId)) {
+    return { ok: false, message: "Select a product category for this proposal." };
   }
 
   const db = getFirebaseAdminFirestore();
@@ -292,6 +306,7 @@ export async function createDraftProposalFromOpportunityAction(
       customerId: customer.id,
       opportunityId: opportunity.id,
       recipientEmail,
+      category: categoryId,
       status: "draft",
       shareToken,
       document: omitUndefinedDeep(encodeProposalDocumentForFirestore(document)),

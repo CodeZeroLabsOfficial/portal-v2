@@ -1,4 +1,5 @@
 import { isStaff } from "@/lib/auth/server-session";
+import { resolveCatalogCategoryId } from "@/lib/catalog/categories";
 import { asString } from "@/lib/firestore/coerce";
 import { millisFromFirestore } from "@/lib/firestore/timestamp";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
@@ -94,6 +95,7 @@ export function parseCatalogServiceRecord(id: string, data: Record<string, unkno
     createdByUid: asString(data.createdByUid) ?? "",
     name: asString(data.name)?.trim() || "Untitled service",
     slug: asString(data.slug)?.trim() || "service",
+    category: resolveCatalogCategoryId(asString(data.category)),
     ...(serviceType ? { serviceType } : {}),
     ...(asString(data.description)?.trim() ? { description: asString(data.description)!.trim() } : {}),
     ...(billingType ? { billingType } : {}),
@@ -169,6 +171,7 @@ export function catalogServiceToPickerOption(service: CatalogServiceRecord): Cat
     serviceName: service.name,
     currency: service.currency,
     status: service.status,
+    category: service.category,
     ...(service.serviceType ? { serviceType: service.serviceType } : {}),
     ...(service.billingType ? { billingType: service.billingType } : {}),
     pricingModel,

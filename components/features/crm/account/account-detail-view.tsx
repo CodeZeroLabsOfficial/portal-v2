@@ -3,12 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft, Pencil, Plus } from "lucide-react";
 
 import { AccountCompanyDetailsCard } from "@/components/features/crm/account/account-company-details-card";
 import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
 import { AddCustomerSheet } from "@/components/features/crm/customer/add-customer-sheet";
-import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,11 +46,15 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
         <Button asChild variant="outline">
           <Link href="/admin/accounts" aria-label="Back to accounts">
             <ChevronLeft />
           </Link>
+        </Button>
+        <Button type="button" onClick={() => setEditOpen(true)}>
+          <Pencil />
+          Edit
         </Button>
       </div>
 
@@ -60,9 +63,6 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
           <CardHeader>
             <CardTitle className="font-display text-2xl">{account.displayName}</CardTitle>
             <StatusBadge label={activeBadge.label} variant={activeBadge.variant} />
-            <CardAction>
-              <SettingsEditButton onClick={() => setEditOpen(true)} ariaLabel="Edit account" />
-            </CardAction>
           </CardHeader>
           <CardContent>
             <Separator className="mb-4" />

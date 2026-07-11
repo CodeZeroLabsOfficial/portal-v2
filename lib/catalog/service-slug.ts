@@ -1,3 +1,4 @@
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
 import type {
   CatalogServiceBillingType,
   CatalogServiceKind,
@@ -29,6 +30,8 @@ export function normalizeLookupKeyBase(raw: string): string {
 
 export interface CatalogServiceLookupContext {
   lookupKeyBase: string;
+  /** When set, prefixes keys as `{category}_{base}_…`. Omit for legacy unprefixed keys. */
+  category?: string;
   serviceType: CatalogServiceKind;
   billingType: CatalogServiceBillingType;
   pricingModel: CatalogServicePricingModel;
@@ -41,14 +44,17 @@ export function buildCatalogServicePriceLookupKey(
 ): string {
   const base = normalizeLookupKeyBase(ctx.lookupKeyBase);
   const kind = ctx.serviceType === "plan" ? "plan" : "addon";
+  const category =
+    ctx.category && isCatalogCategoryId(ctx.category) ? ctx.category : undefined;
+  const stem = category ? `${category}_${base}` : base;
 
   if (ctx.pricingModel === "by_term" && months) {
-    return `${base}_${kind}_${months}_months`;
+    return `${stem}_${kind}_${months}_months`;
   }
   if (ctx.billingType === "one_off") {
-    return `${base}_${kind}_one_off`;
+    return `${stem}_${kind}_one_off`;
   }
-  return `${base}_${kind}`;
+  return `${stem}_${kind}`;
 }
 
 /** Pre-migration lookup keys (`{slug}_12_months`). */
@@ -62,11 +68,12 @@ export function legacyCatalogServicePriceLookupKey(
 export function catalogServiceLookupContext(
   service: Pick<
     CatalogServiceRecord,
-    "slug" | "serviceType" | "billingType" | "pricingModel"
+    "slug" | "category" | "serviceType" | "billingType" | "pricingModel"
   >,
 ): CatalogServiceLookupContext {
   return {
     lookupKeyBase: service.slug,
+    category: service.category,
     serviceType: service.serviceType ?? "plan",
     billingType: service.billingType ?? "recurring",
     pricingModel: service.pricingModel ?? "by_term",
@@ -82,7 +89,7 @@ export function isLegacyCatalogService(
 function computedCatalogServiceTermLookupKey(
   service: Pick<
     CatalogServiceRecord,
-    "slug" | "serviceType" | "billingType" | "pricingModel"
+    "slug" | "category" | "serviceType" | "billingType" | "pricingModel"
   >,
   term: Pick<CatalogServiceTerm, "months">,
 ): string {
@@ -90,14 +97,14 @@ function computedCatalogServiceTermLookupKey(
   if (isLegacyCatalogService(service)) {
     return legacyCatalogServicePriceLookupKey(service.slug, months ?? 12);
   }
-  return buildCatalogServicePriceLookupKey(catalogServiceLookupContext(service as CatalogServiceRecord), months);
+  return buildCatalogServicePriceLookupKey(catalogServiceLookupContext(service), months);
 }
 
 /** Persist fully-qualified Stripe lookup keys on each term (not just the base segment from the form). */
 export function applyCatalogServiceTermLookupKeys(
   service: Pick<
     CatalogServiceRecord,
-    "slug" | "serviceType" | "billingType" | "pricingModel"
+    "slug" | "category" | "serviceType" | "billingType" | "pricingModel"
   >,
   terms: CatalogServiceTerm[],
 ): CatalogServiceTerm[] {

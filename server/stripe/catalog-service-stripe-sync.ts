@@ -104,6 +104,7 @@ export async function syncCatalogServiceToStripe(
         catalog_service_id: service.id,
         organization_id: service.organizationId,
         service_slug: slug,
+        category: service.category,
         ...(service.serviceType ? { service_type: service.serviceType } : {}),
       },
     };
@@ -152,6 +153,7 @@ export async function syncCatalogServiceToStripe(
           catalog_service_id: service.id,
           service_slug: slug,
           lookup_key: lookupKey,
+          category: service.category,
           ...(term.months ? { duration_months: String(term.months) } : {}),
           ...(service.serviceType ? { service_type: service.serviceType } : {}),
           billing_type: billingType,

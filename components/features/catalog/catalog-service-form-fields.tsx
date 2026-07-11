@@ -11,6 +11,10 @@ import { NumericStepper } from "@/components/ui/numeric-stepper";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  CATALOG_CATEGORIES,
+  type CatalogCategoryId,
+} from "@/lib/catalog/categories";
+import {
   normalizeLookupKeyBase,
   previewCatalogServiceLookupKeys,
   slugifyCatalogServiceName,
@@ -192,6 +196,7 @@ export function CatalogServiceFormFields({
   const [termMonths, setTermMonths] = React.useState<CatalogServiceTermMonths>(12);
 
   const name = form.watch("name");
+  const category = form.watch("category");
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
   const includedUsers = form.watch("includedUsers") ?? 0;
@@ -213,12 +218,13 @@ export function CatalogServiceFormFields({
   const lookupPreview = React.useMemo(() => {
     const ctx = {
       lookupKeyBase: resolvedLookupBase,
+      category,
       serviceType,
       billingType,
       pricingModel: isOneOff ? ("flat" as const) : pricingModel,
     };
     return previewCatalogServiceLookupKeys(ctx);
-  }, [resolvedLookupBase, serviceType, billingType, pricingModel, isOneOff]);
+  }, [resolvedLookupBase, category, serviceType, billingType, pricingModel, isOneOff]);
 
   React.useEffect(() => {
     if (mode === "edit" || lookupTouched) return;
@@ -300,31 +306,58 @@ export function CatalogServiceFormFields({
             </div>
 
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor={`${idPrefix}-lookup-key`}>
-                Lookup key <span className="text-destructive">*</span>
+              <Label htmlFor={`${idPrefix}-category`}>
+                Category <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id={`${idPrefix}-lookup-key`}
-                autoComplete="off"
-                className="font-mono"
-                placeholder="e.g. premium_monthly"
-                value={lookupKeyBase}
+              <select
+                id={`${idPrefix}-category`}
+                className={CATALOG_SERVICE_SELECT_CLASS}
                 disabled={busy}
-                onChange={(event) => {
-                  setLookupTouched(true);
-                  setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-                }}
-              />
-              {typeof errors.lookupKeyBase?.message === "string" ? (
-                <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
-              ) : null}
-              {mode === "create" && resolvedLookupBase ? (
-                <p className="text-xs leading-snug text-muted-foreground">
-                  Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
-                  <span className="font-mono">{lookupPreview.join(" · ")}</span>
-                </p>
+                value={category}
+                onChange={(event) =>
+                  form.setValue("category", event.target.value as CatalogCategoryId, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                {CATALOG_CATEGORIES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              {typeof errors.category?.message === "string" ? (
+                <p className="text-xs leading-tight text-destructive">{errors.category.message}</p>
               ) : null}
             </div>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label htmlFor={`${idPrefix}-lookup-key`}>
+              Lookup key <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id={`${idPrefix}-lookup-key`}
+              autoComplete="off"
+              className="font-mono"
+              placeholder="e.g. premium_monthly"
+              value={lookupKeyBase}
+              disabled={busy}
+              onChange={(event) => {
+                setLookupTouched(true);
+                setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+              }}
+            />
+            {typeof errors.lookupKeyBase?.message === "string" ? (
+              <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
+            ) : null}
+            {mode === "create" && resolvedLookupBase ? (
+              <p className="text-xs leading-snug text-muted-foreground">
+                Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
+                <span className="font-mono">{lookupPreview.join(" · ")}</span>
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -496,6 +529,7 @@ export function catalogServiceFormInvalidMessage(
 ): string {
   const messages = [
     errors.name?.message,
+    errors.category?.message,
     errors.lookupKeyBase?.message,
     errors.flatAmountMinor?.message,
     errors.monthlyCost12Minor?.message,

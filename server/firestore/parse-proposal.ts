@@ -1,5 +1,6 @@
 import { COLLECTIONS } from "@/server/firestore/collections";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
 import { asNumber, asString } from "@/lib/firestore/coerce";
 import { millisFromFirestore } from "@/lib/firestore/timestamp";
 import { parseProposalDocument } from "@/lib/schemas/proposal-document";
@@ -113,6 +114,9 @@ export function parseProposalRecord(id: string, data: Record<string, unknown>): 
     title: asString(data.title) ?? document.title ?? "Untitled proposal",
     customerId: asString(data.customerId),
     opportunityId: asString(data.opportunityId),
+    ...(asString(data.category) && isCatalogCategoryId(asString(data.category)!)
+      ? { category: asString(data.category)! }
+      : {}),
     recipientEmail: asString(data.recipientEmail) ?? asString(data.customerEmail),
     status: parseStatus(data.status),
     shareToken: asString(data.shareToken) ?? "",
