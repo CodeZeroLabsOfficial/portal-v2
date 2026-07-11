@@ -220,7 +220,7 @@ export function CatalogServiceEditSheet({
       }
     }
 
-    toast.success("Service saved. Open Integrations to re-sync Stripe if prices changed.");
+    toast.success("Service saved.");
     onOpenChange(false);
     router.refresh();
   }

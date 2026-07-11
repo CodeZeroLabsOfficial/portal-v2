@@ -198,6 +198,12 @@ export async function updateCatalogServiceAction(
   );
   if (!write.ok) return write;
 
+  // Keep Stripe prices in sync — amount/slug edits drop local price IDs until a new Price is created.
+  const syncResult = await pushCatalogServiceToStripe(user, id, {
+    setActive: existing.status === "active",
+  });
+  if (!syncResult.ok) return syncResult;
+
   revalidateCatalogPaths(id);
   return { ok: true };
 }

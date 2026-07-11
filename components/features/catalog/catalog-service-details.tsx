@@ -23,8 +23,6 @@ function buildServiceDetailInfoItems(service: CatalogServiceRecord) {
     { label: "Billing", value: catalogBillingLabel(service) },
     { label: "Pricing model", value: catalogPricingModelLabel(service) },
     { label: "Updated", value: formatCatalogTableDate(service.updatedAt) },
-    { label: "Lookup key", value: service.slug || "—" },
-    { label: "Currency", value: service.currency.toUpperCase() },
   ];
 }
 
