@@ -192,8 +192,10 @@ export interface PackageTier {
   monthlyCost12Minor: number;
   /** Recurring per-month amount (minor units) when the buyer chooses the 24-month term. */
   monthlyCost24Minor: number;
-  /** One-time upfront charge for the 12-month term only (minor units). */
+  /** One-time upfront charge for the 12-month term (minor units). */
   upfrontCost12Minor?: number;
+  /** One-time upfront charge for the 24-month term (minor units). */
+  upfrontCost24Minor?: number;
   /**
    * Portal service catalogue id — preferred billing link (synced Stripe prices on activate).
    */

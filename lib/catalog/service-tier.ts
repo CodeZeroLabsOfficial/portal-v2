@@ -106,6 +106,7 @@ export function packageTierFromCatalogService(
     monthlyCost12Minor: d12?.unitAmountMinor ?? 0,
     monthlyCost24Minor: d24?.unitAmountMinor ?? 0,
     ...(typeof service.upfrontCost12Minor === "number" ? { upfrontCost12Minor: service.upfrontCost12Minor } : {}),
+    ...(typeof service.upfrontCost24Minor === "number" ? { upfrontCost24Minor: service.upfrontCost24Minor } : {}),
     features: [...service.features],
   };
 }

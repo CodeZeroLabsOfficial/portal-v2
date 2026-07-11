@@ -1,4 +1,4 @@
-import { DEFAULT_CATALOG_CATEGORY_ID, resolveCatalogCategoryId } from "@/lib/catalog/categories";
+import { resolveCatalogCategoryId } from "@/lib/catalog/categories";
 import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
 import type { CreateCatalogServiceInput, UpdateCatalogServiceInput } from "@/lib/schemas/catalog-service";
 import type { CatalogServiceRecord } from "@/types/catalog-service";

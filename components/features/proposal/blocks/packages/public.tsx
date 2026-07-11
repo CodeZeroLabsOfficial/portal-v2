@@ -271,10 +271,10 @@ export function PackagesBlockPublic({
         ) : null}
         {tiers.map((tier) => {
           const mm = monthlyMinor(tier);
+          const upfrontRaw =
+            term === "12_months" ? tier.upfrontCost12Minor : tier.upfrontCost24Minor;
           const upfront =
-            term === "12_months" && typeof tier.upfrontCost12Minor === "number" && tier.upfrontCost12Minor > 0
-              ? tier.upfrontCost12Minor
-              : undefined;
+            typeof upfrontRaw === "number" && upfrontRaw > 0 ? upfrontRaw : undefined;
           const isSelected = selectedTierId === tier.id;
           const isRecommended = Boolean(tier.recommended);
           const busy = pendingTierId === tier.id;
@@ -365,7 +365,7 @@ export function PackagesBlockPublic({
                     >
                       {term === "12_months" ? "12-month plan" : "24-month plan"}
                     </p>
-                    {term === "12_months" && upfront !== undefined ? (
+                    {upfront !== undefined ? (
                       <p className="mt-0.5 text-xs tabular-nums">
                         Upfront: {formatCurrencyAmount(upfront, currency)}
                       </p>

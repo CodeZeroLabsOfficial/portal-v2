@@ -11,6 +11,8 @@ import {
   templateCatalogVersionLabel,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
+import { catalogCategoryLabel } from "@/lib/catalog/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
   templateStageBadgeDisplay,
   templateStageBadgeTitle,
@@ -63,6 +65,7 @@ export function TemplatePropertiesPanel({
   const isContractTemplate = onAgreementTitleChange !== undefined;
   const stageBadge = templateStageBadgeDisplay(stage);
   const [editOpen, setEditOpen] = React.useState(false);
+  const { categories } = useCatalogCategories();
   const versionLabel = templateCatalogVersionLabel(catalogMeta);
   const descriptionText = description.trim();
   const agreementTitleText = agreementTitle?.trim() || "Services Agreement";
@@ -113,7 +116,13 @@ export function TemplatePropertiesPanel({
             {mutedText(catalogMeta.classification)}
           </PropertyField>
 
-          <PropertyField label="Category">{mutedText(catalogMeta.category)}</PropertyField>
+          <PropertyField label="Category">
+            {mutedText(
+              catalogMeta.category
+                ? catalogCategoryLabel(catalogMeta.category, categories)
+                : undefined,
+            )}
+          </PropertyField>
         </div>
 
         <PropertyField label="Key features">

@@ -43,6 +43,7 @@ import type { BlockStyle, ProposalBlock, ProposalBranding, ProposalDocument } fr
 import { ContractTemplateAgreementPreview } from "@/components/features/templates/contract-template-agreement-preview";
 import { EMPTY_TEMPLATE_CATALOG_META } from "@/lib/templates/catalog-meta";
 import type { TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
 import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -65,7 +66,7 @@ export interface ProposalDocumentEditorProps {
   proposalEditMiddleSlot?: ReactNode;
   localityTimeZone?: string;
   catalogServiceOptions?: CatalogServicePickerOption[];
-  /** Filters packages plan/addon pickers when editing a proposal (not templates). */
+  /** Filters packages plan/addon pickers for proposals. Templates derive scope from catalogMeta.category. */
   proposalCategory?: string;
   initialBranding?: ProposalBranding;
   embeddedInBuilder?: boolean;
@@ -311,9 +312,15 @@ export function ProposalDocumentEditor({
     [embeddedInBuilder, selectedBlockId, navigateToBlock],
   );
 
+  const editorCategory = React.useMemo(() => {
+    if (variant === "proposal") return proposalCategory;
+    const fromMeta = catalogMeta.category?.trim();
+    return fromMeta && isCatalogCategoryId(fromMeta) ? fromMeta : undefined;
+  }, [variant, proposalCategory, catalogMeta.category]);
+
   return (
     <EditorCatalogServicesContext.Provider value={catalogServiceOptions}>
-      <EditorProposalCategoryContext.Provider value={proposalCategory}>
+      <EditorProposalCategoryContext.Provider value={editorCategory}>
       <EditorTemplatePricingReadOnlyContext.Provider value={true}>
         <ProposalEditorLibraryScope>
           <ProposalMediaLibraryProvider>

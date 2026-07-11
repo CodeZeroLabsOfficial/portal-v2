@@ -974,12 +974,9 @@ function TierCard({
   const pricingReadOnly = useEditorTemplatePricingReadOnly();
   const isRecommended = Boolean(tier.recommended);
   const monthlyMinor = term === "12_months" ? tier.monthlyCost12Minor ?? 0 : tier.monthlyCost24Minor ?? 0;
+  const upfrontRaw = term === "12_months" ? tier.upfrontCost12Minor : tier.upfrontCost24Minor;
   const upfront =
-    term === "12_months" &&
-    typeof tier.upfrontCost12Minor === "number" &&
-    tier.upfrontCost12Minor > 0
-      ? tier.upfrontCost12Minor
-      : undefined;
+    typeof upfrontRaw === "number" && upfrontRaw > 0 ? upfrontRaw : undefined;
   const features = tier.features ?? [];
   const standardSurface = resolveTableSurfaceColors(tableBackground);
   const standardInlineTone = tableSurfaceInlineTone(standardSurface);
@@ -1119,16 +1116,26 @@ function TierCard({
             >
               {term === "12_months" ? "12-month plan" : "24-month plan"}
             </p>
-            {term === "12_months" && !pricingReadOnly ? (
+            {!pricingReadOnly ? (
               <InlinePrice
                 tone={inlineTone}
-                minor={tier.upfrontCost12Minor ?? 0}
+                minor={
+                  (term === "12_months" ? tier.upfrontCost12Minor : tier.upfrontCost24Minor) ?? 0
+                }
                 currency={currency}
-                onChange={(v) => onChange({ upfrontCost12Minor: v > 0 ? v : undefined })}
-                ariaLabel="Upfront cost (12-month)"
+                onChange={(v) =>
+                  onChange(
+                    term === "12_months"
+                      ? { upfrontCost12Minor: v > 0 ? v : undefined }
+                      : { upfrontCost24Minor: v > 0 ? v : undefined },
+                  )
+                }
+                ariaLabel={
+                  term === "12_months" ? "Upfront cost (12-month)" : "Upfront cost (24-month)"
+                }
                 className="mt-0.5 text-xs"
               />
-            ) : term === "12_months" && upfront !== undefined ? (
+            ) : upfront !== undefined ? (
               <p className="mt-0.5 text-xs tabular-nums">
                 Upfront: {formatCurrencyAmount(upfront, currency)}
               </p>

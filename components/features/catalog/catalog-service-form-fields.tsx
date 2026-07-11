@@ -10,10 +10,8 @@ import { Label } from "@/components/ui/label";
 import { NumericStepper } from "@/components/ui/numeric-stepper";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  CATALOG_CATEGORIES,
-  type CatalogCategoryId,
-} from "@/lib/catalog/categories";
+import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
   normalizeLookupKeyBase,
   previewCatalogServiceLookupKeys,
@@ -194,6 +192,7 @@ export function CatalogServiceFormFields({
   section = "all",
 }: CatalogServiceFormFieldsProps) {
   const [termMonths, setTermMonths] = React.useState<CatalogServiceTermMonths>(12);
+  const { categories, createCategory } = useCatalogCategories();
 
   const name = form.watch("name");
   const category = form.watch("category");
@@ -309,24 +308,19 @@ export function CatalogServiceFormFields({
               <Label htmlFor={`${idPrefix}-category`}>
                 Category <span className="text-destructive">*</span>
               </Label>
-              <select
+              <CatalogCategoryCombobox
                 id={`${idPrefix}-category`}
-                className={CATALOG_SERVICE_SELECT_CLASS}
                 disabled={busy}
                 value={category}
-                onChange={(event) =>
-                  form.setValue("category", event.target.value as CatalogCategoryId, {
+                categories={categories}
+                onValueChange={(next) =>
+                  form.setValue("category", next, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
                 }
-              >
-                {CATALOG_CATEGORIES.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
+                onCreateCategory={createCategory}
+              />
               {typeof errors.category?.message === "string" ? (
                 <p className="text-xs leading-tight text-destructive">{errors.category.message}</p>
               ) : null}

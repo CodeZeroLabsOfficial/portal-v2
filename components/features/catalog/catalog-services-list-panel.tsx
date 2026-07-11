@@ -24,7 +24,8 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { CATALOG_CATEGORIES, catalogCategoryLabel } from "@/lib/catalog/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
+import { catalogCategoryLabel } from "@/lib/catalog/categories";
 import { catalogPricingLabel, formatCatalogTableDate } from "@/lib/catalog/display";
 import {
   catalogServiceKindBadgeDisplay,
@@ -44,11 +45,13 @@ interface CatalogServicesListPanelProps {
 function CatalogServicesToolbar({
   table,
   onBulkDelete,
-  bulkDeleteDisabled
+  bulkDeleteDisabled,
+  categoryOptions,
 }: {
   table: Table<CatalogServiceRecord>;
   onBulkDelete: () => void;
   bulkDeleteDisabled: boolean;
+  categoryOptions: { label: string; value: string }[];
 }) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
@@ -83,11 +86,11 @@ function CatalogServicesToolbar({
             ]}
           />
         )}
-        {table.getColumn("category") && (
+        {table.getColumn("category") && categoryOptions.length > 0 && (
           <DataTableFacetedFilter
             column={table.getColumn("category")}
             title="Category"
-            options={CATALOG_CATEGORIES.map((c) => ({ label: c.label, value: c.id }))}
+            options={categoryOptions}
           />
         )}
         {isFiltered && (
@@ -112,6 +115,11 @@ function CatalogServicesToolbar({
 
 export function CatalogServicesListPanel({ services }: CatalogServicesListPanelProps) {
   const router = useRouter();
+  const { categories } = useCatalogCategories();
+  const categoryOptions = React.useMemo(
+    () => categories.map((c) => ({ label: c.label, value: c.id })),
+    [categories],
+  );
   const [addOpen, setAddOpen] = React.useState(false);
   const [pendingId, setPendingId] = React.useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = React.useState(false);
@@ -247,7 +255,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
             s.name,
             s.slug,
             s.category,
-            catalogCategoryLabel(s.category),
+            catalogCategoryLabel(s.category, categories),
             s.serviceType,
             s.status,
             s.stripeProductId,
@@ -265,7 +273,9 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
         accessorKey: "category",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
         cell: ({ row }) => (
-          <span className="text-muted-foreground">{catalogCategoryLabel(row.original.category)}</span>
+          <span className="text-muted-foreground">
+            {catalogCategoryLabel(row.original.category, categories)}
+          </span>
         ),
         filterFn: (row, id, value) => {
           const filters = value as string[];
@@ -357,7 +367,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
         }
       }
     ],
-    [pendingId]
+    [pendingId, categories]
   );
 
   return (
@@ -395,6 +405,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
               table={table}
               onBulkDelete={() => handleBulkDelete()}
               bulkDeleteDisabled={bulkBusy}
+              categoryOptions={categoryOptions}
             />
           );
         }}

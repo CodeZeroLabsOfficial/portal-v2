@@ -15,7 +15,7 @@ function extractPricingMinorFromBlock(block: ProposalBlock): number {
     let maxVal = 0;
     for (const tier of block.tiers) {
       const v12 = tier.monthlyCost12Minor * 12 + (tier.upfrontCost12Minor ?? 0);
-      const v24 = tier.monthlyCost24Minor * 24;
+      const v24 = tier.monthlyCost24Minor * 24 + (tier.upfrontCost24Minor ?? 0);
       maxVal = Math.max(maxVal, v12, v24);
     }
     return maxVal > 0 ? Math.round(maxVal) : 0;

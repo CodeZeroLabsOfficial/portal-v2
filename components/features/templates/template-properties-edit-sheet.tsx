@@ -25,14 +25,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
   catalogSelectOptions,
   type TemplateCatalogMeta,
 } from "@/lib/templates/catalog-meta";
-import {
-  TEMPLATE_CATEGORIES,
-  TEMPLATE_CLASSIFICATIONS,
-} from "@/lib/templates/template-catalog-options";
+import { TEMPLATE_CLASSIFICATIONS } from "@/lib/templates/template-catalog-options";
 
 export interface TemplatePropertiesEditSheetProps {
   open: boolean;
@@ -65,6 +64,7 @@ export function TemplatePropertiesEditSheet({
   const [draftCatalogMeta, setDraftCatalogMeta] = React.useState(catalogMeta);
   const [draftAgreementTitle, setDraftAgreementTitle] = React.useState(agreementTitle ?? "");
   const [featureDraft, setFeatureDraft] = React.useState("");
+  const { categories, createCategory } = useCatalogCategories();
 
   React.useEffect(() => {
     if (!open) return;
@@ -78,7 +78,6 @@ export function TemplatePropertiesEditSheet({
     TEMPLATE_CLASSIFICATIONS,
     draftCatalogMeta.classification,
   );
-  const categoryOptions = catalogSelectOptions(TEMPLATE_CATEGORIES, draftCatalogMeta.category);
 
   function addFeature() {
     const label = featureDraft.trim();
@@ -190,22 +189,18 @@ export function TemplatePropertiesEditSheet({
 
           <div className="space-y-1.5">
             <Label htmlFor="template-category">Category</Label>
-            <Select
-              value={draftCatalogMeta.category || undefined}
+            <CatalogCategoryCombobox
+              id="template-category"
+              value={draftCatalogMeta.category}
+              categories={categories}
               onValueChange={(value) =>
                 setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "category", value))
-              }>
-              <SelectTrigger id="template-category" className="w-full">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categoryOptions.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              }
+              onCreateCategory={createCategory}
+            />
+            <p className="text-muted-foreground text-xs">
+              Package plans and add-ons in the editor are limited to this category.
+            </p>
           </div>
 
           <div className="space-y-1.5">

@@ -186,6 +186,9 @@ function normalizePackageTierInput(raw: unknown): unknown {
   if (typeof o.upfrontCost12Minor === "number" && o.upfrontCost12Minor >= 0) {
     tier.upfrontCost12Minor = o.upfrontCost12Minor;
   }
+  if (typeof o.upfrontCost24Minor === "number" && o.upfrontCost24Minor >= 0) {
+    tier.upfrontCost24Minor = o.upfrontCost24Minor;
+  }
   if (typeof o.stripePriceId === "string") {
     const sp = o.stripePriceId.trim();
     if (sp.length > 0) tier.stripePriceId = sp.slice(0, 120);
@@ -300,6 +303,7 @@ const packageTierSchema = z.object({
   monthlyCost12Minor: z.number().finite().min(0),
   monthlyCost24Minor: z.number().finite().min(0),
   upfrontCost12Minor: z.number().finite().min(0).optional(),
+  upfrontCost24Minor: z.number().finite().min(0).optional(),
   /** Stripe recurring Price id for this tier (optional). */
   stripePriceId: z.string().min(3).max(120).optional(),
   /** Stripe Product id — durations resolved like Add subscription (optional). */

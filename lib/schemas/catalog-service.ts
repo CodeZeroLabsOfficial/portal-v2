@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  CATALOG_CATEGORIES,
-  type CatalogCategoryId,
-} from "@/lib/catalog/categories";
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
 import {
   applyCatalogServiceTermLookupKeys,
   normalizeLookupKeyBase,
@@ -16,16 +13,15 @@ const lookupKeyBaseField = trimmed
   .max(40)
   .regex(/^[a-z0-9_]+$/, "Use lowercase letters, numbers, and underscores only");
 
-const catalogCategoryIds = CATALOG_CATEGORIES.map((c) => c.id) as [
-  CatalogCategoryId,
-  ...CatalogCategoryId[],
-];
+const catalogCategoryField = trimmed
+  .min(1, "Category is required")
+  .refine(isCatalogCategoryId, "Select or create a valid category");
 
 const STRIPE_MIN_MINOR = 50;
 
 const catalogServiceFieldsSchema = z.object({
   serviceType: z.enum(["plan", "addon"]),
-  category: z.enum(catalogCategoryIds),
+  category: catalogCategoryField,
   name: trimmed.min(1, "Name is required").max(120),
   description: trimmed.max(500).optional(),
   billingType: z.enum(["recurring", "one_off"]),

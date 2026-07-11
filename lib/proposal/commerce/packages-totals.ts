@@ -34,14 +34,14 @@ export function packagesSelectionTermLabel(
   return block.plan12Label?.trim() || "12 months";
 }
 
-/** One-time upfront on the 12-month plan term only. */
+/** One-time upfront for the selected plan term (12 or 24 months). */
 export function packageTierUpfrontMinor(block: PackagesBlock, sel: PackagesPublicSelection): number {
-  if (sel.term !== "12_months") return 0;
   const tier = block.tiers.find((t) => t.id === sel.tierId);
-  if (!tier || typeof tier.upfrontCost12Minor !== "number" || tier.upfrontCost12Minor <= 0) {
-    return 0;
-  }
-  return Math.round(tier.upfrontCost12Minor);
+  if (!tier) return 0;
+  const raw =
+    sel.term === "24_months" ? tier.upfrontCost24Minor : tier.upfrontCost12Minor;
+  if (typeof raw !== "number" || raw <= 0) return 0;
+  return Math.round(raw);
 }
 
 /** Contract-style plan total (months × tier monthly rate). */

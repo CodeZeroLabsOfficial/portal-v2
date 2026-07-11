@@ -56,6 +56,8 @@ export const COLLECTIONS = {
    * (Renamed from `catalog_services`; migrate existing docs in Firebase if needed.)
    */
   services: "services",
+  /** Org product-line categories for catalogue services, templates, and proposals. */
+  catalogCategories: "catalog_categories",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

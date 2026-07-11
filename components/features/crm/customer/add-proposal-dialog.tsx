@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { ProposalTemplatePickerCard } from "@/components/features/templates/proposal-template-picker-card";
+import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,17 +23,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Label } from "@/components/ui/label";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  CATALOG_CATEGORIES,
   DEFAULT_CATALOG_CATEGORY_ID,
-  type CatalogCategoryId,
+  isCatalogCategoryId,
 } from "@/lib/catalog/categories";
 import {
   filterProposalTemplatesForPicker,
@@ -63,7 +57,8 @@ export function AddProposalDialog({
 }: AddProposalDialogProps) {
   const router = useRouter();
   const [pendingTemplateId, setPendingTemplateId] = React.useState<string | null>(null);
-  const [category, setCategory] = React.useState<CatalogCategoryId>(DEFAULT_CATALOG_CATEGORY_ID);
+  const [category, setCategory] = React.useState(DEFAULT_CATALOG_CATEGORY_ID);
+  const { categories, createCategory } = useCatalogCategories();
 
   const visible = React.useMemo(
     () =>
@@ -84,18 +79,35 @@ export function AddProposalDialog({
     }
   }, [open]);
 
+  React.useEffect(() => {
+    if (categories.length === 0) return;
+    if (!categories.some((c) => c.id === category)) {
+      setCategory(categories[0].id);
+    }
+  }, [categories, category]);
+
   async function handleUseTemplate(templateId: string) {
     if (pendingTemplateId) return;
-    if (!category) {
+
+    const template = templates.find((t) => t.id === templateId);
+    const fromTemplate = template?.catalogMeta?.category?.trim();
+    const categoryToUse =
+      fromTemplate && isCatalogCategoryId(fromTemplate) ? fromTemplate : category;
+
+    if (!categoryToUse || !isCatalogCategoryId(categoryToUse)) {
       toast.error("Select a product category for this proposal.");
       return;
+    }
+
+    if (categoryToUse !== category) {
+      setCategory(categoryToUse);
     }
 
     setPendingTemplateId(templateId);
     try {
       const res = opportunityId
-        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId, category)
-        : await createDraftProposalFromCustomerAction(customerId, templateId, category);
+        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId, categoryToUse)
+        : await createDraftProposalFromCustomerAction(customerId, templateId, categoryToUse);
       if (!res.ok) {
         toast.error(res.message);
         setPendingTemplateId(null);
@@ -126,22 +138,15 @@ export function AddProposalDialog({
           <Label htmlFor="add-proposal-category">
             Product category <span className="text-destructive">*</span>
           </Label>
-          <Select
+          <CatalogCategoryCombobox
+            id="add-proposal-category"
+            className="max-w-sm"
             value={category}
-            onValueChange={(value) => setCategory(value as CatalogCategoryId)}
+            categories={categories}
+            onValueChange={setCategory}
+            onCreateCategory={createCategory}
             disabled={pendingTemplateId !== null}
-          >
-            <SelectTrigger id="add-proposal-category" className="w-full max-w-sm">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATALOG_CATEGORIES.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           <p className="text-muted-foreground text-xs">
             Package plans and add-ons in the editor are limited to this category.
           </p>

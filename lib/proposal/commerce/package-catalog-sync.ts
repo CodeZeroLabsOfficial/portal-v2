@@ -37,6 +37,7 @@ function packageTierCatalogFieldsEqual(a: PackageTier, b: PackageTier): boolean 
     (a.monthlyCost12Minor ?? 0) === (b.monthlyCost12Minor ?? 0) &&
     (a.monthlyCost24Minor ?? 0) === (b.monthlyCost24Minor ?? 0) &&
     (a.upfrontCost12Minor ?? 0) === (b.upfrontCost12Minor ?? 0) &&
+    (a.upfrontCost24Minor ?? 0) === (b.upfrontCost24Minor ?? 0) &&
     JSON.stringify(a.features ?? []) === JSON.stringify(b.features ?? [])
   );
 }

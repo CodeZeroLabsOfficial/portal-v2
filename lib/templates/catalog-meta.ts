@@ -1,3 +1,5 @@
+import { isCatalogCategoryId } from "@/lib/catalog/categories";
+
 /** Hub + Properties sidebar metadata for proposal/contract templates. */
 export interface TemplateCatalogMeta {
   /** e.g. "Mobile App Development Proposal" */
@@ -6,7 +8,10 @@ export interface TemplateCatalogMeta {
   classification?: string;
   /** @deprecated Legacy free-text field — use `classification`. */
   useCase?: string;
-  /** Industry vertical (Properties dropdown). */
+  /**
+   * Product-line category slug (same as catalogue services / proposals).
+   * Scopes packages plan/addon pickers in the template editor.
+   */
   category?: string;
   /** Display tags on hub cards (e.g. "Dynamic Pricing"). */
   keyFeatures?: string[];
@@ -30,6 +35,13 @@ function parseKeyFeatures(raw: unknown): string[] | undefined {
   return features.length > 0 ? features.slice(0, 8) : undefined;
 }
 
+/** Keep only known product-line category slugs; drop legacy industry labels. */
+function normalizeCatalogCategory(raw: unknown): string | undefined {
+  const trimmed = trimOptional(raw);
+  if (!trimmed || !isCatalogCategoryId(trimmed)) return undefined;
+  return trimmed;
+}
+
 /** Parses Firestore `catalogMeta` — returns undefined when empty or invalid. */
 export function parseTemplateCatalogMeta(raw: unknown): TemplateCatalogMeta | undefined {
   if (!raw || typeof raw !== "object") return undefined;
@@ -39,7 +51,7 @@ export function parseTemplateCatalogMeta(raw: unknown): TemplateCatalogMeta | un
     subtitle: trimOptional(data.subtitle),
     classification: trimOptional(data.classification),
     useCase: trimOptional(data.useCase),
-    category: trimOptional(data.category),
+    category: normalizeCatalogCategory(data.category),
     version: trimOptional(data.version),
     keyFeatures: parseKeyFeatures(data.keyFeatures),
   };
@@ -55,7 +67,7 @@ export function normalizeTemplateCatalogMeta(
     subtitle: trimOptional(meta.subtitle),
     classification: trimOptional(meta.classification),
     useCase: trimOptional(meta.useCase),
-    category: trimOptional(meta.category),
+    category: normalizeCatalogCategory(meta.category),
     version: trimOptional(meta.version),
     keyFeatures: parseKeyFeatures(meta.keyFeatures),
   };
