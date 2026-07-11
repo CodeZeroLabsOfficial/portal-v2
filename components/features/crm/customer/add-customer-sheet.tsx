@@ -11,7 +11,7 @@ import { CustomerProfileFormFields } from "@/components/features/crm/customer/cu
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetActionsEndClass,
-  sheetContentWideClass,
+  sheetContentMediumClass,
   sheetFormClass,
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ import {
   EMPTY_CUSTOMER_PROFILE_FORM_VALUES,
   type CustomerProfileFormValues
 } from "@/lib/customer/profile-form-values";
-import { parseCustomerTagsInput } from "@/lib/customer/tags";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { createCustomerSchema } from "@/lib/schemas/customer";
 import { createCustomerAction } from "@/server/actions/customers-crm";
@@ -50,7 +49,6 @@ export function AddCustomerSheet({
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
-  const [tagInput, setTagInput] = React.useState("");
 
   const resolvedDefaults = React.useMemo(
     (): CustomerProfileFormValues => ({
@@ -70,7 +68,6 @@ export function AddCustomerSheet({
       form.reset(resolvedDefaults);
       setFirstName("");
       setLastName("");
-      setTagInput("");
       setServerError(null);
       return;
     }
@@ -86,7 +83,6 @@ export function AddCustomerSheet({
 
   async function onSubmit(values: CustomerProfileFormValues) {
     setServerError(null);
-    const tags = parseCustomerTagsInput(tagInput);
     const contactAddress = normalizeAddressFields({
       addressLine1: values.addressLine1,
       addressLine2: values.addressLine2,
@@ -96,7 +92,11 @@ export function AddCustomerSheet({
       country: values.country
     });
     const { id: _id, ...createPayload } = values;
-    const result = await createCustomerAction({ ...createPayload, ...contactAddress, tags });
+    const result = await createCustomerAction({
+      ...createPayload,
+      ...contactAddress,
+      tags: []
+    });
     if (!result.ok) {
       setServerError(result.message);
       return;
@@ -116,7 +116,7 @@ export function AddCustomerSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={sheetContentWideClass}>
+      <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Add customer</SheetTitle>
         </SheetHeader>
@@ -130,8 +130,8 @@ export function AddCustomerSheet({
             lastName={lastName}
             onFirstNameChange={setFirstName}
             onLastNameChange={setLastName}
-            tagInput={tagInput}
-            onTagInputChange={setTagInput}
+            showCompanySection={false}
+            showTags={false}
           />
           <div className={sheetActionsEndClass}>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>

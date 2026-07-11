@@ -17,8 +17,12 @@ export interface CustomerProfileFormFieldsProps {
   lastName: string;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
-  tagInput: string;
-  onTagInputChange: (value: string) => void;
+  tagInput?: string;
+  onTagInputChange?: (value: string) => void;
+  /** Defaults to true for edit, false for create. */
+  showCompanySection?: boolean;
+  /** Defaults to true for edit, false for create. */
+  showTags?: boolean;
 }
 
 export function CustomerProfileFormFields({
@@ -29,8 +33,10 @@ export function CustomerProfileFormFields({
   lastName,
   onFirstNameChange,
   onLastNameChange,
-  tagInput,
-  onTagInputChange
+  tagInput = "",
+  onTagInputChange,
+  showCompanySection = mode === "edit",
+  showTags = mode === "edit"
 }: CustomerProfileFormFieldsProps) {
   const { register, formState, watch, setValue, getValues } = form;
   const errors = formState.errors;
@@ -49,11 +55,10 @@ export function CustomerProfileFormFields({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold">Contact</h3>
+      <div className="space-y-4">
         <input type="hidden" {...register("name")} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="crm-first-name">First name</Label>
             {mode === "create" ? (
               <div className="flex overflow-hidden rounded-md border">
@@ -90,7 +95,7 @@ export function CustomerProfileFormFields({
               />
             )}
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="crm-last-name">Last name</Label>
             <Input
               id="crm-last-name"
@@ -101,7 +106,7 @@ export function CustomerProfileFormFields({
               onChange={(e) => onLastNameChange(e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="crm-email">Email *</Label>
             <Input
               id="crm-email"
@@ -114,7 +119,7 @@ export function CustomerProfileFormFields({
               <p className="text-destructive text-xs">{errors.email.message}</p>
             ) : null}
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="crm-phone">Phone</Label>
             <Input
               id="crm-phone"
@@ -125,7 +130,8 @@ export function CustomerProfileFormFields({
             />
           </div>
         </div>
-        <div className="space-y-1.5">
+
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Contact address</Label>
             <Button
@@ -149,7 +155,7 @@ export function CustomerProfileFormFields({
             disabled={disabled}
             {...register("addressLine2")}
           />
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid gap-2 sm:grid-cols-2">
             <Input
               placeholder="City"
               autoComplete="address-level2"
@@ -176,86 +182,101 @@ export function CustomerProfileFormFields({
             />
           </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="crm-tags">Tags</Label>
-          <Input
-            id="crm-tags"
-            value={tagInput}
-            disabled={disabled}
-            onChange={(e) => onTagInputChange(e.target.value)}
-            placeholder="vip, priority — comma separated"
-          />
-        </div>
+
+        {showTags && onTagInputChange ? (
+          <div className="space-y-2">
+            <Label htmlFor="crm-tags">Tags</Label>
+            <Input
+              id="crm-tags"
+              value={tagInput}
+              disabled={disabled}
+              onChange={(e) => onTagInputChange(e.target.value)}
+              placeholder="vip, priority — comma separated"
+            />
+          </div>
+        ) : null}
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold">Company</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="crm-company">Company name</Label>
-            <Input
-              id="crm-company"
-              autoComplete="organization"
-              disabled={disabled}
-              {...register("company")}
-            />
+      {showCompanySection ? (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold">Company</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="crm-company">Company name</Label>
+              <Input
+                id="crm-company"
+                autoComplete="organization"
+                disabled={disabled}
+                {...register("company")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm-company-phone">Company phone</Label>
+              <Input
+                id="crm-company-phone"
+                type="tel"
+                autoComplete="tel"
+                disabled={disabled}
+                {...register("companyPhone")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm-company-email">Company email</Label>
+              <Input
+                id="crm-company-email"
+                type="email"
+                disabled={disabled}
+                {...register("companyEmail")}
+              />
+              {errors.companyEmail ? (
+                <p className="text-destructive text-xs">{errors.companyEmail.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="crm-company-website">Website</Label>
+              <Input
+                id="crm-company-website"
+                autoComplete="url"
+                placeholder="https://www.company.com"
+                disabled={disabled}
+                {...register("companyWebsite")}
+              />
+              {errors.companyWebsite ? (
+                <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm-company-abn">ABN</Label>
+              <Input
+                id="crm-company-abn"
+                autoComplete="off"
+                disabled={disabled}
+                {...register("companyAbn")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm-company-acn">ACN</Label>
+              <Input
+                id="crm-company-acn"
+                autoComplete="off"
+                disabled={disabled}
+                {...register("companyAcn")}
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="crm-company-phone">Company phone</Label>
-            <Input
-              id="crm-company-phone"
-              type="tel"
-              autoComplete="tel"
-              disabled={disabled}
-              {...register("companyPhone")}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="crm-company-email">Company email</Label>
-            <Input
-              id="crm-company-email"
-              type="email"
-              disabled={disabled}
-              {...register("companyEmail")}
-            />
-            {errors.companyEmail ? (
-              <p className="text-destructive text-xs">{errors.companyEmail.message}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="crm-company-website">Website</Label>
-            <Input
-              id="crm-company-website"
-              autoComplete="url"
-              placeholder="https://www.company.com"
-              disabled={disabled}
-              {...register("companyWebsite")}
-            />
-            {errors.companyWebsite ? (
-              <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="crm-company-abn">ABN</Label>
-            <Input id="crm-company-abn" autoComplete="off" disabled={disabled} {...register("companyAbn")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="crm-company-acn">ACN</Label>
-            <Input id="crm-company-acn" autoComplete="off" disabled={disabled} {...register("companyAcn")} />
+          <div className="space-y-2">
+            <Label>Company address</Label>
+            <Input placeholder="Line 1" disabled={disabled} {...register("companyAddressLine1")} />
+            <Input placeholder="Line 2" disabled={disabled} {...register("companyAddressLine2")} />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input placeholder="City" disabled={disabled} {...register("companyCity")} />
+              <Input placeholder="State / region" disabled={disabled} {...register("companyRegion")} />
+              <Input placeholder="Postal code" disabled={disabled} {...register("companyPostalCode")} />
+              <Input placeholder="Country" disabled={disabled} {...register("companyCountry")} />
+            </div>
           </div>
         </div>
-        <div className="space-y-1.5">
-          <Label>Company address</Label>
-          <Input placeholder="Line 1" disabled={disabled} {...register("companyAddressLine1")} />
-          <Input placeholder="Line 2" disabled={disabled} {...register("companyAddressLine2")} />
-          <div className="grid grid-cols-2 gap-1.5">
-            <Input placeholder="City" disabled={disabled} {...register("companyCity")} />
-            <Input placeholder="State / region" disabled={disabled} {...register("companyRegion")} />
-            <Input placeholder="Postal code" disabled={disabled} {...register("companyPostalCode")} />
-            <Input placeholder="Country" disabled={disabled} {...register("companyCountry")} />
-          </div>
-        </div>
-      </div>
+      ) : null}
     </div>
   );
 }
