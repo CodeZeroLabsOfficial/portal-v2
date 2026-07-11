@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { AccountFormFields, type AccountFormFieldsProps } from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
+  sheetActionsEndClass,
   sheetContentMediumClass,
   sheetFormClass,
 } from "@/components/shared/sheet-layout";
@@ -17,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
@@ -70,17 +70,12 @@ export function AccountEditSheet({
   }
 
   const busy = form.formState.isSubmitting;
-  const contactCount = account.contacts.length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Edit account</SheetTitle>
-          <SheetDescription>
-            Updates company details on every CRM profile linked to this account ({contactCount}{" "}
-            contact{contactCount === 1 ? "" : "s"}).
-          </SheetDescription>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
           <FormServerError message={serverError} />
@@ -89,16 +84,21 @@ export function AccountEditSheet({
             idPrefix="edit-account"
             disabled={busy}
           />
-          <Button type="submit" disabled={busy}>
-            {busy ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                Saving…
-              </>
-            ) : (
-              "Save changes"
-            )}
-          </Button>
+          <div className={sheetActionsEndClass}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={busy}>
+              {busy ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                  Saving…
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

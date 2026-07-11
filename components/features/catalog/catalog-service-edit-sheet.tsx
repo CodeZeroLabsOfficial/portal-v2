@@ -22,7 +22,7 @@ import { CatalogServiceStripePanel } from "@/components/features/catalog/catalog
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetActionsRowClass,
+  sheetActionsEndClass,
   sheetContentWideClass,
   sheetFormClass,
   sheetTabsClass,
@@ -303,14 +303,14 @@ export function CatalogServiceEditSheet({
               </TabsContent>
             </Tabs>
 
-            <div className={sheetActionsRowClass}>
+            <div className={sheetActionsEndClass}>
               <Button
                 type="button"
                 variant="destructive"
                 disabled={busy}
                 onClick={() => setConfirmDeleteOpen(true)}
               >
-                Delete service
+                Delete
               </Button>
               <Button type="submit" disabled={busy || fieldsDisabled} className="min-w-[7rem] gap-2">
                 {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
