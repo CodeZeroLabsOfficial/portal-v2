@@ -8,18 +8,13 @@ import { DecimalStepper } from "@/components/ui/decimal-stepper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericStepper } from "@/components/ui/numeric-stepper";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
-import {
-  normalizeLookupKeyBase,
-  previewCatalogServiceLookupKeys,
-  slugifyCatalogServiceName,
-} from "@/lib/catalog/service-slug";
+import { slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
 import type { CreateCatalogServiceInput } from "@/lib/schemas/catalog-service";
 import { cn } from "@/lib/utils";
-import type { CatalogServiceKind, CatalogServiceTermMonths } from "@/types/catalog-service";
+import type { CatalogServiceKind } from "@/types/catalog-service";
 
 export const CATALOG_SERVICE_SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -116,6 +111,58 @@ function PricingStepperRow({
   );
 }
 
+function TermPricingColumn({
+  title,
+  idPrefix,
+  showUpfront,
+  upfront,
+  setUpfront,
+  monthly,
+  setMonthly,
+  monthlyError,
+  disabled,
+  className,
+}: {
+  title: string;
+  idPrefix: string;
+  showUpfront: boolean;
+  upfront: string;
+  setUpfront: (value: string) => void;
+  monthly: string;
+  setMonthly: (value: string) => void;
+  monthlyError?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("min-w-0", className)}>
+      <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">{title}</p>
+      <ul>
+        {showUpfront ? (
+          <PricingStepperRow
+            id={`${idPrefix}-upfront`}
+            label="Upfront"
+            value={upfront}
+            disabled={disabled}
+            placeholder="0.00"
+            allowEmpty
+            onChange={setUpfront}
+          />
+        ) : null}
+        <PricingStepperRow
+          id={`${idPrefix}-monthly`}
+          label="Monthly"
+          value={monthly}
+          disabled={disabled}
+          required
+          error={monthlyError}
+          onChange={setMonthly}
+        />
+      </ul>
+    </div>
+  );
+}
+
 function EntitlementRow({
   id,
   label,
@@ -144,6 +191,23 @@ function EntitlementRow({
       />
     </li>
   );
+}
+
+function catalogFieldErrorMessage(error: { message?: unknown } | undefined): string | undefined {
+  return typeof error?.message === "string" ? error.message : undefined;
+}
+
+export function useCatalogServicePricingFlags(
+  serviceType: CatalogServiceKind,
+  billingType: CreateCatalogServiceInput["billingType"],
+  pricingModel: CreateCatalogServiceInput["pricingModel"],
+) {
+  const isPlan = serviceType === "plan";
+  const isOneOff = billingType === "one_off";
+  const isFlat = isOneOff || pricingModel === "flat";
+  const isByTerm = !isOneOff && pricingModel === "by_term";
+  const showUpfront = isPlan && isByTerm;
+  return { isPlan, isOneOff, isFlat, isByTerm, showUpfront };
 }
 
 export interface CatalogServiceFormFieldsProps {
@@ -191,7 +255,6 @@ export function CatalogServiceFormFields({
   idPrefix = "catalog",
   section = "all",
 }: CatalogServiceFormFieldsProps) {
-  const [termMonths, setTermMonths] = React.useState<CatalogServiceTermMonths>(12);
   const { categories, createCategory } = useCatalogCategories();
 
   const name = form.watch("name");
@@ -203,27 +266,13 @@ export function CatalogServiceFormFields({
   const includedAdmins = form.watch("includedAdmins") ?? 0;
   const { errors } = form.formState;
 
-  const isPlan = serviceType === "plan";
-  const isOneOff = billingType === "one_off";
-  const isFlat = isOneOff || pricingModel === "flat";
-  const isByTerm = !isOneOff && pricingModel === "by_term";
-  const showUpfront = isPlan && isByTerm;
+  const { isPlan, isOneOff, isFlat, showUpfront } = useCatalogServicePricingFlags(
+    serviceType,
+    billingType,
+    pricingModel,
+  );
   const showOverview = section === "all" || section === "overview";
   const showPricing = section === "all" || section === "pricing";
-
-  const resolvedLookupBase =
-    normalizeLookupKeyBase(lookupKeyBase) || lookupKeyBaseFromName(name);
-
-  const lookupPreview = React.useMemo(() => {
-    const ctx = {
-      lookupKeyBase: resolvedLookupBase,
-      category,
-      serviceType,
-      billingType,
-      pricingModel: isOneOff ? ("flat" as const) : pricingModel,
-    };
-    return previewCatalogServiceLookupKeys(ctx);
-  }, [resolvedLookupBase, category, serviceType, billingType, pricingModel, isOneOff]);
 
   React.useEffect(() => {
     if (mode === "edit" || lookupTouched) return;
@@ -235,19 +284,6 @@ export function CatalogServiceFormFields({
       form.setValue("pricingModel", "flat", { shouldDirty: true });
     }
   }, [isOneOff, pricingModel, form]);
-
-  const activeUpfront = termMonths === 12 ? upfront12 : upfront24;
-  const setActiveUpfront = termMonths === 12 ? setUpfront12 : setUpfront24;
-  const activeMonthly = termMonths === 12 ? monthly12 : monthly24;
-  const setActiveMonthly = termMonths === 12 ? setMonthly12 : setMonthly24;
-  const activeMonthlyError =
-    termMonths === 12
-      ? typeof errors.monthlyCost12Minor?.message === "string"
-        ? errors.monthlyCost12Minor.message
-        : undefined
-      : typeof errors.monthlyCost24Minor?.message === "string"
-        ? errors.monthlyCost24Minor.message
-        : undefined;
 
   return (
     <div className="space-y-6">
@@ -327,32 +363,28 @@ export function CatalogServiceFormFields({
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <Label htmlFor={`${idPrefix}-lookup-key`}>
-              Lookup key <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id={`${idPrefix}-lookup-key`}
-              autoComplete="off"
-              className="font-mono"
-              placeholder="e.g. premium_monthly"
-              value={lookupKeyBase}
-              disabled={busy}
-              onChange={(event) => {
-                setLookupTouched(true);
-                setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-              }}
-            />
-            {typeof errors.lookupKeyBase?.message === "string" ? (
-              <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
-            ) : null}
-            {mode === "create" && resolvedLookupBase ? (
-              <p className="text-xs leading-snug text-muted-foreground">
-                Stripe lookup key{lookupPreview.length > 1 ? "s" : ""}:{" "}
-                <span className="font-mono">{lookupPreview.join(" · ")}</span>
-              </p>
-            ) : null}
-          </div>
+          {mode === "edit" ? (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-lookup-key`}>
+                Lookup key <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={`${idPrefix}-lookup-key`}
+                autoComplete="off"
+                className="font-mono"
+                placeholder="e.g. premium_monthly"
+                value={lookupKeyBase}
+                disabled={busy}
+                onChange={(event) => {
+                  setLookupTouched(true);
+                  setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+                }}
+              />
+              {typeof errors.lookupKeyBase?.message === "string" ? (
+                <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
@@ -452,65 +484,48 @@ export function CatalogServiceFormFields({
           </div>
 
           <div className="overflow-hidden rounded-lg border">
-            {isByTerm ? (
-              <div className="border-b px-3 py-2">
-                <Tabs
-                  value={String(termMonths)}
-                  onValueChange={(value) => setTermMonths(value === "24" ? 24 : 12)}
-                >
-                  <TabsList variant="line" className="h-auto w-full justify-start gap-4 rounded-none bg-transparent p-0">
-                    <TabsTrigger value="12" className="flex-none px-0 pb-1" disabled={busy}>
-                      12 months
-                    </TabsTrigger>
-                    <TabsTrigger value="24" className="flex-none px-0 pb-1" disabled={busy}>
-                      24 months
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            ) : (
-              <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">Pricing</p>
-            )}
-            <ul>
-              {isFlat ? (
-                <PricingRow
-                  id={`${idPrefix}-flat-price`}
-                  label={isOneOff ? "One-off price" : "Monthly price"}
-                  value={flatPrice}
-                  disabled={busy}
-                  required
-                  error={
-                    typeof errors.flatAmountMinor?.message === "string"
-                      ? errors.flatAmountMinor.message
-                      : undefined
-                  }
-                  onChange={setFlatPrice}
-                />
-              ) : (
-                <>
-                  {showUpfront ? (
-                    <PricingStepperRow
-                      id={`${idPrefix}-upfront-${termMonths}`}
-                      label="Upfront price"
-                      value={activeUpfront}
-                      disabled={busy}
-                      placeholder="0.00"
-                      allowEmpty
-                      onChange={setActiveUpfront}
-                    />
-                  ) : null}
-                  <PricingStepperRow
-                    id={`${idPrefix}-monthly-${termMonths}`}
-                    label="Monthly price"
-                    value={activeMonthly}
+            {isFlat ? (
+              <>
+                <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">Pricing</p>
+                <ul>
+                  <PricingRow
+                    id={`${idPrefix}-flat-price`}
+                    label={isOneOff ? "One-off price" : "Monthly price"}
+                    value={flatPrice}
                     disabled={busy}
                     required
-                    error={activeMonthlyError}
-                    onChange={setActiveMonthly}
+                    error={catalogFieldErrorMessage(errors.flatAmountMinor)}
+                    onChange={setFlatPrice}
                   />
-                </>
-              )}
-            </ul>
+                </ul>
+              </>
+            ) : (
+              <div className="grid md:grid-cols-2">
+                <TermPricingColumn
+                  title="12-month term"
+                  idPrefix={`${idPrefix}-12`}
+                  showUpfront={showUpfront}
+                  upfront={upfront12}
+                  setUpfront={setUpfront12}
+                  monthly={monthly12}
+                  setMonthly={setMonthly12}
+                  monthlyError={catalogFieldErrorMessage(errors.monthlyCost12Minor)}
+                  disabled={busy}
+                  className="border-b md:border-b-0 md:border-r"
+                />
+                <TermPricingColumn
+                  title="24-month term"
+                  idPrefix={`${idPrefix}-24`}
+                  showUpfront={showUpfront}
+                  upfront={upfront24}
+                  setUpfront={setUpfront24}
+                  monthly={monthly24}
+                  setMonthly={setMonthly24}
+                  monthlyError={catalogFieldErrorMessage(errors.monthlyCost24Minor)}
+                  disabled={busy}
+                />
+              </div>
+            )}
           </div>
         </>
       ) : null}
@@ -533,7 +548,7 @@ export function catalogServiceFormInvalidMessage(
   return messages[0] ?? "Please check the form and try again.";
 }
 
-/** True when the first invalid field belongs on the Pricing tab. */
+/** True when the first invalid field belongs on the Pricing section. */
 export function catalogServiceFormInvalidIsPricing(
   errors: FieldErrors<CreateCatalogServiceInput>,
 ): boolean {
@@ -546,17 +561,4 @@ export function catalogServiceFormInvalidIsPricing(
       errors.upfrontCost12Minor ||
       errors.upfrontCost24Minor,
   );
-}
-
-export function useCatalogServicePricingFlags(
-  serviceType: CatalogServiceKind,
-  billingType: CreateCatalogServiceInput["billingType"],
-  pricingModel: CreateCatalogServiceInput["pricingModel"],
-) {
-  const isPlan = serviceType === "plan";
-  const isOneOff = billingType === "one_off";
-  const isFlat = isOneOff || pricingModel === "flat";
-  const isByTerm = !isOneOff && pricingModel === "by_term";
-  const showUpfront = isPlan && isByTerm;
-  return { isPlan, isOneOff, isFlat, isByTerm, showUpfront };
 }
