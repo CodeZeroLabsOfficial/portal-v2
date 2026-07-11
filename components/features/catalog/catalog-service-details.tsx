@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { CatalogServiceEntitlementStats } from "@/components/features/catalog/catalog-service-entitlement-stats";
 import { Separator } from "@/components/ui/separator";
 import {
   catalogAvailableTermMonths,
@@ -37,18 +36,14 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
     React.useState<CatalogServiceTermMonths>(defaultTerm);
 
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
-  const isPlan = service.serviceType !== "addon";
   const description = service.description?.trim() || "—";
   const infoItems = buildServiceDetailInfoItems(service);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1">
-          <h3 className="mb-2 font-semibold">Description</h3>
-          <p className="text-muted-foreground text-sm">{description}</p>
-        </div>
-        {isPlan ? <CatalogServiceEntitlementStats service={service} /> : null}
+      <div>
+        <h3 className="mb-2 font-semibold">Description</h3>
+        <p className="text-muted-foreground text-sm">{description}</p>
       </div>
 
       <Separator />

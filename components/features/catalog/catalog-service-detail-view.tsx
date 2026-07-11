@@ -6,6 +6,7 @@ import { ChevronLeft, Pencil } from "lucide-react";
 
 import { CatalogServiceDetails } from "@/components/features/catalog/catalog-service-details";
 import { CatalogServiceEditSheet } from "@/components/features/catalog/catalog-service-edit-sheet";
+import { CatalogServiceEntitlementStats } from "@/components/features/catalog/catalog-service-entitlement-stats";
 import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalog-service-features-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -42,8 +43,13 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-2xl">{service.name}</CardTitle>
-            <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
+            <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+              <div className="min-w-0 space-y-2">
+                <CardTitle className="font-display text-2xl">{service.name}</CardTitle>
+                <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
+              </div>
+              {isPlan ? <CatalogServiceEntitlementStats service={service} /> : null}
+            </div>
           </CardHeader>
           <CardContent>
             <Separator className="mb-4" />
