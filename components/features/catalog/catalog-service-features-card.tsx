@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { InlineEditableField } from "@/components/shared/inline-editable-field";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateCatalogServiceFeaturesAction } from "@/server/actions/catalog-services";
 import { cn } from "@/lib/utils";
 
@@ -76,23 +76,24 @@ export function CatalogServiceFeaturesCard({
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Features
           {saving ? <Loader2 className="text-muted-foreground size-4 animate-spin" aria-hidden /> : null}
         </CardTitle>
         {!disabled ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            disabled={saving || features.length >= MAX_FEATURES}
-            onClick={() => void handleAddFeature()}
-          >
-            <Plus className="size-4" aria-hidden />
-            Add feature
-          </Button>
+          <CardAction>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={saving || features.length >= MAX_FEATURES}
+              onClick={() => void handleAddFeature()}
+            >
+              <Plus />
+              Add feature
+            </Button>
+          </CardAction>
         ) : null}
       </CardHeader>
       <CardContent>

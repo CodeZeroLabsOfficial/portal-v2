@@ -12,24 +12,21 @@ export interface CatalogServiceEntitlementStatsProps {
   service: CatalogServiceRecord;
 }
 
-/** Product-detail e-commerce metric tiles for plan entitlements. */
+/** Compact bordered metric tiles for plan entitlements (Real Estate detail pattern). */
 export function CatalogServiceEntitlementStats({ service }: CatalogServiceEntitlementStatsProps) {
   if (service.serviceType === "addon") return null;
 
   return (
-    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid shrink-0 grid-cols-3 gap-3 text-sm *:space-y-1 *:rounded-md *:border *:p-3 *:text-center">
       {PLAN_ENTITLEMENT_STATS.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div
-            key={stat.key}
-            className="hover:border-primary/30 bg-muted grid auto-cols-max grid-flow-col gap-4 rounded-lg border p-4"
-          >
-            <Icon className="size-6 opacity-40" aria-hidden />
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-sm">{stat.label}</span>
-              <span className="text-lg font-semibold tabular-nums">{service[stat.field]}</span>
-            </div>
+          <div key={stat.key}>
+            <p className="text-2xl font-semibold tabular-nums">{service[stat.field]}</p>
+            <p className="text-muted-foreground inline-flex items-center gap-1">
+              <Icon className="size-4" aria-hidden />
+              {stat.label}
+            </p>
           </div>
         );
       })}

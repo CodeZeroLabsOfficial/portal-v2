@@ -1,18 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Edit3 } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, Pencil } from "lucide-react";
 
+import { CatalogServiceDetails } from "@/components/features/catalog/catalog-service-details";
 import { CatalogServiceEditSheet } from "@/components/features/catalog/catalog-service-edit-sheet";
-import { CatalogServiceEntitlementStats } from "@/components/features/catalog/catalog-service-entitlement-stats";
 import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalog-service-features-card";
-import { CatalogServiceSummaryCard } from "@/components/features/catalog/catalog-service-summary-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { Typography } from "@/components/ui/typography";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { catalogServiceStatusBadgeDisplay } from "@/lib/catalog/status-badges";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
-import { cn } from "@/lib/utils";
 
 export interface CatalogServiceDetailViewProps {
   service: CatalogServiceRecord;
@@ -27,39 +27,36 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-row items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <Typography variant="h1" className="text-xl tracking-tight lg:text-2xl">
-            {service.name}
-          </Typography>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <Button type="button" onClick={() => setEditOpen(true)} disabled={isArchived}>
-            <Edit3 className="size-4" aria-hidden />
-            <span className="hidden lg:inline">Edit</span>
-          </Button>
-        </div>
+      <div className="flex items-center justify-between">
+        <Button asChild variant="outline">
+          <Link href="/admin/services" aria-label="Back to services">
+            <ChevronLeft />
+          </Link>
+        </Button>
+        <Button type="button" onClick={() => setEditOpen(true)} disabled={isArchived}>
+          <Pencil />
+          Edit
+        </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-6">
-        <div className={cn("space-y-4", isPlan ? "lg:col-span-4" : "lg:col-span-6")}>
-          {isPlan ? <CatalogServiceEntitlementStats service={service} /> : null}
-          <CatalogServiceSummaryCard service={service} />
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-2xl">{service.name}</CardTitle>
+            <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
+          </CardHeader>
+          <CardContent>
+            <Separator className="mb-4" />
+            <CatalogServiceDetails service={service} />
+          </CardContent>
+        </Card>
 
         {isPlan ? (
-          <div className="lg:col-span-2">
-            <CatalogServiceFeaturesCard
-              serviceId={service.id}
-              initialFeatures={service.features}
-              disabled={isArchived}
-            />
-          </div>
+          <CatalogServiceFeaturesCard
+            serviceId={service.id}
+            initialFeatures={service.features}
+            disabled={isArchived}
+          />
         ) : null}
       </div>
 
