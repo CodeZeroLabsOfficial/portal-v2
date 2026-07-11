@@ -9,6 +9,7 @@ import {
   catalogHeroPriceLabel,
   catalogPricingModelLabel,
   catalogServiceTypeLabel,
+  catalogUpfrontCostLabel,
   formatCatalogTableDate,
 } from "@/lib/catalog/display";
 import type { CatalogServiceRecord, CatalogServiceTermMonths } from "@/types/catalog-service";
@@ -38,6 +39,7 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
   const description = service.description?.trim() || "—";
   const infoItems = buildServiceDetailInfoItems(service);
+  const upfrontLabel = catalogUpfrontCostLabel(service);
 
   return (
     <div className="space-y-6">
@@ -60,9 +62,16 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
       <Separator />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <p className="text-2xl font-bold sm:text-3xl">
-          {catalogHeroPriceLabel(service, isByTerm ? selectedTermMonths : undefined)}
-        </p>
+        <div className="space-y-1">
+          <p className="text-2xl font-bold sm:text-3xl">
+            {catalogHeroPriceLabel(service, isByTerm ? selectedTermMonths : undefined)}
+          </p>
+          {upfrontLabel ? (
+            <p className="text-sm">
+              Upfront cost <span className="font-semibold">{upfrontLabel}</span>
+            </p>
+          ) : null}
+        </div>
 
         {isByTerm ? (
           <div className="flex items-center gap-3">
