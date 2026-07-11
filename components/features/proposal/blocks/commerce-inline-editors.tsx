@@ -348,7 +348,7 @@ export function PackagesInlineEditor({ block, onChange }: PackagesInlineEditorPr
   const categoryLabel = proposalCategory ? catalogCategoryLabel(proposalCategory) : null;
   const noPlanMatchCopy =
     proposalCategory && orderedCatalogServices.length === 0
-      ? `No active ${categoryLabel} plans in the catalogue.`
+      ? "No active services plans in the catalogue."
       : null;
   const noAddonMatchCopy =
     proposalCategory && catalogAddons.length === 0
@@ -1010,6 +1010,8 @@ function TierCard({
   const dashedBorderStyle = {
     borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
   };
+  // Catalogue empty: hide plan-derived name/inclusions/pricing — show shell + empty copy only.
+  const showCatalogEmpty = Boolean(catalogEmptyMessage) && catalogServices.length === 0;
 
   return (
     <div className="group/tier flex flex-col">
@@ -1044,178 +1046,188 @@ function TierCard({
           <X className="h-3.5 w-3.5" />
         </button>
 
-        {tierNameReadOnly ? (
-          <p className="text-center text-base font-semibold">{tier.name}</p>
-        ) : (
-          <InlineText
-            tone={inlineTone}
-            value={tier.name}
-            placeholder="Tier name"
-            onChange={(v) => onChange({ name: v })}
-            ariaLabel="Tier name"
-            className="text-center text-base font-semibold"
-            inputClassName="w-full text-center text-base font-semibold"
-          />
-        )}
-
-        <ul
-          className="mt-2 space-y-1 text-center text-[13px] leading-snug"
-          style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
-        >
-          <li>
-            <span className="font-medium">Included users</span>:{" "}
-            {formatPackageTierIncluded(tier.includedUsers)}
-          </li>
-          <li>
-            <span className="font-medium">Included locations</span>:{" "}
-            {formatPackageTierIncluded(tier.includedLocations)}
-          </li>
-          <li>
-            <span className="font-medium">Included admins</span>:{" "}
-            {formatPackageTierIncluded(tier.includedAdmins)}
-          </li>
-        </ul>
-
-        <div className="mt-3 border-t border-dashed pt-3 text-center" style={dashedBorderStyle}>
-          <div className="flex items-baseline justify-center gap-1">
-            {pricingReadOnly ? (
-              <TierPriceAmount
-                minor={monthlyMinor}
-                currency={currency}
-                className="text-xl font-semibold sm:text-2xl"
-              />
-            ) : (
-              <InlinePrice
-                tone={inlineTone}
-                minor={monthlyMinor}
-                currency={currency}
-                onChange={(v) =>
-                  onChange(
-                    term === "12_months" ? { monthlyCost12Minor: v } : { monthlyCost24Minor: v },
-                  )
-                }
-                ariaLabel="Monthly price"
-                className="text-xl font-semibold sm:text-2xl"
-              />
-            )}
-          </div>
-          <p
-            className="text-xs"
-            style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
-          >
-            / month
-          </p>
-
-          <div
-            className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
-            style={dashedBorderStyle}
-          >
+        {showCatalogEmpty ? (
+          <div className="mt-1 flex min-h-[120px] flex-1 flex-col items-center justify-center px-1 text-center">
             <p
-              className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+              className="text-xs"
               style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
             >
-              {term === "12_months" ? "12-month plan" : "24-month plan"}
-            </p>
-            {!pricingReadOnly ? (
-              <InlinePrice
-                tone={inlineTone}
-                minor={
-                  (term === "12_months" ? tier.upfrontCost12Minor : tier.upfrontCost24Minor) ?? 0
-                }
-                currency={currency}
-                onChange={(v) =>
-                  onChange(
-                    term === "12_months"
-                      ? { upfrontCost12Minor: v > 0 ? v : undefined }
-                      : { upfrontCost24Minor: v > 0 ? v : undefined },
-                  )
-                }
-                ariaLabel={
-                  term === "12_months" ? "Upfront cost (12-month)" : "Upfront cost (24-month)"
-                }
-                className="mt-0.5 text-xs"
-              />
-            ) : upfront !== undefined ? (
-              <p className="mt-0.5 text-xs tabular-nums">
-                Upfront: {formatCurrencyAmount(upfront, currency)}
-              </p>
-            ) : (
-              <p
-                className="mt-0.5 text-xs"
-                style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
-              >
-                No upfront charge
-              </p>
-            )}
-          </div>
-        </div>
-
-        {catalogServices.length > 0 ? (
-          <div
-            className="mt-3 border-t border-dashed pt-3"
-            style={{
-              borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
-            }}
-          >
-            <label
-              className="mb-1 block text-xs font-medium"
-              style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
-            >
-              Catalogue service
-            </label>
-            <select
-              className={cn(
-                "mt-0.5 w-full rounded-md border px-2 py-1.5 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
-                isRecommended && "border-white/35 bg-white text-slate-900 [color-scheme:light]",
-              )}
-              style={
-                isRecommended
-                  ? { color: "#0f172a", backgroundColor: "#ffffff" }
-                  : {
-                      ...standardControlStyle,
-                    }
-              }
-              value={tier.serviceId ?? ""}
-              onChange={(e) => {
-                const v = e.target.value.trim();
-                if (!v) {
-                  onChange({ serviceId: undefined });
-                  return;
-                }
-                const service = catalogServices.find((s) => s.serviceId === v);
-                if (!service) return;
-                onChange({
-                  ...packageTierFromCatalogService(service, tier.id),
-                  recommended: tier.recommended,
-                });
-              }}
-              aria-label="Catalogue service for this tier"
-            >
-              <option value="">— None —</option>
-              {catalogServices.map((s) => (
-                <option key={s.serviceId} value={s.serviceId}>
-                  {s.serviceName}
-                </option>
-              ))}
-            </select>
-            {pricingReadOnly && !tier.serviceId?.trim() ? (
-              <p className="mt-2 text-xs" style={standardMutedStyle}>
-                Link a catalogue service to load pricing from Admin → Services.
-              </p>
-            ) : null}
-          </div>
-        ) : catalogEmptyMessage ? (
-          <div
-            className="mt-3 border-t border-dashed pt-3"
-            style={{
-              borderColor: isRecommended ? recommendedFaintBorder : standardSurface.dividerColor,
-            }}
-          >
-            <p className="text-xs" style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}>
               {catalogEmptyMessage}
             </p>
           </div>
-        ) : null}
+        ) : (
+          <>
+            {tierNameReadOnly ? (
+              <p className="text-center text-base font-semibold">{tier.name}</p>
+            ) : (
+              <InlineText
+                tone={inlineTone}
+                value={tier.name}
+                placeholder="Tier name"
+                onChange={(v) => onChange({ name: v })}
+                ariaLabel="Tier name"
+                className="text-center text-base font-semibold"
+                inputClassName="w-full text-center text-base font-semibold"
+              />
+            )}
+
+            <ul
+              className="mt-2 space-y-1 text-center text-[13px] leading-snug"
+              style={isRecommended ? { color: recommendedFg } : standardMutedStyle}
+            >
+              <li>
+                <span className="font-medium">Included users</span>:{" "}
+                {formatPackageTierIncluded(tier.includedUsers)}
+              </li>
+              <li>
+                <span className="font-medium">Included locations</span>:{" "}
+                {formatPackageTierIncluded(tier.includedLocations)}
+              </li>
+              <li>
+                <span className="font-medium">Included admins</span>:{" "}
+                {formatPackageTierIncluded(tier.includedAdmins)}
+              </li>
+            </ul>
+
+            <div className="mt-3 border-t border-dashed pt-3 text-center" style={dashedBorderStyle}>
+              <div className="flex items-baseline justify-center gap-1">
+                {pricingReadOnly ? (
+                  <TierPriceAmount
+                    minor={monthlyMinor}
+                    currency={currency}
+                    className="text-xl font-semibold sm:text-2xl"
+                  />
+                ) : (
+                  <InlinePrice
+                    tone={inlineTone}
+                    minor={monthlyMinor}
+                    currency={currency}
+                    onChange={(v) =>
+                      onChange(
+                        term === "12_months"
+                          ? { monthlyCost12Minor: v }
+                          : { monthlyCost24Minor: v },
+                      )
+                    }
+                    ariaLabel="Monthly price"
+                    className="text-xl font-semibold sm:text-2xl"
+                  />
+                )}
+              </div>
+              <p
+                className="text-xs"
+                style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+              >
+                / month
+              </p>
+
+              <div
+                className="mx-auto mt-2.5 max-w-[220px] rounded-md border border-dashed px-2.5 py-2 text-center"
+                style={dashedBorderStyle}
+              >
+                <p
+                  className={cn(PROPOSAL_PUBLIC_META_LABEL_CLASSES, "font-semibold")}
+                  style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+                >
+                  {term === "12_months" ? "12-month plan" : "24-month plan"}
+                </p>
+                {!pricingReadOnly ? (
+                  <InlinePrice
+                    tone={inlineTone}
+                    minor={
+                      (term === "12_months" ? tier.upfrontCost12Minor : tier.upfrontCost24Minor) ??
+                      0
+                    }
+                    currency={currency}
+                    onChange={(v) =>
+                      onChange(
+                        term === "12_months"
+                          ? { upfrontCost12Minor: v > 0 ? v : undefined }
+                          : { upfrontCost24Minor: v > 0 ? v : undefined },
+                      )
+                    }
+                    ariaLabel={
+                      term === "12_months"
+                        ? "Upfront cost (12-month)"
+                        : "Upfront cost (24-month)"
+                    }
+                    className="mt-0.5 text-xs"
+                  />
+                ) : upfront !== undefined ? (
+                  <p className="mt-0.5 text-xs tabular-nums">
+                    Upfront: {formatCurrencyAmount(upfront, currency)}
+                  </p>
+                ) : (
+                  <p
+                    className="mt-0.5 text-xs"
+                    style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+                  >
+                    No upfront charge
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {catalogServices.length > 0 ? (
+              <div
+                className="mt-3 border-t border-dashed pt-3"
+                style={{
+                  borderColor: isRecommended
+                    ? recommendedFaintBorder
+                    : standardSurface.dividerColor,
+                }}
+              >
+                <label
+                  className="mb-1 block text-xs font-medium"
+                  style={isRecommended ? { color: recommendedDimText } : standardMutedStyle}
+                >
+                  Catalogue service
+                </label>
+                <select
+                  className={cn(
+                    "mt-0.5 w-full rounded-md border px-2 py-1.5 text-xs outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring",
+                    isRecommended &&
+                      "border-white/35 bg-white text-slate-900 [color-scheme:light]",
+                  )}
+                  style={
+                    isRecommended
+                      ? { color: "#0f172a", backgroundColor: "#ffffff" }
+                      : {
+                          ...standardControlStyle,
+                        }
+                  }
+                  value={tier.serviceId ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (!v) {
+                      onChange({ serviceId: undefined });
+                      return;
+                    }
+                    const service = catalogServices.find((s) => s.serviceId === v);
+                    if (!service) return;
+                    onChange({
+                      ...packageTierFromCatalogService(service, tier.id),
+                      recommended: tier.recommended,
+                    });
+                  }}
+                  aria-label="Catalogue service for this tier"
+                >
+                  <option value="">— None —</option>
+                  {catalogServices.map((s) => (
+                    <option key={s.serviceId} value={s.serviceId}>
+                      {s.serviceName}
+                    </option>
+                  ))}
+                </select>
+                {pricingReadOnly && !tier.serviceId?.trim() ? (
+                  <p className="mt-2 text-xs" style={standardMutedStyle}>
+                    Link a catalogue service to load pricing from Admin → Services.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </>
+        )}
 
         <div className="mt-auto pt-3">
           <button
