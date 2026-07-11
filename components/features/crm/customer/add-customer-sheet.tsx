@@ -34,32 +34,48 @@ import { createCustomerAction } from "@/server/actions/customers-crm";
 export interface AddCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Prefill create form (e.g. company fields when adding a contact from an account). */
+  initialValues?: Partial<CustomerProfileFormValues>;
+  /** When set, called instead of navigating to the new customer detail page. */
+  onCreated?: (customerId: string) => void;
 }
 
-const defaultValues: CustomerProfileFormValues = {
-  ...EMPTY_CUSTOMER_PROFILE_FORM_VALUES
-};
-
-export function AddCustomerSheet({ open, onOpenChange }: AddCustomerSheetProps) {
+export function AddCustomerSheet({
+  open,
+  onOpenChange,
+  initialValues,
+  onCreated
+}: AddCustomerSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [tagInput, setTagInput] = React.useState("");
 
+  const resolvedDefaults = React.useMemo(
+    (): CustomerProfileFormValues => ({
+      ...EMPTY_CUSTOMER_PROFILE_FORM_VALUES,
+      ...initialValues
+    }),
+    [initialValues]
+  );
+
   const form = useForm<CustomerProfileFormValues>({
     resolver: zodResolver(createCustomerSchema),
-    defaultValues
+    defaultValues: resolvedDefaults
   });
 
   React.useEffect(() => {
-    if (open) return;
-    form.reset(defaultValues);
-    setFirstName("");
-    setLastName("");
-    setTagInput("");
-    setServerError(null);
-  }, [open, form]);
+    if (!open) {
+      form.reset(resolvedDefaults);
+      setFirstName("");
+      setLastName("");
+      setTagInput("");
+      setServerError(null);
+      return;
+    }
+    form.reset(resolvedDefaults);
+  }, [open, form, resolvedDefaults]);
 
   React.useEffect(() => {
     form.setValue("name", combineCustomerName(firstName, lastName), {
@@ -88,7 +104,11 @@ export function AddCustomerSheet({ open, onOpenChange }: AddCustomerSheetProps) 
 
     toast.success("Customer created");
     onOpenChange(false);
-    router.push(`/admin/customers/${result.customerId}`);
+    if (onCreated) {
+      onCreated(result.customerId);
+    } else {
+      router.push(`/admin/customers/${result.customerId}`);
+    }
     router.refresh();
   }
 
