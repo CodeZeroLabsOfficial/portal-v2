@@ -12,6 +12,12 @@ import {
   catalogServiceFormInvalidMessage,
   useCatalogServicePricingFlags,
 } from "@/components/features/catalog/catalog-service-form-fields";
+import {
+  CatalogServiceFeaturesEditor,
+  CATALOG_MAX_FEATURE_LENGTH,
+  CATALOG_MAX_FEATURES,
+  normalizeCatalogFeatures,
+} from "@/components/features/catalog/catalog-service-features-editor";
 import { CatalogServiceStripePanel } from "@/components/features/catalog/catalog-service-stripe-panel";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
@@ -38,6 +44,7 @@ import {
 import {
   deleteCatalogServiceAction,
   updateCatalogServiceAction,
+  updateCatalogServiceFeaturesAction,
 } from "@/server/actions/catalog-services";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 
@@ -45,6 +52,19 @@ export interface CatalogServiceEditSheetProps {
   service: CatalogServiceRecord;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function validateFeaturesDraft(features: string[]): string | null {
+  const trimmed = normalizeCatalogFeatures(features);
+  if (trimmed.length > CATALOG_MAX_FEATURES) {
+    return `At most ${CATALOG_MAX_FEATURES} features allowed.`;
+  }
+  for (const feature of trimmed) {
+    if (feature.length > CATALOG_MAX_FEATURE_LENGTH) {
+      return `Each feature must be ${CATALOG_MAX_FEATURE_LENGTH} characters or fewer.`;
+    }
+  }
+  return null;
 }
 
 export function CatalogServiceEditSheet({
@@ -62,6 +82,7 @@ export function CatalogServiceEditSheet({
   const [upfrontPrice, setUpfrontPrice] = React.useState("");
   const [monthly12, setMonthly12] = React.useState("");
   const [monthly24, setMonthly24] = React.useState("");
+  const [featuresDraft, setFeaturesDraft] = React.useState<string[]>(() => [...service.features]);
 
   const serviceType = service.serviceType ?? "plan";
   const fieldsDisabled = service.status === "archived";
@@ -112,6 +133,7 @@ export function CatalogServiceEditSheet({
     setUpfrontPrice(prices.upfrontPrice);
     setMonthly12(prices.monthly12);
     setMonthly24(prices.monthly24);
+    setFeaturesDraft([...service.features]);
     setServerError(null);
   }, [open, service, form]);
 
@@ -139,6 +161,16 @@ export function CatalogServiceEditSheet({
 
   async function onSubmit(values: CreateCatalogServiceInput) {
     setServerError(null);
+
+    if (isPlan) {
+      const featuresError = validateFeaturesDraft(featuresDraft);
+      if (featuresError) {
+        setServerError(featuresError);
+        setActiveTab("features");
+        return;
+      }
+    }
+
     const payload = buildCatalogServicePayload({
       values,
       resolvedLookupBase,
@@ -161,6 +193,18 @@ export function CatalogServiceEditSheet({
       setServerError(result.message);
       setActiveTab("overview");
       return;
+    }
+
+    if (isPlan) {
+      const featuresResult = await updateCatalogServiceFeaturesAction({
+        serviceId: service.id,
+        features: normalizeCatalogFeatures(featuresDraft),
+      });
+      if (!featuresResult.ok) {
+        setServerError(featuresResult.message);
+        setActiveTab("features");
+        return;
+      }
     }
 
     toast.success("Service saved. Open Integrations to re-sync Stripe if prices changed.");
@@ -208,6 +252,11 @@ export function CatalogServiceEditSheet({
                 <TabsTrigger value="overview" className="flex-none px-0 pb-3">
                   Overview
                 </TabsTrigger>
+                {isPlan ? (
+                  <TabsTrigger value="features" className="flex-none px-0 pb-3">
+                    Features
+                  </TabsTrigger>
+                ) : null}
                 <TabsTrigger value="integrations" className="flex-none px-0 pb-3">
                   Integrations
                 </TabsTrigger>
@@ -234,6 +283,16 @@ export function CatalogServiceEditSheet({
                   idPrefix="edit-catalog"
                 />
               </TabsContent>
+
+              {isPlan ? (
+                <TabsContent value="features" className="mt-0">
+                  <CatalogServiceFeaturesEditor
+                    features={featuresDraft}
+                    onChange={setFeaturesDraft}
+                    disabled={busy || fieldsDisabled}
+                  />
+                </TabsContent>
+              ) : null}
 
               <TabsContent value="integrations" className="mt-0">
                 <CatalogServiceStripePanel

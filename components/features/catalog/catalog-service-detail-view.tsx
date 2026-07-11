@@ -51,13 +51,7 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
           </CardContent>
         </Card>
 
-        {isPlan ? (
-          <CatalogServiceFeaturesCard
-            serviceId={service.id}
-            initialFeatures={service.features}
-            disabled={isArchived}
-          />
-        ) : null}
+        {isPlan ? <CatalogServiceFeaturesCard features={service.features} /> : null}
       </div>
 
       <CatalogServiceEditSheet service={service} open={editOpen} onOpenChange={setEditOpen} />
