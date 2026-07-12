@@ -5,7 +5,7 @@ export interface PropertyFieldProps {
   children: React.ReactNode;
 }
 
-/** Read-only Properties sidebar field — label + value stack (builder inspector panels). */
+/** Read-only label + value stack for Properties sidebars and detail metadata rows. */
 export function PropertyField({ label, children }: PropertyFieldProps) {
   return (
     <div className="space-y-2">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { AddProposalDialog } from "@/components/features/crm/customer/add-proposal-dialog";
-import { CRM_DETAIL_LABEL_CLASS } from "@/components/shared/crm-detail-label";
+import { PropertyField } from "@/components/shared/property-field";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrencyAmount } from "@/lib/common/format";
@@ -112,15 +112,15 @@ export function OpportunityStageProgress({
 
         <div className="px-4 py-4 sm:px-6 md:px-8">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <div className="space-y-1">
-              <dt className={CRM_DETAIL_LABEL_CLASS}>Start</dt>
-              <dd className="text-sm tabular-nums">
+            <PropertyField label="Start">
+              <p className="text-sm tabular-nums">
                 {startDate ? startDate : <span className="text-muted-foreground">—</span>}
-              </dd>
-            </div>
-            <div className="space-y-1 text-right">
-              <dt className={CRM_DETAIL_LABEL_CLASS}>Current stage</dt>
-              <dd className="text-sm font-medium">{opportunityStageLabel(opportunity.stage)}</dd>
+              </p>
+            </PropertyField>
+            <div className="text-right">
+              <PropertyField label="Current stage">
+                <p className="text-sm font-medium">{opportunityStageLabel(opportunity.stage)}</p>
+              </PropertyField>
             </div>
           </div>
 
