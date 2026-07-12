@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { buildCatalogServicePayload, majorInputToMinor } from "@/lib/catalog/form-defaults";
 import { DEFAULT_CATALOG_CATEGORY_ID } from "@/lib/catalog/categories";
-import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
+import { normalizeLookupKeyBase, slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
 import {
   createCatalogServiceSchema,
   type CreateCatalogServiceInput,
@@ -54,8 +54,6 @@ const defaultValues: CreateCatalogServiceInput = {
 export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServiceDialogProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
-  const [lookupKeyBase, setLookupKeyBase] = React.useState("");
-  const [lookupTouched, setLookupTouched] = React.useState(false);
   const [flatPrice, setFlatPrice] = React.useState("");
   const [upfront12, setUpfront12] = React.useState("");
   const [upfront24, setUpfront24] = React.useState("");
@@ -76,13 +74,9 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
     pricingModel,
   );
 
-  const resolvedLookupBase = normalizeLookupKeyBase(lookupKeyBase);
-
   React.useEffect(() => {
     if (!open) {
       form.reset(defaultValues);
-      setLookupKeyBase("");
-      setLookupTouched(false);
       setFlatPrice("");
       setUpfront12("");
       setUpfront24("");
@@ -93,6 +87,8 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
   }, [open, form]);
 
   function syncFormFromControls() {
+    const name = form.getValues("name");
+    const resolvedLookupBase = normalizeLookupKeyBase(slugifyCatalogServiceName(name));
     form.setValue("lookupKeyBase", resolvedLookupBase, { shouldValidate: false });
     if (isFlat) {
       form.setValue("flatAmountMinor", majorInputToMinor(flatPrice), { shouldValidate: false });
@@ -122,6 +118,7 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
 
   async function onSubmit(values: CreateCatalogServiceInput) {
     setServerError(null);
+    const resolvedLookupBase = normalizeLookupKeyBase(slugifyCatalogServiceName(values.name));
     const payload = buildCatalogServicePayload({
       values,
       resolvedLookupBase,
@@ -170,10 +167,6 @@ export function AddCatalogServiceDialog({ open, onOpenChange }: AddCatalogServic
               mode="create"
               serviceType={serviceType}
               busy={busy}
-              lookupKeyBase={lookupKeyBase}
-              setLookupKeyBase={setLookupKeyBase}
-              lookupTouched={lookupTouched}
-              setLookupTouched={setLookupTouched}
               flatPrice={flatPrice}
               setFlatPrice={setFlatPrice}
               upfront12={upfront12}

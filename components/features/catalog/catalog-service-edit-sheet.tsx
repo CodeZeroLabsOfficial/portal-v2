@@ -37,7 +37,7 @@ import {
   servicePriceControlDefaults,
   serviceToEditDefaults,
 } from "@/lib/catalog/form-defaults";
-import { normalizeLookupKeyBase, previewCatalogServiceLookupKeys } from "@/lib/catalog/service-slug";
+import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
 import {
   createCatalogServiceSchema,
   type CreateCatalogServiceInput,
@@ -77,8 +77,6 @@ export function CatalogServiceEditSheet({
   const [activeTab, setActiveTab] = React.useState("overview");
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
-  const [lookupKeyBase, setLookupKeyBase] = React.useState(service.slug);
-  const [lookupTouched, setLookupTouched] = React.useState(false);
   const [flatPrice, setFlatPrice] = React.useState("");
   const [upfront12, setUpfront12] = React.useState("");
   const [upfront24, setUpfront24] = React.useState("");
@@ -99,25 +97,13 @@ export function CatalogServiceEditSheet({
 
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
-  const category = form.watch("category");
   const { isPlan, isFlat, isByTerm, showUpfront } = useCatalogServicePricingFlags(
     serviceType,
     billingType,
     pricingModel,
   );
 
-  const resolvedLookupBase = normalizeLookupKeyBase(lookupKeyBase);
-  const isOneOff = billingType === "one_off";
-
-  const lookupPreviewKeys = React.useMemo(() => {
-    return previewCatalogServiceLookupKeys({
-      lookupKeyBase: resolvedLookupBase,
-      category,
-      serviceType,
-      billingType,
-      pricingModel: isOneOff ? "flat" : pricingModel,
-    });
-  }, [resolvedLookupBase, category, serviceType, billingType, pricingModel, isOneOff]);
+  const resolvedLookupBase = normalizeLookupKeyBase(service.slug);
 
   React.useEffect(() => {
     if (!open) {
@@ -131,8 +117,6 @@ export function CatalogServiceEditSheet({
       ...defaults,
       serviceType: service.serviceType ?? "plan",
     });
-    setLookupKeyBase(service.slug);
-    setLookupTouched(true);
     setFlatPrice(prices.flatPrice);
     setUpfront12(prices.upfront12);
     setUpfront24(prices.upfront24);
@@ -251,10 +235,6 @@ export function CatalogServiceEditSheet({
     mode: "edit" as const,
     serviceType,
     busy: busy || fieldsDisabled,
-    lookupKeyBase,
-    setLookupKeyBase,
-    lookupTouched,
-    setLookupTouched,
     flatPrice,
     setFlatPrice,
     upfront12,
@@ -319,11 +299,7 @@ export function CatalogServiceEditSheet({
               ) : null}
 
               <TabsContent value="integrations" className="mt-0">
-                <CatalogServiceStripePanel
-                  service={service}
-                  lookupPreviewKeys={lookupPreviewKeys}
-                  disabled={fieldsDisabled}
-                />
+                <CatalogServiceStripePanel service={service} disabled={fieldsDisabled} />
               </TabsContent>
             </Tabs>
 

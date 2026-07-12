@@ -308,18 +308,6 @@ export async function activateCatalogServiceAction(
   return pushCatalogServiceToStripe(user, id, { setActive: true });
 }
 
-export async function syncCatalogServiceStripeAction(
-  serviceId: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const user = await requireStaffSession();
-  if (!user) return { ok: false, message: "Unauthorized." };
-
-  const id = serviceId.trim();
-  if (!id) return { ok: false, message: "Service id is required." };
-
-  return pushCatalogServiceToStripe(user, id, { setActive: false });
-}
-
 export async function archiveCatalogServiceAction(
   serviceId: string,
 ): Promise<{ ok: true } | { ok: false; message: string }> {

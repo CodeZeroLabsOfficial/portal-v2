@@ -11,7 +11,6 @@ import { NumericStepper } from "@/components/ui/numeric-stepper";
 import { Textarea } from "@/components/ui/textarea";
 import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
-import { slugifyCatalogServiceName } from "@/lib/catalog/service-slug";
 import type { CreateCatalogServiceInput } from "@/lib/schemas/catalog-service";
 import { cn } from "@/lib/utils";
 import type { CatalogServiceKind } from "@/types/catalog-service";
@@ -20,12 +19,6 @@ export const CATALOG_SERVICE_SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export type CatalogServiceFormSection = "all" | "overview" | "pricing";
-
-function lookupKeyBaseFromName(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "";
-  return slugifyCatalogServiceName(trimmed);
-}
 
 function PricingRow({
   id,
@@ -215,10 +208,6 @@ export interface CatalogServiceFormFieldsProps {
   mode: "create" | "edit";
   serviceType: CatalogServiceKind;
   busy: boolean;
-  lookupKeyBase: string;
-  setLookupKeyBase: React.Dispatch<React.SetStateAction<string>>;
-  lookupTouched: boolean;
-  setLookupTouched: React.Dispatch<React.SetStateAction<boolean>>;
   flatPrice: string;
   setFlatPrice: React.Dispatch<React.SetStateAction<string>>;
   upfront12: string;
@@ -238,10 +227,6 @@ export function CatalogServiceFormFields({
   mode,
   serviceType,
   busy,
-  lookupKeyBase,
-  setLookupKeyBase,
-  lookupTouched,
-  setLookupTouched,
   flatPrice,
   setFlatPrice,
   upfront12,
@@ -257,7 +242,6 @@ export function CatalogServiceFormFields({
 }: CatalogServiceFormFieldsProps) {
   const { categories, createCategory } = useCatalogCategories();
 
-  const name = form.watch("name");
   const category = form.watch("category");
   const billingType = form.watch("billingType");
   const pricingModel = form.watch("pricingModel");
@@ -273,11 +257,6 @@ export function CatalogServiceFormFields({
   );
   const showOverview = section === "all" || section === "overview";
   const showPricing = section === "all" || section === "pricing";
-
-  React.useEffect(() => {
-    if (mode === "edit" || lookupTouched) return;
-    setLookupKeyBase(lookupKeyBaseFromName(name));
-  }, [mode, name, lookupTouched, setLookupKeyBase]);
 
   React.useEffect(() => {
     if (isOneOff && pricingModel !== "flat") {
@@ -362,29 +341,6 @@ export function CatalogServiceFormFields({
               ) : null}
             </div>
           </div>
-
-          {mode === "edit" ? (
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor={`${idPrefix}-lookup-key`}>
-                Lookup key <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id={`${idPrefix}-lookup-key`}
-                autoComplete="off"
-                className="font-mono"
-                placeholder="e.g. premium_monthly"
-                value={lookupKeyBase}
-                disabled={busy}
-                onChange={(event) => {
-                  setLookupTouched(true);
-                  setLookupKeyBase(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"));
-                }}
-              />
-              {typeof errors.lookupKeyBase?.message === "string" ? (
-                <p className="text-xs leading-tight text-destructive">{errors.lookupKeyBase.message}</p>
-              ) : null}
-            </div>
-          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${idPrefix}-service-description`}>Description</Label>
@@ -539,7 +495,6 @@ export function catalogServiceFormInvalidMessage(
   const messages = [
     errors.name?.message,
     errors.category?.message,
-    errors.lookupKeyBase?.message,
     errors.flatAmountMinor?.message,
     errors.monthlyCost12Minor?.message,
     errors.monthlyCost24Minor?.message,
