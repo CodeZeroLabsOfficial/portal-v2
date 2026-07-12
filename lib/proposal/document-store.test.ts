@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   applyBlockStyleById,
   documentEditorReducer,
+  duplicateBlockById,
   insertRootBlockAt,
   mergeNestedCommerceBlockStyles,
   patchBlockBackground,
@@ -11,7 +12,15 @@ import {
   reorderRootBlocks,
   updateBlockById,
 } from "./document-store";
-import type { PackagesBlock, PricingBlock, ProposalBlock, ProposalDocument, SectionBlock, TextBlock } from "@/types/proposal";
+import type {
+  AgreementBlock,
+  PackagesBlock,
+  PricingBlock,
+  ProposalBlock,
+  ProposalDocument,
+  SectionBlock,
+  TextBlock,
+} from "@/types/proposal";
 
 const textA: TextBlock = { id: "text-a", type: "text", html: "<p>A</p>" };
 const textB: TextBlock = { id: "text-b", type: "text", html: "<p>B</p>" };
@@ -162,4 +171,68 @@ test("updateBlock preserves pricing style on direct root block replace", () => {
   const block = state.blocks[0] as PricingBlock;
   assert.equal(block.style?.tableBackground, "#0F172A");
   assert.equal(block.lineItems[0]?.label, "Item");
+});
+
+test("duplicateBlockById clones section with fresh nested ids (isomorphic, no node:crypto)", () => {
+  const packages: PackagesBlock = {
+    id: "pkg-1",
+    type: "packages",
+    currency: "AUD",
+    tiers: [
+      {
+        id: "tier-1",
+        name: "Starter",
+        includedUsers: 1,
+        includedLocations: 1,
+        includedAdmins: 0,
+        monthlyCost12Minor: 0,
+        monthlyCost24Minor: 0,
+        features: ["A"],
+      },
+    ],
+    addonLineItems: [{ id: "addon-1", label: "Extra", unitAmountMinor: 100, quantity: 1 }],
+  };
+  const agreement: AgreementBlock = {
+    id: "agree-1",
+    type: "agreement",
+    children: [{ id: "agree-text", type: "text", html: "<p>Terms</p>" }],
+  };
+  const sectionWithNested: SectionBlock = {
+    id: "section-dup",
+    type: "section",
+    children: [packages, agreement, textA],
+  };
+  const source: ProposalDocument = { title: "Dup", blocks: [sectionWithNested] };
+
+  const next = duplicateBlockById(source, "section-dup");
+  assert.equal(next.blocks.length, 2);
+
+  const orig = next.blocks[0] as SectionBlock;
+  const clone = next.blocks[1] as SectionBlock;
+  assert.equal(orig.id, "section-dup");
+  assert.notEqual(clone.id, orig.id);
+  assert.equal(clone.type, "section");
+  assert.equal(clone.children.length, 3);
+
+  const origPkg = orig.children[0] as PackagesBlock;
+  const clonePkg = clone.children[0] as PackagesBlock;
+  assert.notEqual(clonePkg.id, origPkg.id);
+  assert.notEqual(clonePkg.tiers[0]?.id, origPkg.tiers[0]?.id);
+  assert.notEqual(clonePkg.addonLineItems?.[0]?.id, origPkg.addonLineItems?.[0]?.id);
+
+  const origAgree = orig.children[1] as AgreementBlock;
+  const cloneAgree = clone.children[1] as AgreementBlock;
+  assert.notEqual(cloneAgree.id, origAgree.id);
+  assert.notEqual(cloneAgree.children[0]?.id, origAgree.children[0]?.id);
+
+  assert.notEqual(clone.children[2]?.id, orig.children[2]?.id);
+});
+
+test("documentEditorReducer duplicateBlock inserts cloned root section", () => {
+  const next = documentEditorReducer(doc, { type: "duplicateBlock", id: "section-1" });
+  assert.equal(next.blocks.length, 3);
+  assert.equal(next.blocks[0]?.id, "section-1");
+  assert.equal(next.blocks[1]?.type, "section");
+  assert.notEqual(next.blocks[1]?.id, "section-1");
+  assert.equal(next.blocks[2]?.id, "text-b");
 });

@@ -1,6 +1,6 @@
 import { arrayMove } from "@dnd-kit/sortable";
 
-import { cloneProposalDocument } from "@/lib/proposal/clone-document";
+import { cloneBlockWithFreshIds } from "@/lib/proposal/clone-block";
 import type {
   BlockStyle,
   ProposalAgreementChildBlock,
@@ -10,10 +10,6 @@ import type {
   ProposalDocument,
   SectionBackground,
 } from "@/types/proposal";
-
-function cloneBlockWithFreshIdsFromLib(block: ProposalBlock): ProposalBlock {
-  return cloneProposalDocument({ title: "", blocks: [block] }).blocks[0]!;
-}
 
 function mapContentBlock(
   block: ProposalContentBlock,
@@ -159,7 +155,7 @@ export function reorderRootBlocks(document: ProposalDocument, activeId: string, 
 export function duplicateBlockById(document: ProposalDocument, id: string): ProposalDocument {
   const rootIdx = document.blocks.findIndex((b) => b.id === id);
   if (rootIdx >= 0) {
-    const cloned = cloneBlockWithFreshIdsFromLib(document.blocks[rootIdx]!);
+    const cloned = cloneBlockWithFreshIds(document.blocks[rootIdx]!);
     const blocks = [...document.blocks];
     blocks.splice(rootIdx + 1, 0, cloned);
     return { ...document, blocks };
