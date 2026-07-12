@@ -16,14 +16,28 @@ import {
 import type { CatalogServiceRecord, CatalogServiceTermMonths } from "@/types/catalog-service";
 import { cn } from "@/lib/utils";
 
-function buildServiceDetailInfoItems(service: CatalogServiceRecord) {
+function buildServiceDetailPrimaryRow(service: CatalogServiceRecord) {
   return [
     { label: "Category", value: catalogCategoryLabel(service.category) },
     { label: "Type", value: catalogServiceTypeLabel(service) },
-    { label: "Billing", value: catalogBillingLabel(service) },
-    { label: "Pricing model", value: catalogPricingModelLabel(service) },
     { label: "Updated", value: formatCatalogTableDate(service.updatedAt) },
   ];
+}
+
+function buildServiceDetailSecondaryRow(service: CatalogServiceRecord) {
+  return [
+    { label: "Pricing model", value: catalogPricingModelLabel(service) },
+    { label: "Billing", value: catalogBillingLabel(service) },
+  ];
+}
+
+function ServiceDetailInfoCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-muted-foreground text-sm">{label}</p>
+      <p className="font-medium">{value}</p>
+    </div>
+  );
 }
 
 export interface CatalogServiceDetailsProps {
@@ -38,7 +52,8 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
 
   const isByTerm = service.pricingModel === "by_term" && availableTerms.length > 0;
   const description = service.description?.trim() || "—";
-  const infoItems = buildServiceDetailInfoItems(service);
+  const primaryRow = buildServiceDetailPrimaryRow(service);
+  const secondaryRow = buildServiceDetailSecondaryRow(service);
   const upfrontLabel = catalogUpfrontCostLabel(
     service,
     isByTerm ? selectedTermMonths : undefined,
@@ -51,15 +66,17 @@ export function CatalogServiceDetails({ service }: CatalogServiceDetailsProps) {
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
 
-      <Separator />
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {infoItems.map((item) => (
-          <div className="space-y-1" key={item.label}>
-            <p className="text-muted-foreground text-sm">{item.label}</p>
-            <p className="font-medium">{item.value}</p>
-          </div>
-        ))}
+      <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {primaryRow.map((item) => (
+            <ServiceDetailInfoCell key={item.label} label={item.label} value={item.value} />
+          ))}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {secondaryRow.map((item) => (
+            <ServiceDetailInfoCell key={item.label} label={item.label} value={item.value} />
+          ))}
+        </div>
       </div>
 
       <Separator />
