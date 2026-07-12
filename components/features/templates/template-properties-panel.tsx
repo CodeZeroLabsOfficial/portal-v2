@@ -5,6 +5,7 @@ import * as React from "react";
 import { TemplateAuthorDisplay } from "@/components/features/templates/template-author-display";
 import { TemplatePropertiesEditSheet } from "@/components/features/templates/template-properties-edit-sheet";
 import { SettingsEditButton } from "@/components/features/settings/settings-edit-button";
+import { PropertyField, propertyMutedText } from "@/components/shared/property-field";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,26 +31,6 @@ export interface TemplatePropertiesPanelProps {
   /** Contract templates — customer-facing agreement modal / PDF title. */
   agreementTitle?: string;
   onAgreementTitleChange?: (value: string) => void;
-}
-
-interface PropertyFieldProps {
-  label: string;
-  children: React.ReactNode;
-}
-
-function PropertyField({ label, children }: PropertyFieldProps) {
-  return (
-    <div className="space-y-2">
-      <h4 className="text-sm font-medium">{label}</h4>
-      {children}
-    </div>
-  );
-}
-
-function mutedText(value: string | undefined): React.ReactNode {
-  return (
-    <p className="text-muted-foreground text-sm">{value?.trim() || "—"}</p>
-  );
 }
 
 export function TemplatePropertiesPanel({
@@ -91,7 +72,7 @@ export function TemplatePropertiesPanel({
           </PropertyField>
         ) : null}
 
-        <PropertyField label="Subtitle">{mutedText(catalogMeta.subtitle)}</PropertyField>
+        <PropertyField label="Subtitle">{propertyMutedText(catalogMeta.subtitle)}</PropertyField>
 
         <PropertyField label="Description">
           <p className="text-muted-foreground text-sm whitespace-pre-wrap">
@@ -113,11 +94,11 @@ export function TemplatePropertiesPanel({
           </PropertyField>
 
           <PropertyField label="Classification">
-            {mutedText(catalogMeta.classification)}
+            {propertyMutedText(catalogMeta.classification)}
           </PropertyField>
 
           <PropertyField label="Category">
-            {mutedText(
+            {propertyMutedText(
               catalogMeta.category
                 ? catalogCategoryLabel(catalogMeta.category, categories)
                 : undefined,

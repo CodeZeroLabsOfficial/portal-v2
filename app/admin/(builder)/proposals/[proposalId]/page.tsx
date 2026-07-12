@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
-import { ProposalBuilderMetadata } from "@/components/features/proposal/proposal-builder-metadata";
+import { ProposalPropertiesPanel } from "@/components/features/proposal/proposal-properties-panel";
 import { ProposalShareSettings } from "@/components/features/proposal/proposal-share-settings";
 import { ProposalBuilderWorkspace } from "@/components/features/proposal/editor/proposal-builder-workspace";
 import { getCurrentSessionUser } from "@/lib/auth/server-session";
@@ -60,7 +60,7 @@ export default async function AdminProposalBuilderPage({ params, searchParams }:
       backLabel={customerBackId ? "Customer" : "Proposals"}
       titleFallback={proposal.document.title?.trim() || "Untitled proposal"}
       detailsSlot={
-        <ProposalBuilderMetadata
+        <ProposalPropertiesPanel
           proposal={proposal}
           recipientDisplayName={recipientDisplayName}
           customerId={customerId}
