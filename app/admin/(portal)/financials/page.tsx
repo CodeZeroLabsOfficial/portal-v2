@@ -5,7 +5,7 @@ export default function AdminFinancialsPage() {
     <ComingSoonPage
       title="Financials"
       phase="Phase 3 — Operations"
-      description="Revenue, MRR, and financial overview across accounts and subscriptions."
+      description="Revenue and billing overview"
     />
   );
 }

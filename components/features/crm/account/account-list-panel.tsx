@@ -329,7 +329,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Company profiles. Link contacts to an account from the customer form."
+        description="Companies and organizations you work with"
         actions={
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus />

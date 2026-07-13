@@ -29,7 +29,7 @@ export function TemplatesHubPanel({ rows, localityTimeZone }: TemplatesHubPanelP
     <div className="space-y-6">
       <PageHeader
         title="Templates"
-        description="Reusable proposal layouts and contract agreement templates for your team."
+        description="Proposal layouts and agreement templates"
         actions={<NewTemplateButtonGroup defaultKind={defaultCreateKind} />}
       />
 

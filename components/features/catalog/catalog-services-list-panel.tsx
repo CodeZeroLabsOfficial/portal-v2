@@ -374,7 +374,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
     <div className="space-y-6">
       <PageHeader
         title="Services"
-        description="Product catalogue synced to Stripe."
+        description="Products and pricing for proposals and billing"
         actions={
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus />

@@ -39,7 +39,7 @@ export function OpportunitiesPanel({ opportunities }: OpportunitiesPanelProps) {
     <div className="space-y-4">
       <PageHeader
         title="Pipeline"
-        description="Drag cards between stages or use the list view to change the stage from the dropdown."
+        description="Deals by stage across your sales pipeline"
       />
 
       <Tabs defaultValue="board" className="w-full">

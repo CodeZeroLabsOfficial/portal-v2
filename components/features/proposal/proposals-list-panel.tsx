@@ -359,7 +359,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Proposals" description="All proposals for your organization." />
+      <PageHeader title="Proposals" description="Draft, sent, and accepted proposals" />
 
       <ConfirmDialog
         open={confirmOpen}

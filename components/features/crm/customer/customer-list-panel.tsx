@@ -345,7 +345,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
     <div className="space-y-6">
       <PageHeader
         title="Customers"
-        description="Unified hub for leads and contacts."
+        description="Leads and contacts across your pipeline"
         actions={
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus />

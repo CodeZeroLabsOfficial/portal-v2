@@ -557,7 +557,7 @@ export function SubscriptionListPanel({
     <div className="space-y-6">
       <PageHeader
         title="Subscriptions"
-        description="Active Stripe subscriptions"
+        description="Recurring plans and billing status across customer accounts"
         actions={
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="size-4" aria-hidden />

@@ -41,7 +41,7 @@ export function TasksPanel({
   if (!organizationId) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Tasks" description="Stay on top of assignments and deadlines." />
+        <PageHeader title="Tasks" description="Assignments, due dates, and follow-ups" />
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -62,7 +62,7 @@ export function TasksPanel({
     <div className="space-y-4">
       <PageHeader
         title="Tasks"
-        description="Track assignments, due dates, and customer-linked work."
+        description="Assignments, due dates, and follow-ups"
         actions={
           <Button
             type="button"

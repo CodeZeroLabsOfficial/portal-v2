@@ -5,7 +5,7 @@ export default function AdminReportsPage() {
     <ComingSoonPage
       title="Reports"
       phase="Phase 3 — Operations"
-      description="Operational reports and analytics exports."
+      description="Operational reports and exports"
     />
   );
 }
