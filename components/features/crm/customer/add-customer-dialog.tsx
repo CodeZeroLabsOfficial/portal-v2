@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { AccountFormFields } from "@/components/features/crm/account/account-form-fields";
+import { AccountReadonlySummary } from "@/components/features/crm/account/account-readonly-summary";
 import { FormServerError } from "@/components/shared/form-server-error";
 import { FormStepHeader } from "@/components/shared/form-step-header";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatAddressLines, normalizeAddressFields } from "@/lib/common/format";
+import { normalizeAddressFields } from "@/lib/common/format";
 import { combineCustomerName } from "@/lib/customer/name-split";
 import {
   createAccountFormSchema,
@@ -175,18 +176,6 @@ export function AddCustomerDialog({
     [accounts, selectedAccountId],
   );
 
-  const selectedAccountAddress = React.useMemo(() => {
-    if (!selectedAccount) return "";
-    return formatAddressLines({
-      addressLine1: selectedAccount.companyAddressLine1,
-      addressLine2: selectedAccount.companyAddressLine2,
-      city: selectedAccount.companyCity,
-      region: selectedAccount.companyRegion,
-      postalCode: selectedAccount.companyPostalCode,
-      country: selectedAccount.companyCountry,
-    }).join("\n");
-  }, [selectedAccount]);
-
   function copyAccountAddressToContact() {
     const opts = { shouldDirty: true, shouldTouch: true };
     if (accountMode === "existing" && selectedAccount) {
@@ -329,9 +318,9 @@ export function AddCustomerDialog({
               {/* Fixed footprint so mode switches don’t resize the dialog */}
               <div className="min-h-[22rem]">
                 {accountMode === "existing" ? (
-                  <div className="grid gap-6 lg:grid-cols-2">
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium">Select account</p>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Select account</p>
+                    <div className="grid gap-6 lg:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="add-customer-account">Account</Label>
                         <select
@@ -348,18 +337,10 @@ export function AddCustomerDialog({
                           ))}
                         </select>
                       </div>
-                    </div>
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium">Address</p>
-                      {selectedAccountAddress ? (
-                        <p className="text-muted-foreground whitespace-pre-line text-sm">
-                          {selectedAccountAddress}
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Select an account to preview its address.
-                        </p>
-                      )}
+                      <div className="space-y-2">
+                        <Label>Company details</Label>
+                        <AccountReadonlySummary account={selectedAccount} />
+                      </div>
                     </div>
                   </div>
                 ) : null}
@@ -391,11 +372,18 @@ export function AddCustomerDialog({
 
               <div className="grid min-h-[22rem] gap-6 lg:grid-cols-2">
                 <div className="space-y-4">
-                  <p className="text-sm font-medium">Contact details</p>
+                  <div className="flex h-8 items-center">
+                    <p className="text-sm font-medium">Contact details</p>
+                  </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="add-customer-first-name">First name</Label>
-                      <div className="flex overflow-hidden rounded-md border">
+                      <div
+                        className={
+                          contactForm.formState.errors.name
+                            ? "flex overflow-hidden rounded-md border border-destructive"
+                            : "flex overflow-hidden rounded-md border"
+                        }>
                         <select
                           id="add-customer-record-type"
                           className="h-9 appearance-none border-r bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none"
@@ -417,6 +405,7 @@ export function AddCustomerDialog({
                           placeholder="John"
                           value={firstName}
                           disabled={busy}
+                          aria-invalid={Boolean(contactForm.formState.errors.name)}
                           onChange={(e) => setFirstName(e.target.value)}
                         />
                       </div>
@@ -429,20 +418,32 @@ export function AddCustomerDialog({
                         placeholder="Smith"
                         value={lastName}
                         disabled={busy}
+                        aria-invalid={Boolean(contactForm.formState.errors.name)}
                         onChange={(e) => setLastName(e.target.value)}
                       />
                     </div>
+                    {contactForm.formState.errors.name ? (
+                      <p
+                        aria-live="polite"
+                        role="alert"
+                        className="text-destructive mt-2 text-xs sm:col-span-2">
+                        {contactForm.formState.errors.name.message}
+                      </p>
+                    ) : null}
                     <div className="space-y-2">
-                      <Label htmlFor="add-customer-email">Email *</Label>
+                      <Label htmlFor="add-customer-email">
+                        Email <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="add-customer-email"
                         type="email"
                         autoComplete="email"
                         disabled={busy}
+                        aria-invalid={Boolean(contactForm.formState.errors.email)}
                         {...contactForm.register("email")}
                       />
                       {contactForm.formState.errors.email ? (
-                        <p className="text-destructive text-xs">
+                        <p aria-live="polite" role="alert" className="text-destructive mt-2 text-xs">
                           {contactForm.formState.errors.email.message}
                         </p>
                       ) : null}
@@ -458,62 +459,84 @@ export function AddCustomerDialog({
                       />
                     </div>
                   </div>
-                  {contactForm.formState.errors.name ? (
-                    <p className="text-destructive text-xs">
-                      {contactForm.formState.errors.name.message}
-                    </p>
-                  ) : null}
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="space-y-4">
+                  <div className="flex h-8 items-center justify-between gap-2">
                     <p className="text-sm font-medium">Address</p>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
+                      className="h-8"
                       onClick={copyAccountAddressToContact}
                       disabled={busy || !canCopyAddress}>
                       Copy from account
                     </Button>
                   </div>
-                  <Input
-                    placeholder="Line 1"
-                    autoComplete="address-line1"
-                    disabled={busy}
-                    {...contactForm.register("addressLine1")}
-                  />
-                  <Input
-                    placeholder="Line 2"
-                    autoComplete="address-line2"
-                    disabled={busy}
-                    {...contactForm.register("addressLine2")}
-                  />
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      placeholder="City"
-                      autoComplete="address-level2"
-                      disabled={busy}
-                      {...contactForm.register("city")}
-                    />
-                    <Input
-                      placeholder="State / region"
-                      autoComplete="address-level1"
-                      disabled={busy}
-                      {...contactForm.register("region")}
-                    />
-                    <Input
-                      placeholder="Postal code"
-                      autoComplete="postal-code"
-                      disabled={busy}
-                      {...contactForm.register("postalCode")}
-                    />
-                    <Input
-                      placeholder="Country"
-                      autoComplete="country-name"
-                      disabled={busy}
-                      {...contactForm.register("country")}
-                    />
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-address-line1">Line 1</Label>
+                      <Input
+                        id="add-customer-address-line1"
+                        placeholder="Line 1"
+                        autoComplete="address-line1"
+                        disabled={busy}
+                        {...contactForm.register("addressLine1")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-address-line2">Line 2</Label>
+                      <Input
+                        id="add-customer-address-line2"
+                        placeholder="Line 2"
+                        autoComplete="address-line2"
+                        disabled={busy}
+                        {...contactForm.register("addressLine2")}
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="add-customer-city">City</Label>
+                        <Input
+                          id="add-customer-city"
+                          placeholder="City"
+                          autoComplete="address-level2"
+                          disabled={busy}
+                          {...contactForm.register("city")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="add-customer-region">State / region</Label>
+                        <Input
+                          id="add-customer-region"
+                          placeholder="State / region"
+                          autoComplete="address-level1"
+                          disabled={busy}
+                          {...contactForm.register("region")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="add-customer-postal">Postal code</Label>
+                        <Input
+                          id="add-customer-postal"
+                          placeholder="Postal code"
+                          autoComplete="postal-code"
+                          disabled={busy}
+                          {...contactForm.register("postalCode")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="add-customer-country">Country</Label>
+                        <Input
+                          id="add-customer-country"
+                          placeholder="Country"
+                          autoComplete="country-name"
+                          disabled={busy}
+                          {...contactForm.register("country")}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

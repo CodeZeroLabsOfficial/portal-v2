@@ -3,7 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ExternalLink,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  X
+} from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
@@ -297,22 +307,29 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/admin/customers/${id}`}>View Profile</Link>
+                  <Link href={`/admin/customers/${id}`}>
+                    <ExternalLink aria-hidden />
+                    Open
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void openEdit(id)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openEdit(id)}>
+                  <Pencil aria-hidden />
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {row.original.status === "active" ? (
                   <DropdownMenuItem onClick={() => void handleArchive(id, true)}>
+                    <Archive aria-hidden />
                     Archive
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => void handleArchive(id, false)}>
+                    <ArchiveRestore aria-hidden />
                     Restore
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => void handleDelete(id)}>
+                <DropdownMenuItem variant="destructive" onClick={() => void handleDelete(id)}>
+                  <Trash2 aria-hidden />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>

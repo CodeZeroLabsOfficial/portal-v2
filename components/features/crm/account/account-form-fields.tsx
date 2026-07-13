@@ -23,6 +23,9 @@ export function AccountFormFields({
 }: AccountFormFieldsProps) {
   const { errors } = form.formState;
   const split = layout === "split";
+  const companyInvalid = Boolean(errors.company);
+  const companyEmailInvalid = Boolean(errors.companyEmail);
+  const companyWebsiteInvalid = Boolean(errors.companyWebsite);
 
   const companyFields = (
     <div className={cn("grid gap-4", !split && "sm:grid-cols-2")}>
@@ -35,10 +38,13 @@ export function AccountFormFields({
           autoComplete="organization"
           placeholder="Company Name Pty Ltd"
           disabled={disabled}
+          aria-invalid={companyInvalid}
           {...form.register("company")}
         />
         {errors.company ? (
-          <p className="text-destructive text-xs">{errors.company.message}</p>
+          <p aria-live="polite" role="alert" className="text-destructive mt-2 text-xs">
+            {errors.company.message}
+          </p>
         ) : null}
       </div>
 
@@ -63,10 +69,13 @@ export function AccountFormFields({
             autoComplete="off"
             placeholder="info@company.com"
             disabled={disabled}
+            aria-invalid={companyEmailInvalid}
             {...form.register("companyEmail")}
           />
           {errors.companyEmail ? (
-            <p className="text-destructive text-xs">{errors.companyEmail.message}</p>
+            <p aria-live="polite" role="alert" className="text-destructive mt-2 text-xs">
+              {errors.companyEmail.message}
+            </p>
           ) : null}
         </div>
       </div>
@@ -78,10 +87,13 @@ export function AccountFormFields({
           autoComplete="off"
           placeholder="https://www.company.com"
           disabled={disabled}
+          aria-invalid={companyWebsiteInvalid}
           {...form.register("companyWebsite")}
         />
         {errors.companyWebsite ? (
-          <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
+          <p aria-live="polite" role="alert" className="text-destructive mt-2 text-xs">
+            {errors.companyWebsite.message}
+          </p>
         ) : null}
       </div>
 
@@ -109,20 +121,6 @@ export function AccountFormFields({
     </div>
   );
 
-  const addressFields = (
-    <div className="space-y-2">
-      <Label>Address</Label>
-      <Input placeholder="Line 1" disabled={disabled} {...form.register("companyAddressLine1")} />
-      <Input placeholder="Line 2" disabled={disabled} {...form.register("companyAddressLine2")} />
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Input placeholder="City" disabled={disabled} {...form.register("companyCity")} />
-        <Input placeholder="State / region" disabled={disabled} {...form.register("companyRegion")} />
-        <Input placeholder="Postal code" disabled={disabled} {...form.register("companyPostalCode")} />
-        <Input placeholder="Country" disabled={disabled} {...form.register("companyCountry")} />
-      </div>
-    </div>
-  );
-
   if (split) {
     return (
       <div className="grid gap-6 lg:grid-cols-2">
@@ -130,7 +128,67 @@ export function AccountFormFields({
           <p className="text-sm font-medium">Company details</p>
           {companyFields}
         </div>
-        <div className="space-y-3">{addressFields}</div>
+        <div className="space-y-3">
+          <p className="text-sm font-medium">Address</p>
+          <div className="grid gap-4 content-start">
+            <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-address-line1`}>Line 1</Label>
+              <Input
+                id={`${idPrefix}-address-line1`}
+                placeholder="Line 1"
+                disabled={disabled}
+                {...form.register("companyAddressLine1")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-address-line2`}>Line 2</Label>
+              <Input
+                id={`${idPrefix}-address-line2`}
+                placeholder="Line 2"
+                disabled={disabled}
+                {...form.register("companyAddressLine2")}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor={`${idPrefix}-city`}>City</Label>
+                <Input
+                  id={`${idPrefix}-city`}
+                  placeholder="City"
+                  disabled={disabled}
+                  {...form.register("companyCity")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`${idPrefix}-region`}>State / region</Label>
+                <Input
+                  id={`${idPrefix}-region`}
+                  placeholder="State / region"
+                  disabled={disabled}
+                  {...form.register("companyRegion")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`${idPrefix}-postal`}>Postal code</Label>
+                <Input
+                  id={`${idPrefix}-postal`}
+                  placeholder="Postal code"
+                  disabled={disabled}
+                  {...form.register("companyPostalCode")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`${idPrefix}-country`}>Country</Label>
+                <Input
+                  id={`${idPrefix}-country`}
+                  placeholder="Country"
+                  disabled={disabled}
+                  {...form.register("companyCountry")}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -138,7 +196,17 @@ export function AccountFormFields({
   return (
     <>
       {companyFields}
-      {addressFields}
+      <div className="space-y-2">
+        <Label>Address</Label>
+        <Input placeholder="Line 1" disabled={disabled} {...form.register("companyAddressLine1")} />
+        <Input placeholder="Line 2" disabled={disabled} {...form.register("companyAddressLine2")} />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input placeholder="City" disabled={disabled} {...form.register("companyCity")} />
+          <Input placeholder="State / region" disabled={disabled} {...form.register("companyRegion")} />
+          <Input placeholder="Postal code" disabled={disabled} {...form.register("companyPostalCode")} />
+          <Input placeholder="Country" disabled={disabled} {...form.register("companyCountry")} />
+        </div>
+      </div>
     </>
   );
 }
