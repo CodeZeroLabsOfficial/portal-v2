@@ -4,36 +4,45 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { CreateAccountFormInput } from "@/lib/schemas/account";
 
 export interface AccountFormFieldsProps {
   form: Pick<UseFormReturn<CreateAccountFormInput>, "register" | "formState">;
   idPrefix: string;
   disabled?: boolean;
+  /** `split` = company left, address right (add-customer dialog). Default stacked. */
+  layout?: "stacked" | "split";
 }
 
-export function AccountFormFields({ form, idPrefix, disabled }: AccountFormFieldsProps) {
+export function AccountFormFields({
+  form,
+  idPrefix,
+  disabled,
+  layout = "stacked",
+}: AccountFormFieldsProps) {
   const { errors } = form.formState;
+  const split = layout === "split";
 
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor={`${idPrefix}-company`}>
-            Company name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id={`${idPrefix}-company`}
-            autoComplete="organization"
-            placeholder="Company Name Pty Ltd"
-            disabled={disabled}
-            {...form.register("company")}
-          />
-          {errors.company ? (
-            <p className="text-destructive text-xs">{errors.company.message}</p>
-          ) : null}
-        </div>
+  const companyFields = (
+    <div className={cn("grid gap-4", !split && "sm:grid-cols-2")}>
+      <div className={cn("space-y-2", !split && "sm:col-span-2")}>
+        <Label htmlFor={`${idPrefix}-company`}>
+          Company name <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id={`${idPrefix}-company`}
+          autoComplete="organization"
+          placeholder="Company Name Pty Ltd"
+          disabled={disabled}
+          {...form.register("company")}
+        />
+        {errors.company ? (
+          <p className="text-destructive text-xs">{errors.company.message}</p>
+        ) : null}
+      </div>
 
+      <div className={cn("grid gap-4", split ? "sm:grid-cols-2" : "contents")}>
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-company-phone`}>Company phone</Label>
           <Input
@@ -60,21 +69,23 @@ export function AccountFormFields({ form, idPrefix, disabled }: AccountFormField
             <p className="text-destructive text-xs">{errors.companyEmail.message}</p>
           ) : null}
         </div>
+      </div>
 
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor={`${idPrefix}-company-website`}>Website</Label>
-          <Input
-            id={`${idPrefix}-company-website`}
-            autoComplete="off"
-            placeholder="https://www.company.com"
-            disabled={disabled}
-            {...form.register("companyWebsite")}
-          />
-          {errors.companyWebsite ? (
-            <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
-          ) : null}
-        </div>
+      <div className={cn("space-y-2", !split && "sm:col-span-2")}>
+        <Label htmlFor={`${idPrefix}-company-website`}>Website</Label>
+        <Input
+          id={`${idPrefix}-company-website`}
+          autoComplete="off"
+          placeholder="https://www.company.com"
+          disabled={disabled}
+          {...form.register("companyWebsite")}
+        />
+        {errors.companyWebsite ? (
+          <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
+        ) : null}
+      </div>
 
+      <div className={cn("grid gap-4", split ? "sm:grid-cols-2" : "contents")}>
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-company-abn`}>ABN</Label>
           <Input
@@ -95,18 +106,39 @@ export function AccountFormFields({ form, idPrefix, disabled }: AccountFormField
           />
         </div>
       </div>
+    </div>
+  );
 
-      <div className="space-y-2">
-        <Label>Address</Label>
-        <Input placeholder="Line 1" disabled={disabled} {...form.register("companyAddressLine1")} />
-        <Input placeholder="Line 2" disabled={disabled} {...form.register("companyAddressLine2")} />
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input placeholder="City" disabled={disabled} {...form.register("companyCity")} />
-          <Input placeholder="State / region" disabled={disabled} {...form.register("companyRegion")} />
-          <Input placeholder="Postal code" disabled={disabled} {...form.register("companyPostalCode")} />
-          <Input placeholder="Country" disabled={disabled} {...form.register("companyCountry")} />
-        </div>
+  const addressFields = (
+    <div className="space-y-2">
+      <Label>Address</Label>
+      <Input placeholder="Line 1" disabled={disabled} {...form.register("companyAddressLine1")} />
+      <Input placeholder="Line 2" disabled={disabled} {...form.register("companyAddressLine2")} />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input placeholder="City" disabled={disabled} {...form.register("companyCity")} />
+        <Input placeholder="State / region" disabled={disabled} {...form.register("companyRegion")} />
+        <Input placeholder="Postal code" disabled={disabled} {...form.register("companyPostalCode")} />
+        <Input placeholder="Country" disabled={disabled} {...form.register("companyCountry")} />
       </div>
+    </div>
+  );
+
+  if (split) {
+    return (
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-3">
+          <p className="text-sm font-medium">Company details</p>
+          {companyFields}
+        </div>
+        <div className="space-y-3">{addressFields}</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {companyFields}
+      {addressFields}
     </>
   );
 }

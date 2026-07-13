@@ -21,9 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { normalizeAddressFields } from "@/lib/common/format";
+import { formatAddressLines, normalizeAddressFields } from "@/lib/common/format";
 import { combineCustomerName } from "@/lib/customer/name-split";
-import { cn } from "@/lib/utils";
 import {
   createAccountFormSchema,
   type CreateAccountFormInput,
@@ -33,7 +32,7 @@ import { createAccountAction, listAccountsForPickerAction } from "@/server/actio
 import { createCustomerAction } from "@/server/actions/customers-crm";
 import type { AccountRecord } from "@/types/account";
 
-type AccountMode = "existing" | "new" | "none";
+type AccountMode = "existing" | "new";
 
 const trimmed = z.string().trim();
 
@@ -94,6 +93,9 @@ const STEPS = [
     icon: User,
   },
 ] as const;
+
+const selectClassName =
+  "border-input bg-background h-9 w-full rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface AddCustomerDialogProps {
   open: boolean;
@@ -173,6 +175,18 @@ export function AddCustomerDialog({
     [accounts, selectedAccountId],
   );
 
+  const selectedAccountAddress = React.useMemo(() => {
+    if (!selectedAccount) return "";
+    return formatAddressLines({
+      addressLine1: selectedAccount.companyAddressLine1,
+      addressLine2: selectedAccount.companyAddressLine2,
+      city: selectedAccount.companyCity,
+      region: selectedAccount.companyRegion,
+      postalCode: selectedAccount.companyPostalCode,
+      country: selectedAccount.companyCountry,
+    }).join("\n");
+  }, [selectedAccount]);
+
   function copyAccountAddressToContact() {
     const opts = { shouldDirty: true, shouldTouch: true };
     if (accountMode === "existing" && selectedAccount) {
@@ -199,13 +213,9 @@ export function AddCustomerDialog({
     setServerError(null);
     if (accountMode === "existing") {
       if (!selectedAccountId.trim()) {
-        setServerError("Select an account, or choose Create new / No account.");
+        setServerError("Select an account, or choose Create new.");
         return;
       }
-      setStep(1);
-      return;
-    }
-    if (accountMode === "none") {
       setStep(1);
       return;
     }
@@ -281,8 +291,8 @@ export function AddCustomerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="flex h-[min(90vh,44rem)] w-full max-w-5xl flex-col overflow-hidden sm:max-w-5xl">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Add customer</DialogTitle>
         </DialogHeader>
 
@@ -290,210 +300,226 @@ export function AddCustomerDialog({
 
         <FormServerError message={serverError} />
 
-        {step === 0 ? (
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-            <div>
-              <h3 className="text-lg font-semibold">Account Information</h3>
-              <p className="text-muted-foreground text-sm">
-                Link an existing company or enter new account details.
-              </p>
-            </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {step === 0 ? (
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <div>
+                <h3 className="text-lg font-semibold">Account Information</h3>
+                <p className="text-muted-foreground text-sm">
+                  Link an existing company or enter new account details.
+                </p>
+              </div>
 
-            <div className="grid gap-2 sm:grid-cols-3">
-              {(
-                [
-                  { id: "existing", label: "Existing account" },
-                  { id: "new", label: "Create new" },
-                  { id: "none", label: "No account" },
-                ] as const
-              ).map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  disabled={busy || (lockExistingAccount && opt.id !== "existing")}
-                  onClick={() => {
-                    setAccountMode(opt.id);
-                    setServerError(null);
-                  }}
-                  className={cn(
-                    "rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                    accountMode === opt.id
-                      ? "border-primary bg-primary/5 font-medium"
-                      : "hover:bg-muted/50",
-                  )}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {accountMode === "existing" ? (
               <div className="space-y-2">
-                <Label htmlFor="add-customer-account">Account</Label>
+                <Label htmlFor="add-customer-account-mode">Account type</Label>
                 <select
-                  id="add-customer-account"
-                  className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                  id="add-customer-account-mode"
+                  className={selectClassName}
                   disabled={busy || lockExistingAccount}
-                  value={selectedAccountId}
-                  onChange={(e) => setSelectedAccountId(e.target.value)}>
-                  <option value="">Select an account…</option>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.company}
-                    </option>
-                  ))}
+                  value={accountMode}
+                  onChange={(e) => {
+                    setAccountMode(e.target.value as AccountMode);
+                    setServerError(null);
+                  }}>
+                  <option value="existing">Existing account</option>
+                  <option value="new">Create new</option>
                 </select>
               </div>
-            ) : null}
 
-            {accountMode === "new" ? (
-              <AccountFormFields form={accountForm} idPrefix="add-customer-account" disabled={busy} />
-            ) : null}
+              {/* Fixed footprint so mode switches don’t resize the dialog */}
+              <div className="min-h-[22rem]">
+                {accountMode === "existing" ? (
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium">Select account</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="add-customer-account">Account</Label>
+                        <select
+                          id="add-customer-account"
+                          className={selectClassName}
+                          disabled={busy || lockExistingAccount}
+                          value={selectedAccountId}
+                          onChange={(e) => setSelectedAccountId(e.target.value)}>
+                          <option value="">Select an account…</option>
+                          {accounts.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.company}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium">Address</p>
+                      {selectedAccountAddress ? (
+                        <p className="text-muted-foreground whitespace-pre-line text-sm">
+                          {selectedAccountAddress}
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">
+                          Select an account to preview its address.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
 
-            {accountMode === "none" ? (
-              <p className="text-muted-foreground text-sm">
-                Continue without linking a company. You can assign an account later from the contact
-                profile.
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <form
-            id="add-customer-contact-form"
-            onSubmit={contactForm.handleSubmit(handleCreate)}
-            className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1"
-            noValidate>
-            <div>
-              <h3 className="text-lg font-semibold">Contact Information</h3>
-              <p className="text-muted-foreground text-sm">
-                Who is the primary contact for this account?
-              </p>
-            </div>
-
-            <input type="hidden" {...contactForm.register("name")} />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="add-customer-first-name">First name</Label>
-                <div className="flex overflow-hidden rounded-md border">
-                  <select
-                    id="add-customer-record-type"
-                    className="h-9 appearance-none border-r bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none"
-                    value={contactForm.watch("saveAsLead") ? "lead" : "contact"}
+                {accountMode === "new" ? (
+                  <AccountFormFields
+                    form={accountForm}
+                    idPrefix="add-customer-account"
                     disabled={busy}
-                    aria-label="Record type"
-                    onChange={(e) =>
-                      contactForm.setValue("saveAsLead", e.target.value === "lead", {
-                        shouldDirty: true,
-                      })
-                    }>
-                    <option value="contact">Contact</option>
-                    <option value="lead">Lead</option>
-                  </select>
-                  <Input
-                    id="add-customer-first-name"
-                    autoComplete="given-name"
-                    className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-                    placeholder="John"
-                    value={firstName}
-                    disabled={busy}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    layout="split"
                   />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-customer-last-name">Last name</Label>
-                <Input
-                  id="add-customer-last-name"
-                  autoComplete="family-name"
-                  placeholder="Smith"
-                  value={lastName}
-                  disabled={busy}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-customer-email">Email *</Label>
-                <Input
-                  id="add-customer-email"
-                  type="email"
-                  autoComplete="email"
-                  disabled={busy}
-                  {...contactForm.register("email")}
-                />
-                {contactForm.formState.errors.email ? (
-                  <p className="text-destructive text-xs">
-                    {contactForm.formState.errors.email.message}
-                  </p>
                 ) : null}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-customer-phone">Phone</Label>
-                <Input
-                  id="add-customer-phone"
-                  type="tel"
-                  autoComplete="tel"
-                  disabled={busy}
-                  {...contactForm.register("phone")}
-                />
-              </div>
             </div>
+          ) : (
+            <form
+              id="add-customer-contact-form"
+              onSubmit={contactForm.handleSubmit(handleCreate)}
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+              noValidate>
+              <div>
+                <h3 className="text-lg font-semibold">Contact Information</h3>
+                <p className="text-muted-foreground text-sm">
+                  Who is the primary contact for this account?
+                </p>
+              </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Contact address</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={copyAccountAddressToContact}
-                  disabled={busy || !canCopyAddress}>
-                  Copy from account
-                </Button>
+              <input type="hidden" {...contactForm.register("name")} />
+
+              <div className="grid min-h-[22rem] gap-6 lg:grid-cols-2">
+                <div className="space-y-4">
+                  <p className="text-sm font-medium">Contact details</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-first-name">First name</Label>
+                      <div className="flex overflow-hidden rounded-md border">
+                        <select
+                          id="add-customer-record-type"
+                          className="h-9 appearance-none border-r bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none"
+                          value={contactForm.watch("saveAsLead") ? "lead" : "contact"}
+                          disabled={busy}
+                          aria-label="Record type"
+                          onChange={(e) =>
+                            contactForm.setValue("saveAsLead", e.target.value === "lead", {
+                              shouldDirty: true,
+                            })
+                          }>
+                          <option value="contact">Contact</option>
+                          <option value="lead">Lead</option>
+                        </select>
+                        <Input
+                          id="add-customer-first-name"
+                          autoComplete="given-name"
+                          className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+                          placeholder="John"
+                          value={firstName}
+                          disabled={busy}
+                          onChange={(e) => setFirstName(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-last-name">Last name</Label>
+                      <Input
+                        id="add-customer-last-name"
+                        autoComplete="family-name"
+                        placeholder="Smith"
+                        value={lastName}
+                        disabled={busy}
+                        onChange={(e) => setLastName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-email">Email *</Label>
+                      <Input
+                        id="add-customer-email"
+                        type="email"
+                        autoComplete="email"
+                        disabled={busy}
+                        {...contactForm.register("email")}
+                      />
+                      {contactForm.formState.errors.email ? (
+                        <p className="text-destructive text-xs">
+                          {contactForm.formState.errors.email.message}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="add-customer-phone">Phone</Label>
+                      <Input
+                        id="add-customer-phone"
+                        type="tel"
+                        autoComplete="tel"
+                        disabled={busy}
+                        {...contactForm.register("phone")}
+                      />
+                    </div>
+                  </div>
+                  {contactForm.formState.errors.name ? (
+                    <p className="text-destructive text-xs">
+                      {contactForm.formState.errors.name.message}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Address</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyAccountAddressToContact}
+                      disabled={busy || !canCopyAddress}>
+                      Copy from account
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Line 1"
+                    autoComplete="address-line1"
+                    disabled={busy}
+                    {...contactForm.register("addressLine1")}
+                  />
+                  <Input
+                    placeholder="Line 2"
+                    autoComplete="address-line2"
+                    disabled={busy}
+                    {...contactForm.register("addressLine2")}
+                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="City"
+                      autoComplete="address-level2"
+                      disabled={busy}
+                      {...contactForm.register("city")}
+                    />
+                    <Input
+                      placeholder="State / region"
+                      autoComplete="address-level1"
+                      disabled={busy}
+                      {...contactForm.register("region")}
+                    />
+                    <Input
+                      placeholder="Postal code"
+                      autoComplete="postal-code"
+                      disabled={busy}
+                      {...contactForm.register("postalCode")}
+                    />
+                    <Input
+                      placeholder="Country"
+                      autoComplete="country-name"
+                      disabled={busy}
+                      {...contactForm.register("country")}
+                    />
+                  </div>
+                </div>
               </div>
-              <Input
-                placeholder="Line 1"
-                autoComplete="address-line1"
-                disabled={busy}
-                {...contactForm.register("addressLine1")}
-              />
-              <Input
-                placeholder="Line 2"
-                autoComplete="address-line2"
-                disabled={busy}
-                {...contactForm.register("addressLine2")}
-              />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Input
-                  placeholder="City"
-                  autoComplete="address-level2"
-                  disabled={busy}
-                  {...contactForm.register("city")}
-                />
-                <Input
-                  placeholder="State / region"
-                  autoComplete="address-level1"
-                  disabled={busy}
-                  {...contactForm.register("region")}
-                />
-                <Input
-                  placeholder="Postal code"
-                  autoComplete="postal-code"
-                  disabled={busy}
-                  {...contactForm.register("postalCode")}
-                />
-                <Input
-                  placeholder="Country"
-                  autoComplete="country-name"
-                  disabled={busy}
-                  {...contactForm.register("country")}
-                />
-              </div>
-            </div>
-            {contactForm.formState.errors.name ? (
-              <p className="text-destructive text-xs">{contactForm.formState.errors.name.message}</p>
-            ) : null}
-          </form>
-        )}
+            </form>
+          )}
+        </div>
 
         <DialogFooter className="shrink-0 sm:justify-between">
           {step === 0 ? (
