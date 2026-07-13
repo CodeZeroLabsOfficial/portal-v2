@@ -107,7 +107,6 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
           <FormServerError message={serverError} />
           <CustomerProfileFormFields
             form={form}
-            mode="edit"
             disabled={fieldsDisabled || busy}
             firstName={firstName}
             lastName={lastName}

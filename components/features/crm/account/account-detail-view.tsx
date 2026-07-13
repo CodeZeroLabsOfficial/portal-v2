@@ -8,12 +8,11 @@ import { toast } from "sonner";
 
 import { AccountCompanyDetailsCard } from "@/components/features/crm/account/account-company-details-card";
 import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
-import { AddCustomerSheet } from "@/components/features/crm/customer/add-customer-sheet";
+import { AddCustomerDialog } from "@/components/features/crm/customer/add-customer-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
 import { customerStatusBadgeDisplay } from "@/lib/crm/status-badges";
 import { deleteAccountAction } from "@/server/actions/accounts-crm";
 import type { AccountDetailAggregate } from "@/types/account";
@@ -28,13 +27,6 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const activeBadge = customerStatusBadgeDisplay("active");
-
-  const addContactInitialValues = React.useMemo(
-    (): Partial<CustomerProfileFormValues> => ({
-      accountId: account.id,
-    }),
-    [account.id],
-  );
 
   async function handleDelete() {
     const contactCount = account.contacts.length;
@@ -135,10 +127,10 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
 
       <AccountEditSheet account={account} open={editOpen} onOpenChange={setEditOpen} />
 
-      <AddCustomerSheet
+      <AddCustomerDialog
         open={addContactOpen}
         onOpenChange={setAddContactOpen}
-        initialValues={addContactInitialValues}
+        initialAccountId={account.id}
         onCreated={() => {
           router.refresh();
         }}

@@ -7,7 +7,7 @@ import { Loader2, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
-import { AddCustomerSheet } from "@/components/features/crm/customer/add-customer-sheet";
+import { AddCustomerDialog } from "@/components/features/crm/customer/add-customer-dialog";
 import { CustomerEditSheet } from "@/components/features/crm/customer/customer-edit-sheet";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -336,7 +336,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           </Button>
         }
       />
-      <AddCustomerSheet open={addOpen} onOpenChange={setAddOpen} />
+      <AddCustomerDialog open={addOpen} onOpenChange={setAddOpen} />
       {customerEditSheet.entity ? (
         <CustomerEditSheet
           customer={customerEditSheet.entity}
