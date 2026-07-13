@@ -16,6 +16,7 @@ import { DataTableViewOptions } from "@/components/shared/data-table/data-table-
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,12 +154,20 @@ function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[]
 
 function SubscriptionListToolbar({
   table,
-  productOptions
+  productOptions,
+  onBulkCancel,
+  bulkCancelDisabled
 }: {
   table: Table<SubscriptionListTableRow>;
   productOptions: { value: string; label: string }[];
+  onBulkCancel: () => void;
+  bulkCancelDisabled: boolean;
 }) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
+  const cancelableCount = table
+    .getFilteredSelectedRowModel()
+    .rows.filter((r) => canCancelSubscription(r.original.subscription)).length;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -191,6 +200,16 @@ function SubscriptionListToolbar({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
+        {selectedCount > 0 ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={bulkCancelDisabled || cancelableCount === 0}
+            onClick={onBulkCancel}>
+            <Ban />
+            Cancel ({cancelableCount})
+          </Button>
+        ) : null}
         <DataTableViewOptions table={table} />
       </div>
     </div>
@@ -208,9 +227,11 @@ export function SubscriptionListPanel({
   const searchParams = useSearchParams();
   const [addOpen, setAddOpen] = React.useState(false);
   const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
+  const tableRef = React.useRef<Table<SubscriptionListTableRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -312,10 +333,71 @@ export function SubscriptionListPanel({
     );
   }
 
+  function handleBulkCancel() {
+    const table = tableRef.current;
+    if (!table) return;
+    const cancelable = table
+      .getFilteredSelectedRowModel()
+      .rows.map((r) => r.original)
+      .filter((row) => canCancelSubscription(row.subscription));
+    if (cancelable.length === 0) {
+      toast.error("None of the selected subscriptions can be canceled.");
+      return;
+    }
+    openConfirm(
+      {
+        title: `Cancel ${cancelable.length} subscription${cancelable.length === 1 ? "" : "s"}`,
+        description:
+          "Cancel the selected subscriptions now? This immediately cancels them in Stripe and cannot be undone. Already canceled subscriptions are skipped."
+      },
+      async () => {
+        setBulkBusy(true);
+        let failed = 0;
+        try {
+          for (const row of cancelable) {
+            const res = await cancelSubscriptionAction(row.id);
+            if (!res.ok) {
+              failed += 1;
+              toast.error(`${row.accountName}: ${res.message ?? "Action failed."}`);
+            }
+          }
+          if (failed === 0) toast.success("Subscriptions canceled.");
+          table.resetRowSelection();
+          router.refresh();
+        } finally {
+          setBulkBusy(false);
+        }
+      }
+    );
+  }
+
   const columns = React.useMemo<ColumnDef<SubscriptionListTableRow>[]>(
     () => [
       {
-        id: "accountName",        accessorKey: "accountName",
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false
+      },
+      {
+        id: "accountName",
+        accessorKey: "accountName",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Account name" />,
         cell: ({ row }) => {
           const { accountName, crmCustomerId } = row.original;
@@ -510,9 +592,17 @@ export function SubscriptionListPanel({
         initialPageSize={25}
         initialSorting={[{ id: "createdAt", desc: true }]}
         emptyMessage={rows.length === 0 ? "No subscriptions yet." : "No subscriptions match your filters."}
-        toolbar={(table) => (
-          <SubscriptionListToolbar table={table} productOptions={productOptions} />
-        )}
+        toolbar={(table) => {
+          tableRef.current = table;
+          return (
+            <SubscriptionListToolbar
+              table={table}
+              productOptions={productOptions}
+              onBulkCancel={handleBulkCancel}
+              bulkCancelDisabled={bulkBusy}
+            />
+          );
+        }}
       />
     </div>
   );

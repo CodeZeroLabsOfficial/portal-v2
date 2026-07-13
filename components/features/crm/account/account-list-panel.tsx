@@ -23,6 +23,7 @@ import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,8 +49,17 @@ function contactCountForRow(row: AccountListRow): number {
   return (hasPrimary ? 1 : 0) + row.additionalContactCount;
 }
 
-function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
+function AccountToolbar({
+  table,
+  onBulkDelete,
+  bulkDeleteDisabled,
+}: {
+  table: Table<AccountListRow>;
+  onBulkDelete: () => void;
+  bulkDeleteDisabled: boolean;
+}) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -68,6 +78,16 @@ function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
         )}
       </div>
       <div className="flex items-center gap-2">
+        {selectedCount > 0 ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={bulkDeleteDisabled}
+            onClick={onBulkDelete}>
+            <Trash2 />
+            Delete ({selectedCount})
+          </Button>
+        ) : null}
         <DataTableViewOptions table={table} />
       </div>
     </div>
@@ -80,9 +100,11 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
   const accountEditSheet = useSheetEntityState<AccountDetailAggregate>();
   const [editLoadingId, setEditLoadingId] = React.useState<string | null>(null);
   const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
+  const tableRef = React.useRef<Table<AccountListRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -122,8 +144,58 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
     setConfirmOpen(true);
   }
 
+  function handleBulkDelete() {
+    const table = tableRef.current;
+    if (!table) return;
+    const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original);
+    if (selected.length === 0) return;
+    setConfirmMeta({
+      title: `Delete ${selected.length} account${selected.length === 1 ? "" : "s"}`,
+      description:
+        "Permanently delete the selected accounts and all linked contacts, including documents, proposals, opportunities, notes, tasks, invoices, and subscriptions? Open Stripe subscriptions must be canceled first. This cannot be undone.",
+    });
+    setConfirmAction(() => async () => {
+      setBulkBusy(true);
+      let failed = 0;
+      for (const row of selected) {
+        const res = await deleteAccountAction(row.id);
+        if (!res.ok) {
+          failed += 1;
+          toast.error(`${row.displayName}: ${res.message}`);
+        }
+      }
+      setBulkBusy(false);
+      table.resetRowSelection();
+      if (failed === 0) toast.success("Accounts deleted");
+      router.refresh();
+    });
+    setConfirmOpen(true);
+  }
+
   const columns = React.useMemo<ColumnDef<AccountListRow>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: "displayName",
         meta: { viewLabel: "Company" },
@@ -277,7 +349,16 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No accounts yet. Add an account to get started."
-        toolbar={(table) => <AccountToolbar table={table} />}
+        toolbar={(table) => {
+          tableRef.current = table;
+          return (
+            <AccountToolbar
+              table={table}
+              onBulkDelete={handleBulkDelete}
+              bulkDeleteDisabled={bulkBusy}
+            />
+          );
+        }}
       />
       <ConfirmDialog
         open={confirmOpen}
