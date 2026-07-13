@@ -32,8 +32,8 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
     const contactCount = account.contacts.length;
     const ok = window.confirm(
       contactCount > 0
-        ? `Delete ${account.company} and its ${contactCount} contact${contactCount === 1 ? "" : "s"} (proposals, opportunities, notes, etc.)? This cannot be undone.`
-        : `Delete ${account.company}? This cannot be undone.`,
+        ? `Permanently delete ${account.company} and its ${contactCount} contact${contactCount === 1 ? "" : "s"}, including documents, proposals, opportunities, notes, tasks, invoices, and subscriptions? Open Stripe subscriptions must be canceled first. This cannot be undone.`
+        : `Permanently delete ${account.company}? Related billing mirrors and documents (if any) will also be removed. This cannot be undone.`,
     );
     if (!ok) return;
     setDeleting(true);

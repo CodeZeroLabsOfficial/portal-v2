@@ -3,13 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, MoreHorizontal, Plus, X } from "lucide-react";
+import {
+  ExternalLink,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
 import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
 import { AddAccountDialog } from "@/components/features/crm/account/add-account-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
@@ -18,16 +27,25 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import type { AccountListRow } from "@/lib/account/list";
-import { getAccountDetailAction } from "@/server/actions/accounts-crm";
+import {
+  deleteAccountAction,
+  getAccountDetailAction,
+} from "@/server/actions/accounts-crm";
 import type { AccountDetailAggregate } from "@/types/account";
 
 interface AccountListPanelProps {
   rows: AccountListRow[];
+}
+
+function contactCountForRow(row: AccountListRow): number {
+  const hasPrimary = Boolean(row.contactName.trim() || row.contactId);
+  return (hasPrimary ? 1 : 0) + row.additionalContactCount;
 }
 
 function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
@@ -61,6 +79,10 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
   const [addOpen, setAddOpen] = React.useState(false);
   const accountEditSheet = useSheetEntityState<AccountDetailAggregate>();
   const [editLoadingId, setEditLoadingId] = React.useState<string | null>(null);
+  const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
+  const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
 
   React.useEffect(() => {
     router.refresh();
@@ -75,6 +97,29 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       return;
     }
     accountEditSheet.show(res.account);
+  }
+
+  function handleDelete(row: AccountListRow) {
+    const contactCount = contactCountForRow(row);
+    setConfirmMeta({
+      title: "Delete account",
+      description:
+        contactCount > 0
+          ? `Permanently delete ${row.displayName} and its ${contactCount} contact${contactCount === 1 ? "" : "s"}, including documents, proposals, opportunities, notes, tasks, invoices, and subscriptions? Open Stripe subscriptions must be canceled first. This cannot be undone.`
+          : `Permanently delete ${row.displayName}? Related billing mirrors and documents (if any) will also be removed. This cannot be undone.`,
+    });
+    setConfirmAction(() => async () => {
+      setPendingId(row.id);
+      const res = await deleteAccountAction(row.id);
+      setPendingId(null);
+      if (!res.ok) {
+        toast.error(res.message);
+        throw new Error(res.message);
+      }
+      toast.success("Account deleted");
+      router.refresh();
+    });
+    setConfirmOpen(true);
   }
 
   const columns = React.useMemo<ColumnDef<AccountListRow>[]>(
@@ -169,7 +214,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         id: "actions",
         cell: ({ row }) => {
           const id = row.original.id;
-          const busy = editLoadingId === id;
+          const busy = editLoadingId === id || pendingId === id;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -183,16 +228,29 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/admin/accounts/${id}`}>View Account</Link>
+                  <Link href={`/admin/accounts/${id}`}>
+                    <ExternalLink aria-hidden />
+                    Open
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void openEdit(id)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openEdit(id)}>
+                  <Pencil aria-hidden />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => handleDelete(row.original)}>
+                  <Trash2 aria-hidden />
+                  Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );
         },
       },
     ],
-    [editLoadingId],
+    [editLoadingId, pendingId],
   );
 
   return (
@@ -220,6 +278,17 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         data={rows}
         emptyMessage="No accounts yet. Add an account to get started."
         toolbar={(table) => <AccountToolbar table={table} />}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmMeta.title}
+        description={confirmMeta.description}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          if (confirmAction) await confirmAction();
+        }}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import { logError } from "@/lib/common/logging";
 import { coerceTimestampToMillis, millisFromFirestore } from "@/lib/firestore/timestamp";
 import { notifyStaffAction } from "@/lib/notification/notify";
 import { COLLECTIONS } from "@/server/firestore/collections";
+import { deleteStorageFileAdmin } from "@/lib/firebase/admin-storage";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
 import { getStripe } from "@/lib/stripe/server";
@@ -1102,6 +1103,35 @@ async function deleteQueryDocsWhere(
   if (snap.size >= 400) await deleteQueryDocsWhere(db, collection, field, value);
 }
 
+/** Deletes signed agreements for a customer, including signature files in Storage. */
+export async function deleteSignedAgreementsForCustomerDb(
+  db: AdminDb,
+  customerId: string,
+): Promise<void> {
+  const snap = await db
+    .collection(COLLECTIONS.signedAgreements)
+    .where("customerId", "==", customerId)
+    .limit(400)
+    .get();
+  if (snap.empty) return;
+
+  const storagePaths = new Set<string>();
+  for (const doc of snap.docs) {
+    const path = asString(doc.data().signatureImageStoragePath)?.trim();
+    if (path) storagePaths.add(path);
+  }
+
+  await Promise.all([...storagePaths].map((path) => deleteStorageFileAdmin(path)));
+
+  const batch = db.batch();
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+  }
+  await batch.commit();
+
+  if (snap.size >= 400) await deleteSignedAgreementsForCustomerDb(db, customerId);
+}
+
 /** Deletes proposals linked by `customerId` or legacy `recipientEmail` match. */
 export async function deleteProposalsForCustomerDb(
   db: AdminDb,
@@ -1136,7 +1166,7 @@ export async function deleteCustomerDocument(
 
   await deleteQueryDocsWhere(database, COLLECTIONS.customerNotes, "customerId", customerId);
   await deleteQueryDocsWhere(database, COLLECTIONS.customerActivities, "customerId", customerId);
-  await deleteQueryDocsWhere(database, COLLECTIONS.signedAgreements, "customerId", customerId);
+  await deleteSignedAgreementsForCustomerDb(database, customerId);
   await deleteQueryDocsWhere(database, COLLECTIONS.tasks, "customerId", customerId);
   await deleteProposalsForCustomerDb(database, customerId, customer.email);
   await deleteOpportunitiesForCustomerDb(database, customerId);

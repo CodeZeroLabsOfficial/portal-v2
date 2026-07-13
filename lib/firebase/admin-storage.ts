@@ -143,6 +143,38 @@ export async function getStorageFileSignedReadUrl(
   }
 }
 
+/**
+ * Best-effort delete of a private Storage object (e.g. signed-agreement signature PNG).
+ * Missing objects and unconfigured storage succeed without throwing.
+ */
+export async function deleteStorageFileAdmin(storagePath: string): Promise<void> {
+  const app = getFirebaseAdminApp();
+  const trimmed = storagePath.trim();
+  if (!app || !trimmed) return;
+  // Ignore inline data URLs — nothing in Storage.
+  if (trimmed.startsWith("data:")) return;
+
+  const projectIdFromApp =
+    typeof app.options.projectId === "string" && app.options.projectId.length > 0
+      ? app.options.projectId
+      : undefined;
+  const bucketName = getFirebaseStorageBucketName(projectIdFromApp);
+  if (!bucketName) return;
+
+  const objectPath = trimmed.startsWith("gs://")
+    ? trimmed.replace(/^gs:\/\/[^/]+\//, "")
+    : trimmed;
+
+  try {
+    await getStorage(app).bucket(bucketName).file(objectPath).delete({ ignoreNotFound: true });
+  } catch (error) {
+    logError("storage_file_delete_failed", {
+      storagePath: objectPath,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
+
 async function savePublicStorageImage(
   path: string,
   buffer: Buffer,
