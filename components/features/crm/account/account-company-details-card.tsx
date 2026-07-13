@@ -1,5 +1,5 @@
 import { formatAddressLines, websiteHref } from "@/lib/common/format";
-import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
+import type { AccountDetailAggregate } from "@/types/account";
 
 interface AccountCompanyDetailsCardProps {
   account: AccountDetailAggregate;

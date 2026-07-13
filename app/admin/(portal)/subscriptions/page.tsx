@@ -39,7 +39,7 @@ export default async function AdminSubscriptionsPage() {
     .filter((c) => c.status === "active")
     .map((c) => ({
       id: c.id,
-      label: [c.company?.trim(), c.name?.trim(), c.email?.trim()].filter(Boolean).join(" · ")
+      label: [c.company?.trim(), c.name?.trim(), c.email?.trim()].filter(Boolean).join(" · ") || c.id,
     }));
 
   return (

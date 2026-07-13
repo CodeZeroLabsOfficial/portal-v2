@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Plus } from "lucide-react";
+import { ChevronLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AccountCompanyDetailsCard } from "@/components/features/crm/account/account-company-details-card";
 import { AccountEditSheet } from "@/components/features/crm/account/account-edit-sheet";
@@ -14,7 +15,8 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
 import { customerStatusBadgeDisplay } from "@/lib/crm/status-badges";
-import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
+import { deleteAccountAction } from "@/server/actions/accounts-crm";
+import type { AccountDetailAggregate } from "@/types/account";
 
 interface AccountDetailViewProps {
   account: AccountDetailAggregate;
@@ -24,44 +26,60 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
   const router = useRouter();
   const [addContactOpen, setAddContactOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   const activeBadge = customerStatusBadgeDisplay("active");
 
   const addContactInitialValues = React.useMemo(
     (): Partial<CustomerProfileFormValues> => ({
-      company: account.displayName,
-      companyPhone: account.companyPhone,
-      companyEmail: account.companyEmail,
-      companyWebsite: account.companyWebsite,
-      companyAbn: account.companyAbn,
-      companyAcn: account.companyAcn,
-      companyAddressLine1: account.companyAddressLine1 ?? "",
-      companyAddressLine2: account.companyAddressLine2 ?? "",
-      companyCity: account.companyCity ?? "",
-      companyRegion: account.companyRegion ?? "",
-      companyPostalCode: account.companyPostalCode ?? "",
-      companyCountry: account.companyCountry ?? ""
+      accountId: account.id,
     }),
-    [account]
+    [account.id],
   );
+
+  async function handleDelete() {
+    const contactCount = account.contacts.length;
+    const ok = window.confirm(
+      contactCount > 0
+        ? `Delete ${account.company} and its ${contactCount} contact${contactCount === 1 ? "" : "s"} (proposals, opportunities, notes, etc.)? This cannot be undone.`
+        : `Delete ${account.company}? This cannot be undone.`,
+    );
+    if (!ok) return;
+    setDeleting(true);
+    const res = await deleteAccountAction(account.id);
+    setDeleting(false);
+    if (!res.ok) {
+      toast.error(res.message);
+      return;
+    }
+    toast.success("Account deleted");
+    router.push("/admin/accounts");
+    router.refresh();
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Button asChild variant="outline">
           <Link href="/admin/accounts" aria-label="Back to accounts">
             <ChevronLeft />
           </Link>
         </Button>
-        <Button type="button" onClick={() => setEditOpen(true)}>
-          <Pencil />
-          Edit
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="destructive" onClick={() => void handleDelete()} disabled={deleting}>
+            <Trash2 />
+            Delete
+          </Button>
+          <Button type="button" onClick={() => setEditOpen(true)}>
+            <Pencil />
+            Edit
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-2xl">{account.displayName}</CardTitle>
+            <CardTitle className="font-display text-2xl">{account.company}</CardTitle>
             <StatusBadge label={activeBadge.label} variant={activeBadge.variant} />
           </CardHeader>
           <CardContent>
@@ -87,7 +105,7 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
               <ul className="divide-y">
                 {account.contacts.map((c) => {
                   const statusDisplay = customerStatusBadgeDisplay(
-                    c.status === "archived" ? "archived" : "active"
+                    c.status === "archived" ? "archived" : "active",
                   );
                   return (
                     <li key={c.id}>
@@ -115,12 +133,7 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
         </Card>
       </div>
 
-      <AccountEditSheet
-        account={account}
-        accountKey={account.key}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <AccountEditSheet account={account} open={editOpen} onOpenChange={setEditOpen} />
 
       <AddCustomerSheet
         open={addContactOpen}

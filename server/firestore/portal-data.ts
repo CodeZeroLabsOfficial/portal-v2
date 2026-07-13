@@ -16,13 +16,17 @@ import type { PortalUser } from "@/types/user";
 import type { CustomerRecord } from "@/types/customer";
 import type { CustomerListRow } from "@/lib/customer/list";
 import {
-  getAccountDetailForKey,
-  getAdminAccountListRows as loadCrmAccountListRows,
   getAdminCustomerListRows as loadCrmCustomerListRows,
   batchGetCustomerRecordsForStaff,
   listAllSubscriptionsForStaff,
   listCrmCustomerRecordsForStaff,
 } from "@/server/firestore/crm-customers";
+import {
+  accountCompanyNameFromMaps,
+  batchGetAccountRecordsForStaff,
+  getAccountDetailForId,
+  getAdminAccountListRows as loadCrmAccountListRows,
+} from "@/server/firestore/crm-accounts";
 
 export interface ActivityItem {
   id: string;
@@ -154,15 +158,15 @@ export async function getAdminCustomerListRows(user: PortalUser): Promise<Custom
   return loadCrmCustomerListRows(user);
 }
 
-/** Distinct company names from CRM customers (see `lib/account-list`). */
+/** Company accounts from `accounts` collection. */
 export async function getAdminAccountListRows(user: PortalUser) {
   noStore();
   return loadCrmAccountListRows(user);
 }
 
-export async function getAdminAccountDetail(user: PortalUser, accountKey: string) {
+export async function getAdminAccountDetail(user: PortalUser, accountId: string) {
   noStore();
-  return getAccountDetailForKey(user, accountKey);
+  return getAccountDetailForId(user, accountId);
 }
 
 async function listSubscriptionsForStaffAdmin(user: PortalUser): Promise<SubscriptionRecord[]> {
@@ -291,13 +295,6 @@ export async function listProposalsForStaffOrg(user: PortalUser): Promise<Propos
   return listProposalsForUser(user);
 }
 
-function accountCompanyNameFromCustomer(customer: CustomerRecord | undefined): string {
-  if (!customer) return "—";
-  const company = customer.company?.trim();
-  const person = customer.name?.trim() ?? "";
-  return company || person || "—";
-}
-
 function contactNameFromCustomer(customer: CustomerRecord | undefined): string {
   if (!customer) return "—";
   const name = customer.name?.trim();
@@ -311,11 +308,15 @@ export async function listProposalsHubRowsForStaffOrg(user: PortalUser): Promise
     .map((p) => p.customerId)
     .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
   const customers = await batchGetCustomerRecordsForStaff(user, customerIds);
+  const accountIds = [...customers.values()]
+    .map((c) => c.accountId?.trim())
+    .filter((id): id is string => Boolean(id));
+  const accounts = await batchGetAccountRecordsForStaff(user, accountIds);
   return proposals.map((p) => {
     const customer = p.customerId?.trim() ? customers.get(p.customerId.trim()) : undefined;
     return {
       ...p,
-      accountCompanyName: customer ? accountCompanyNameFromCustomer(customer) : "—",
+      accountCompanyName: accountCompanyNameFromMaps(customer, accounts),
       contactName: customer ? contactNameFromCustomer(customer) : "—",
     };
   });

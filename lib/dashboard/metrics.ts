@@ -17,9 +17,9 @@ function startOfYearMs(d: Date): number {
   return new Date(d.getFullYear(), 0, 1).getTime();
 }
 
-/** CRM rows shown in the Customers directory (excludes account-only shells). */
-export function isCrmDirectoryCustomer(c: CustomerRecord): boolean {
-  return !c.accountOnly;
+/** CRM rows shown in the Customers directory. */
+export function isCrmDirectoryCustomer(_c: CustomerRecord): boolean {
+  return true;
 }
 
 /** Contacts use the sky CRM type badge (`crmType === "contact"`). */

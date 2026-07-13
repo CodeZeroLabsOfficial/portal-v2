@@ -15,7 +15,9 @@
  */
 export const COLLECTIONS = {
   users: "users",
-  /** CRM customer profiles (single-tenant); optional `portalUserId` links `users/{uid}`. */
+  /** Company accounts — source of truth for company fields; contacts link via `customers.accountId`. */
+  accounts: "accounts",
+  /** CRM contact/lead profiles (single-tenant); optional `portalUserId` links `users/{uid}`. */
   customers: "customers",
   /** Sales opportunities — `customerId` references `customers`. */
   opportunities: "opportunities",

@@ -18,18 +18,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import type { AccountListRow } from "@/lib/account/list";
 import { getAccountDetailAction } from "@/server/actions/accounts-crm";
-import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
-
-interface AccountEditPayload {
-  account: AccountDetailAggregate;
-  accountKey: string;
-}
+import type { AccountDetailAggregate } from "@/types/account";
 
 interface AccountListPanelProps {
   rows: AccountListRow[];
@@ -64,22 +59,22 @@ function AccountToolbar({ table }: { table: Table<AccountListRow> }) {
 export function AccountListPanel({ rows }: AccountListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
-  const accountEditSheet = useSheetEntityState<AccountEditPayload>();
-  const [editLoadingKey, setEditLoadingKey] = React.useState<string | null>(null);
+  const accountEditSheet = useSheetEntityState<AccountDetailAggregate>();
+  const [editLoadingId, setEditLoadingId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     router.refresh();
   }, [router]);
 
-  async function openEdit(accountKey: string) {
-    setEditLoadingKey(accountKey);
-    const res = await getAccountDetailAction(accountKey);
-    setEditLoadingKey(null);
+  async function openEdit(accountId: string) {
+    setEditLoadingId(accountId);
+    const res = await getAccountDetailAction(accountId);
+    setEditLoadingId(null);
     if (!res.ok) {
       toast.error(res.message);
       return;
     }
-    accountEditSheet.show({ account: res.account, accountKey: res.accountKey });
+    accountEditSheet.show(res.account);
   }
 
   const columns = React.useMemo<ColumnDef<AccountListRow>[]>(
@@ -90,7 +85,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
         cell: ({ row }) => (
           <Link
-            href={`/admin/accounts/${row.original.key}`}
+            href={`/admin/accounts/${row.original.id}`}
             className="font-medium hover:underline">
             {row.original.displayName}
           </Link>
@@ -105,12 +100,12 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
             r.addressSummary,
             r.companyPhone,
             r.companyEmail,
-            r.companyWebsite
+            r.companyWebsite,
           ]
             .join(" ")
             .toLowerCase();
           return hay.includes(q);
-        }
+        },
       },
       {
         accessorKey: "contactName",
@@ -137,7 +132,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
               ) : null}
             </span>
           );
-        }
+        },
       },
       {
         accessorKey: "addressSummary",
@@ -150,7 +145,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
           ) : (
             <span className="text-muted-foreground">—</span>
           );
-        }
+        },
       },
       {
         accessorKey: "companyPhone",
@@ -159,7 +154,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         cell: ({ row }) => {
           const phone = row.original.companyPhone.trim();
           return phone || <span className="text-muted-foreground">—</span>;
-        }
+        },
       },
       {
         accessorKey: "companyEmail",
@@ -168,13 +163,13 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         cell: ({ row }) => {
           const email = row.original.companyEmail.trim();
           return email || <span className="text-muted-foreground">—</span>;
-        }
+        },
       },
       {
         id: "actions",
         cell: ({ row }) => {
-          const key = row.original.key;
-          const busy = editLoadingKey === key;
+          const id = row.original.id;
+          const busy = editLoadingId === id;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -188,23 +183,23 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/admin/accounts/${key}`}>View Account</Link>
+                  <Link href={`/admin/accounts/${id}`}>View Account</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void openEdit(key)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openEdit(id)}>Edit</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );
-        }
-      }
+        },
+      },
     ],
-    [editLoadingKey]
+    [editLoadingId],
   );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Accounts"
-        description="Company profiles from customer records. Set company details when editing a customer."
+        description="Company profiles. Link contacts to an account from the customer form."
         actions={
           <Button size="sm" onClick={() => setAddOpen(true)}>
             <Plus />
@@ -215,8 +210,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       <AddAccountDialog open={addOpen} onOpenChange={setAddOpen} />
       {accountEditSheet.entity ? (
         <AccountEditSheet
-          account={accountEditSheet.entity.account}
-          accountKey={accountEditSheet.entity.accountKey}
+          account={accountEditSheet.entity}
           open={accountEditSheet.open}
           onOpenChange={accountEditSheet.onOpenChange}
         />
@@ -224,7 +218,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
       <DataTable
         columns={columns}
         data={rows}
-        emptyMessage="No accounts yet. Add a company name on a customer profile to see it listed here."
+        emptyMessage="No accounts yet. Add an account to get started."
         toolbar={(table) => <AccountToolbar table={table} />}
       />
     </div>

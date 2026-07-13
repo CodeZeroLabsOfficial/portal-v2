@@ -76,24 +76,10 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
       postalCode: values.postalCode,
       country: values.country
     });
-    const companyAddress = normalizeAddressFields({
-      addressLine1: values.companyAddressLine1,
-      addressLine2: values.companyAddressLine2,
-      city: values.companyCity,
-      region: values.companyRegion,
-      postalCode: values.companyPostalCode,
-      country: values.companyCountry
-    });
 
     const result = await updateCustomerAction({
       ...values,
       ...contactAddress,
-      companyAddressLine1: companyAddress.addressLine1 ?? "",
-      companyAddressLine2: companyAddress.addressLine2 ?? "",
-      companyCity: companyAddress.city ?? "",
-      companyRegion: companyAddress.region ?? "",
-      companyPostalCode: companyAddress.postalCode ?? "",
-      companyCountry: companyAddress.country ?? "",
       tags,
       id: customer.id
     });

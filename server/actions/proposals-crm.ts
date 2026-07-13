@@ -39,10 +39,13 @@ function formatCustomFields(cf: Record<string, string>): string {
 }
 
 /** Shared `Prepared for …` block used by every default proposal document. */
-function buildContactLines(customer: CustomerRecord): string {
+function buildContactLines(
+  customer: CustomerRecord,
+  companyName?: string,
+): string {
   const address = formatAddressLine(customer);
   return [
-    customer.company ? `Company: ${customer.company}` : null,
+    companyName ? `Company: ${companyName}` : null,
     `Email: ${customer.email}`,
     customer.phone ? `Phone: ${customer.phone}` : null,
     address ? `Address: ${address}` : null,
@@ -51,11 +54,24 @@ function buildContactLines(customer: CustomerRecord): string {
     .join("\n");
 }
 
+async function resolveAccountCompanyName(
+  user: Awaited<ReturnType<typeof requireStaffSession>>,
+  customer: CustomerRecord,
+): Promise<string | undefined> {
+  if (!user) return undefined;
+  const aid = customer.accountId?.trim();
+  if (!aid) return undefined;
+  const { getAccountRecordForStaff } = await import("@/server/firestore/crm-accounts");
+  const account = await getAccountRecordForStaff(user, aid);
+  return account?.company?.trim() || undefined;
+}
+
 function buildPrefilledProposalDocument(
   customer: CustomerRecord,
   opportunity: OpportunityRecord,
+  companyName?: string,
 ): ProposalDocument {
-  const contactLines = buildContactLines(customer);
+  const contactLines = buildContactLines(customer, companyName);
   const cfText = formatCustomFields({
     ...customer.customFields,
     ...opportunity.customFieldsSnapshot,
@@ -92,13 +108,16 @@ function buildPrefilledProposalDocument(
   }
 
   return {
-    title: `${opportunity.name} — ${customer.company ?? customer.name}`,
+    title: `${opportunity.name} — ${companyName ?? customer.name}`,
     blocks,
   };
 }
 
-function buildCustomerOnlyProposalDocument(customer: CustomerRecord): ProposalDocument {
-  const contactLines = buildContactLines(customer);
+function buildCustomerOnlyProposalDocument(
+  customer: CustomerRecord,
+  companyName?: string,
+): ProposalDocument {
+  const contactLines = buildContactLines(customer, companyName);
   const cfText = formatCustomFields(customer.customFields);
 
   const blocks: ProposalBlock[] = [
@@ -111,7 +130,7 @@ function buildCustomerOnlyProposalDocument(customer: CustomerRecord): ProposalDo
   }
 
   return {
-    title: `${customer.company ?? customer.name} — Proposal`,
+    title: `${companyName ?? customer.name} — Proposal`,
     blocks,
   };
 }
@@ -150,6 +169,12 @@ export async function createDraftProposalFromCustomerAction(
   const db = getFirebaseAdminFirestore();
   if (!db) return { ok: false, message: "Database unavailable." };
 
+  const companyName = await resolveAccountCompanyName(user, customer);
+  const { getAccountRecordForStaff } = await import("@/server/firestore/crm-accounts");
+  const account = customer.accountId?.trim()
+    ? await getAccountRecordForStaff(user, customer.accountId.trim())
+    : null;
+
   let document: ProposalDocument;
   let branding: ProposalBranding | undefined;
   let sourceTemplateId: string | undefined;
@@ -163,12 +188,13 @@ export async function createDraftProposalFromCustomerAction(
     }
     document = applyProposalTokensToDocument(cloneProposalDocument(template.document), {
       customer,
+      account,
       timeZone: user.timeZone?.trim() || undefined,
     });
     branding = cloneBrandingFromTemplate(template.branding);
     sourceTemplateId = template.id;
   } else {
-    document = buildCustomerOnlyProposalDocument(customer);
+    document = buildCustomerOnlyProposalDocument(customer, companyName);
   }
 
   const organizationId = user.organizationId ?? "default";
@@ -270,6 +296,12 @@ export async function createDraftProposalFromOpportunityAction(
   const db = getFirebaseAdminFirestore();
   if (!db) return { ok: false, message: "Database unavailable." };
 
+  const companyName = await resolveAccountCompanyName(user, customer);
+  const { getAccountRecordForStaff } = await import("@/server/firestore/crm-accounts");
+  const account = customer.accountId?.trim()
+    ? await getAccountRecordForStaff(user, customer.accountId.trim())
+    : null;
+
   let document: ProposalDocument;
   let branding: ProposalBranding | undefined;
   let sourceTemplateId: string | undefined;
@@ -283,13 +315,14 @@ export async function createDraftProposalFromOpportunityAction(
     }
     document = applyProposalTokensToDocument(cloneProposalDocument(template.document), {
       customer,
+      account,
       opportunity,
       timeZone: user.timeZone?.trim() || undefined,
     });
     branding = cloneBrandingFromTemplate(template.branding);
     sourceTemplateId = template.id;
   } else {
-    document = buildPrefilledProposalDocument(customer, opportunity);
+    document = buildPrefilledProposalDocument(customer, opportunity, companyName);
   }
 
   const organizationId = user.organizationId ?? "default";

@@ -1,31 +1,45 @@
+import Link from "next/link";
 import { Building2, FileText, Globe, Mail, MapPin, Phone } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAddressLines, websiteHref } from "@/lib/common/format";
-import type { CustomerRecord } from "@/types/customer";
+import type { AccountRecord } from "@/types/account";
 
 export interface CustomerCompanyDetailsCardProps {
-  customer: CustomerRecord;
+  account: AccountRecord | null;
 }
 
 function EmptyValue() {
   return <span className="text-muted-foreground">—</span>;
 }
 
-export function CustomerCompanyDetailsCard({ customer }: CustomerCompanyDetailsCardProps) {
-  const companyName = customer.company?.trim();
-  const companyPhone = customer.companyPhone?.trim();
-  const companyEmail = customer.companyEmail?.trim();
-  const companyWebsite = customer.companyWebsite?.trim();
-  const companyAbn = customer.companyAbn?.trim();
-  const companyAcn = customer.companyAcn?.trim();
+export function CustomerCompanyDetailsCard({ account }: CustomerCompanyDetailsCardProps) {
+  if (!account) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Company details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">Not linked to an account.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const companyName = account.company?.trim();
+  const companyPhone = account.companyPhone?.trim();
+  const companyEmail = account.companyEmail?.trim();
+  const companyWebsite = account.companyWebsite?.trim();
+  const companyAbn = account.companyAbn?.trim();
+  const companyAcn = account.companyAcn?.trim();
   const addressLines = formatAddressLines({
-    addressLine1: customer.companyAddressLine1,
-    addressLine2: customer.companyAddressLine2,
-    city: customer.companyCity,
-    region: customer.companyRegion,
-    postalCode: customer.companyPostalCode,
-    country: customer.companyCountry
+    addressLine1: account.companyAddressLine1,
+    addressLine2: account.companyAddressLine2,
+    city: account.companyCity,
+    region: account.companyRegion,
+    postalCode: account.companyPostalCode,
+    country: account.companyCountry,
   });
   const websiteUrl = companyWebsite ? websiteHref(companyWebsite) : "";
   const addressText = addressLines.length > 0 ? addressLines.join("\n") : "";
@@ -33,13 +47,19 @@ export function CustomerCompanyDetailsCard({ customer }: CustomerCompanyDetailsC
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Company details</CardTitle>
+        <CardTitle>
+          <Link href={`/admin/accounts/${account.id}`} className="hover:underline">
+            Company details
+          </Link>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm">
             <Building2 className="text-muted-foreground size-4 shrink-0" aria-hidden />
-            <span>{companyName || <EmptyValue />}</span>
+            <Link href={`/admin/accounts/${account.id}`} className="hover:text-primary hover:underline">
+              {companyName || <EmptyValue />}
+            </Link>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Phone className="text-muted-foreground size-4 shrink-0" aria-hidden />
@@ -78,23 +98,13 @@ export function CustomerCompanyDetailsCard({ customer }: CustomerCompanyDetailsC
           <div className="flex items-center gap-3 text-sm">
             <FileText className="text-muted-foreground size-4 shrink-0" aria-hidden />
             <span>
-              ABN{" "}
-              {companyAbn ? (
-                companyAbn
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
+              ABN {companyAbn ? companyAbn : <span className="text-muted-foreground">—</span>}
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <FileText className="text-muted-foreground size-4 shrink-0" aria-hidden />
             <span>
-              ACN{" "}
-              {companyAcn ? (
-                companyAcn
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
+              ACN {companyAcn ? companyAcn : <span className="text-muted-foreground">—</span>}
             </span>
           </div>
           <div className="flex items-start gap-3 text-sm">

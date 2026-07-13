@@ -130,7 +130,7 @@ export function AddCustomerSheet({
             lastName={lastName}
             onFirstNameChange={setFirstName}
             onLastNameChange={setLastName}
-            showCompanySection={false}
+            showAccountSection
             showTags={false}
           />
           <div className={sheetActionsEndClass}>

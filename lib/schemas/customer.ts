@@ -30,21 +30,17 @@ export const companyWebsiteField = z
     message: "Website must be at most 2048 characters",
   });
 
+/** Empty string → undefined account link. */
+export const optionalAccountId = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v && v.length > 0 ? v : undefined));
+
 const customerProfileFieldsSchema = z.object({
   name: trimmed.min(1, "Name is required").max(200),
   email: trimmed.email("Valid email required").max(320),
-  company: optionalTrimmed,
-  companyPhone: optionalTrimmed,
-  companyEmail: optionalCompanyEmail,
-  companyWebsite: companyWebsiteField,
-  companyAbn: optionalTrimmed,
-  companyAcn: optionalTrimmed,
-  companyAddressLine1: optionalTrimmed,
-  companyAddressLine2: optionalTrimmed,
-  companyCity: optionalTrimmed,
-  companyRegion: optionalTrimmed,
-  companyPostalCode: optionalTrimmed,
-  companyCountry: optionalTrimmed,
+  accountId: optionalAccountId,
   phone: optionalTrimmed,
   addressLine1: optionalTrimmed,
   addressLine2: optionalTrimmed,

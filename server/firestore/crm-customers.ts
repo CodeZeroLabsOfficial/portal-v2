@@ -11,13 +11,10 @@ import { COLLECTIONS } from "@/server/firestore/collections";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
 import { getStripe } from "@/lib/stripe/server";
-import { accountKeyToNormalizedCompany, companyNameToAccountKey } from "@/lib/account/key";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
-import type { AccountListRow } from "@/lib/account/list";
 import type { CustomerListRow } from "@/lib/customer/list";
 import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
-import type { CreateAccountFormInput, UpdateAccountFormInput } from "@/lib/schemas/account";
 import type { CreateCustomerInput, UpdateCustomerFormInput } from "@/lib/schemas/customer";
 import type { InvoiceRecord } from "@/types/invoice";
 import type { ProposalRecord } from "@/types/proposal";
@@ -28,6 +25,7 @@ import type {
   CustomerRecord,
   CustomerSubscriptionRollup,
 } from "@/types/customer";
+import { batchGetAccountRecordsForStaff } from "@/server/firestore/crm-accounts";
 import { deleteOpportunitiesForCustomerDb } from "@/server/firestore/crm-opportunities";
 import { syncStripeCustomerIdFromCrmCustomerDoc } from "@/server/firestore/sync-portal-user-stripe";
 import { deleteMirroredStripeCustomer } from "@/server/stripe/delete-stripe-customer-for-crm";
@@ -47,68 +45,10 @@ function formatLocation(data: Pick<CustomerRecord, "city" | "region" | "country"
   return parts.length ? parts.join(", ") : "";
 }
 
-function formatCompanyLocation(
-  data: Pick<CustomerRecord, "companyCity" | "companyRegion" | "companyCountry">,
-): string {
-  const parts = [data.companyCity, data.companyRegion, data.companyCountry].filter(Boolean) as string[];
-  return parts.length ? parts.join(", ") : "";
-}
-
-function companyAddressSummary(c: CustomerRecord): string {
-  const street = [c.companyAddressLine1, c.companyAddressLine2].filter(Boolean).join(", ");
-  const loc = formatCompanyLocation(c);
-  const pc = c.companyPostalCode?.trim();
-  const chunks = [street, [pc, loc].filter(Boolean).join(" ").trim()].filter(Boolean);
-  return chunks.join(" · ") || "—";
-}
-
-/**
- * Pre-sort a customer group newest→oldest so callers can scan once instead of
- * re-sorting per field (`pickLatestNonEmpty` was previously sorting 6+ times
- * per group in `getAdminAccountListRows` / `getAccountDetailForKey`).
- */
-function sortGroupNewestFirst(customers: CustomerRecord[]): CustomerRecord[] {
-  return [...customers].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-}
-
-function pickLatestNonEmpty(
-  sortedNewestFirst: CustomerRecord[],
-  pick: (row: CustomerRecord) => string | undefined,
-): string {
-  for (const row of sortedNewestFirst) {
-    const v = pick(row)?.trim();
-    if (v) return v;
-  }
-  return "";
-}
-
-function displayCompanyNameForGroup(sortedNewestFirst: CustomerRecord[]): string {
-  const raw = sortedNewestFirst[0]?.company?.trim();
-  return raw || "—";
-}
-
-function pickPrimaryContact(group: CustomerRecord[]): {
-  contactName: string;
-  contactId?: string;
-  additionalContactCount: number;
-} {
-  const realContacts = sortGroupNewestFirst(group.filter((r) => !r.accountOnly));
-  const active = realContacts.filter((r) => r.status === "active");
-  const pool = active.length > 0 ? active : realContacts;
-  const primary = pool[0];
-  if (!primary) {
-    return { contactName: "", additionalContactCount: 0 };
-  }
-  return {
-    contactName: primary.name.trim(),
-    contactId: primary.id,
-    additionalContactCount: Math.max(0, pool.length - 1),
-  };
-}
-
 function parseCustomerRecord(id: string, data: Record<string, unknown>): CustomerRecord | null {
   if (typeof data !== "object" || data === null) return null;
   const organizationId = asString(data.organizationId)?.trim();
+  const accountId = asString(data.accountId)?.trim();
   const name = asString(data.name) ?? "";
   const email = asString(data.email) ?? "";
   const tagsRaw = data.tags;
@@ -118,7 +58,6 @@ function parseCustomerRecord(id: string, data: Record<string, unknown>): Custome
   const customFields = asStringStringMap(data.customFields);
   const status = data.status === "archived" ? "archived" : "active";
   const crmType: CustomerCrmType = data.crmType === "lead" ? "lead" : "contact";
-  const accountOnly = data.accountOnly === true;
   const contactAddress = normalizeAddressFields({
     addressLine1: asString(data.addressLine1),
     addressLine2: asString(data.addressLine2),
@@ -130,21 +69,9 @@ function parseCustomerRecord(id: string, data: Record<string, unknown>): Custome
   return {
     id,
     ...(organizationId ? { organizationId } : {}),
-    ...(accountOnly ? { accountOnly: true } : {}),
+    ...(accountId ? { accountId } : {}),
     name,
     email,
-    company: asString(data.company),
-    companyPhone: asString(data.companyPhone),
-    companyEmail: asString(data.companyEmail),
-    companyWebsite: asString(data.companyWebsite),
-    companyAbn: asString(data.companyAbn),
-    companyAcn: asString(data.companyAcn),
-    companyAddressLine1: asString(data.companyAddressLine1),
-    companyAddressLine2: asString(data.companyAddressLine2),
-    companyCity: asString(data.companyCity),
-    companyRegion: asString(data.companyRegion),
-    companyPostalCode: asString(data.companyPostalCode),
-    companyCountry: asString(data.companyCountry),
     phone: asString(data.phone),
     addressLine1: contactAddress.addressLine1 || undefined,
     addressLine2: contactAddress.addressLine2 || undefined,
@@ -203,10 +130,11 @@ function rollupForStripeCustomer(
 function customerToListRow(
   customer: CustomerRecord,
   subscriptions: SubscriptionRecord[],
+  companyName?: string,
 ): CustomerListRow {
   const location = formatLocation(customer);
-  const company = customer.company?.trim() || undefined;
-  const accountKey = company ? companyNameToAccountKey(company) || undefined : undefined;
+  const company = companyName?.trim() || undefined;
+  const accountId = customer.accountId?.trim() || undefined;
   return {
     id: customer.id,
     name: customer.name.trim() || customer.email.trim() || customer.id,
@@ -215,7 +143,7 @@ function customerToListRow(
     location: location.trim() || "—",
     avatarUrl: customer.avatarUrl,
     company,
-    accountKey,
+    accountId,
     tags: customer.tags,
     status: customer.status,
     subscriptionRollup: rollupForStripeCustomer(customer.stripeCustomerId, subscriptions),
@@ -296,12 +224,18 @@ export async function getAdminSubscriptionsSnapshot(
     const customers = await listCustomerRecordsForStaffSorted(user);
     if (!customers) return null;
 
+    const accountIds = customers
+      .map((c) => c.accountId?.trim())
+      .filter((id): id is string => Boolean(id));
+    const accounts = await batchGetAccountRecordsForStaff(user, accountIds);
+
     const stripeCustomerLinks: Record<string, StripeCustomerLink> = {};
     for (const c of customers) {
       const sid = c.stripeCustomerId?.trim();
       if (!sid || stripeCustomerLinks[sid]) continue;
-      const label = [c.name?.trim(), c.company?.trim()].filter(Boolean).join(" · ") || c.email?.trim() || c.id;
-      const accountName = c.company?.trim() || c.name?.trim() || c.email?.trim() || "—";
+      const company = c.accountId ? accounts.get(c.accountId)?.company?.trim() : undefined;
+      const label = [c.name?.trim(), company].filter(Boolean).join(" · ") || c.email?.trim() || c.id;
+      const accountName = company || c.name?.trim() || c.email?.trim() || "—";
       stripeCustomerLinks[sid] = {
         customerId: c.id,
         label: label.slice(0, 160),
@@ -327,7 +261,8 @@ export async function listCrmCustomerRecordsForStaff(user: PortalUser): Promise<
   return rows ?? [];
 }
 
-async function listCustomerRecordsForStaffSorted(
+/** Exported for account list/detail joins (avoid circular static imports). */
+export async function listCustomerRecordsForStaffSorted(
   user: PortalUser,
 ): Promise<CustomerRecord[] | null> {
   const db = getFirebaseAdminFirestore();
@@ -359,268 +294,19 @@ export async function getAdminCustomerListRows(user: PortalUser): Promise<Custom
       listAllSubscriptionsForStaff(db),
     ]);
     if (!customers) return [];
-    return customers
-      .filter((c) => !c.accountOnly)
-      .map((c) => customerToListRow(c, subscriptions));
+    const accountIds = customers
+      .map((c) => c.accountId?.trim())
+      .filter((id): id is string => Boolean(id));
+    const accounts = await batchGetAccountRecordsForStaff(user, accountIds);
+    return customers.map((c) => {
+      const company = c.accountId ? accounts.get(c.accountId)?.company : undefined;
+      return customerToListRow(c, subscriptions, company);
+    });
   } catch (error) {
     logError("crm_list_customers_failed", {
       message: error instanceof Error ? error.message : "unknown",
     });
     return [];
-  }
-}
-
-export async function getAdminAccountListRows(user: PortalUser): Promise<AccountListRow[]> {
-  const customers = await listCustomerRecordsForStaffSorted(user);
-  if (!customers) return [];
-
-  const byNorm = new Map<string, CustomerRecord[]>();
-  for (const c of customers) {
-    const name = c.company?.trim();
-    if (!name) continue;
-    const norm = name.toLowerCase();
-    const bucket = byNorm.get(norm) ?? [];
-    bucket.push(c);
-    byNorm.set(norm, bucket);
-  }
-
-  const rows: AccountListRow[] = [];
-  for (const [, group] of byNorm) {
-    const sorted = sortGroupNewestFirst(group);
-    const displayName = displayCompanyNameForGroup(sorted);
-    const key = companyNameToAccountKey(displayName);
-    if (!key) continue;
-    let addressSummary = "—";
-    for (const c of sorted) {
-      const s = companyAddressSummary(c);
-      if (s !== "—") {
-        addressSummary = s;
-        break;
-      }
-    }
-    const { contactName, contactId, additionalContactCount } = pickPrimaryContact(group);
-    rows.push({
-      key,
-      displayName,
-      addressSummary,
-      companyPhone: pickLatestNonEmpty(sorted, (r) => r.companyPhone),
-      companyEmail: pickLatestNonEmpty(sorted, (r) => r.companyEmail),
-      companyWebsite: pickLatestNonEmpty(sorted, (r) => r.companyWebsite),
-      contactName,
-      ...(contactId ? { contactId } : {}),
-      additionalContactCount,
-    });
-  }
-
-  rows.sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }));
-  return rows;
-}
-
-export interface AccountDetailAggregate {
-  key: string;
-  displayName: string;
-  companyPhone: string;
-  companyEmail: string;
-  companyWebsite: string;
-  companyAbn: string;
-  companyAcn: string;
-  companyAddressLine1?: string;
-  companyAddressLine2?: string;
-  companyCity?: string;
-  companyRegion?: string;
-  companyPostalCode?: string;
-  companyCountry?: string;
-  contacts: CustomerRecord[];
-}
-
-export async function getAccountDetailForKey(
-  user: PortalUser,
-  accountKey: string,
-): Promise<AccountDetailAggregate | null> {
-  const customers = await listCustomerRecordsForStaffSorted(user);
-  if (!customers) return null;
-
-  const norm = accountKeyToNormalizedCompany(accountKey);
-  if (!norm) return null;
-
-  const group = customers.filter((c) => c.company?.trim().toLowerCase() === norm);
-  if (group.length === 0) return null;
-
-  const sorted = sortGroupNewestFirst(group);
-  const displayName = displayCompanyNameForGroup(sorted);
-  const contacts = sorted.filter((c) => !c.accountOnly);
-  return {
-    key: companyNameToAccountKey(displayName),
-    displayName,
-    companyPhone: pickLatestNonEmpty(sorted, (r) => r.companyPhone),
-    companyEmail: pickLatestNonEmpty(sorted, (r) => r.companyEmail),
-    companyWebsite: pickLatestNonEmpty(sorted, (r) => r.companyWebsite),
-    companyAbn: pickLatestNonEmpty(sorted, (r) => r.companyAbn),
-    companyAcn: pickLatestNonEmpty(sorted, (r) => r.companyAcn),
-    companyAddressLine1: pickLatestNonEmpty(sorted, (r) => r.companyAddressLine1) || undefined,
-    companyAddressLine2: pickLatestNonEmpty(sorted, (r) => r.companyAddressLine2) || undefined,
-    companyCity: pickLatestNonEmpty(sorted, (r) => r.companyCity) || undefined,
-    companyRegion: pickLatestNonEmpty(sorted, (r) => r.companyRegion) || undefined,
-    companyPostalCode: pickLatestNonEmpty(sorted, (r) => r.companyPostalCode) || undefined,
-    companyCountry: pickLatestNonEmpty(sorted, (r) => r.companyCountry) || undefined,
-    contacts,
-  };
-}
-
-export async function createAccountDocument(
-  user: PortalUser,
-  input: CreateAccountFormInput,
-): Promise<
-  | { ok: true; accountKey: string; alreadyExisted: boolean }
-  | { ok: false; message: string }
-> {
-  const db = getFirebaseAdminFirestore();
-  if (!db || !isStaff(user)) {
-    return { ok: false, message: "CRM is only available to admin or team members." };
-  }
-
-  const companyTrimmed = input.company.trim();
-  if (!companyTrimmed) {
-    return { ok: false, message: "Company name is required." };
-  }
-  const accountKey = companyNameToAccountKey(companyTrimmed);
-  if (!accountKey) {
-    return { ok: false, message: "Company name is required." };
-  }
-
-  const customers = await listCustomerRecordsForStaffSorted(user);
-  if (!customers) {
-    return { ok: false, message: "Could not load customers." };
-  }
-  const existingGroup = customers.filter(
-    (c) => c.company?.trim().toLowerCase() === companyTrimmed.toLowerCase(),
-  );
-  if (existingGroup.length > 0) {
-    return { ok: true, accountKey, alreadyExisted: true };
-  }
-
-  const col = db.collection(COLLECTIONS.customers);
-  const docRef = col.doc();
-  const payload = {
-    name: "",
-    email: "",
-    company: companyTrimmed,
-    companyPhone: input.companyPhone?.trim() || null,
-    companyEmail: input.companyEmail?.trim()?.toLowerCase() || null,
-    companyWebsite: input.companyWebsite?.trim() || null,
-    companyAbn: input.companyAbn?.trim() || null,
-    companyAcn: input.companyAcn?.trim() || null,
-    companyAddressLine1: input.companyAddressLine1?.trim() || null,
-    companyAddressLine2: input.companyAddressLine2?.trim() || null,
-    companyCity: input.companyCity?.trim() || null,
-    companyRegion: input.companyRegion?.trim() || null,
-    companyPostalCode: input.companyPostalCode?.trim() || null,
-    companyCountry: input.companyCountry?.trim() || null,
-    phone: null,
-    addressLine1: null,
-    addressLine2: null,
-    city: null,
-    region: null,
-    postalCode: null,
-    country: null,
-    tags: [] as string[],
-    customFields: {} as Record<string, string>,
-    portalUserId: null,
-    stripeCustomerId: null,
-    avatarUrl: null,
-    status: "active",
-    crmType: "contact" as CustomerCrmType,
-    accountOnly: true,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-    createdByUid: user.uid,
-  };
-
-  try {
-    await docRef.set(payload);
-    await db.collection(COLLECTIONS.customerActivities).add({
-      customerId: docRef.id,
-      type: "created",
-      title: "Account created",
-      detail: companyTrimmed,
-      actorUid: user.uid,
-      createdAt: Timestamp.now(),
-    });
-    return { ok: true, accountKey, alreadyExisted: false };
-  } catch (error) {
-    logError("crm_create_account_failed", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
-    return { ok: false, message: "Failed to create account." };
-  }
-}
-
-export async function updateAccountDetailsForGroup(
-  user: PortalUser,
-  input: UpdateAccountFormInput,
-): Promise<{ ok: true; newAccountKey: string } | { ok: false; message: string }> {
-  const db = getFirebaseAdminFirestore();
-  if (!db || !isStaff(user)) {
-    return { ok: false, message: "CRM is only available to admin or team members." };
-  }
-
-  const norm = accountKeyToNormalizedCompany(input.accountKey);
-  if (!norm) {
-    return { ok: false, message: "Invalid account." };
-  }
-
-  const customers = await listCustomerRecordsForStaffSorted(user);
-  if (!customers) {
-    return { ok: false, message: "Could not load customers." };
-  }
-
-  const contacts = customers.filter((c) => c.company?.trim().toLowerCase() === norm);
-  if (contacts.length === 0) {
-    return { ok: false, message: "Account not found." };
-  }
-
-  const companyTrimmed = input.company.trim();
-  const newAccountKey = companyNameToAccountKey(companyTrimmed);
-  if (!newAccountKey) {
-    return { ok: false, message: "Company name is required." };
-  }
-
-  const payload: Record<string, unknown> = {
-    company: companyTrimmed,
-    companyPhone: input.companyPhone?.trim() || null,
-    companyEmail: input.companyEmail?.trim()?.toLowerCase() || null,
-    companyWebsite: input.companyWebsite?.trim() || null,
-    companyAbn: input.companyAbn?.trim() || null,
-    companyAcn: input.companyAcn?.trim() || null,
-    companyAddressLine1: input.companyAddressLine1?.trim() || null,
-    companyAddressLine2: input.companyAddressLine2?.trim() || null,
-    companyCity: input.companyCity?.trim() || null,
-    companyRegion: input.companyRegion?.trim() || null,
-    companyPostalCode: input.companyPostalCode?.trim() || null,
-    companyCountry: input.companyCountry?.trim() || null,
-    updatedAt: FieldValue.serverTimestamp(),
-  };
-
-  try {
-    await Promise.all(
-      contacts.map(async (c) => {
-        await db.collection(COLLECTIONS.customers).doc(c.id).update(payload);
-        await db.collection(COLLECTIONS.customerActivities).add({
-          customerId: c.id,
-          type: "updated",
-          title: "Account company details updated",
-          detail: companyTrimmed,
-          actorUid: user.uid,
-          createdAt: Timestamp.now(),
-        });
-      }),
-    );
-    return { ok: true, newAccountKey };
-  } catch (error) {
-    logError("crm_update_account_failed", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
-    return { ok: false, message: "Failed to update account details." };
   }
 }
 
@@ -1037,24 +723,23 @@ export async function createCustomerDocument(
   const customFields: Record<string, string> = {};
 
   const crmType: CustomerCrmType = input.saveAsLead ? "lead" : "contact";
+  const accountId = input.accountId?.trim() || undefined;
+  let accountCompanyName = "";
+  if (accountId) {
+    const { getAccountRecordForStaff } = await import("@/server/firestore/crm-accounts");
+    const account = await getAccountRecordForStaff(user, accountId);
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+    accountCompanyName = account.company.trim();
+  }
 
   const col = db.collection(COLLECTIONS.customers);
   const docRef = col.doc();
   const payload = {
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
-    company: input.company?.trim() || null,
-    companyPhone: input.companyPhone?.trim() || null,
-    companyEmail: input.companyEmail?.trim()?.toLowerCase() || null,
-    companyWebsite: input.companyWebsite?.trim() || null,
-    companyAbn: input.companyAbn?.trim() || null,
-    companyAcn: input.companyAcn?.trim() || null,
-    companyAddressLine1: input.companyAddressLine1?.trim() || null,
-    companyAddressLine2: input.companyAddressLine2?.trim() || null,
-    companyCity: input.companyCity?.trim() || null,
-    companyRegion: input.companyRegion?.trim() || null,
-    companyPostalCode: input.companyPostalCode?.trim() || null,
-    companyCountry: input.companyCountry?.trim() || null,
+    accountId: accountId || null,
     phone: input.phone?.trim() || null,
     ...contactAddressPayloadFromInput(input),
     tags: input.tags ?? [],
@@ -1076,7 +761,7 @@ export async function createCustomerDocument(
     try {
       const now = Timestamp.now();
       const opportunityName =
-        payload.company?.trim() || payload.name.trim() || payload.email.trim() || "New lead";
+        accountCompanyName || payload.name.trim() || payload.email.trim() || "New lead";
       const opportunityPayload: Record<string, unknown> = {
         customerId: docRef.id,
         name: opportunityName,
@@ -1123,6 +808,7 @@ export async function createCustomerDocument(
         id: docRef.id,
         name: payload.name,
         email: payload.email,
+        ...(accountId ? { accountId } : {}),
         tags: payload.tags,
         customFields,
         crmType,
@@ -1201,21 +887,19 @@ export async function updateCustomerDocument(
     return { ok: false, message: "Customer not found." };
   }
 
+  const accountId = rest.accountId?.trim() || undefined;
+  if (accountId) {
+    const { getAccountRecordForStaff } = await import("@/server/firestore/crm-accounts");
+    const account = await getAccountRecordForStaff(user, accountId);
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+  }
+
   const payload: Record<string, unknown> = {
     name: rest.name.trim(),
     email: rest.email.trim().toLowerCase(),
-    company: rest.company?.trim() || null,
-    companyPhone: rest.companyPhone?.trim() || null,
-    companyEmail: rest.companyEmail?.trim()?.toLowerCase() || null,
-    companyWebsite: rest.companyWebsite?.trim() || null,
-    companyAbn: rest.companyAbn?.trim() || null,
-    companyAcn: rest.companyAcn?.trim() || null,
-    companyAddressLine1: rest.companyAddressLine1?.trim() || null,
-    companyAddressLine2: rest.companyAddressLine2?.trim() || null,
-    companyCity: rest.companyCity?.trim() || null,
-    companyRegion: rest.companyRegion?.trim() || null,
-    companyPostalCode: rest.companyPostalCode?.trim() || null,
-    companyCountry: rest.companyCountry?.trim() || null,
+    accountId: accountId || null,
     phone: rest.phone?.trim() || null,
     ...contactAddressPayloadFromInput(rest),
     tags: rest.tags ?? [],

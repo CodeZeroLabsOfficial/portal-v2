@@ -3,18 +3,7 @@ export interface CustomerProfileFormValues {
   id?: string;
   name: string;
   email: string;
-  company?: string;
-  companyPhone?: string;
-  companyEmail?: string;
-  companyWebsite?: string;
-  companyAbn?: string;
-  companyAcn?: string;
-  companyAddressLine1?: string;
-  companyAddressLine2?: string;
-  companyCity?: string;
-  companyRegion?: string;
-  companyPostalCode?: string;
-  companyCountry?: string;
+  accountId?: string;
   phone?: string;
   addressLine1?: string;
   addressLine2?: string;
@@ -29,18 +18,7 @@ export interface CustomerProfileFormValues {
 export const EMPTY_CUSTOMER_PROFILE_FORM_VALUES: CustomerProfileFormValues = {
   name: "",
   email: "",
-  company: "",
-  companyPhone: "",
-  companyEmail: "",
-  companyWebsite: "",
-  companyAbn: "",
-  companyAcn: "",
-  companyAddressLine1: "",
-  companyAddressLine2: "",
-  companyCity: "",
-  companyRegion: "",
-  companyPostalCode: "",
-  companyCountry: "",
+  accountId: "",
   phone: "",
   addressLine1: "",
   addressLine2: "",
@@ -49,5 +27,5 @@ export const EMPTY_CUSTOMER_PROFILE_FORM_VALUES: CustomerProfileFormValues = {
   postalCode: "",
   country: "",
   tags: [],
-  saveAsLead: false
+  saveAsLead: false,
 };

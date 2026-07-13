@@ -6,34 +6,50 @@ import { createAccountFormSchema, updateAccountFormSchema } from "@/lib/schemas/
 import { zodErrorToMessage } from "@/lib/common/zod-error";
 import {
   createAccountDocument,
-  getAccountDetailForKey,
-  updateAccountDetailsForGroup,
-  type AccountDetailAggregate,
-} from "@/server/firestore/crm-customers";
+  deleteAccountDocument,
+  getAccountDetailForId,
+  listAccountRecordsForStaff,
+  updateAccountDocument,
+} from "@/server/firestore/crm-accounts";
+import type { AccountDetailAggregate, AccountRecord } from "@/types/account";
+
+export async function listAccountsForPickerAction(): Promise<
+  { ok: true; accounts: AccountRecord[] } | { ok: false; message: string }
+> {
+  const user = await requireStaffSession();
+  if (!user) {
+    return { ok: false, message: "You need an admin or team session to list accounts." };
+  }
+  const accounts = await listAccountRecordsForStaff(user);
+  if (!accounts) {
+    return { ok: false, message: "Could not load accounts." };
+  }
+  return { ok: true, accounts };
+}
 
 export async function getAccountDetailAction(
-  accountKey: string,
+  accountId: string,
 ): Promise<
-  { ok: true; account: AccountDetailAggregate; accountKey: string } | { ok: false; message: string }
+  { ok: true; account: AccountDetailAggregate } | { ok: false; message: string }
 > {
   const user = await requireStaffSession();
   if (!user) {
     return { ok: false, message: "You need an admin or team session to edit accounts." };
   }
-  const key = accountKey.trim();
-  if (!key) {
-    return { ok: false, message: "Account key is required." };
+  const id = accountId.trim();
+  if (!id) {
+    return { ok: false, message: "Account id is required." };
   }
-  const account = await getAccountDetailForKey(user, key);
+  const account = await getAccountDetailForId(user, id);
   if (!account) {
     return { ok: false, message: "Account not found." };
   }
-  return { ok: true, account, accountKey: key };
+  return { ok: true, account };
 }
 
 export async function updateAccountAction(
   raw: unknown,
-): Promise<{ ok: true; newAccountKey: string } | { ok: false; message: string }> {
+): Promise<{ ok: true } | { ok: false; message: string }> {
   const user = await requireStaffSession();
   if (!user) {
     return { ok: false, message: "You need an admin or team session to edit accounts." };
@@ -43,23 +59,18 @@ export async function updateAccountAction(
     return { ok: false, message: zodErrorToMessage(parsed.error) };
   }
 
-  const previousKey = parsed.data.accountKey;
-  const result = await updateAccountDetailsForGroup(user, parsed.data);
+  const result = await updateAccountDocument(user, parsed.data);
   if (!result.ok) return result;
 
   revalidatePath("/admin/customers", "layout");
   revalidatePath("/admin/accounts", "layout");
-  revalidatePath(`/admin/accounts/${previousKey}`, "page");
-  revalidatePath(`/admin/accounts/${result.newAccountKey}`, "page");
-  return { ok: true, newAccountKey: result.newAccountKey };
+  revalidatePath(`/admin/accounts/${parsed.data.id}`, "page");
+  return { ok: true };
 }
 
 export async function createAccountAction(
   raw: unknown,
-): Promise<
-  | { ok: true; accountKey: string; alreadyExisted: boolean }
-  | { ok: false; message: string }
-> {
+): Promise<{ ok: true; accountId: string } | { ok: false; message: string }> {
   const user = await requireStaffSession();
   if (!user) {
     return { ok: false, message: "You need an admin or team session to add accounts." };
@@ -73,6 +84,23 @@ export async function createAccountAction(
   if (!result.ok) return result;
 
   revalidatePath("/admin/accounts", "layout");
-  revalidatePath(`/admin/accounts/${result.accountKey}`, "page");
-  return { ok: true, accountKey: result.accountKey, alreadyExisted: result.alreadyExisted };
+  revalidatePath(`/admin/accounts/${result.accountId}`, "page");
+  return { ok: true, accountId: result.accountId };
+}
+
+export async function deleteAccountAction(
+  accountId: string,
+): Promise<{ ok: true; deletedCustomers: number } | { ok: false; message: string }> {
+  const user = await requireStaffSession();
+  if (!user) {
+    return { ok: false, message: "Unauthorized." };
+  }
+  const result = await deleteAccountDocument(user, accountId);
+  if (!result.ok) return result;
+
+  revalidatePath("/admin/customers", "layout");
+  revalidatePath("/admin/accounts", "layout");
+  revalidatePath("/admin/proposals", "layout");
+  revalidatePath("/admin/subscriptions", "layout");
+  return { ok: true, deletedCustomers: result.deletedCustomers };
 }

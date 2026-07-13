@@ -1,11 +1,14 @@
 "use client";
 
+import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
+import { listAccountsForPickerAction } from "@/server/actions/accounts-crm";
+import type { AccountRecord } from "@/types/account";
 
 export type { CustomerProfileFormValues };
 
@@ -19,8 +22,8 @@ export interface CustomerProfileFormFieldsProps {
   onLastNameChange: (value: string) => void;
   tagInput?: string;
   onTagInputChange?: (value: string) => void;
-  /** Defaults to true for edit, false for create. */
-  showCompanySection?: boolean;
+  /** Defaults to true. */
+  showAccountSection?: boolean;
   /** Defaults to true for edit, false for create. */
   showTags?: boolean;
 }
@@ -35,22 +38,40 @@ export function CustomerProfileFormFields({
   onLastNameChange,
   tagInput = "",
   onTagInputChange,
-  showCompanySection = mode === "edit",
-  showTags = mode === "edit"
+  showAccountSection = true,
+  showTags = mode === "edit",
 }: CustomerProfileFormFieldsProps) {
-  const { register, formState, watch, setValue, getValues } = form;
+  const { register, formState, watch, setValue } = form;
   const errors = formState.errors;
   const saveAsLead = watch("saveAsLead");
+  const accountId = watch("accountId");
+  const [accounts, setAccounts] = React.useState<AccountRecord[]>([]);
 
-  function copyCompanyAddressToContact() {
-    const values = getValues();
+  React.useEffect(() => {
+    let cancelled = false;
+    void listAccountsForPickerAction().then((res) => {
+      if (cancelled || !res.ok) return;
+      setAccounts(res.accounts);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedAccount = React.useMemo(
+    () => accounts.find((a) => a.id === accountId?.trim()) ?? null,
+    [accounts, accountId],
+  );
+
+  function copyAccountAddressToContact() {
+    if (!selectedAccount) return;
     const opts = { shouldDirty: true, shouldTouch: true };
-    setValue("addressLine1", values.companyAddressLine1 ?? "", opts);
-    setValue("addressLine2", values.companyAddressLine2 ?? "", opts);
-    setValue("city", values.companyCity ?? "", opts);
-    setValue("region", values.companyRegion ?? "", opts);
-    setValue("postalCode", values.companyPostalCode ?? "", opts);
-    setValue("country", values.companyCountry ?? "", opts);
+    setValue("addressLine1", selectedAccount.companyAddressLine1 ?? "", opts);
+    setValue("addressLine2", selectedAccount.companyAddressLine2 ?? "", opts);
+    setValue("city", selectedAccount.companyCity ?? "", opts);
+    setValue("region", selectedAccount.companyRegion ?? "", opts);
+    setValue("postalCode", selectedAccount.companyPostalCode ?? "", opts);
+    setValue("country", selectedAccount.companyCountry ?? "", opts);
   }
 
   return (
@@ -131,6 +152,27 @@ export function CustomerProfileFormFields({
           </div>
         </div>
 
+        {showAccountSection ? (
+          <div className="space-y-2">
+            <Label htmlFor="crm-account">Account</Label>
+            <select
+              id="crm-account"
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+              disabled={disabled}
+              value={accountId ?? ""}
+              onChange={(e) =>
+                setValue("accountId", e.target.value, { shouldDirty: true, shouldTouch: true })
+              }>
+              <option value="">No account</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.company}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Contact address</Label>
@@ -138,9 +180,9 @@ export function CustomerProfileFormFields({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={copyCompanyAddressToContact}
-              disabled={disabled}>
-              Copy from company
+              onClick={copyAccountAddressToContact}
+              disabled={disabled || !selectedAccount}>
+              Copy from account
             </Button>
           </div>
           <Input
@@ -196,87 +238,6 @@ export function CustomerProfileFormFields({
           </div>
         ) : null}
       </div>
-
-      {showCompanySection ? (
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold">Company</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="crm-company">Company name</Label>
-              <Input
-                id="crm-company"
-                autoComplete="organization"
-                disabled={disabled}
-                {...register("company")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="crm-company-phone">Company phone</Label>
-              <Input
-                id="crm-company-phone"
-                type="tel"
-                autoComplete="tel"
-                disabled={disabled}
-                {...register("companyPhone")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="crm-company-email">Company email</Label>
-              <Input
-                id="crm-company-email"
-                type="email"
-                disabled={disabled}
-                {...register("companyEmail")}
-              />
-              {errors.companyEmail ? (
-                <p className="text-destructive text-xs">{errors.companyEmail.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="crm-company-website">Website</Label>
-              <Input
-                id="crm-company-website"
-                autoComplete="url"
-                placeholder="https://www.company.com"
-                disabled={disabled}
-                {...register("companyWebsite")}
-              />
-              {errors.companyWebsite ? (
-                <p className="text-destructive text-xs">{errors.companyWebsite.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="crm-company-abn">ABN</Label>
-              <Input
-                id="crm-company-abn"
-                autoComplete="off"
-                disabled={disabled}
-                {...register("companyAbn")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="crm-company-acn">ACN</Label>
-              <Input
-                id="crm-company-acn"
-                autoComplete="off"
-                disabled={disabled}
-                {...register("companyAcn")}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Company address</Label>
-            <Input placeholder="Line 1" disabled={disabled} {...register("companyAddressLine1")} />
-            <Input placeholder="Line 2" disabled={disabled} {...register("companyAddressLine2")} />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder="City" disabled={disabled} {...register("companyCity")} />
-              <Input placeholder="State / region" disabled={disabled} {...register("companyRegion")} />
-              <Input placeholder="Postal code" disabled={disabled} {...register("companyPostalCode")} />
-              <Input placeholder="Country" disabled={disabled} {...register("companyCountry")} />
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

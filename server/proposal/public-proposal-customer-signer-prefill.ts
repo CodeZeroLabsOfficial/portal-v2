@@ -17,7 +17,15 @@ export async function loadProposalCustomerSignerPrefill(
     const name = typeof d.name === "string" ? d.name.trim() : "";
     const emailFromDoc = typeof d.email === "string" ? d.email.trim() : "";
     const email = emailFromDoc || (proposal.recipientEmail?.trim() ?? "");
-    const organization = typeof d.company === "string" ? d.company.trim() : "";
+    let organization = "";
+    const accountId = typeof d.accountId === "string" ? d.accountId.trim() : "";
+    if (accountId) {
+      const asnap = await db.collection(COLLECTIONS.accounts).doc(accountId).get();
+      if (asnap.exists) {
+        const a = asnap.data() as Record<string, unknown>;
+        organization = typeof a.company === "string" ? a.company.trim() : "";
+      }
+    }
     return { name, email, organization };
   } catch {
     return null;

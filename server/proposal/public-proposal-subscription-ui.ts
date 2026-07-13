@@ -43,9 +43,17 @@ export async function loadProposalPublicSubscriptionUi(
       const snap = await db.collection(COLLECTIONS.customers).doc(proposal.customerId.trim()).get();
       if (snap.exists) {
         const d = snap.data() as Record<string, unknown>;
-        const company = typeof d.company === "string" ? d.company.trim() : "";
         const name = typeof d.name === "string" ? d.name.trim() : "";
         const email = typeof d.email === "string" ? d.email.trim() : "";
+        let company = "";
+        const accountId = typeof d.accountId === "string" ? d.accountId.trim() : "";
+        if (accountId) {
+          const asnap = await db.collection(COLLECTIONS.accounts).doc(accountId).get();
+          if (asnap.exists) {
+            const a = asnap.data() as Record<string, unknown>;
+            company = typeof a.company === "string" ? a.company.trim() : "";
+          }
+        }
         customerLabel = company || name || email || customerLabel;
       }
     } catch {

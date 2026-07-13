@@ -13,6 +13,7 @@ import {
   listTasksForCustomer
 } from "@/server/firestore/crm-customers";
 import { listOpportunitiesForCustomer } from "@/server/firestore/crm-opportunities";
+import { getAccountRecordForStaff } from "@/server/firestore/crm-accounts";
 import { listProposalTemplatesForOrg } from "@/server/firestore/proposal-templates";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,10 @@ export default async function AdminCustomerDetailPage({ params, searchParams }: 
   if (!customer) {
     notFound();
   }
+
+  const account = customer.accountId
+    ? await getAccountRecordForStaff(user, customer.accountId)
+    : null;
 
   const [
     notes,
@@ -62,6 +67,7 @@ export default async function AdminCustomerDetailPage({ params, searchParams }: 
   return (
     <CustomerDetailView
       customer={customer}
+      account={account}
       subscriptions={subscriptions}
       invoices={invoices}
       proposalsMatched={proposalsMatched}

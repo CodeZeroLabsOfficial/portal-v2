@@ -1,5 +1,3 @@
-import type { CustomerCrmType, CustomerSubscriptionRollup } from "@/types/customer";
-
 /** Rows for the admin customer list table (CRM-style UI). */
 export interface CustomerListRow {
   /** Firestore `customers/{id}` document id. */
@@ -10,13 +8,14 @@ export interface CustomerListRow {
   /** City, region, country — formatted for table display. */
   location: string;
   avatarUrl?: string;
+  /** Linked account company name when `accountId` is set. */
   company?: string;
-  /** URL segment for `/admin/accounts/[accountKey]` when `company` is set. */
-  accountKey?: string;
+  /** Firestore `accounts/{id}` when linked. */
+  accountId?: string;
   tags: string[];
-  crmType: CustomerCrmType;
+  crmType: import("@/types/customer").CustomerCrmType;
   status: "active" | "archived";
-  subscriptionRollup: CustomerSubscriptionRollup;
+  subscriptionRollup: import("@/types/customer").CustomerSubscriptionRollup;
   portalUserId?: string;
   stripeCustomerId?: string;
 }

@@ -19,43 +19,37 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { accountToFormDefaults } from "@/lib/account/form-defaults";
 import { updateAccountFormSchema, type UpdateAccountFormInput } from "@/lib/schemas/account";
 import { updateAccountAction } from "@/server/actions/accounts-crm";
-import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
+import type { AccountDetailAggregate } from "@/types/account";
 
 export interface AccountEditSheetProps {
   account: AccountDetailAggregate;
-  accountKey: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AccountEditSheet({
-  account,
-  accountKey,
-  open,
-  onOpenChange
-}: AccountEditSheetProps) {
+export function AccountEditSheet({ account, open, onOpenChange }: AccountEditSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   const form = useForm<UpdateAccountFormInput>({
     resolver: zodResolver(updateAccountFormSchema),
-    defaultValues: accountToFormDefaults(account, accountKey)
+    defaultValues: accountToFormDefaults(account),
   });
 
   React.useEffect(() => {
     if (!open) return;
-    form.reset(accountToFormDefaults(account, accountKey));
+    form.reset(accountToFormDefaults(account));
     setServerError(null);
-  }, [open, account, accountKey, form]);
+  }, [open, account, form]);
 
   async function onSubmit(values: UpdateAccountFormInput) {
     setServerError(null);
-    const result = await updateAccountAction({ ...values, accountKey });
+    const result = await updateAccountAction({ ...values, id: account.id });
     if (!result.ok) {
       setServerError(result.message);
       return;
@@ -63,9 +57,6 @@ export function AccountEditSheet({
 
     toast.success("Account saved");
     onOpenChange(false);
-    if (result.newAccountKey !== accountKey) {
-      router.push(`/admin/accounts/${result.newAccountKey}`);
-    }
     router.refresh();
   }
 

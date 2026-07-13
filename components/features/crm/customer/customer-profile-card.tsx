@@ -13,6 +13,7 @@ import type { CustomerRecord } from "@/types/customer";
 
 export interface CustomerProfileCardProps {
   customer: CustomerRecord;
+  companyName?: string;
   subscriptionCount: number;
   openInvoiceCount: number;
   proposalCount: number;
@@ -22,6 +23,7 @@ export interface CustomerProfileCardProps {
 
 export function CustomerProfileCard({
   customer,
+  companyName,
   subscriptionCount,
   openInvoiceCount,
   proposalCount,
@@ -32,7 +34,7 @@ export function CustomerProfileCard({
   const displayName = customer.name?.trim() || customer.email;
   const statusBadge = customerStatusBadgeDisplay(customer.status === "archived" ? "archived" : "active");
   const crmTypeBadge = customerCrmTypeBadgeDisplay(customer.crmType);
-  const company = customer.company?.trim();
+  const company = companyName?.trim();
 
   return (
     <Card className="relative">

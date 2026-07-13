@@ -63,7 +63,7 @@ export function AddAccountDialog({ open, onOpenChange }: AddAccountDialogProps) 
       return;
     }
     onOpenChange(false);
-    router.push(`/admin/accounts/${result.accountKey}`);
+    router.push(`/admin/accounts/${result.accountId}`);
     router.refresh();
   }
 

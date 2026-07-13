@@ -241,9 +241,9 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         cell: ({ row }) => {
           const company = row.original.company?.trim();
           if (!company) return <span className="text-muted-foreground">—</span>;
-          if (row.original.accountKey) {
+          if (row.original.accountId) {
             return (
-              <Link href={`/admin/accounts/${row.original.accountKey}`} className="hover:underline">
+              <Link href={`/admin/accounts/${row.original.accountId}`} className="hover:underline">
                 {company}
               </Link>
             );

@@ -113,6 +113,13 @@ export async function listOpportunityBoardCardsForStaff(user: PortalUser): Promi
 
   const customerIds = [...new Set(opportunities.map((o) => o.customerId))];
   const customers = await batchGetCustomerRecordsForStaff(user, customerIds);
+  const accountIds = [...customers.values()]
+    .map((c) => c.accountId?.trim())
+    .filter((id): id is string => Boolean(id));
+  const { batchGetAccountRecordsForStaff, accountCompanyNameFromMaps } = await import(
+    "@/server/firestore/crm-accounts"
+  );
+  const accounts = await batchGetAccountRecordsForStaff(user, accountIds);
 
   const assigneeUids = new Set<string>();
   for (const o of opportunities) {
@@ -147,9 +154,8 @@ export async function listOpportunityBoardCardsForStaff(user: PortalUser): Promi
 
   return opportunities.map((o): OpportunityBoardCard => {
     const customer: CustomerRecord | undefined = customers.get(o.customerId);
-    const company = customer?.company?.trim();
+    const accountCompanyName = accountCompanyNameFromMaps(customer, accounts);
     const person = customer?.name?.trim() ?? "";
-    const accountCompanyName = company || person || "—";
     const leadContactName = person || customer?.email?.trim() || "—";
 
     const assigneeUid = o.createdByUid?.trim() || customer?.createdByUid?.trim();
@@ -244,11 +250,13 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
     return { ok: false, message: "This profile is already a contact." };
   }
 
-  const detailLabel =
-    asString(customerData.company)?.trim() ||
-    asString(customerData.name)?.trim() ||
-    asString(customerData.email)?.trim() ||
-    "Lead";
+  let detailLabelStr = asString(customerData.name)?.trim() || asString(customerData.email)?.trim() || "Lead";
+  const linkedAccountId = asString(customerData.accountId)?.trim();
+  if (linkedAccountId) {
+    const accountSnap = await db.collection(COLLECTIONS.accounts).doc(linkedAccountId).get();
+    const company = asString(accountSnap.data()?.company)?.trim();
+    if (company) detailLabelStr = company;
+  }
 
   let opportunityDocIds: string[] = [];
 
@@ -297,7 +305,7 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
     customerId,
     type: "lead_converted",
     title: "Lead converted to contact",
-    detail: `${detailLabel} — removed from pipeline`,
+    detail: `${detailLabelStr} — removed from pipeline`,
     actorUid: user.uid,
     createdAt: activityAt,
   });
@@ -306,9 +314,9 @@ export async function convertLeadToContact(user: PortalUser, customerId: string)
     actor: user,
     organizationId: user.organizationId ?? asString(customerData.organizationId),
     title: "Lead converted to contact",
-    message: detailLabel,
+    message: detailLabelStr,
     category: "crm",
-    entity: { type: "customer", id: customerId, label: detailLabel },
+    entity: { type: "customer", id: customerId, label: detailLabelStr },
     href: `/admin/customers/${customerId}`,
     idempotencyKey: `customer:converted:${customerId}`,
   });

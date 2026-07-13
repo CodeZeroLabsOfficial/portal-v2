@@ -6,18 +6,7 @@ export function customerToFormDefaults(customer: CustomerRecord): UpdateCustomer
     id: customer.id,
     name: customer.name,
     email: customer.email,
-    company: customer.company ?? "",
-    companyPhone: customer.companyPhone ?? "",
-    companyEmail: customer.companyEmail ?? "",
-    companyWebsite: customer.companyWebsite ?? "",
-    companyAbn: customer.companyAbn ?? "",
-    companyAcn: customer.companyAcn ?? "",
-    companyAddressLine1: customer.companyAddressLine1 ?? "",
-    companyAddressLine2: customer.companyAddressLine2 ?? "",
-    companyCity: customer.companyCity ?? "",
-    companyRegion: customer.companyRegion ?? "",
-    companyPostalCode: customer.companyPostalCode ?? "",
-    companyCountry: customer.companyCountry ?? "",
+    accountId: customer.accountId ?? "",
     phone: customer.phone ?? "",
     addressLine1: customer.addressLine1 ?? "",
     addressLine2: customer.addressLine2 ?? "",
@@ -35,9 +24,7 @@ export type CustomerInlineFieldOverrides = Partial<
     | "name"
     | "email"
     | "phone"
-    | "company"
-    | "companyAbn"
-    | "companyAcn"
+    | "accountId"
     | "addressLine1"
     | "addressLine2"
     | "city"

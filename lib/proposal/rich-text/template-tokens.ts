@@ -17,6 +17,8 @@ import type {
 
 export interface ProposalTokenContext {
   customer: CustomerRecord;
+  /** Linked account company fields for `{{company}}` / `{{acn}}`. */
+  account?: import("@/types/account").AccountRecord | null;
   opportunity?: OpportunityRecord | null;
   /** IANA zone from Settings → Locality (`PortalUser.timeZone`) — drives `{{date}}` calendar day. */
   timeZone?: string;
@@ -47,11 +49,11 @@ function customerAddress(customer: CustomerRecord): string {
 
 /** Replace merge tokens in strings (case-insensitive): `{{client}}`, `{{first_name}}`, `{{email}}`, `{{company}}`, `{{acn}}`, `{{address}}`, `{{opportunity}}`, `{{deal_amount}}`, `{{date}}`. */
 export function replaceProposalTokens(text: string, ctx: ProposalTokenContext): string {
-  const { customer, opportunity } = ctx;
+  const { customer, opportunity, account } = ctx;
   const at = ctx.mergedAt ?? new Date();
   /** Long calendar date at merge time (en-AU wording; optional IANA zone from staff locality). */
   const date = formatProposalMergeDate(at, ctx.timeZone);
-  const company = customer.company?.trim() ?? "";
+  const company = account?.company?.trim() ?? "";
   const oppName = opportunity?.name?.trim() ?? "";
   let dealAmount = "";
   if (opportunity && typeof opportunity.amountMinor === "number") {
@@ -68,7 +70,7 @@ export function replaceProposalTokens(text: string, ctx: ProposalTokenContext): 
     first_name: firstName,
     email: customer.email?.trim() ?? "",
     company,
-    acn: customer.companyAcn?.trim() ?? "",
+    acn: account?.companyAcn?.trim() ?? "",
     address: customerAddress(customer),
     opportunity: oppName,
     deal_amount: dealAmount,

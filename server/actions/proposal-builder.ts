@@ -419,8 +419,16 @@ export async function acceptProposalPublicAction(
         const csnap = await db.collection(COLLECTIONS.customers).doc(proposal.customerId).get();
         if (csnap.exists) {
           const c = csnap.data() as Record<string, unknown>;
-          const company = typeof c.company === "string" ? c.company.trim() : "";
           const name = typeof c.name === "string" ? c.name.trim() : "";
+          let company = "";
+          const accountId = typeof c.accountId === "string" ? c.accountId.trim() : "";
+          if (accountId) {
+            const asnap = await db.collection(COLLECTIONS.accounts).doc(accountId).get();
+            if (asnap.exists) {
+              const a = asnap.data() as Record<string, unknown>;
+              company = typeof a.company === "string" ? a.company.trim() : "";
+            }
+          }
           customerName = company || name || undefined;
         }
       } catch {

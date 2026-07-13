@@ -22,6 +22,7 @@ import { CustomerVaultTab } from "@/components/features/crm/customer/tabs/vault-
 import { openInvoiceCount } from "@/lib/crm/customer-billing-metrics";
 import { convertLeadToContactAction } from "@/server/actions/opportunities-crm";
 import type { CustomerActivityRecord, CustomerNoteRecord, CustomerRecord } from "@/types/customer";
+import type { AccountRecord } from "@/types/account";
 import type { InvoiceRecord } from "@/types/invoice";
 import type { OpportunityRecord } from "@/types/opportunity";
 import type { ProposalRecord } from "@/types/proposal";
@@ -32,6 +33,7 @@ import type { TaskRecord } from "@/types/task";
 
 export interface CustomerDetailViewProps {
   customer: CustomerRecord;
+  account: AccountRecord | null;
   subscriptions: SubscriptionRecord[];
   invoices: InvoiceRecord[];
   proposalsMatched: ProposalRecord[];
@@ -46,6 +48,7 @@ export interface CustomerDetailViewProps {
 
 export function CustomerDetailView({
   customer,
+  account,
   subscriptions,
   invoices,
   proposalsMatched,
@@ -84,6 +87,7 @@ export function CustomerDetailView({
           <div className="space-y-4">
             <CustomerProfileCard
               customer={customer}
+              companyName={account?.company}
               subscriptionCount={subscriptions.length}
               openInvoiceCount={openInvoiceCount(invoices)}
               proposalCount={proposalsMatched.length}
@@ -95,7 +99,7 @@ export function CustomerDetailView({
               convertLeadBusy={convertLeadBusy}
               onConvertLead={() => void convertLead()}
             />
-            <CustomerCompanyDetailsCard customer={customer} />
+            <CustomerCompanyDetailsCard account={account} />
             <CustomerIntegrationsCard customer={customer} activities={activities} />
             <CustomerPortalAccessCard customer={customer} />
           </div>

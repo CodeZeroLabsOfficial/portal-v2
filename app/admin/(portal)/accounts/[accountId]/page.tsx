@@ -8,7 +8,7 @@ import { getAdminAccountDetail } from "@/server/firestore/portal-data";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  params: Promise<{ accountKey: string }>;
+  params: Promise<{ accountId: string }>;
 }
 
 export default async function AdminAccountDetailPage({ params }: PageProps) {
@@ -18,8 +18,8 @@ export default async function AdminAccountDetailPage({ params }: PageProps) {
     redirect("/login?next=/admin/accounts");
   }
 
-  const { accountKey } = await params;
-  const account = await getAdminAccountDetail(user, accountKey);
+  const { accountId } = await params;
+  const account = await getAdminAccountDetail(user, accountId);
   if (!account) {
     notFound();
   }

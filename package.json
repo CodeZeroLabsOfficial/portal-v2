@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:unit": "npx tsx --test 'lib/**/*.test.ts' 'tests/**/*.test.ts'"
+    "test:unit": "npx tsx --test 'lib/**/*.test.ts' 'tests/**/*.test.ts'",
+    "migrate:accounts": "npx tsx scripts/migrate-accounts.ts",
+    "migrate:accounts:dry": "npx tsx scripts/migrate-accounts.ts --dry-run"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

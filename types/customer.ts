@@ -13,21 +13,10 @@ export interface CustomerRecord {
   id: string;
   /** Legacy multi-tenant field — optional; single-tenant CRM does not require it. */
   organizationId?: string;
+  /** Linked company account — `accounts/{accountId}`. */
+  accountId?: string;
   name: string;
   email: string;
-  company?: string;
-  /** Company switchboard / main line (distinct from contact `phone`). */
-  companyPhone?: string;
-  companyEmail?: string;
-  companyWebsite?: string;
-  companyAbn?: string;
-  companyAcn?: string;
-  companyAddressLine1?: string;
-  companyAddressLine2?: string;
-  companyCity?: string;
-  companyRegion?: string;
-  companyPostalCode?: string;
-  companyCountry?: string;
   phone?: string;
   addressLine1?: string;
   addressLine2?: string;
@@ -45,11 +34,6 @@ export interface CustomerRecord {
   avatarUrl?: string;
   /** Defaults to `contact` when absent in Firestore (existing rows). */
   crmType: CustomerCrmType;
-  /**
-   * When true the row only carries company-level information used by the Accounts directory and
-   * is hidden from the Customers directory. Contacts are not stored on these documents.
-   */
-  accountOnly?: boolean;
   status: CustomerLifecycleStatus;
   /** Epoch millis — Firestore `createdAt` (Timestamp or number). */
   createdAt: number;

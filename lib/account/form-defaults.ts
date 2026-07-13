@@ -1,13 +1,10 @@
 import type { UpdateAccountFormInput } from "@/lib/schemas/account";
-import type { AccountDetailAggregate } from "@/server/firestore/crm-customers";
+import type { AccountRecord } from "@/types/account";
 
-export function accountToFormDefaults(
-  account: AccountDetailAggregate,
-  accountKey: string,
-): UpdateAccountFormInput {
+export function accountToFormDefaults(account: AccountRecord): UpdateAccountFormInput {
   return {
-    accountKey,
-    company: account.displayName,
+    id: account.id,
+    company: account.company,
     companyPhone: account.companyPhone ?? "",
     companyEmail: account.companyEmail ?? "",
     companyWebsite: account.companyWebsite ?? "",
@@ -41,13 +38,12 @@ export type AccountInlineFieldOverrides = Partial<
 >;
 
 export function buildAccountUpdatePayload(
-  account: AccountDetailAggregate,
-  accountKey: string,
+  account: AccountRecord,
   overrides: AccountInlineFieldOverrides = {},
 ): UpdateAccountFormInput {
   return {
-    ...accountToFormDefaults(account, accountKey),
+    ...accountToFormDefaults(account),
     ...overrides,
-    accountKey,
+    id: account.id,
   };
 }

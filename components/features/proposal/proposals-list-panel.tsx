@@ -11,7 +11,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Loader2, MoreHorizontal, FileText } from "lucide-react";
+import { Copy, ExternalLink, FileText, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -326,18 +326,26 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
                 {canOpenPublic && publicUrl ? (
                   <DropdownMenuItem asChild>
                     <Link href={publicUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink aria-hidden />
                       Open
                     </Link>
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem asChild>
-                  <Link href={editHref}>Edit</Link>
+                  <Link href={editHref}>
+                    <Pencil aria-hidden />
+                    Edit
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void handleClone(proposal)}>Clone</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleClone(proposal)}>
+                  <Copy aria-hidden />
+                  Clone
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
+                  variant="destructive"
                   onSelect={() => handleDelete(proposal)}>
+                  <Trash2 aria-hidden />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
