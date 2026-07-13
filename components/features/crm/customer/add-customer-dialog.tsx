@@ -77,7 +77,7 @@ const EMPTY_CONTACT: ContactStepValues = {
   region: "",
   postalCode: "",
   country: "",
-  saveAsLead: false,
+  saveAsLead: true,
 };
 
 const STEPS = [
@@ -128,11 +128,15 @@ export function AddCustomerDialog({
   const accountForm = useForm<CreateAccountFormInput>({
     resolver: zodResolver(createAccountFormSchema),
     defaultValues: EMPTY_ACCOUNT,
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   const contactForm = useForm<ContactStepValues>({
     resolver: zodResolver(contactStepSchema) as Resolver<ContactStepValues>,
     defaultValues: EMPTY_CONTACT,
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   React.useEffect(() => {
@@ -166,7 +170,7 @@ export function AddCustomerDialog({
 
   React.useEffect(() => {
     contactForm.setValue("name", combineCustomerName(firstName, lastName), {
-      shouldValidate: true,
+      shouldValidate: false,
       shouldDirty: false,
     });
   }, [firstName, lastName, contactForm]);
