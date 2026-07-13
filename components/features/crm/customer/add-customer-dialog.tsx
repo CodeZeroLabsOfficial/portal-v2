@@ -129,14 +129,14 @@ export function AddCustomerDialog({
     resolver: zodResolver(createAccountFormSchema),
     defaultValues: EMPTY_ACCOUNT,
     mode: "onSubmit",
-    reValidateMode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
   const contactForm = useForm<ContactStepValues>({
     resolver: zodResolver(contactStepSchema) as Resolver<ContactStepValues>,
     defaultValues: EMPTY_CONTACT,
     mode: "onSubmit",
-    reValidateMode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
   React.useEffect(() => {
@@ -152,28 +152,27 @@ export function AddCustomerDialog({
   }, [open]);
 
   React.useEffect(() => {
-    if (!open) {
-      setStep(0);
-      setServerError(null);
-      setSubmitting(false);
-      setAccountMode(initialAccountId ? "existing" : "new");
-      setSelectedAccountId(initialAccountId?.trim() ?? "");
-      setFirstName("");
-      setLastName("");
-      accountForm.reset(EMPTY_ACCOUNT);
-      contactForm.reset(EMPTY_CONTACT);
-      return;
-    }
+    if (!open) return;
+    setStep(0);
+    setServerError(null);
+    setSubmitting(false);
     setAccountMode(initialAccountId ? "existing" : "new");
     setSelectedAccountId(initialAccountId?.trim() ?? "");
+    setFirstName("");
+    setLastName("");
+    accountForm.reset(EMPTY_ACCOUNT);
+    contactForm.reset(EMPTY_CONTACT);
   }, [open, initialAccountId, accountForm, contactForm]);
+
+  const contactSubmitted = contactForm.formState.isSubmitted;
 
   React.useEffect(() => {
     contactForm.setValue("name", combineCustomerName(firstName, lastName), {
-      shouldValidate: false,
+      // Revalidate after Create so fixing first/last clears “Name is required”.
+      shouldValidate: contactSubmitted,
       shouldDirty: false,
     });
-  }, [firstName, lastName, contactForm]);
+  }, [firstName, lastName, contactForm, contactSubmitted]);
 
   const selectedAccount = React.useMemo(
     () => accounts.find((a) => a.id === selectedAccountId) ?? null,
@@ -209,11 +208,13 @@ export function AddCustomerDialog({
         setServerError("Select an account, or choose Create new.");
         return;
       }
+      contactForm.clearErrors();
       setStep(1);
       return;
     }
     const valid = await accountForm.trigger();
     if (!valid) return;
+    contactForm.clearErrors();
     setStep(1);
   }
 
@@ -362,7 +363,13 @@ export function AddCustomerDialog({
           ) : (
             <form
               id="add-customer-contact-form"
-              onSubmit={contactForm.handleSubmit(handleCreate)}
+              onSubmit={(e) => {
+                contactForm.setValue("name", combineCustomerName(firstName, lastName), {
+                  shouldValidate: false,
+                  shouldDirty: false,
+                });
+                void contactForm.handleSubmit(handleCreate)(e);
+              }}
               className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
               noValidate>
               <div>
@@ -384,7 +391,7 @@ export function AddCustomerDialog({
                       <Label htmlFor="add-customer-first-name">First name</Label>
                       <div
                         className={
-                          contactForm.formState.errors.name
+                          contactSubmitted && contactForm.formState.errors.name
                             ? "flex overflow-hidden rounded-md border border-destructive"
                             : "flex overflow-hidden rounded-md border"
                         }>
@@ -409,7 +416,9 @@ export function AddCustomerDialog({
                           placeholder="John"
                           value={firstName}
                           disabled={busy}
-                          aria-invalid={Boolean(contactForm.formState.errors.name)}
+                          aria-invalid={
+                            contactSubmitted && Boolean(contactForm.formState.errors.name)
+                          }
                           onChange={(e) => setFirstName(e.target.value)}
                         />
                       </div>
@@ -422,11 +431,13 @@ export function AddCustomerDialog({
                         placeholder="Smith"
                         value={lastName}
                         disabled={busy}
-                        aria-invalid={Boolean(contactForm.formState.errors.name)}
+                        aria-invalid={
+                          contactSubmitted && Boolean(contactForm.formState.errors.name)
+                        }
                         onChange={(e) => setLastName(e.target.value)}
                       />
                     </div>
-                    {contactForm.formState.errors.name ? (
+                    {contactSubmitted && contactForm.formState.errors.name ? (
                       <p
                         aria-live="polite"
                         role="alert"
@@ -443,10 +454,12 @@ export function AddCustomerDialog({
                         type="email"
                         autoComplete="email"
                         disabled={busy}
-                        aria-invalid={Boolean(contactForm.formState.errors.email)}
+                        aria-invalid={
+                          contactSubmitted && Boolean(contactForm.formState.errors.email)
+                        }
                         {...contactForm.register("email")}
                       />
-                      {contactForm.formState.errors.email ? (
+                      {contactSubmitted && contactForm.formState.errors.email ? (
                         <p aria-live="polite" role="alert" className="text-destructive mt-2 text-xs">
                           {contactForm.formState.errors.email.message}
                         </p>
