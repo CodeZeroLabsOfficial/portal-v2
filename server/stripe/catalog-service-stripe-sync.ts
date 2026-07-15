@@ -41,16 +41,8 @@ function termNeedsNewPrice(
 }
 
 /** Stripe Price nickname — not the catalogue description (that belongs on the Product only). */
-function priceNickname(
-  serviceName: string,
-  term: CatalogServiceTerm,
-  billingType: "recurring" | "one_off",
-): string {
-  const label = serviceName.trim() || "Service";
-  if (term.months === 12) return `${label} · 12 month term`;
-  if (term.months === 24) return `${label} · 24 month term`;
-  if (billingType === "one_off") return `${label} · one-off`;
-  return `${label} · monthly`;
+function priceNickname(serviceName: string): string {
+  return serviceName.trim() || "Service";
 }
 
 /**
@@ -146,7 +138,7 @@ export async function syncCatalogServiceToStripe(
         product: productId,
         currency,
         unit_amount: term.monthlyAmountMinor,
-        nickname: priceNickname(serviceName, term, billingType),
+        nickname: priceNickname(serviceName),
         lookup_key: lookupKey,
         transfer_lookup_key: true,
         metadata: {
