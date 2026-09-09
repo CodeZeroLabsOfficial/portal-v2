@@ -88,21 +88,67 @@ function getActiveHeading(editor: Editor): HeadingOption {
   return HEADING_OPTIONS[4];
 }
 
+/**
+ * Empty caret only updates stored marks — expand to the parent textblock so size/family
+ * (and heading font-size clears) apply to the visible text, then restore the caret.
+ */
+function textblockContentRange(editor: Editor): { from: number; to: number; caret: number } | null {
+  const { empty, $from } = editor.state.selection;
+  if (!empty || !$from.parent.isTextblock || $from.parent.content.size === 0) return null;
+  return { from: $from.start(), to: $from.end(), caret: $from.pos };
+}
+
+function clampFontSizePx(n: number) {
+  return Math.max(8, Math.min(120, Math.round(n)));
+}
+
+function applyFontSizePx(editor: Editor, px: number) {
+  const size = `${clampFontSizePx(px)}px`;
+  const range = textblockContentRange(editor);
+  if (range) {
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({ from: range.from, to: range.to })
+      .setFontSize(size)
+      .setTextSelection(range.caret)
+      .run();
+    return;
+  }
+  editor.chain().focus().setFontSize(size).run();
+}
+
 function applyHeadingOption(editor: Editor, opt: HeadingOption) {
-  const c = editor.chain().focus();
+  const { empty, from: selFrom, to: selTo, $from } = editor.state.selection;
+  let chain = editor.chain().focus();
+
+  // Clear inline font-size on the whole textblock so heading CSS sizes are visible.
+  if ($from.parent.isTextblock && $from.parent.content.size > 0) {
+    chain = chain
+      .setTextSelection({ from: $from.start(), to: $from.end() })
+      .unsetFontSize();
+    chain = empty
+      ? chain.setTextSelection(selFrom)
+      : chain.setTextSelection({ from: selFrom, to: selTo });
+  } else {
+    chain = chain.unsetFontSize();
+  }
+
   if (opt.value === "p") {
-    c.setParagraph().run();
-    return;
-  }
-  if (opt.value === "blockquote") {
-    if (editor.isActive("blockquote")) {
-      c.toggleBlockquote().run();
-    } else {
-      c.setParagraph().toggleBlockquote().run();
+    chain = chain.setParagraph();
+  } else if (opt.value === "blockquote") {
+    if (!editor.isActive("blockquote")) {
+      chain = editor.isActive("heading")
+        ? chain.setParagraph().toggleBlockquote()
+        : chain.toggleBlockquote();
     }
-    return;
+  } else {
+    chain = chain.setHeading({
+      level: Number(opt.value.slice(1)) as 1 | 2 | 3 | 4,
+    });
   }
-  c.toggleHeading({ level: Number(opt.value.slice(1)) as 1 | 2 | 3 | 4 }).run();
+
+  chain.run();
 }
 
 const ALIGN_OPTIONS: { value: "left" | "center" | "right"; icon: typeof AlignLeft; label: string }[] = [
@@ -262,7 +308,11 @@ function HeadingPicker({ editor }: { editor: Editor }) {
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const panelStyle = useFixedToolbarMenuPosition(open, triggerRef, panelRef, { align: "start" });
-  const active = getActiveHeading(editor);
+  const { activeValue } = useEditorState({
+    editor,
+    selector: (snap) => ({ activeValue: getActiveHeading(snap.editor).value }),
+  });
+  const active = HEADING_OPTIONS.find((o) => o.value === activeValue) ?? HEADING_OPTIONS[4];
   useCloseBubbleToolbarMenu(open, setOpen, triggerRef, [panelRef]);
 
   const panel =
@@ -379,11 +429,18 @@ function FontFamilyPicker({
             style={preview ? { fontFamily: preview } : undefined}
             onPointerDown={(e) => e.preventDefault()}
             onClick={() => {
-              if (!opt.value) {
-                editor.chain().focus().unsetFontFamily().run();
-              } else {
-                editor.chain().focus().setFontFamily(opt.value).run();
+              const range = textblockContentRange(editor);
+              let chain = editor.chain().focus();
+              if (range) {
+                chain = chain.setTextSelection({ from: range.from, to: range.to });
               }
+              chain = opt.value
+                ? chain.setFontFamily(opt.value)
+                : chain.unsetFontFamily();
+              if (range) {
+                chain = chain.setTextSelection(range.caret);
+              }
+              chain.run();
               setOpen(false);
             }}
           >
@@ -463,9 +520,8 @@ function FontFamilyPicker({
 }
 
 /**
- * Effective (rendered) font size in px at the selection, read from the DOM. Reflects the size the
- * user actually sees — including heading-level and inherited CSS sizes that carry no inline
- * `fontSize` mark — so the control isn't stuck on a hard-coded default. Returns null off the DOM.
+ * Fallback size from computed CSS when no `textStyle.fontSize` mark is set (body / heading scale).
+ * Prefer walking from the caret into a styled ancestor so child spans win over the block element.
  */
 function readSelectionFontSizePx(editor: Editor): number | null {
   if (typeof window === "undefined") return null;
@@ -474,9 +530,22 @@ function readSelectionFontSizePx(editor: Editor): number | null {
     const { empty, from } = state.selection;
     const pos = empty ? state.selection.$head.pos : from;
     const { node } = view.domAtPos(Math.max(1, pos));
-    const el = node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
-    if (!el) return null;
-    const px = Number.parseFloat(window.getComputedStyle(el).fontSize);
+    let el: HTMLElement | null =
+      node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
+    while (el && el !== view.dom) {
+      const inline = el.style?.fontSize?.trim();
+      if (inline) {
+        const px = Number.parseFloat(inline);
+        if (Number.isFinite(px)) return Math.round(px);
+      }
+      el = el.parentElement;
+    }
+    const fallback =
+      node.nodeType === Node.ELEMENT_NODE
+        ? (node as HTMLElement)
+        : (node.parentElement as HTMLElement | null);
+    if (!fallback) return null;
+    const px = Number.parseFloat(window.getComputedStyle(fallback).fontSize);
     return Number.isFinite(px) ? Math.round(px) : null;
   } catch {
     return null;
@@ -492,13 +561,8 @@ function FontSizeControl({ editor }: { editor: Editor }) {
       effectivePx: readSelectionFontSizePx(snap.editor),
     }),
   });
-  const value = effectivePx ?? parseRichTextFontSizePx(fontSizeRaw) ?? 16;
-  function clamp(n: number) {
-    return Math.max(8, Math.min(120, Math.round(n)));
-  }
-  function set(next: number) {
-    editor.chain().focus().setFontSize(`${clamp(next)}px`).run();
-  }
+  // Mark wins over DOM so steppers don't re-apply the CSS size after setFontSize.
+  const value = parseRichTextFontSizePx(fontSizeRaw) ?? effectivePx ?? 16;
   return (
     <div
       className={cn(
@@ -517,7 +581,7 @@ function FontSizeControl({ editor }: { editor: Editor }) {
         value={value}
         onChange={(e) => {
           const n = Number(e.target.value);
-          if (Number.isFinite(n) && n > 0) set(n);
+          if (Number.isFinite(n) && n > 0) applyFontSizePx(editor, n);
         }}
         className={cn(
           "w-10 rounded bg-transparent px-1 py-0.5 text-center text-sm tabular-nums outline-none",
@@ -531,7 +595,7 @@ function FontSizeControl({ editor }: { editor: Editor }) {
         <button
           type="button"
           onPointerDown={(e) => e.preventDefault()}
-          onClick={() => set(value + 1)}
+          onClick={() => applyFontSizePx(editor, value + 1)}
           aria-label="Increase font size"
           className={proposalToolbarBubbleStepperButtonClasses(appearance)}
         >
@@ -540,7 +604,7 @@ function FontSizeControl({ editor }: { editor: Editor }) {
         <button
           type="button"
           onPointerDown={(e) => e.preventDefault()}
-          onClick={() => set(value - 1)}
+          onClick={() => applyFontSizePx(editor, value - 1)}
           aria-label="Decrease font size"
           className={proposalToolbarBubbleStepperButtonClasses(appearance)}
         >
