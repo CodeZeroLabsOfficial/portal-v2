@@ -310,7 +310,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
         title="Services"
         description="Products and pricing for proposals and billing"
         actions={
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button onClick={() => setAddOpen(true)}>
             <Plus />
             Add service
           </Button>

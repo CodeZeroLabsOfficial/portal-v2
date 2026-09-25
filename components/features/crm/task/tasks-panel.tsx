@@ -74,7 +74,7 @@ export function TasksPanel({
             }
             onClick={() => setAddOpen(true)}>
             <Plus />
-            <span className="hidden lg:inline">Add task</span>
+            Add task
           </Button>
         }
       />

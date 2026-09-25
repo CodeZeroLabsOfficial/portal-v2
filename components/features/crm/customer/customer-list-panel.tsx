@@ -289,7 +289,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         title="Customers"
         description="Leads and contacts across your pipeline"
         actions={
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button onClick={() => setAddOpen(true)}>
             <Plus />
             Add customer
           </Button>

@@ -280,7 +280,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         title="Accounts"
         description="Companies and organizations you work with"
         actions={
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button onClick={() => setAddOpen(true)}>
             <Plus />
             Add account
           </Button>

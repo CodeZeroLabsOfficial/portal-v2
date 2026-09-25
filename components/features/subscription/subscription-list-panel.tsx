@@ -489,7 +489,7 @@ export function SubscriptionListPanel({
         title="Subscriptions"
         description="Recurring plans and billing status across customer accounts"
         actions={
-          <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Button onClick={() => setAddOpen(true)}>
             <Plus className="size-4" aria-hidden />
             Add subscription
           </Button>

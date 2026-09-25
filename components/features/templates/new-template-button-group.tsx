@@ -53,7 +53,6 @@ export function NewTemplateButtonGroup({ defaultKind }: NewTemplateButtonGroupPr
     <ButtonGroup>
       <Button
         type="button"
-        size="sm"
         disabled={isBusy}
         onClick={() => void handleCreate(defaultKind)}>
         {isBusy ? <Loader2 className="size-4 animate-spin" /> : <Plus />}
@@ -63,7 +62,6 @@ export function NewTemplateButtonGroup({ defaultKind }: NewTemplateButtonGroupPr
         <PopoverTrigger asChild>
           <Button
             type="button"
-            size="sm"
             disabled={isBusy}
             aria-label="Choose template type">
             <ChevronDown className="size-4" aria-hidden />
