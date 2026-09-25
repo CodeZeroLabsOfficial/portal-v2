@@ -10,7 +10,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
@@ -21,7 +20,6 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -31,7 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import type { AccountListRow } from "@/lib/account/list";
 import {
@@ -49,51 +46,6 @@ function contactCountForRow(row: AccountListRow): number {
   return (hasPrimary ? 1 : 0) + row.additionalContactCount;
 }
 
-function AccountToolbar({
-  table,
-  onBulkDelete,
-  bulkDeleteDisabled,
-}: {
-  table: Table<AccountListRow>;
-  onBulkDelete: () => void;
-  bulkDeleteDisabled: boolean;
-}) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search company, contact, address, email…"
-          value={(table.getColumn("displayName")?.getFilterValue() as string) ?? ""}
-          onChange={(e) => table.getColumn("displayName")?.setFilterValue(e.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {isFiltered && (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={bulkDeleteDisabled}
-            onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        ) : null}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
-  );
-}
-
 export function AccountListPanel({ rows }: AccountListPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = React.useState(false);
@@ -104,7 +56,6 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
-  const tableRef = React.useRef<Table<AccountListRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -144,9 +95,7 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
     setConfirmOpen(true);
   }
 
-  function handleBulkDelete() {
-    const table = tableRef.current;
-    if (!table) return;
+  function handleBulkDelete(table: Table<AccountListRow>) {
     const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original);
     if (selected.length === 0) return;
     setConfirmMeta({
@@ -349,15 +298,14 @@ export function AccountListPanel({ rows }: AccountListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No accounts yet. Add an account to get started."
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <AccountToolbar
-              table={table}
-              onBulkDelete={handleBulkDelete}
-              bulkDeleteDisabled={bulkBusy}
-            />
-          );
+        search={{
+          columnId: "displayName",
+          placeholder: "Search company, contact, address, email…"
+        }}
+        bulkAction={{
+          label: (count) => `Delete (${count})`,
+          disabled: bulkBusy,
+          onAction: handleBulkDelete
         }}
       />
       <ConfirmDialog

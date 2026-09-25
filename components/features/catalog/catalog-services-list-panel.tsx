@@ -3,15 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, MoreHorizontal, Plus, Trash2, X } from "lucide-react";
+import { Loader2, MoreHorizontal, Plus } from "lucide-react";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
 import { AddCatalogServiceDialog } from "@/components/features/catalog/add-catalog-service-dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
-import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { catalogCategoryLabel } from "@/lib/catalog/categories";
 import { catalogPricingLabel, formatCatalogTableDate } from "@/lib/catalog/display";
@@ -42,76 +39,16 @@ interface CatalogServicesListPanelProps {
   services: CatalogServiceRecord[];
 }
 
-function CatalogServicesToolbar({
-  table,
-  onBulkDelete,
-  bulkDeleteDisabled,
-  categoryOptions,
-}: {
-  table: Table<CatalogServiceRecord>;
-  onBulkDelete: () => void;
-  bulkDeleteDisabled: boolean;
-  categoryOptions: { label: string; value: string }[];
-}) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
+const CATALOG_STATUS_FILTER_OPTIONS = [
+  { label: "Active", value: "active" },
+  { label: "Draft", value: "draft" },
+  { label: "Archived", value: "archived" }
+];
 
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search name, slug, Stripe id…"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={[
-              { label: "Active", value: "active" },
-              { label: "Draft", value: "draft" },
-              { label: "Archived", value: "archived" }
-            ]}
-          />
-        )}
-        {table.getColumn("serviceType") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("serviceType")}
-            title="Type"
-            options={[
-              { label: "Plan", value: "plan" },
-              { label: "Add-on", value: "addon" }
-            ]}
-          />
-        )}
-        {table.getColumn("category") && categoryOptions.length > 0 && (
-          <DataTableFacetedFilter
-            column={table.getColumn("category")}
-            title="Category"
-            options={categoryOptions}
-          />
-        )}
-        {isFiltered && (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
-          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        )}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
-  );
-}
+const CATALOG_TYPE_FILTER_OPTIONS = [
+  { label: "Plan", value: "plan" },
+  { label: "Add-on", value: "addon" }
+];
 
 export function CatalogServicesListPanel({ services }: CatalogServicesListPanelProps) {
   const router = useRouter();
@@ -131,7 +68,6 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
     confirmLabel: "Continue",
     destructive: false
   });
-  const tableRef = React.useRef<Table<CatalogServiceRecord> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -187,9 +123,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
     });
   }
 
-  function handleBulkDelete() {
-    const table = tableRef.current;
-    if (!table) return;
+  function handleBulkDelete(table: Table<CatalogServiceRecord>) {
     const ids = table.getFilteredSelectedRowModel().rows.map((r) => r.original.id);
     if (ids.length === 0) return;
     openConfirm({
@@ -398,16 +332,18 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
         columns={columns}
         data={services}
         emptyMessage="No services yet. Add your first service to get started."
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <CatalogServicesToolbar
-              table={table}
-              onBulkDelete={() => handleBulkDelete()}
-              bulkDeleteDisabled={bulkBusy}
-              categoryOptions={categoryOptions}
-            />
-          );
+        search={{ columnId: "name", placeholder: "Search name, slug, Stripe id…" }}
+        filters={[
+          { columnId: "status", title: "Status", options: CATALOG_STATUS_FILTER_OPTIONS },
+          { columnId: "serviceType", title: "Type", options: CATALOG_TYPE_FILTER_OPTIONS },
+          ...(categoryOptions.length > 0
+            ? [{ columnId: "category", title: "Category", options: categoryOptions }]
+            : [])
+        ]}
+        bulkAction={{
+          label: (count) => `Delete (${count})`,
+          disabled: bulkBusy,
+          onAction: handleBulkDelete
         }}
       />
     </div>

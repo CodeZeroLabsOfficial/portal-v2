@@ -7,12 +7,11 @@ import type { DateRange } from "react-day-picker";
 import { Ban, ExternalLink, MoreHorizontal, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 
-import { CustomerSubscriptionTableToolbar } from "@/components/features/crm/customer/customer-subscription-table-toolbar";
+import CalendarDateRangePicker from "@/components/custom-date-range-picker";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +22,7 @@ import {
 import { formatCurrencyAmount } from "@/lib/common/format";
 import {
   mapSubscriptionsToTableRows,
+  SUBSCRIPTION_STATUS_FILTER_OPTIONS,
   subscriptionInDateRange,
   type SubscriptionTableRow
 } from "@/lib/crm/subscription-table";
@@ -135,7 +135,7 @@ export function CustomerSubscriptionsTab({
         accessorKey: "searchLabel",
         header: () => null,
         cell: () => null,
-        enableHiding: true
+        enableHiding: false
       },
       {
         id: "product",
@@ -279,26 +279,33 @@ export function CustomerSubscriptionsTab({
         }}
       />
 
-      <Card className="min-w-0 py-0">
-        <CardContent className="space-y-2 px-6 pb-4 pt-4">
-          <DataTable
-            columns={columns}
-            data={tableRows}
-            tableClassName="table-fixed"
-            initialPageSize={10}
-            initialSorting={[{ id: "renews", desc: true }]}
-            initialColumnVisibility={{ searchLabel: false }}
-            emptyMessage="No subscriptions for this customer."
-            toolbar={(table) => (
-              <CustomerSubscriptionTableToolbar
-                table={table}
-                dateRange={dateRange}
-                onDateRangeChange={setDateRange}
-              />
-            )}
+      <DataTable
+        columns={columns}
+        data={tableRows}
+        tableClassName="table-fixed"
+        initialPageSize={10}
+        initialSorting={[{ id: "renews", desc: true }]}
+        initialColumnVisibility={{ searchLabel: false }}
+        emptyMessage="No subscriptions for this customer."
+        search={{ columnId: "searchLabel", placeholder: "Search subscriptions…" }}
+        filters={[
+          {
+            columnId: "status",
+            title: "Status",
+            options: SUBSCRIPTION_STATUS_FILTER_OPTIONS
+          }
+        ]}
+        toolbarEnd={
+          <CalendarDateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            compact
+            className="shrink-0"
           />
-        </CardContent>
-      </Card>
+        }
+        externalFiltersActive={Boolean(dateRange?.from)}
+        onResetFilters={() => setDateRange(undefined)}
+      />
     </div>
   );
 }

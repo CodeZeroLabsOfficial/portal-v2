@@ -17,8 +17,6 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
-import { DataTableBulkToolbar } from "@/components/shared/data-table/data-table-bulk-toolbar";
-import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +28,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import { formatLastEditedInLocality } from "@/lib/proposal/public/locality-dates";
 import {
@@ -70,41 +67,6 @@ function mapToTableRows(rows: ProposalHubListRow[]): ProposalListTableRow[] {
   }));
 }
 
-function ProposalsListToolbar({
-  table,
-  onBulkDelete,
-  bulkDeleteDisabled,
-}: {
-  table: Table<ProposalListTableRow>;
-  onBulkDelete: () => void;
-  bulkDeleteDisabled: boolean;
-}) {
-  return (
-    <DataTableBulkToolbar
-      table={table}
-      onBulkDelete={onBulkDelete}
-      bulkDeleteDisabled={bulkDeleteDisabled}
-      filters={
-        <>
-          <Input
-            placeholder="Search title, account, contact…"
-            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn("title")?.setFilterValue(event.target.value)}
-            className="h-8 w-full sm:max-w-xs"
-          />
-          {table.getColumn("stageKey") ? (
-            <DataTableFacetedFilter
-              column={table.getColumn("stageKey")}
-              title="Status"
-              options={PROPOSAL_STAGE_FILTER_OPTIONS}
-            />
-          ) : null}
-        </>
-      }
-    />
-  );
-}
-
 export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPanelProps) {
   const router = useRouter();
   const [pendingId, setPendingId] = React.useState<string | null>(null);
@@ -117,7 +79,6 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
     destructive: false
   });
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
-  const tableRef = React.useRef<Table<ProposalListTableRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -178,9 +139,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
     });
   }
 
-  function handleBulkDelete() {
-    const table = tableRef.current;
-    if (!table) return;
+  function handleBulkDelete(table: Table<ProposalListTableRow>) {
     const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original);
     if (selected.length === 0) return;
     openConfirm({
@@ -395,15 +354,14 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
             "No proposals match your filters."
           )
         }
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <ProposalsListToolbar
-              table={table}
-              onBulkDelete={handleBulkDelete}
-              bulkDeleteDisabled={bulkBusy}
-            />
-          );
+        search={{ columnId: "title", placeholder: "Search title, account, contact…" }}
+        filters={[
+          { columnId: "stageKey", title: "Status", options: PROPOSAL_STAGE_FILTER_OPTIONS }
+        ]}
+        bulkAction={{
+          label: (count) => `Delete (${count})`,
+          disabled: bulkBusy,
+          onAction: handleBulkDelete
         }}
       />
     </div>

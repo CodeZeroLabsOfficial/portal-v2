@@ -11,8 +11,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
-  Trash2,
-  X
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnDef, Table } from "@tanstack/react-table";
@@ -24,8 +23,6 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
-import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -35,7 +32,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   customerCrmTypeBadgeDisplay,
   customerStatusBadgeDisplay,
@@ -54,66 +50,15 @@ interface CustomerListPanelProps {
   rows: CustomerListRow[];
 }
 
-function CustomerToolbar({
-  table,
-  onBulkDelete,
-  bulkDeleteDisabled
-}: {
-  table: Table<CustomerListRow>;
-  onBulkDelete: () => void;
-  bulkDeleteDisabled: boolean;
-}) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
+const CUSTOMER_STATUS_FILTER_OPTIONS = [
+  { label: "Active", value: "active" },
+  { label: "Archived", value: "archived" }
+];
 
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search name, email, company, tags…"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={[
-              { label: "Active", value: "active" },
-              { label: "Archived", value: "archived" }
-            ]}
-          />
-        )}
-        {table.getColumn("crmType") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("crmType")}
-            title="Type"
-            options={[
-              { label: "Lead", value: "lead" },
-              { label: "Contact", value: "contact" }
-            ]}
-          />
-        )}
-        {isFiltered && (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
-          <Button variant="destructive" size="sm" disabled={bulkDeleteDisabled} onClick={onBulkDelete}>
-            <Trash2 />
-            Delete ({selectedCount})
-          </Button>
-        )}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
-  );
-}
+const CUSTOMER_TYPE_FILTER_OPTIONS = [
+  { label: "Lead", value: "lead" },
+  { label: "Contact", value: "contact" }
+];
 
 export function CustomerListPanel({ rows }: CustomerListPanelProps) {
   const router = useRouter();
@@ -125,7 +70,6 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
-  const tableRef = React.useRef<Table<CustomerListRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -165,9 +109,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
     setConfirmOpen(true);
   }
 
-  async function handleBulkDelete() {
-    const table = tableRef.current;
-    if (!table) return;
+  async function handleBulkDelete(table: Table<CustomerListRow>) {
     const ids = table.getFilteredSelectedRowModel().rows.map((r) => r.original.id);
     if (ids.length === 0) return;
     setConfirmMeta({
@@ -376,15 +318,15 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No customers yet. Add your first customer to get started."
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <CustomerToolbar
-              table={table}
-              onBulkDelete={() => void handleBulkDelete()}
-              bulkDeleteDisabled={bulkBusy}
-            />
-          );
+        search={{ columnId: "name", placeholder: "Search name, email, company, tags…" }}
+        filters={[
+          { columnId: "status", title: "Status", options: CUSTOMER_STATUS_FILTER_OPTIONS },
+          { columnId: "crmType", title: "Type", options: CUSTOMER_TYPE_FILTER_OPTIONS }
+        ]}
+        bulkAction={{
+          label: (count) => `Delete (${count})`,
+          disabled: bulkBusy,
+          onAction: (table) => void handleBulkDelete(table)
         }}
       />
     </div>

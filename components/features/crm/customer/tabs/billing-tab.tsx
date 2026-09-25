@@ -6,7 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { DateRange } from "react-day-picker";
 import { Download } from "lucide-react";
 
-import { CustomerInvoiceTableToolbar } from "@/components/features/crm/customer/customer-invoice-table-toolbar";
+import CalendarDateRangePicker from "@/components/custom-date-range-picker";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { formatCurrencyAmount } from "@/lib/common/format";
 import { customerBillingMetrics } from "@/lib/crm/customer-billing-metrics";
 import { invoiceStatusBadgeDisplay } from "@/lib/crm/invoice-status-badge";
 import {
+  INVOICE_STATUS_FILTER_OPTIONS,
   invoiceInDateRange,
   mapInvoicesToTableRows,
   multiSelectColumnFilter,
@@ -43,7 +44,7 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
         accessorKey: "searchLabel",
         header: () => null,
         cell: () => null,
-        enableHiding: true
+        enableHiding: false
       },
       {
         id: "issued",
@@ -178,26 +179,29 @@ export function CustomerBillingTab({ customer, invoices }: CustomerBillingTabPro
         </Card>
       </div>
 
-      <Card className="min-w-0 py-0">
-        <CardContent className="space-y-2 px-6 pb-4 pt-4">
-          <DataTable
-            columns={columns}
-            data={tableRows}
-            tableClassName="table-fixed"
-            initialPageSize={10}
-            initialSorting={[{ id: "issued", desc: true }]}
-            initialColumnVisibility={{ searchLabel: false }}
-            emptyMessage="No invoices for this customer."
-            toolbar={(table) => (
-              <CustomerInvoiceTableToolbar
-                table={table}
-                dateRange={dateRange}
-                onDateRangeChange={setDateRange}
-              />
-            )}
+      <DataTable
+        columns={columns}
+        data={tableRows}
+        tableClassName="table-fixed"
+        initialPageSize={10}
+        initialSorting={[{ id: "issued", desc: true }]}
+        initialColumnVisibility={{ searchLabel: false }}
+        emptyMessage="No invoices for this customer."
+        search={{ columnId: "searchLabel", placeholder: "Search invoices…" }}
+        filters={[
+          { columnId: "status", title: "Status", options: INVOICE_STATUS_FILTER_OPTIONS }
+        ]}
+        toolbarEnd={
+          <CalendarDateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            compact
+            className="shrink-0"
           />
-        </CardContent>
-      </Card>
+        }
+        externalFiltersActive={Boolean(dateRange?.from)}
+        onResetFilters={() => setDateRange(undefined)}
+      />
     </div>
   );
 }

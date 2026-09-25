@@ -4,15 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef, Table } from "@tanstack/react-table";
-import { Ban, ExternalLink, MoreHorizontal, Pause, Play, Plus, X } from "lucide-react";
+import { Ban, ExternalLink, MoreHorizontal, Pause, Play, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddSubscriptionDialog } from "@/components/features/subscription/add-subscription-dialog";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
-import { DataTableFacetedFilter } from "@/components/shared/data-table/data-table-faceted-filter";
-import { DataTableViewOptions } from "@/components/shared/data-table/data-table-view-options";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import type { SubscriptionListRow } from "@/lib/crm/subscription-list";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
@@ -152,70 +149,6 @@ function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[]
   });
 }
 
-function SubscriptionListToolbar({
-  table,
-  productOptions,
-  onBulkCancel,
-  bulkCancelDisabled
-}: {
-  table: Table<SubscriptionListTableRow>;
-  productOptions: { value: string; label: string }[];
-  onBulkCancel: () => void;
-  bulkCancelDisabled: boolean;
-}) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-  const cancelableCount = table
-    .getFilteredSelectedRowModel()
-    .rows.filter((r) => canCancelSubscription(r.original.subscription)).length;
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search account, product, status, collection method…"
-          value={(table.getColumn("accountName")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("accountName")?.setFilterValue(event.target.value)}
-          className="h-8 w-full sm:max-w-xs"
-        />
-        {table.getColumn("statusFilter") ? (
-          <DataTableFacetedFilter
-            column={table.getColumn("statusFilter")}
-            title="Status"
-            options={SUBSCRIPTION_LIST_STATUS_FILTER_OPTIONS}
-          />
-        ) : null}
-        {productOptions.length > 0 && table.getColumn("productLabel") ? (
-          <DataTableFacetedFilter
-            column={table.getColumn("productLabel")}
-            title="Product"
-            options={productOptions}
-          />
-        ) : null}
-        {isFiltered ? (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
-            Reset
-            <X />
-          </Button>
-        ) : null}
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={bulkCancelDisabled || cancelableCount === 0}
-            onClick={onBulkCancel}>
-            <Ban />
-            Cancel ({cancelableCount})
-          </Button>
-        ) : null}
-        <DataTableViewOptions table={table} />
-      </div>
-    </div>
-  );
-}
-
 export function SubscriptionListPanel({
   rows,
   customerOptions,
@@ -231,7 +164,6 @@ export function SubscriptionListPanel({
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmMeta, setConfirmMeta] = React.useState({ title: "", description: "" });
   const [confirmAction, setConfirmAction] = React.useState<(() => Promise<void>) | null>(null);
-  const tableRef = React.useRef<Table<SubscriptionListTableRow> | null>(null);
 
   React.useEffect(() => {
     router.refresh();
@@ -333,9 +265,7 @@ export function SubscriptionListPanel({
     );
   }
 
-  function handleBulkCancel() {
-    const table = tableRef.current;
-    if (!table) return;
+  function handleBulkCancel(table: Table<SubscriptionListTableRow>) {
     const cancelable = table
       .getFilteredSelectedRowModel()
       .rows.map((r) => r.original)
@@ -592,16 +522,28 @@ export function SubscriptionListPanel({
         initialPageSize={25}
         initialSorting={[{ id: "createdAt", desc: true }]}
         emptyMessage={rows.length === 0 ? "No subscriptions yet." : "No subscriptions match your filters."}
-        toolbar={(table) => {
-          tableRef.current = table;
-          return (
-            <SubscriptionListToolbar
-              table={table}
-              productOptions={productOptions}
-              onBulkCancel={handleBulkCancel}
-              bulkCancelDisabled={bulkBusy}
-            />
-          );
+        search={{
+          columnId: "accountName",
+          placeholder: "Search account, product, status, collection method…"
+        }}
+        filters={[
+          {
+            columnId: "statusFilter",
+            title: "Status",
+            options: SUBSCRIPTION_LIST_STATUS_FILTER_OPTIONS
+          },
+          ...(productOptions.length > 0
+            ? [{ columnId: "productLabel", title: "Product", options: productOptions }]
+            : [])
+        ]}
+        bulkAction={{
+          label: (count) => `Cancel (${count})`,
+          disabled: bulkBusy,
+          count: (table) =>
+            table
+              .getFilteredSelectedRowModel()
+              .rows.filter((row) => canCancelSubscription(row.original.subscription)).length,
+          onAction: handleBulkCancel
         }}
       />
     </div>
