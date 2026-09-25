@@ -1,11 +1,16 @@
 /** Narrow side sheet — default `sm:max-w-sm` (tasks, template properties). */
 export const sheetContentClass = "flex w-full flex-col overflow-hidden";
 
-/** Medium forms — settings, Stripe connect. */
-export const sheetContentMediumClass = "flex w-full flex-col overflow-hidden sm:max-w-lg";
+/**
+ * Must repeat the sheet primitive's `data-[side=*]:sm:` variant. A plain
+ * `sm:max-w-*` does not override `data-[side=right]:sm:max-w-sm`.
+ */
+export const sheetContentMediumClass =
+  "flex w-full flex-col overflow-hidden data-[side=left]:sm:max-w-lg data-[side=right]:sm:max-w-lg";
 
 /** Wide forms — catalog, CRM. */
-export const sheetContentWideClass = "flex w-full flex-col overflow-hidden sm:max-w-2xl";
+export const sheetContentWideClass =
+  "flex w-full flex-col overflow-hidden data-[side=left]:sm:max-w-2xl data-[side=right]:sm:max-w-2xl";
 
 /** Form fills the sheet under the header so the footer stays pinned. */
 export const sheetFormClass = "flex min-h-0 flex-1 flex-col";
