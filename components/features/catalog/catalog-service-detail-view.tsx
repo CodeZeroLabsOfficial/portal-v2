@@ -11,7 +11,6 @@ import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalo
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { catalogServiceStatusBadgeDisplay } from "@/lib/catalog/status-badges";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 
@@ -52,7 +51,6 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
             </div>
           </CardHeader>
           <CardContent>
-            <Separator className="mb-4" />
             <CatalogServiceDetails service={service} />
           </CardContent>
         </Card>
