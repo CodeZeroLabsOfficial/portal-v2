@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AdminDashboardSideMetricsProps {
   openTicketTotal: number;
@@ -16,13 +16,13 @@ export function AdminDashboardSideMetrics({
   const taskHeadline = taskDue.overdue + taskDue.dueThisWeek;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription>Operations</CardDescription>
-        <CardTitle className="font-display text-2xl tabular-nums lg:text-3xl">
+    <Card className="py-0">
+      <div className="flex flex-col justify-center gap-1 border-b px-4 py-3 sm:px-6 sm:py-4">
+        <span className="text-muted-foreground text-xs">Operations</span>
+        <span className="font-display text-lg leading-none tabular-nums sm:text-2xl">
           {openTicketTotal + taskHeadline}
-        </CardTitle>
-      </CardHeader>
+        </span>
+      </div>
       <CardContent>
         <p className="mb-2 text-sm font-bold">Highlights</p>
         <div className="divide-y *:py-3">

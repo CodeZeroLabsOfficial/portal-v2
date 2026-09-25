@@ -3,20 +3,13 @@
 import * as React from "react";
 import { Label, Pie, PieChart } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { isPendingProposalStatus } from "@/lib/dashboard/pipeline-metrics";
 import type { ProposalRecord } from "@/types/proposal";
 
 interface AdminDashboardStatusChartProps {
@@ -57,16 +50,12 @@ export function AdminDashboardStatusChart({ proposals }: AdminDashboardStatusCha
     }));
   }, [proposals]);
 
-  const pendingCount = proposals.filter((p) => isPendingProposalStatus(p.status)).length;
   const total = proposals.length;
 
   return (
     <Card className="xl:col-span-1">
       <CardHeader>
         <CardTitle>Proposal Mix</CardTitle>
-        <CardDescription>
-          {pendingCount} pending of {total} total proposals
-        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
         {chartData.length === 0 ? (

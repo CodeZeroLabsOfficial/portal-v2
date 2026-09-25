@@ -2,7 +2,7 @@
 
 import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import { DEFAULT_CURRENCY } from "@/config/constants";
 import { formatCurrencyAmount } from "@/lib/common/format";
@@ -40,7 +40,6 @@ export function AdminDashboardAchievement({ invoices }: AdminDashboardAchievemen
     <Card className="xl:col-span-1">
       <CardHeader>
         <CardTitle>Revenue by Year</CardTitle>
-        <CardDescription>Paid invoice revenue year-to-date comparison.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {rows.map((row) => (
