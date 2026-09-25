@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { CustomerProfileFormFields } from "@/components/features/crm/customer/customer-profile-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetContentWideClass,
+  sheetContentMediumClass,
   sheetFooterClass,
   sheetFormBodyClass,
   sheetFormClass,
@@ -102,7 +102,7 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={sheetContentWideClass}>
+      <SheetContent className={sheetContentMediumClass}>
         <SheetHeader>
           <SheetTitle>Edit customer</SheetTitle>
           <SheetDescription>{customer.email}</SheetDescription>

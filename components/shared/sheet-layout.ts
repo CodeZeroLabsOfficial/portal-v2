@@ -8,7 +8,7 @@ export const sheetContentClass = "flex w-full flex-col overflow-hidden";
 export const sheetContentMediumClass =
   "flex w-full flex-col overflow-hidden data-[side=left]:sm:max-w-lg data-[side=right]:sm:max-w-lg";
 
-/** Wide forms — catalog, CRM. */
+/** Wide forms — `sm:max-w-2xl`. */
 export const sheetContentWideClass =
   "flex w-full flex-col overflow-hidden data-[side=left]:sm:max-w-2xl data-[side=right]:sm:max-w-2xl";
 
