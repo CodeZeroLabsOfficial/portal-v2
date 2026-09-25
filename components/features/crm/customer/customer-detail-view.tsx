@@ -44,7 +44,6 @@ export interface CustomerDetailViewProps {
   tasks: TaskRecord[];
   templates: ProposalTemplateRecord[];
   signedAgreements: SignedAgreementRecord[];
-  initialTab?: string;
 }
 
 export function CustomerDetailView({
@@ -58,8 +57,7 @@ export function CustomerDetailView({
   activities,
   tasks,
   templates,
-  signedAgreements,
-  initialTab
+  signedAgreements
 }: CustomerDetailViewProps) {
   const router = useRouter();
   const [convertLeadBusy, setConvertLeadBusy] = React.useState(false);
@@ -83,7 +81,6 @@ export function CustomerDetailView({
     <>
       <CustomerDetailShell
         customerId={customer.id}
-        initialTab={initialTab}
         hero={
           <CustomerDetailHero
             customer={customer}
