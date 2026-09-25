@@ -49,7 +49,7 @@ export interface CalendarDateRangePickerProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   value?: DateRange;
   onChange?: (range: DateRange | undefined) => void;
-  /** Matches DataTable toolbar controls (`h-8`, `size="sm"`). */
+  /** Matches DataTable toolbar controls (`size="sm"`). */
   compact?: boolean;
 }
 
@@ -142,11 +142,7 @@ export default function CalendarDateRangePicker({
     <span>All time</span>
   );
 
-  const triggerButtonClassName = cn(
-    "justify-start gap-1.5 text-left font-normal",
-    compact && "h-8",
-    !date?.from && "text-muted-foreground"
-  );
+  const triggerButtonClassName = "justify-start gap-1.5 text-left";
 
   return (
     <div className={cn("grid gap-2", className)}>
