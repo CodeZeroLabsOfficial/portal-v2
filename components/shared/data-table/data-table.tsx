@@ -16,10 +16,16 @@ import {
   useReactTable,
   VisibilityState
 } from "@tanstack/react-table";
-import { Search, X } from "lucide-react";
+import { ListFilter, Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -93,6 +99,8 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>(initialColumnVisibility);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
+  const [openFilterIds, setOpenFilterIds] = React.useState<string[]>([]);
+  const [autoOpenFilterId, setAutoOpenFilterId] = React.useState<string | null>(null);
 
   const table = useReactTable({
     data,
@@ -137,11 +145,30 @@ export function DataTable<TData, TValue>({
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
   const isSelecting = selectedCount > 0 && bulkAction != null;
   const actionCount = bulkAction?.count?.(table) ?? selectedCount;
-  const showReset = columnFilters.length > 0 || externalFiltersActive;
+  const openFilters = filters.filter(
+    (filter) => openFilterIds.includes(filter.columnId) && table.getColumn(filter.columnId)
+  );
+  const availableFilters = filters.filter(
+    (filter) => !openFilterIds.includes(filter.columnId) && table.getColumn(filter.columnId)
+  );
+  const showReset = columnFilters.length > 0 || externalFiltersActive || openFilterIds.length > 0;
 
   function handleReset() {
+    setOpenFilterIds([]);
+    setAutoOpenFilterId(null);
     table.resetColumnFilters();
     onResetFilters?.();
+  }
+
+  function addFilter(columnId: string) {
+    setOpenFilterIds((ids) => (ids.includes(columnId) ? ids : [...ids, columnId]));
+    setAutoOpenFilterId(columnId);
+  }
+
+  function removeFilter(columnId: string) {
+    table.getColumn(columnId)?.setFilterValue(undefined);
+    setOpenFilterIds((ids) => ids.filter((id) => id !== columnId));
+    setAutoOpenFilterId((current) => (current === columnId ? null : current));
   }
 
   const columnsMenu = <DataTableViewOptions table={table} />;
@@ -184,20 +211,52 @@ export function DataTable<TData, TValue>({
                   />
                 </div>
               ) : null}
-              {filters.map((filter) => {
-                const column = table.getColumn(filter.columnId);
-                if (!column) return null;
-                return (
-                  <DataTableFacetedFilter
-                    key={filter.columnId}
-                    column={column}
-                    title={filter.title}
-                    options={filter.options}
-                  />
-                );
-              })}
-              {showReset ? (
-                <Button variant="ghost" size="sm" onClick={handleReset}>
+              {filters.length > 0 ? (
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 @max-md/card:flex-initial">
+                  {openFilters.map((filter) => (
+                    <DataTableFacetedFilter
+                      key={filter.columnId}
+                      column={table.getColumn(filter.columnId)}
+                      title={filter.title}
+                      options={filter.options}
+                      defaultOpen={autoOpenFilterId === filter.columnId}
+                      onAutoOpenHandled={() =>
+                        setAutoOpenFilterId((current) =>
+                          current === filter.columnId ? null : current
+                        )
+                      }
+                      onRemove={() => removeFilter(filter.columnId)}
+                    />
+                  ))}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={availableFilters.length === 0}>
+                        <ListFilter />
+                        Filters
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {availableFilters.map((filter) => (
+                        <DropdownMenuItem
+                          key={filter.columnId}
+                          onSelect={() => addFilter(filter.columnId)}>
+                          {filter.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {showReset ? (
+                    <Button variant="outline" size="sm" className="ms-auto" onClick={handleReset}>
+                      Reset
+                      <X />
+                    </Button>
+                  ) : null}
+                </div>
+              ) : showReset ? (
+                <Button variant="outline" size="sm" onClick={handleReset}>
                   Reset
                   <X />
                 </Button>
