@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { catalogCategoryLabel } from "@/lib/catalog/categories";
+import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import { catalogPricingLabel, formatCatalogTableDate } from "@/lib/catalog/display";
 import {
   catalogServiceKindBadgeDisplay,
@@ -211,10 +212,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
             {catalogCategoryLabel(row.original.category, categories)}
           </span>
         ),
-        filterFn: (row, id, value) => {
-          const filters = value as string[];
-          return filters.includes(row.getValue(id));
-        }
+        filterFn: multiSelectColumnFilter
       },
       {
         accessorKey: "status",
@@ -223,10 +221,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
           const d = catalogServiceStatusBadgeDisplay(row.original.status);
           return <StatusBadge label={d.label} variant={d.variant} />;
         },
-        filterFn: (row, id, value) => {
-          const filters = value as string[];
-          return filters.includes(row.getValue(id));
-        }
+        filterFn: multiSelectColumnFilter
       },
       {
         accessorKey: "serviceType",
@@ -235,11 +230,7 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
           const d = catalogServiceKindBadgeDisplay(row.original.serviceType);
           return <StatusBadge label={d.label} variant={d.variant} />;
         },
-        filterFn: (row, id, value) => {
-          const filters = value as string[];
-          const cell = row.getValue(id) as string | undefined;
-          return cell ? filters.includes(cell) : false;
-        }
+        filterFn: multiSelectColumnFilter
       },
       {
         id: "pricing",

@@ -37,6 +37,7 @@ import {
   customerStatusBadgeDisplay,
   subscriptionRollupBadgeDisplay
 } from "@/lib/crm/status-badges";
+import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import type { CustomerListRow } from "@/lib/customer/list";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
 import {
@@ -181,10 +182,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           const d = customerStatusBadgeDisplay(row.original.status);
           return <StatusBadge label={d.label} variant={d.variant} />;
         },
-        filterFn: (row, id, value) => {
-          const filters = value as string[];
-          return filters.includes(row.getValue(id));
-        }
+        filterFn: multiSelectColumnFilter
       },
       {
         accessorKey: "company",
@@ -226,10 +224,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           const d = customerCrmTypeBadgeDisplay(row.original.crmType);
           return <StatusBadge label={d.label} variant={d.variant} />;
         },
-        filterFn: (row, id, value) => {
-          const filters = value as string[];
-          return filters.includes(row.getValue(id));
-        }
+        filterFn: multiSelectColumnFilter
       },
       {
         id: "actions",
