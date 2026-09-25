@@ -1,4 +1,5 @@
 import {
+  DM_Sans,
   Geist,
   Inter,
   Montserrat,
@@ -71,7 +72,10 @@ const outfit = Outfit({
   variable: "--font-outfit"
 });
 
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+
 export const fontVariables = cn(
+  dmSans.variable,
   geist.variable,
   inter.variable,
   roboto.variable,

@@ -50,21 +50,16 @@ export async function updatePortalAppearanceSettingsAction(
   }
 
   const v = parsed.data;
-  const primaryColorHex = v.primaryColorHex.trim();
   const logoUrl = v.logoUrl?.trim() ?? "";
   const faviconUrl = v.faviconUrl?.trim() ?? "";
 
   const payload: Record<string, unknown> = {
     portalName: v.portalName.trim(),
-    fontFamily: v.fontFamily,
+    themeColor: v.themeColor,
     updatedAt: Date.now(),
+    primaryColorHex: FieldValue.delete(),
+    fontFamily: FieldValue.delete(),
   };
-
-  if (primaryColorHex) {
-    payload.primaryColorHex = primaryColorHex;
-  } else {
-    payload.primaryColorHex = FieldValue.delete();
-  }
 
   if (logoUrl) {
     payload.logoUrl = logoUrl;

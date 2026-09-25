@@ -5,47 +5,35 @@ export const DEFAULT_THEME = {
   contentLayout: "full"
 } as const;
 
-export type ThemeType = typeof DEFAULT_THEME;
+/** Tailwind 600 shades used by `[data-theme-color]` in `app/themes.css`. */
+export const THEME_COLORS = [
+  { name: "Red", value: "red" },
+  { name: "Orange", value: "orange" },
+  { name: "Amber", value: "amber" },
+  { name: "Yellow", value: "yellow" },
+  { name: "Lime", value: "lime" },
+  { name: "Green", value: "green" },
+  { name: "Emerald", value: "emerald" },
+  { name: "Teal", value: "teal" },
+  { name: "Cyan", value: "cyan" },
+  { name: "Sky", value: "sky" },
+  { name: "Blue", value: "blue" },
+  { name: "Indigo", value: "indigo" },
+  { name: "Violet", value: "violet" },
+  { name: "Purple", value: "purple" },
+  { name: "Fuchsia", value: "fuchsia" },
+  { name: "Pink", value: "pink" },
+  { name: "Rose", value: "rose" },
+] as const;
 
-export const THEMES = [
-  {
-    name: "Default",
-    value: "default",
-    colors: ["oklch(0.33 0 0)"]
-  },
-  {
-    name: "Underground",
-    value: "underground",
-    colors: ["oklch(0.5315 0.0694 156.19)"]
-  },
-  {
-    name: "Rose Garden",
-    value: "rose-garden",
-    colors: ["oklch(0.5827 0.2418 12.23)"]
-  },
-  {
-    name: "Lake View",
-    value: "lake-view",
-    colors: ["oklch(0.765 0.177 163.22)"]
-  },
-  {
-    name: "Sunset Glow",
-    value: "sunset-glow",
-    colors: ["oklch(0.5827 0.2187 36.98)"]
-  },
-  {
-    name: "Forest Whisper",
-    value: "forest-whisper",
-    colors: ["oklch(0.5276 0.1072 182.22)"]
-  },
-  {
-    name: "Ocean Breeze",
-    value: "ocean-breeze",
-    colors: ["oklch(0.59 0.20 277.12)"]
-  },
-  {
-    name: "Lavender Dream",
-    value: "lavender-dream",
-    colors: ["oklch(0.71 0.16 293.54)"]
-  }
-];
+export const THEME_COLOR_VALUES = ["default", ...THEME_COLORS.map((color) => color.value)] as const;
+
+export type ThemeColorId = (typeof THEME_COLOR_VALUES)[number];
+
+export const DEFAULT_THEME_COLOR: ThemeColorId = "default";
+
+export function isThemeColorId(value: string | undefined): value is ThemeColorId {
+  return THEME_COLOR_VALUES.some((color) => color === value);
+}
+
+export type ThemeType = typeof DEFAULT_THEME;

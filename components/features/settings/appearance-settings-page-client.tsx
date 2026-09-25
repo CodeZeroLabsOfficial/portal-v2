@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { ColourPresetSelector } from "@/components/features/settings/colour-preset-selector";
+import { ThemeColorSelector } from "@/components/features/settings/theme-color-selector";
 import { ThemeModeSelector } from "@/components/features/settings/theme-mode-selector";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import {
-  BRANDING_FONTS,
-  DEFAULT_BRANDING_FONT,
-  isBrandingFontId,
-  type BrandingFontId,
-} from "@/lib/fonts-config";
+import { DEFAULT_THEME_COLOR, isThemeColorId, type ThemeColorId } from "@/lib/themes";
 import { updatePortalAppearanceSettingsAction } from "@/server/actions/appearance-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,17 +23,24 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import type { PortalAppearanceSettings } from "@/types/appearance";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function applyPortalThemeColor(themeColor: ThemeColorId) {
+  const body = document.body;
+  body.removeAttribute("data-theme-font");
+  body.removeAttribute("data-has-portal-primary");
+  body.style.removeProperty("--portal-primary");
+  if (themeColor === "default") {
+    body.removeAttribute("data-theme-color");
+    body.removeAttribute("data-theme-chart-preset");
+    return;
+  }
+  body.setAttribute("data-theme-color", themeColor);
+  body.setAttribute("data-theme-chart-preset", themeColor);
+}
 
 interface ImageUploadFieldProps {
   label: string;
@@ -134,12 +136,11 @@ export function AppearanceSettingsPageClient({
 }: AppearanceSettingsPageClientProps) {
   const router = useRouter();
   const [appearance, setAppearance] = useState(initialSettings);
-  const [fontFamily, setFontFamily] = useState<BrandingFontId>(
-    initialSettings.fontFamily && isBrandingFontId(initialSettings.fontFamily)
-      ? initialSettings.fontFamily
-      : DEFAULT_BRANDING_FONT,
+  const [themeColor, setThemeColor] = useState<ThemeColorId>(
+    initialSettings.themeColor && isThemeColorId(initialSettings.themeColor)
+      ? initialSettings.themeColor
+      : DEFAULT_THEME_COLOR,
   );
-  const [primaryColorHex, setPrimaryColorHex] = useState(initialSettings.primaryColorHex ?? "");
   const [saving, setSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialSettings.logoUrl ?? null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(initialSettings.faviconUrl ?? null);
@@ -169,15 +170,29 @@ export function AppearanceSettingsPageClient({
 
   useEffect(() => {
     setAppearance(initialSettings);
-    setPrimaryColorHex(initialSettings.primaryColorHex ?? "");
     setLogoUrl(initialSettings.logoUrl ?? null);
     setFaviconUrl(initialSettings.faviconUrl ?? null);
-    setFontFamily(
-      initialSettings.fontFamily && isBrandingFontId(initialSettings.fontFamily)
-        ? initialSettings.fontFamily
-        : DEFAULT_BRANDING_FONT,
+    setThemeColor(
+      initialSettings.themeColor && isThemeColorId(initialSettings.themeColor)
+        ? initialSettings.themeColor
+        : DEFAULT_THEME_COLOR,
     );
   }, [initialSettings]);
+
+  const persistedThemeColor =
+    appearance.themeColor && isThemeColorId(appearance.themeColor)
+      ? appearance.themeColor
+      : DEFAULT_THEME_COLOR;
+  const persistedThemeColorRef = useRef(persistedThemeColor);
+  persistedThemeColorRef.current = persistedThemeColor;
+
+  useEffect(() => {
+    applyPortalThemeColor(themeColor);
+  }, [themeColor]);
+
+  useEffect(() => {
+    return () => applyPortalThemeColor(persistedThemeColorRef.current);
+  }, []);
 
   async function onSubmitPortal(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -208,15 +223,13 @@ export function AppearanceSettingsPageClient({
       }
     }
 
-    const nextPrimary = String(form.get("primaryColorHex") ?? "").trim();
     const portalName = String(form.get("portalName") ?? "").trim();
 
     setSaving(true);
     try {
       const result = await updatePortalAppearanceSettingsAction({
         portalName,
-        primaryColorHex: nextPrimary,
-        fontFamily,
+        themeColor,
         logoUrl: nextLogoUrl,
         faviconUrl: nextFaviconUrl,
       });
@@ -227,13 +240,11 @@ export function AppearanceSettingsPageClient({
 
       const saved: PortalAppearanceSettings = {
         portalName,
-        primaryColorHex: nextPrimary || undefined,
-        fontFamily,
+        themeColor,
         logoUrl: nextLogoUrl || undefined,
         faviconUrl: nextFaviconUrl || undefined,
       };
       setAppearance(saved);
-      setPrimaryColorHex(nextPrimary);
       setLogoUrl(nextLogoUrl || null);
       clearLogoFiles();
       setFaviconUrl(nextFaviconUrl || null);
@@ -264,46 +275,7 @@ export function AppearanceSettingsPageClient({
                   defaultValue={appearance.portalName}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="fontFamily">Font</Label>
-                <Select
-                  value={fontFamily}
-                  onValueChange={(value) => setFontFamily(value as BrandingFontId)}
-                >
-                  <SelectTrigger id="fontFamily" className="w-full">
-                    <SelectValue placeholder="Select font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BRANDING_FONTS.map((font) => (
-                      <SelectItem key={font.value} value={font.value}>
-                        {font.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ColourPresetSelector />
-              <div className="space-y-2">
-                <Label htmlFor="primaryColorHex">Primary colour</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="primaryColorHex"
-                    name="primaryColorHex"
-                    value={primaryColorHex}
-                    onChange={(e) => setPrimaryColorHex(e.target.value)}
-                    placeholder="#0f172a"
-                  />
-                  {primaryColorHex && (
-                    <span
-                      className="size-9 shrink-0 rounded-md border"
-                      style={{ backgroundColor: primaryColorHex }}
-                    />
-                  )}
-                </div>
-              </div>
+              <ThemeColorSelector value={themeColor} onValueChange={setThemeColor} />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
