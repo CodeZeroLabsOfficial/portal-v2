@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import {
-  format,
-  subDays,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  startOfDay,
   endOfDay,
+  endOfMonth,
+  endOfWeek,
+  format,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
   startOfYear,
-  startOfWeek
+  subDays,
+  subMonths,
+  subWeeks
 } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
@@ -36,19 +38,12 @@ const dateFilterPresets = [
   { name: "All time", value: ALL_TIME_PRESET },
   { name: "Today", value: "today" },
   { name: "Yesterday", value: "yesterday" },
-  { name: "This Week", value: "thisWeek" },
-  { name: "Last 7 Days", value: "last7Days" },
-  { name: "Last 28 Days", value: "last28Days" },
-  { name: "This Month", value: "thisMonth" },
-  { name: "Last Month", value: "lastMonth" },
-  { name: "This Year", value: "thisYear" }
+  { name: "This week", value: "thisWeek" },
+  { name: "Last week", value: "lastWeek" },
+  { name: "This month", value: "thisMonth" },
+  { name: "Last month", value: "lastMonth" },
+  { name: "This year", value: "thisYear" }
 ];
-
-function defaultUncontrolledRange(): DateRange {
-  const today = new Date();
-  const twentyEightDaysAgo = startOfDay(subDays(today, 27));
-  return { from: twentyEightDaysAgo, to: endOfDay(today) };
-}
 
 export interface CalendarDateRangePickerProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
@@ -66,16 +61,12 @@ export default function CalendarDateRangePicker({
 }: CalendarDateRangePickerProps) {
   const isMobile = useIsMobile();
   const isControlled = onChange !== undefined;
-  const [uncontrolledDate, setUncontrolledDate] = React.useState<DateRange | undefined>(() =>
-    defaultUncontrolledRange()
-  );
+  const [uncontrolledDate, setUncontrolledDate] = React.useState<DateRange | undefined>();
   const date = isControlled ? controlledValue : uncontrolledDate;
 
   const [open, setOpen] = React.useState(false);
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
-  const [activePreset, setActivePreset] = React.useState(
-    isControlled ? ALL_TIME_PRESET : "last28Days"
-  );
+  const [activePreset, setActivePreset] = React.useState(ALL_TIME_PRESET);
 
   React.useEffect(() => {
     if (!isControlled) return;
@@ -118,14 +109,9 @@ export default function CalendarDateRangePicker({
         handleQuickSelect(startOfDay(startOfCurrentWeek), endOfDay(today), type);
         break;
       }
-      case "last7Days": {
-        const sevenDaysAgo = subDays(today, 6);
-        handleQuickSelect(startOfDay(sevenDaysAgo), endOfDay(today), type);
-        break;
-      }
-      case "last28Days": {
-        const twentyEightDaysAgo = subDays(today, 27);
-        handleQuickSelect(startOfDay(twentyEightDaysAgo), endOfDay(today), type);
+      case "lastWeek": {
+        const previousWeek = subWeeks(today, 1);
+        handleQuickSelect(startOfWeek(previousWeek), endOfWeek(previousWeek), type);
         break;
       }
       case "thisMonth":
