@@ -57,7 +57,7 @@ export function AppSidebar({ groups, brand, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full [&>[data-slot=scroll-area-viewport]]:scroll-fade">
           <NavMain groups={groups} />
         </ScrollArea>
       </SidebarContent>

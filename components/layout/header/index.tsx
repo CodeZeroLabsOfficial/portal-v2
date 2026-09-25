@@ -27,13 +27,19 @@ export function SiteHeader({
         <Button onClick={toggleSidebar} size="icon" variant="ghost">
           {open ? <PanelLeftClose /> : <PanelLeftOpen />}
         </Button>
-        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+        <Separator
+          orientation="vertical"
+          className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center"
+        />
         <Search scope={searchScope} />
 
         <div className="ml-auto flex items-center gap-2">
           <Notifications />
           <ThemeSwitch />
-          <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+          <Separator
+          orientation="vertical"
+          className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center"
+        />
           <UserMenu user={user} />
         </div>
       </div>

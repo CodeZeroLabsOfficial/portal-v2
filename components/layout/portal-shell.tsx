@@ -24,18 +24,18 @@ export function PortalShell({
         {
           "--sidebar-width": "calc(var(--spacing) * 64)",
           "--header-height": "calc(var(--spacing) * 14)",
-          "--content-padding": "calc(var(--spacing) * 4)",
+          "--content-padding": "calc(var(--spacing) * 6)",
           "--content-margin": "calc(var(--spacing) * 1.5)",
           "--content-full-height":
-            "calc(100vh - var(--header-height) - (var(--content-padding) * 2) - (var(--content-margin) * 2))",
+            "calc(100vh - var(--header-height) - (var(--content-padding) * 2.2) - (var(--content-margin) * 2.2))",
         } as React.CSSProperties
       }
     >
       <AppSidebar variant="inset" groups={groups} brand={brand} />
       <SidebarInset>
         <SiteHeader user={user} searchScope={searchScope} />
-        <div className="bg-muted/40 flex flex-1 flex-col">
-          <div className="@container/main p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:mx-auto xl:group-data-[theme-content-layout=centered]/layout:w-full xl:group-data-[theme-content-layout=centered]/layout:max-w-7xl">
             {children}
           </div>
         </div>
