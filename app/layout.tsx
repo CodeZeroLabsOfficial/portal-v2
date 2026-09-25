@@ -13,6 +13,7 @@ import { DEFAULT_BRANDING_FONT, isBrandingFontId } from "@/lib/fonts-config";
 import { DEFAULT_THEME } from "@/lib/themes";
 import { getPortalAppearanceSettings } from "@/server/firestore/appearance-settings";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { PROPOSAL_GOOGLE_FONTS_STYLESHEET_HREF } from "@/lib/proposal/rich-text/fonts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -76,9 +77,11 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <ActiveThemeProvider initialTheme={themeSettings}>
-            {children}
-            <Toaster position="top-center" richColors />
-            <NextTopLoader color="var(--primary)" showSpinner={false} height={2} />
+            <TooltipProvider>
+              {children}
+              <Toaster position="top-center" richColors />
+              <NextTopLoader color="var(--primary)" showSpinner={false} height={2} />
+            </TooltipProvider>
           </ActiveThemeProvider>
         </ThemeProvider>
       </body>
