@@ -56,6 +56,8 @@ export async function updatePortalAppearanceSettingsAction(
   const payload: Record<string, unknown> = {
     portalName: v.portalName.trim(),
     themeColor: v.themeColor,
+    font: v.font,
+    displayFont: v.displayFont,
     updatedAt: Date.now(),
     primaryColorHex: FieldValue.delete(),
     fontFamily: FieldValue.delete(),

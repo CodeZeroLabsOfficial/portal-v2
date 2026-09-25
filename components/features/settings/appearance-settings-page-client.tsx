@@ -7,9 +7,23 @@ import { UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { ThemeColorSelector } from "@/components/features/settings/theme-color-selector";
+import {
+  ThemeDisplayFontSelector,
+  ThemeFontSelector,
+} from "@/components/features/settings/theme-font-selector";
 import { ThemeModeSelector } from "@/components/features/settings/theme-mode-selector";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { DEFAULT_THEME_COLOR, isThemeColorId, type ThemeColorId } from "@/lib/themes";
+import {
+  DEFAULT_THEME_COLOR,
+  DEFAULT_THEME_DISPLAY_FONT,
+  DEFAULT_THEME_FONT,
+  isThemeColorId,
+  isThemeDisplayFontId,
+  isThemeFontId,
+  type ThemeColorId,
+  type ThemeDisplayFontId,
+  type ThemeFontId,
+} from "@/lib/themes";
 import { updatePortalAppearanceSettingsAction } from "@/server/actions/appearance-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,18 +42,33 @@ import type { PortalAppearanceSettings } from "@/types/appearance";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-function applyPortalThemeColor(themeColor: ThemeColorId) {
+interface PortalThemePreview {
+  themeColor: ThemeColorId;
+  font: ThemeFontId;
+  displayFont: ThemeDisplayFontId;
+}
+
+function applyPortalThemePreview({ themeColor, font, displayFont }: PortalThemePreview) {
   const body = document.body;
-  body.removeAttribute("data-theme-font");
   body.removeAttribute("data-has-portal-primary");
   body.style.removeProperty("--portal-primary");
   if (themeColor === "default") {
     body.removeAttribute("data-theme-color");
     body.removeAttribute("data-theme-chart-preset");
-    return;
+  } else {
+    body.setAttribute("data-theme-color", themeColor);
+    body.setAttribute("data-theme-chart-preset", themeColor);
   }
-  body.setAttribute("data-theme-color", themeColor);
-  body.setAttribute("data-theme-chart-preset", themeColor);
+  if (font === "default") {
+    body.removeAttribute("data-theme-font");
+  } else {
+    body.setAttribute("data-theme-font", font);
+  }
+  if (displayFont === "default") {
+    body.removeAttribute("data-theme-display-font");
+  } else {
+    body.setAttribute("data-theme-display-font", displayFont);
+  }
 }
 
 interface ImageUploadFieldProps {
@@ -141,6 +170,16 @@ export function AppearanceSettingsPageClient({
       ? initialSettings.themeColor
       : DEFAULT_THEME_COLOR,
   );
+  const [font, setFont] = useState<ThemeFontId>(
+    initialSettings.font && isThemeFontId(initialSettings.font)
+      ? initialSettings.font
+      : DEFAULT_THEME_FONT,
+  );
+  const [displayFont, setDisplayFont] = useState<ThemeDisplayFontId>(
+    initialSettings.displayFont && isThemeDisplayFontId(initialSettings.displayFont)
+      ? initialSettings.displayFont
+      : DEFAULT_THEME_DISPLAY_FONT,
+  );
   const [saving, setSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialSettings.logoUrl ?? null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(initialSettings.faviconUrl ?? null);
@@ -177,21 +216,38 @@ export function AppearanceSettingsPageClient({
         ? initialSettings.themeColor
         : DEFAULT_THEME_COLOR,
     );
+    setFont(
+      initialSettings.font && isThemeFontId(initialSettings.font)
+        ? initialSettings.font
+        : DEFAULT_THEME_FONT,
+    );
+    setDisplayFont(
+      initialSettings.displayFont && isThemeDisplayFontId(initialSettings.displayFont)
+        ? initialSettings.displayFont
+        : DEFAULT_THEME_DISPLAY_FONT,
+    );
   }, [initialSettings]);
 
-  const persistedThemeColor =
-    appearance.themeColor && isThemeColorId(appearance.themeColor)
-      ? appearance.themeColor
-      : DEFAULT_THEME_COLOR;
-  const persistedThemeColorRef = useRef(persistedThemeColor);
-  persistedThemeColorRef.current = persistedThemeColor;
+  const persistedPreview: PortalThemePreview = {
+    themeColor:
+      appearance.themeColor && isThemeColorId(appearance.themeColor)
+        ? appearance.themeColor
+        : DEFAULT_THEME_COLOR,
+    font: appearance.font && isThemeFontId(appearance.font) ? appearance.font : DEFAULT_THEME_FONT,
+    displayFont:
+      appearance.displayFont && isThemeDisplayFontId(appearance.displayFont)
+        ? appearance.displayFont
+        : DEFAULT_THEME_DISPLAY_FONT,
+  };
+  const persistedPreviewRef = useRef(persistedPreview);
+  persistedPreviewRef.current = persistedPreview;
 
   useEffect(() => {
-    applyPortalThemeColor(themeColor);
-  }, [themeColor]);
+    applyPortalThemePreview({ themeColor, font, displayFont });
+  }, [themeColor, font, displayFont]);
 
   useEffect(() => {
-    return () => applyPortalThemeColor(persistedThemeColorRef.current);
+    return () => applyPortalThemePreview(persistedPreviewRef.current);
   }, []);
 
   async function onSubmitPortal(e: React.FormEvent<HTMLFormElement>) {
@@ -230,6 +286,8 @@ export function AppearanceSettingsPageClient({
       const result = await updatePortalAppearanceSettingsAction({
         portalName,
         themeColor,
+        font,
+        displayFont,
         logoUrl: nextLogoUrl,
         faviconUrl: nextFaviconUrl,
       });
@@ -241,6 +299,8 @@ export function AppearanceSettingsPageClient({
       const saved: PortalAppearanceSettings = {
         portalName,
         themeColor,
+        font,
+        displayFont,
         logoUrl: nextLogoUrl || undefined,
         faviconUrl: nextFaviconUrl || undefined,
       };
@@ -276,6 +336,8 @@ export function AppearanceSettingsPageClient({
                 />
               </div>
               <ThemeColorSelector value={themeColor} onValueChange={setThemeColor} />
+              <ThemeFontSelector value={font} onValueChange={setFont} />
+              <ThemeDisplayFontSelector value={displayFont} onValueChange={setDisplayFont} />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

@@ -9,7 +9,15 @@ import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 import { ActiveThemeProvider } from "@/components/active-theme";
-import { DEFAULT_THEME, DEFAULT_THEME_COLOR, isThemeColorId } from "@/lib/themes";
+import {
+  DEFAULT_THEME,
+  DEFAULT_THEME_COLOR,
+  DEFAULT_THEME_DISPLAY_FONT,
+  DEFAULT_THEME_FONT,
+  isThemeColorId,
+  isThemeDisplayFontId,
+  isThemeFontId,
+} from "@/lib/themes";
 import { getPortalAppearanceSettings } from "@/server/firestore/appearance-settings";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,13 +58,22 @@ export default async function RootLayout({
     appearance?.themeColor && isThemeColorId(appearance.themeColor)
       ? appearance.themeColor
       : DEFAULT_THEME_COLOR;
-  const themeColorAttributes =
-    themeColor === "default"
+  const font =
+    appearance?.font && isThemeFontId(appearance.font) ? appearance.font : DEFAULT_THEME_FONT;
+  const displayFont =
+    appearance?.displayFont && isThemeDisplayFontId(appearance.displayFont)
+      ? appearance.displayFont
+      : DEFAULT_THEME_DISPLAY_FONT;
+  const themeColorAttributes = {
+    ...(themeColor === "default"
       ? {}
       : {
           "data-theme-color": themeColor,
           "data-theme-chart-preset": themeColor,
-        };
+        }),
+    ...(font === "default" ? {} : { "data-theme-font": font }),
+    ...(displayFont === "default" ? {} : { "data-theme-display-font": displayFont }),
+  };
 
   return (
     <html lang="en" suppressHydrationWarning>
