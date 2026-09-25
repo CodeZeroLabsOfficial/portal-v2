@@ -8,8 +8,8 @@ import { AdminDashboardAchievement } from "@/components/features/dashboard/admin
 import { AdminDashboardActivityChart } from "@/components/features/dashboard/admin-dashboard-activity-chart";
 import { AdminDashboardRecentTransactions } from "@/components/features/dashboard/admin-dashboard-recent-transactions";
 import { AdminDashboardReminders } from "@/components/features/dashboard/admin-dashboard-reminders";
-import { AdminDashboardSalesPlaceholder } from "@/components/features/dashboard/admin-dashboard-sales-placeholder";
 import { AdminDashboardSideMetrics } from "@/components/features/dashboard/admin-dashboard-side-metrics";
+import { ComingSoonEmpty } from "@/components/shared/coming-soon-empty";
 import { AdminDashboardStatusChart } from "@/components/features/dashboard/admin-dashboard-status-chart";
 import { AdminDashboardSummaryCards } from "@/components/features/dashboard/admin-dashboard-summary-cards";
 import CalendarDateRangePicker from "@/components/custom-date-range-picker";
@@ -102,7 +102,9 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="z-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="finance">Finance</TabsTrigger>
+          <TabsTrigger value="support">Support</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -134,8 +136,23 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
           <AdminDashboardRecentTransactions payments={data.payments} />
         </TabsContent>
 
-        <TabsContent value="sales">
-          <AdminDashboardSalesPlaceholder />
+        <TabsContent value="pipeline">
+          <ComingSoonEmpty
+            title="Pipeline dashboard coming soon"
+            description="This section will show proposals, deal stages, and pipeline value."
+          />
+        </TabsContent>
+        <TabsContent value="finance">
+          <ComingSoonEmpty
+            title="Finance dashboard coming soon"
+            description="This section will show invoices, payments, and revenue."
+          />
+        </TabsContent>
+        <TabsContent value="support">
+          <ComingSoonEmpty
+            title="Support dashboard coming soon"
+            description="This section will show open tickets, urgency, and follow-ups."
+          />
         </TabsContent>
       </Tabs>
     </>

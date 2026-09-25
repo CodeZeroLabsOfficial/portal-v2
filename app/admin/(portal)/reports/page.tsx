@@ -1,11 +1,10 @@
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { ComingSoonEmpty } from "@/components/shared/coming-soon-empty";
 
 export default function AdminReportsPage() {
   return (
-    <ComingSoonPage
-      title="Reports"
-      phase="Phase 3 — Operations"
-      description="Operational reports and exports"
+    <ComingSoonEmpty
+      title="Reports dashboard coming soon"
+      description="This section will show operational reports and exports."
     />
   );
 }

@@ -1,11 +1,10 @@
-import { ComingSoonPage } from "@/components/shared/coming-soon-page";
+import { ComingSoonEmpty } from "@/components/shared/coming-soon-empty";
 
 export default function AdminFinancialsPage() {
   return (
-    <ComingSoonPage
-      title="Financials"
-      phase="Phase 3 — Operations"
-      description="Revenue and billing overview"
+    <ComingSoonEmpty
+      title="Financials dashboard coming soon"
+      description="This section will show invoices, payments, and revenue."
     />
   );
 }
