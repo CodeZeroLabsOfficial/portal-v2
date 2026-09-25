@@ -6,11 +6,12 @@ import { toast } from "sonner";
 
 import { CustomerCompanyDetailsCard } from "@/components/features/crm/customer/customer-company-details-card";
 import { CustomerContactDetailsCard } from "@/components/features/crm/customer/customer-contact-details-card";
+import { CustomerDetailHero } from "@/components/features/crm/customer/customer-detail-hero";
 import { CustomerDetailShell } from "@/components/features/crm/customer/customer-detail-shell";
 import { CustomerEditSheet } from "@/components/features/crm/customer/customer-edit-sheet";
 import { CustomerIntegrationsCard } from "@/components/features/crm/customer/customer-integrations-card";
+import { CustomerOverviewStats } from "@/components/features/crm/customer/customer-overview-stats";
 import { CustomerPortalAccessCard } from "@/components/features/crm/customer/customer-portal-access-card";
-import { CustomerProfileCard } from "@/components/features/crm/customer/customer-profile-card";
 import { CustomerBillingTab } from "@/components/features/crm/customer/tabs/billing-tab";
 import { CustomerDocumentsTab } from "@/components/features/crm/customer/tabs/documents-tab";
 import { CustomerNotesTab } from "@/components/features/crm/customer/tabs/notes-tab";
@@ -83,29 +84,38 @@ export function CustomerDetailView({
       <CustomerDetailShell
         customerId={customer.id}
         initialTab={initialTab}
-        sidebar={
-          <div className="space-y-4">
-            <CustomerProfileCard
-              customer={customer}
-              companyName={account?.company}
-              subscriptionCount={subscriptions.length}
-              openInvoiceCount={openInvoiceCount(invoices)}
-              proposalCount={proposalsMatched.length}
-              opportunityCount={opportunities.length}
-              onEditClick={() => setEditOpen(true)}
-            />
-            <CustomerContactDetailsCard
-              customer={customer}
-              convertLeadBusy={convertLeadBusy}
-              onConvertLead={() => void convertLead()}
-            />
-            <CustomerCompanyDetailsCard account={account} />
-            <CustomerIntegrationsCard customer={customer} activities={activities} />
-            <CustomerPortalAccessCard customer={customer} />
-          </div>
+        hero={
+          <CustomerDetailHero
+            customer={customer}
+            companyName={account?.company}
+            onEditClick={() => setEditOpen(true)}
+          />
         }
-      panels={{
-        overview: <CustomerOverviewTab customerId={customer.id} activities={activities} />,
+        panels={{
+          overview: (
+            <CustomerOverviewTab
+              customerId={customer.id}
+              activities={activities}
+              aside={
+                <>
+                  <CustomerContactDetailsCard
+                    customer={customer}
+                    convertLeadBusy={convertLeadBusy}
+                    onConvertLead={() => void convertLead()}
+                  />
+                  <CustomerCompanyDetailsCard account={account} />
+                  <CustomerOverviewStats
+                    subscriptionCount={subscriptions.length}
+                    openInvoiceCount={openInvoiceCount(invoices)}
+                    proposalCount={proposalsMatched.length}
+                    opportunityCount={opportunities.length}
+                  />
+                  <CustomerIntegrationsCard customer={customer} activities={activities} />
+                  <CustomerPortalAccessCard customer={customer} />
+                </>
+              }
+            />
+          ),
         billing: <CustomerBillingTab customer={customer} invoices={invoices} />,
         subscriptions: (
           <CustomerSubscriptionsTab customer={customer} subscriptions={subscriptions} />
