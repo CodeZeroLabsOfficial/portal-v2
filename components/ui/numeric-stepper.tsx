@@ -67,7 +67,7 @@ export function NumericStepper({
         <Minus className="size-3.5" aria-hidden />
       </button>
       <span
-        className="text-foreground min-w-8 px-1 text-center text-sm font-medium tabular-nums"
+        className="text-foreground flex min-w-8 shrink-0 items-center justify-center px-1 text-sm font-medium tabular-nums"
         aria-live="polite"
       >
         {current}

@@ -24,7 +24,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetActionsEndClass,
-  sheetContentMediumClass,
+  sheetContentWideClass,
   sheetFooterClass,
   sheetFormBodyClass,
   sheetFormClass,
@@ -254,7 +254,7 @@ export function CatalogServiceEditSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className={sheetContentMediumClass}>
+        <SheetContent className={sheetContentWideClass}>
           <SheetHeader>
             <SheetTitle>Edit service</SheetTitle>
           </SheetHeader>

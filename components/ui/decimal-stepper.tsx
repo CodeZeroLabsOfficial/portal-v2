@@ -150,7 +150,7 @@ export function DecimalStepper({
         value={displayValue()}
         aria-label={ariaLabel}
         className={cn(
-          "h-full w-[5.5rem] rounded-none border-0 bg-transparent px-1 text-center text-sm shadow-none tabular-nums dark:bg-transparent",
+          "h-full w-[5.5rem] rounded-none border-0 bg-transparent px-1 py-0 text-center text-sm shadow-none tabular-nums dark:bg-transparent",
           "focus-visible:ring-0 disabled:bg-transparent disabled:opacity-100 dark:disabled:bg-transparent",
         )}
         onFocus={() => setDraft(value)}
