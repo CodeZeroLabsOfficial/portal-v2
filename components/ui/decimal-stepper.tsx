@@ -131,7 +131,7 @@ export function DecimalStepper({
         type="button"
         disabled={minusDisabled}
         className={cn(
-          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "text-foreground inline-flex w-6 shrink-0 items-center justify-center outline-none transition-colors",
           "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
           "disabled:pointer-events-none",
           !disabled && minusDisabled && "opacity-50",
@@ -150,7 +150,7 @@ export function DecimalStepper({
         value={displayValue()}
         aria-label={ariaLabel}
         className={cn(
-          "h-full w-[5.5rem] rounded-none border-0 bg-transparent px-1 py-0 text-center text-sm shadow-none tabular-nums dark:bg-transparent",
+          "h-full w-16 rounded-none border-0 bg-transparent px-1 py-0 text-center text-sm shadow-none tabular-nums dark:bg-transparent",
           "focus-visible:ring-0 disabled:bg-transparent disabled:opacity-100 dark:disabled:bg-transparent",
         )}
         onFocus={() => setDraft(value)}
@@ -162,7 +162,7 @@ export function DecimalStepper({
         type="button"
         disabled={disabled}
         className={cn(
-          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "text-foreground inline-flex w-6 shrink-0 items-center justify-center outline-none transition-colors",
           "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
           "disabled:pointer-events-none",
         )}
