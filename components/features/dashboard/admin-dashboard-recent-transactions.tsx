@@ -93,7 +93,7 @@ function toRecentOrderRow(
 const columns: ColumnDef<RecentOrderRow>[] = [
   {
     accessorKey: "invoiceLabel",
-    header: "ID",
+    header: "Invoice ID",
     cell: ({ row }) => {
       const label = row.original.invoiceLabel;
       const href = row.original.hostedInvoiceUrl;
@@ -246,7 +246,7 @@ export function AdminDashboardRecentTransactions({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Orders</CardTitle>
+        <CardTitle>Recent Invoices</CardTitle>
         <CardAction>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -265,7 +265,7 @@ export function AdminDashboardRecentTransactions({
       <CardContent className="flex flex-col p-0 [&_[data-slot=table-container]]:flex-1">
         <div className="flex min-h-14 items-center gap-2 border-b px-(--card-spacing) py-3">
           <Input
-            placeholder="Filter orders..."
+            placeholder="Filter invoices..."
             value={(table.getColumn("customerLabel")?.getFilterValue() as string) ?? ""}
             onChange={(event) => table.getColumn("customerLabel")?.setFilterValue(event.target.value)}
             className="max-w-xs"
@@ -307,7 +307,7 @@ export function AdminDashboardRecentTransactions({
         </Table>
         <div className="flex items-center justify-between gap-2 border-t px-(--card-spacing) py-3">
           <p className="text-muted-foreground text-sm tabular-nums">
-            {firstRow} - {lastRow} of {rowCount} orders
+            {firstRow} - {lastRow} of {rowCount} invoices
           </p>
           <div className="flex items-center gap-1">
             <Button
