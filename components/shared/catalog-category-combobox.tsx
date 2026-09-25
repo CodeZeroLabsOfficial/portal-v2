@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -75,15 +75,12 @@ export function CatalogCategoryCombobox({
           role="combobox"
           aria-expanded={open}
           disabled={disabled || creating}
-          className={cn(
-            "bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]",
-            className,
-          )}
+          className={cn("w-full justify-between px-2.5 font-normal", className)}
         >
           <span className={cn("truncate", !selected && "text-muted-foreground")}>
             {selected?.label ?? placeholder}
           </span>
-          <ChevronsUpDownIcon className="text-muted-foreground/80 size-4 shrink-0" aria-hidden />
+          <ChevronDownIcon className="text-muted-foreground size-4 shrink-0" aria-hidden />
         </Button>
       </PopoverTrigger>
       <PopoverContent

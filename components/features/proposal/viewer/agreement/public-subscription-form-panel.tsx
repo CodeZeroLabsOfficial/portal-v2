@@ -22,6 +22,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { formatCurrencyAmount } from "@/lib/common/format";
 import type { ProposalPublicSubscriptionUi } from "@/server/proposal/public-proposal-subscription-ui";
 import { cn } from "@/lib/utils";
@@ -380,9 +381,9 @@ export function ProposalPublicSubscriptionFormPanel({
         {mode === "manage_subscription" ? (
           <Field>
             <FieldLabel htmlFor="proposal-public-collection">Collection method</FieldLabel>
-            <select
+            <NativeSelect
               id="proposal-public-collection"
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+              className="w-full"
               disabled={busy}
               value={collectionMethod}
               onChange={(e) =>
@@ -395,7 +396,7 @@ export function ProposalPublicSubscriptionFormPanel({
             >
               <option value="charge_automatically">Automatic charge</option>
               <option value="send_invoice">Send invoice</option>
-            </select>
+            </NativeSelect>
           </Field>
         ) : null}
 
@@ -421,9 +422,9 @@ export function ProposalPublicSubscriptionFormPanel({
               <FieldLabel htmlFor="proposal-public-payment-method">
                 {mode === "save_card_only" ? "Payment method" : "Credit card details"}
               </FieldLabel>
-              <select
+              <NativeSelect
                 id="proposal-public-payment-method"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                className="w-full"
                 value={showAddCard ? "__add_new__" : effectivePmId ?? ""}
                 disabled={busy || cardLoading}
                 onChange={(e) => {
@@ -444,7 +445,7 @@ export function ProposalPublicSubscriptionFormPanel({
                   </option>
                 ))}
                 <option value="__add_new__">+ Add new card</option>
-              </select>
+              </NativeSelect>
             </Field>
             {showAddCard ? (
               <FieldGroup className="gap-3 pt-1">
@@ -461,7 +462,7 @@ export function ProposalPublicSubscriptionFormPanel({
                 </Field>
                 <div
                   id={cardElementId}
-                  className="min-h-[52px] rounded-md border border-input bg-background px-3 py-3 text-sm"
+                  className="min-h-16 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm dark:bg-input/30"
                 />
               </FieldGroup>
             ) : null}

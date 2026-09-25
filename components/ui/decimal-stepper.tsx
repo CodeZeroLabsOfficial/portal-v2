@@ -120,7 +120,8 @@ export function DecimalStepper({
   return (
     <div
       className={cn(
-        "border-border/60 bg-background inline-flex items-center rounded-md border p-0.5 shadow-sm",
+        "inline-flex h-8 items-stretch overflow-hidden rounded-lg border border-input bg-transparent dark:bg-input/30",
+        disabled && "opacity-50",
         className,
       )}
       role="group"
@@ -130,9 +131,10 @@ export function DecimalStepper({
         type="button"
         disabled={minusDisabled}
         className={cn(
-          "text-foreground inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
-          "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-50",
+          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+          "disabled:pointer-events-none",
+          !disabled && minusDisabled && "opacity-50",
         )}
         aria-label={ariaLabel ? `Decrease ${ariaLabel}` : "Decrease"}
         onClick={() => stepBy(-step)}
@@ -148,8 +150,8 @@ export function DecimalStepper({
         value={displayValue()}
         aria-label={ariaLabel}
         className={cn(
-          "h-8 w-[5.5rem] border-0 bg-transparent px-1 text-center text-sm shadow-none tabular-nums",
-          "focus-visible:ring-0 focus-visible:ring-offset-0",
+          "h-full w-[5.5rem] rounded-none border-0 bg-transparent px-1 text-center text-sm shadow-none tabular-nums dark:bg-transparent",
+          "focus-visible:ring-0 disabled:bg-transparent disabled:opacity-100 dark:disabled:bg-transparent",
         )}
         onFocus={() => setDraft(value)}
         onBlur={() => commitDraft(draft ?? value)}
@@ -160,9 +162,9 @@ export function DecimalStepper({
         type="button"
         disabled={disabled}
         className={cn(
-          "text-foreground inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
-          "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-50",
+          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+          "disabled:pointer-events-none",
         )}
         aria-label={ariaLabel ? `Increase ${ariaLabel}` : "Increase"}
         onClick={() => stepBy(step)}

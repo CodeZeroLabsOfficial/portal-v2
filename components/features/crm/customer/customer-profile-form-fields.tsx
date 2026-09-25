@@ -6,6 +6,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
 import { listAccountsForPickerAction } from "@/server/actions/accounts-crm";
 import type { AccountRecord } from "@/types/account";
@@ -122,9 +123,9 @@ export function CustomerProfileFormFields({
 
         <div className="space-y-2">
           <Label htmlFor="crm-account">Account</Label>
-          <select
+          <NativeSelect
             id="crm-account"
-            className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+            className="w-full"
             disabled={disabled}
             value={accountId ?? ""}
             onChange={(e) =>
@@ -136,7 +137,7 @@ export function CustomerProfileFormFields({
                 {a.company}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         <div className="space-y-2">

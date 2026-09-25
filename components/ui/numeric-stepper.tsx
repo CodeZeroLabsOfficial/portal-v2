@@ -45,7 +45,8 @@ export function NumericStepper({
     <div
       id={id}
       className={cn(
-        "border-border/60 bg-background inline-flex items-center rounded-md border p-0.5 shadow-sm",
+        "inline-flex h-8 items-stretch overflow-hidden rounded-lg border border-input bg-transparent dark:bg-input/30",
+        disabled && "opacity-50",
         className,
       )}
       role="group"
@@ -55,9 +56,10 @@ export function NumericStepper({
         type="button"
         disabled={disabled || atMin}
         className={cn(
-          "text-foreground inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
-          "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-50",
+          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+          "disabled:pointer-events-none",
+          !disabled && atMin && "opacity-50",
         )}
         aria-label={ariaLabel ? `Decrease ${ariaLabel}` : "Decrease"}
         onClick={() => setNext(current - 1)}
@@ -74,9 +76,10 @@ export function NumericStepper({
         type="button"
         disabled={disabled || atMax}
         className={cn(
-          "text-foreground inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm outline-none transition-colors",
-          "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-          "disabled:pointer-events-none disabled:opacity-50",
+          "text-foreground inline-flex w-7 shrink-0 items-center justify-center outline-none transition-colors",
+          "hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+          "disabled:pointer-events-none",
+          !disabled && atMax && "opacity-50",
         )}
         aria-label={ariaLabel ? `Increase ${ariaLabel}` : "Increase"}
         onClick={() => setNext(current + 1)}

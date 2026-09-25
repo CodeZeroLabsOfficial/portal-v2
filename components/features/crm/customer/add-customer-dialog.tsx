@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
+import { Building2, ChevronDown, ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,7 +21,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { combineCustomerName } from "@/lib/customer/name-split";
 import {
@@ -94,9 +96,6 @@ const STEPS = [
     icon: User,
   },
 ] as const;
-
-const selectClassName =
-  "border-input bg-background h-9 w-full rounded-md border px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface AddCustomerDialogProps {
   open: boolean;
@@ -306,9 +305,9 @@ export function AddCustomerDialog({
 
               <div className="space-y-2">
                 <Label htmlFor="add-customer-account-mode">Account type</Label>
-                <select
+                <NativeSelect
                   id="add-customer-account-mode"
-                  className={selectClassName}
+                  className="w-full"
                   disabled={busy || lockExistingAccount}
                   value={accountMode}
                   onChange={(e) => {
@@ -317,7 +316,7 @@ export function AddCustomerDialog({
                   }}>
                   <option value="existing">Existing account</option>
                   <option value="new">Create new</option>
-                </select>
+                </NativeSelect>
               </div>
 
               {/* Fixed footprint so mode switches don’t resize the dialog */}
@@ -328,9 +327,9 @@ export function AddCustomerDialog({
                     <div className="grid gap-6 lg:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="add-customer-account">Account</Label>
-                        <select
+                        <NativeSelect
                           id="add-customer-account"
-                          className={selectClassName}
+                          className="w-full"
                           disabled={busy || lockExistingAccount}
                           value={selectedAccountId}
                           onChange={(e) => setSelectedAccountId(e.target.value)}>
@@ -340,7 +339,7 @@ export function AddCustomerDialog({
                               {a.company}
                             </option>
                           ))}
-                        </select>
+                        </NativeSelect>
                       </div>
                       <div className="space-y-2">
                         <Label>Company details</Label>
@@ -389,30 +388,31 @@ export function AddCustomerDialog({
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="add-customer-first-name">First name</Label>
-                      <div
-                        className={
-                          contactSubmitted && contactForm.formState.errors.name
-                            ? "flex overflow-hidden rounded-md border border-destructive"
-                            : "flex overflow-hidden rounded-md border"
-                        }>
-                        <select
-                          id="add-customer-record-type"
-                          className="h-9 appearance-none border-r bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none"
-                          value={contactForm.watch("saveAsLead") ? "lead" : "contact"}
-                          disabled={busy}
-                          aria-label="Record type"
-                          onChange={(e) =>
-                            contactForm.setValue("saveAsLead", e.target.value === "lead", {
-                              shouldDirty: true,
-                            })
-                          }>
-                          <option value="contact">Contact</option>
-                          <option value="lead">Lead</option>
-                        </select>
-                        <Input
+                      <InputGroup>
+                        <div className="relative flex shrink-0 items-center self-stretch border-r border-input">
+                          <select
+                            id="add-customer-record-type"
+                            data-slot="input-group-control"
+                            className="h-full appearance-none bg-transparent pr-7 pl-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                            value={contactForm.watch("saveAsLead") ? "lead" : "contact"}
+                            disabled={busy}
+                            aria-label="Record type"
+                            onChange={(e) =>
+                              contactForm.setValue("saveAsLead", e.target.value === "lead", {
+                                shouldDirty: true,
+                              })
+                            }>
+                            <option value="contact">Contact</option>
+                            <option value="lead">Lead</option>
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden
+                          />
+                        </div>
+                        <InputGroupInput
                           id="add-customer-first-name"
                           autoComplete="given-name"
-                          className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
                           placeholder="John"
                           value={firstName}
                           disabled={busy}
@@ -421,7 +421,7 @@ export function AddCustomerDialog({
                           }
                           onChange={(e) => setFirstName(e.target.value)}
                         />
-                      </div>
+                      </InputGroup>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="add-customer-last-name">Last name</Label>

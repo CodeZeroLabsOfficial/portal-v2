@@ -17,6 +17,7 @@ import {
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Sheet,
   SheetContent,
@@ -32,14 +33,7 @@ import {
   type UpdateLocalityPreferencesInput
 } from "@/lib/schemas/locality-preferences";
 import { updateLocalityPreferencesAction } from "@/server/actions/locality-preferences";
-import { cn } from "@/lib/utils";
 import type { PortalUser } from "@/types/user";
-
-const selectClassName = cn(
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-  "disabled:cursor-not-allowed disabled:opacity-50"
-);
 
 const DATE_PRESET_ALLOW = new Set(["locale", "iso", "dmy", "mdy", "long", ""]);
 const TIME_PRESET_ALLOW = new Set(["12", "24", ""]);
@@ -180,14 +174,14 @@ export function LocalityEditSheet({
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="locality-tz">Time zone</Label>
-                <select id="locality-tz" className={selectClassName} {...form.register("timeZone")}>
+                <NativeSelect id="locality-tz" className="w-full" {...form.register("timeZone")}>
                   <option value="">App default</option>
                   {timeZoneOptions.map((z) => (
                     <option key={z} value={z}>
                       {z.replace(/_/g, " ")}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 <p className="text-muted-foreground text-xs">
                   Used for timestamps, deadlines, and calendar views.
                 </p>
@@ -195,9 +189,9 @@ export function LocalityEditSheet({
 
               <div className="space-y-2">
                 <Label htmlFor="locality-currency">Currency</Label>
-                <select
+                <NativeSelect
                   id="locality-currency"
-                  className={selectClassName}
+                  className="w-full"
                   {...form.register("currencyCode")}
                 >
                   <option value="">App default</option>
@@ -206,7 +200,7 @@ export function LocalityEditSheet({
                       {c}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 <p className="text-muted-foreground text-xs">
                   ISO 4217 code (e.g. AUD for Australian dollar).
                 </p>
@@ -214,9 +208,9 @@ export function LocalityEditSheet({
 
               <div className="space-y-2">
                 <Label htmlFor="locality-lang">Language</Label>
-                <select
+                <NativeSelect
                   id="locality-lang"
-                  className={selectClassName}
+                  className="w-full"
                   {...form.register("languageTag")}
                 >
                   <option value="">App default</option>
@@ -225,14 +219,14 @@ export function LocalityEditSheet({
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="locality-region">Country / region</Label>
-                <select
+                <NativeSelect
                   id="locality-region"
-                  className={selectClassName}
+                  className="w-full"
                   {...form.register("localeRegionCode")}
                 >
                   <option value="">App default</option>
@@ -241,7 +235,7 @@ export function LocalityEditSheet({
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 <p className="text-muted-foreground text-xs">
                   ISO locale region (e.g. Australia → AU).
                 </p>
@@ -249,9 +243,9 @@ export function LocalityEditSheet({
 
               <div className="space-y-2">
                 <Label htmlFor="locality-date">Date format</Label>
-                <select
+                <NativeSelect
                   id="locality-date"
-                  className={selectClassName}
+                  className="w-full"
                   {...form.register("dateFormatPreset")}
                 >
                   <option value="">App default</option>
@@ -260,14 +254,14 @@ export function LocalityEditSheet({
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="locality-time">Time format</Label>
-                <select
+                <NativeSelect
                   id="locality-time"
-                  className={selectClassName}
+                  className="w-full"
                   {...form.register("timeFormatPreset")}
                 >
                   <option value="">App default</option>
@@ -276,7 +270,7 @@ export function LocalityEditSheet({
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
           </div>

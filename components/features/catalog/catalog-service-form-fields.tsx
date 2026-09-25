@@ -6,7 +6,9 @@ import type { FieldErrors, UseFormReturn } from "react-hook-form";
 
 import { DecimalStepper } from "@/components/ui/decimal-stepper";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { NumericStepper } from "@/components/ui/numeric-stepper";
 import { Textarea } from "@/components/ui/textarea";
 import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
@@ -14,9 +16,6 @@ import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import type { CreateCatalogServiceInput } from "@/lib/schemas/catalog-service";
 import { cn } from "@/lib/utils";
 import type { CatalogServiceKind } from "@/types/catalog-service";
-
-export const CATALOG_SERVICE_SELECT_CLASS =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export type CatalogServiceFormSection = "all" | "overview" | "pricing";
 
@@ -52,7 +51,7 @@ function PricingRow({
           placeholder={placeholder}
           value={value}
           disabled={disabled}
-          className="h-9 w-[8.5rem] shrink-0 text-right"
+          className="w-[8.5rem] shrink-0 text-right"
           onChange={(event) => onChange(event.target.value)}
         />
         {error ? <p className="text-xs leading-tight text-destructive">{error}</p> : null}
@@ -274,11 +273,12 @@ export function CatalogServiceFormFields({
                 Service or product name <span className="text-destructive">*</span>
               </Label>
               {mode === "create" ? (
-                <div className="flex overflow-hidden rounded-md border border-input focus-within:ring-2 focus-within:ring-ring">
-                  <div className="relative shrink-0 border-r border-input">
+                <InputGroup>
+                  <div className="relative flex shrink-0 items-center self-stretch border-r border-input">
                     <select
                       id={`${idPrefix}-service-type`}
-                      className="h-9 appearance-none bg-transparent py-1 pl-3 pr-7 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      data-slot="input-group-control"
+                      className="h-full appearance-none bg-transparent pr-7 pl-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={busy}
                       value={serviceType}
                       aria-label="Service type"
@@ -292,19 +292,18 @@ export function CatalogServiceFormFields({
                       <option value="addon">Add-on</option>
                     </select>
                     <ChevronDown
-                      className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                      className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground"
                       aria-hidden
                     />
                   </div>
-                  <Input
+                  <InputGroupInput
                     id={`${idPrefix}-service-name`}
                     autoComplete="off"
-                    className="h-9 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
                     placeholder="Service or product name"
                     disabled={busy}
                     {...form.register("name")}
                   />
-                </div>
+                </InputGroup>
               ) : (
                 <Input
                   id={`${idPrefix}-service-name`}
@@ -348,7 +347,7 @@ export function CatalogServiceFormFields({
               id={`${idPrefix}-service-description`}
               rows={2}
               disabled={busy}
-              className="min-h-[3.25rem] resize-none"
+              className="resize-none"
               placeholder="Provide a brief description of the product or service"
               {...form.register("description")}
             />
@@ -401,9 +400,9 @@ export function CatalogServiceFormFields({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`${idPrefix}-billing-type`}>Billing</Label>
-              <select
+              <NativeSelect
                 id={`${idPrefix}-billing-type`}
-                className={CATALOG_SERVICE_SELECT_CLASS}
+                className="w-full"
                 disabled={busy}
                 value={billingType}
                 onChange={(event) =>
@@ -414,14 +413,14 @@ export function CatalogServiceFormFields({
               >
                 <option value="recurring">Recurring</option>
                 <option value="one_off">One-off</option>
-              </select>
+              </NativeSelect>
             </div>
 
             <div className={cn("flex flex-col gap-1.5", isOneOff && "opacity-50")}>
               <Label htmlFor={`${idPrefix}-pricing-model`}>Pricing model</Label>
-              <select
+              <NativeSelect
                 id={`${idPrefix}-pricing-model`}
-                className={CATALOG_SERVICE_SELECT_CLASS}
+                className="w-full"
                 disabled={busy || isOneOff}
                 value={isOneOff ? "flat" : pricingModel}
                 onChange={(event) =>
@@ -432,7 +431,7 @@ export function CatalogServiceFormFields({
               >
                 <option value="flat">Flat rate (one price)</option>
                 <option value="by_term">Fixed term</option>
-              </select>
+              </NativeSelect>
               {isOneOff ? (
                 <p className="text-xs text-muted-foreground">One-off charges use a single flat price.</p>
               ) : null}
