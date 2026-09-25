@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
 import {
   buildDashboardViewModel,
   resolveDashboardEarliestMs,
@@ -102,9 +103,6 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
         <TabsList className="z-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="activities" disabled>
-            Activities
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -122,7 +120,13 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
           </div>
 
           <div className="mt-4 grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
-            <AdminDashboardReminders tasks={data.tasks} />
+            <AdminDashboardReminders
+              tasks={data.tasks}
+              customerOptions={data.crmCustomers.map((customer) => ({
+                id: customer.id,
+                label: taskCustomerContactLabel(customer),
+              }))}
+            />
             <AdminDashboardAchievement invoices={data.invoices} />
             <AdminDashboardStatusChart proposals={data.proposals} />
           </div>
@@ -133,8 +137,6 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
         <TabsContent value="sales">
           <AdminDashboardSalesPlaceholder />
         </TabsContent>
-
-        <TabsContent value="activities">...</TabsContent>
       </Tabs>
     </>
   );

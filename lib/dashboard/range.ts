@@ -6,7 +6,6 @@ const MS_PER_DAY = 86400000;
 export interface ResolvedDashboardRange {
   startMs: number;
   endMs: number;
-  label: string;
 }
 
 export function defaultDashboardDateRange(): DateRange {
@@ -15,15 +14,6 @@ export function defaultDashboardDateRange(): DateRange {
     from: startOfDay(subDays(today, 27)),
     to: endOfDay(today),
   };
-}
-
-export function formatDashboardRangeLabel(startMs: number, endMs: number): string {
-  const fmt = new Intl.DateTimeFormat("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  return `${fmt.format(new Date(startMs))} – ${fmt.format(new Date(endMs))}`;
 }
 
 /** Equal-length window immediately before `[startMs, endMs]` (inclusive). */
@@ -128,10 +118,10 @@ export function resolveDashboardRange(
   if (!range?.from) {
     const startMs = startOfDay(new Date(safeEarliest)).getTime();
     const endMs = todayEnd;
-    return { startMs, endMs, label: formatDashboardRangeLabel(startMs, endMs) };
+    return { startMs, endMs };
   }
 
   const startMs = startOfDay(range.from).getTime();
   const endMs = endOfDay(range.to ?? range.from).getTime();
-  return { startMs, endMs, label: formatDashboardRangeLabel(startMs, endMs) };
+  return { startMs, endMs };
 }

@@ -31,11 +31,9 @@ export interface DashboardKpiCard {
   delta?: string;
   deltaPositive: boolean;
   deltaNeutral: boolean;
-  footer: string;
 }
 
 export interface DashboardViewModel {
-  range: ResolvedDashboardRange;
   kpis: {
     revenue: DashboardKpiCard;
     payments: DashboardKpiCard;
@@ -146,7 +144,6 @@ export function buildDashboardViewModel(
   );
 
   return {
-    range,
     kpis: {
       revenue: {
         title: "Revenue",
@@ -154,7 +151,6 @@ export function buildDashboardViewModel(
         delta: formatPeriodDelta(revenueChange.pct),
         deltaPositive: revenueChange.pct > 0,
         deltaNeutral: revenueChange.neutral,
-        footer: `Previous period: ${formatCurrencyAmount(revenuePrior.amountMinor, DEFAULT_CURRENCY)}`,
       },
       payments: {
         title: "Payments",
@@ -162,7 +158,6 @@ export function buildDashboardViewModel(
         delta: formatPeriodDelta(paymentsChange.pct),
         deltaPositive: paymentsChange.pct > 0,
         deltaNeutral: paymentsChange.neutral,
-        footer: `${paymentsCurrent.count} payment${paymentsCurrent.count === 1 ? "" : "s"} · Previous ${formatCurrencyAmount(paymentsPrior.amountMinor, DEFAULT_CURRENCY)}`,
       },
       activeLeads: {
         title: "Active Leads",
@@ -170,7 +165,6 @@ export function buildDashboardViewModel(
         delta: formatPeriodDelta(leadsChange.pct),
         deltaPositive: leadsChange.pct > 0,
         deltaNeutral: leadsChange.neutral,
-        footer: `${leadsNewInPeriod} new in selected period`,
       },
       openTickets: {
         title: "Open Tickets",
@@ -178,7 +172,6 @@ export function buildDashboardViewModel(
         delta: undefined,
         deltaPositive: false,
         deltaNeutral: true,
-        footer: "Support metrics coming soon",
       },
     },
     chartTabs,

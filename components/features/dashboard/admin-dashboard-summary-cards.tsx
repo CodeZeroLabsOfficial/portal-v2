@@ -1,9 +1,17 @@
 "use client";
 
-import { TrendingDown, TrendingUp } from "lucide-react";
+import {
+  CircleDollarSign,
+  CreditCard,
+  Ticket,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import type { DashboardKpiCard } from "@/lib/dashboard/build-dashboard-view";
 import { cn } from "@/lib/utils";
 
@@ -14,51 +22,58 @@ interface AdminDashboardSummaryCardsProps {
   openTickets: DashboardKpiCard;
 }
 
+const KPI_ICONS: Record<string, LucideIcon> = {
+  Revenue: CircleDollarSign,
+  Payments: CreditCard,
+  "Active Leads": Users,
+  "Open Tickets": Ticket,
+};
+
 function SummaryCard({ kpi }: { kpi: DashboardKpiCard }) {
+  const Icon = KPI_ICONS[kpi.title];
   const showDelta = typeof kpi.delta === "string" && kpi.delta.length > 0;
 
   return (
-    <Card className="w-full gap-0 p-6 py-4">
-      <CardContent className="p-0">
-        <div className="flex items-center justify-between gap-2">
-          <dt className="text-muted-foreground text-sm font-medium">{kpi.title}</dt>
-          {showDelta ? (
-            <Badge
-              variant="outline"
-              className={cn(
-                "inline-flex shrink-0 items-center px-1.5 py-0.5 ps-2.5 text-xs font-medium",
-                kpi.deltaNeutral
-                  ? "text-muted-foreground"
-                  : kpi.deltaPositive
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-              )}
-            >
-              {!kpi.deltaNeutral ? (
-                kpi.deltaPositive ? (
-                  <TrendingUp
-                    className="mr-0.5 -ml-1 size-5 shrink-0 self-center text-green-500"
-                    aria-hidden
-                  />
-                ) : (
-                  <TrendingDown
-                    className="mr-0.5 -ml-1 size-5 shrink-0 self-center text-red-500"
-                    aria-hidden
-                  />
-                )
-              ) : null}
-              <span className="sr-only">
-                {kpi.deltaNeutral
-                  ? "No change"
-                  : kpi.deltaPositive
-                    ? "Increased by "
-                    : "Decreased by "}
-              </span>
-              {kpi.delta}
-            </Badge>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-muted-foreground text-sm">
+          {Icon ? (
+            <Icon className="mr-3 inline size-7 rounded-md border p-1.5" aria-hidden />
           ) : null}
-        </div>
-        <dd className="text-foreground mt-2 text-3xl font-semibold tabular-nums">{kpi.value}</dd>
+          {kpi.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex h-full flex-col justify-between">
+        <Typography variant="display-lg" className="mb-2">
+          {kpi.value}
+        </Typography>
+        {showDelta ? (
+          <div
+            className={cn(
+              "flex items-center text-sm",
+              kpi.deltaNeutral
+                ? "text-muted-foreground"
+                : kpi.deltaPositive
+                  ? "text-green-600"
+                  : "text-red-600",
+            )}
+          >
+            {kpi.deltaNeutral ? null : kpi.deltaPositive ? (
+              <TrendingUp className="mr-1 size-4" aria-hidden />
+            ) : (
+              <TrendingDown className="mr-1 size-4" aria-hidden />
+            )}
+            <span className="sr-only">
+              {kpi.deltaNeutral
+                ? "No change "
+                : kpi.deltaPositive
+                  ? "Increased by "
+                  : "Decreased by "}
+            </span>
+            {kpi.delta}
+            <span className="text-muted-foreground ml-1">vs previous period</span>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -73,7 +88,7 @@ export function AdminDashboardSummaryCards({
   const cards: DashboardKpiCard[] = [revenue, payments, activeLeads, openTickets];
 
   return (
-    <div className="*:data-[slot=card]:from-primary/10 grid gap-4 *:data-[slot=card]:bg-gradient-to-t md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6 xl:grid-cols-4">
       {cards.map((kpi) => (
         <SummaryCard key={kpi.title} kpi={kpi} />
       ))}
