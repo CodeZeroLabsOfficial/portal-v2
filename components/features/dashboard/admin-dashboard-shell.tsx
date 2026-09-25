@@ -133,7 +133,11 @@ export function AdminDashboardShell({ data, displayName, userLabel }: AdminDashb
             <AdminDashboardStatusChart proposals={data.proposals} />
           </div>
 
-          <AdminDashboardRecentTransactions payments={data.payments} />
+          <AdminDashboardRecentTransactions
+            invoices={data.invoices}
+            customers={data.crmCustomers}
+            subscriptions={data.subscriptions}
+          />
         </TabsContent>
 
         <TabsContent value="pipeline">

@@ -15,7 +15,6 @@ import {
 import { ArrowUpDown, ChevronLeft, ChevronRight, FolderUp, MoreHorizontal } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,70 +34,80 @@ import {
 } from "@/components/ui/table";
 import { DEFAULT_CURRENCY } from "@/config/constants";
 import { formatCurrencyAmount } from "@/lib/common/format";
-import { paymentStatusBadgeDisplay } from "@/lib/crm/payment-status-badge";
-import type { PaymentRecord } from "@/types/payment";
+import { formatInvoiceDisplayLabel } from "@/lib/crm/customer-billing-metrics";
+import { invoiceStatusBadgeDisplay } from "@/lib/crm/invoice-status-badge";
+import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
+import type { CustomerRecord } from "@/types/customer";
+import type { InvoiceRecord, InvoiceStatus } from "@/types/invoice";
+import type { SubscriptionRecord } from "@/types/subscription";
 
 interface RecentOrderRow {
   id: string;
-  ref: string;
-  stripeUrl: string;
+  invoiceLabel: string;
+  hostedInvoiceUrl: string;
   customerLabel: string;
-  description: string;
+  product: string;
   amount: number;
   currency: string;
-  status: string;
+  status: InvoiceStatus;
 }
 
-function shortRef(id: string): string {
-  const clean = id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6);
-  if (clean.length < 6) {
-    return `#${id.slice(0, 8)}`;
+function customerLabelByStripeId(customers: CustomerRecord[]): Map<string, string> {
+  const labels = new Map<string, string>();
+  for (const customer of customers) {
+    const stripeId = customer.stripeCustomerId?.trim();
+    if (!stripeId || labels.has(stripeId)) continue;
+    labels.set(stripeId, taskCustomerContactLabel(customer));
   }
-  return `#${clean.slice(0, 3)}-${clean.slice(3, 6)}`;
+  return labels;
 }
 
-function stripePaymentDashboardUrl(payment: PaymentRecord): string {
-  const id = payment.stripePaymentIntentId?.trim() || payment.id.trim();
-  return `https://dashboard.stripe.com/payments/${encodeURIComponent(id)}`;
-}
-
-function initials(label: string): string {
-  const parts = label.split(/[\s_]+/).filter(Boolean);
-  if (parts.length >= 2) {
-    const first = parts[0]?.[0] ?? "";
-    const second = parts[1]?.[0] ?? "";
-    return `${first}${second}`.toUpperCase();
+function productNameBySubscriptionId(subscriptions: SubscriptionRecord[]): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const subscription of subscriptions) {
+    const name = subscription.productName?.trim();
+    if (!name || names.has(subscription.id)) continue;
+    names.set(subscription.id, name);
   }
-  const compact = label.replace(/[^a-zA-Z0-9]/g, "");
-  return compact.slice(0, 2).toUpperCase() || "—";
+  return names;
 }
 
-function toRecentOrderRow(payment: PaymentRecord): RecentOrderRow {
-  const refId = payment.stripePaymentIntentId?.trim() || payment.id;
+function toRecentOrderRow(
+  invoice: InvoiceRecord,
+  customerLabels: Map<string, string>,
+  productNames: Map<string, string>,
+): RecentOrderRow {
+  const subscriptionId = invoice.subscriptionId?.trim() ?? "";
   return {
-    id: refId,
-    ref: shortRef(refId),
-    stripeUrl: stripePaymentDashboardUrl(payment),
-    customerLabel: payment.customerId.trim(),
-    description: payment.description?.trim() ?? "",
-    amount: payment.amount,
-    currency: payment.currency || DEFAULT_CURRENCY,
-    status: payment.status,
+    id: invoice.stripeInvoiceId || invoice.id,
+    invoiceLabel: formatInvoiceDisplayLabel(invoice),
+    hostedInvoiceUrl: invoice.hostedInvoiceUrl?.trim() ?? "",
+    customerLabel: customerLabels.get(invoice.customerId.trim()) ?? "",
+    product: subscriptionId ? (productNames.get(subscriptionId) ?? "") : "",
+    amount: invoice.amountDue,
+    currency: invoice.currency || DEFAULT_CURRENCY,
+    status: invoice.status,
   };
 }
 
 const columns: ColumnDef<RecentOrderRow>[] = [
   {
-    accessorKey: "ref",
+    accessorKey: "invoiceLabel",
     header: "ID",
-    size: 90,
-    cell: ({ row }) => (
-      <Button variant="link" className="text-muted-foreground hover:text-primary h-auto p-0" asChild>
-        <a href={row.original.stripeUrl} target="_blank" rel="noopener noreferrer">
-          {row.original.ref}
-        </a>
-      </Button>
-    ),
+    cell: ({ row }) => {
+      const label = row.original.invoiceLabel;
+      const href = row.original.hostedInvoiceUrl;
+      if (!href) {
+        return <span className="text-muted-foreground whitespace-nowrap">{label}</span>;
+      }
+      return (
+        <Button variant="link" className="text-muted-foreground hover:text-primary h-auto p-0" asChild>
+          <a href={href} target="_blank" rel="noopener noreferrer">
+            {label}
+          </a>
+        </Button>
+      );
+    },
   },
   {
     accessorKey: "customerLabel",
@@ -108,34 +117,26 @@ const columns: ColumnDef<RecentOrderRow>[] = [
       if (!label) {
         return <span className="text-muted-foreground">—</span>;
       }
-      return (
-        <div className="flex items-center gap-4">
-          <Avatar>
-            <AvatarFallback>{initials(label)}</AvatarFallback>
-          </Avatar>
-          <div className="truncate font-medium">{label}</div>
-        </div>
-      );
+      return <div className="font-medium">{label}</div>;
     },
     filterFn: (row, _columnId, filterValue) => {
       const query = String(filterValue).toLowerCase();
       return (
         row.original.customerLabel.toLowerCase().includes(query) ||
-        row.original.description.toLowerCase().includes(query)
+        row.original.product.toLowerCase().includes(query) ||
+        row.original.invoiceLabel.toLowerCase().includes(query)
       );
     },
   },
   {
-    accessorKey: "description",
+    accessorKey: "product",
     header: "Product",
-    size: 180,
     cell: ({ row }) => (
-      <div className="text-muted-foreground truncate">{row.original.description || "—"}</div>
+      <div className="text-muted-foreground">{row.original.product || "—"}</div>
     ),
   },
   {
     accessorKey: "amount",
-    size: 110,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -147,7 +148,7 @@ const columns: ColumnDef<RecentOrderRow>[] = [
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="font-medium tabular-nums">
+      <div className="font-medium whitespace-nowrap tabular-nums">
         {formatCurrencyAmount(row.original.amount, row.original.currency)}
       </div>
     ),
@@ -155,16 +156,14 @@ const columns: ColumnDef<RecentOrderRow>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 120,
     cell: ({ row }) => {
-      const status = paymentStatusBadgeDisplay(row.original.status);
+      const status = invoiceStatusBadgeDisplay(row.original.status);
       return <StatusBadge label={status.label} variant={status.variant} />;
     },
   },
   {
     id: "actions",
     enableHiding: false,
-    size: 56,
     cell: ({ row }) => (
       <div className="text-end">
         <DropdownMenu>
@@ -177,16 +176,18 @@ const columns: ColumnDef<RecentOrderRow>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                void navigator.clipboard.writeText(row.original.id);
+                void navigator.clipboard.writeText(row.original.invoiceLabel);
               }}
             >
-              Copy payment ID
+              Copy invoice number
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href={row.original.stripeUrl} target="_blank" rel="noopener noreferrer">
-                View payment details
-              </a>
-            </DropdownMenuItem>
+            {row.original.hostedInvoiceUrl ? (
+              <DropdownMenuItem asChild>
+                <a href={row.original.hostedInvoiceUrl} target="_blank" rel="noopener noreferrer">
+                  View invoice
+                </a>
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -195,22 +196,26 @@ const columns: ColumnDef<RecentOrderRow>[] = [
 ];
 
 interface AdminDashboardRecentTransactionsProps {
-  payments: PaymentRecord[];
+  invoices: InvoiceRecord[];
+  customers: CustomerRecord[];
+  subscriptions: SubscriptionRecord[];
 }
 
 export function AdminDashboardRecentTransactions({
-  payments,
+  invoices,
+  customers,
+  subscriptions,
 }: AdminDashboardRecentTransactionsProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
-  const rows = React.useMemo(
-    () =>
-      [...payments]
-        .sort((a, b) => (b.createdAt || b.updatedAt) - (a.createdAt || a.updatedAt))
-        .map(toRecentOrderRow),
-    [payments],
-  );
+  const rows = React.useMemo(() => {
+    const customerLabels = customerLabelByStripeId(customers);
+    const productNames = productNameBySubscriptionId(subscriptions);
+    return [...invoices]
+      .sort((a, b) => (b.issuedAt || b.paidAt || 0) - (a.issuedAt || a.paidAt || 0))
+      .map((invoice) => toRecentOrderRow(invoice, customerLabels, productNames));
+  }, [invoices, customers, subscriptions]);
 
   const table = useReactTable({
     data: rows,
@@ -266,17 +271,12 @@ export function AdminDashboardRecentTransactions({
             className="max-w-xs"
           />
         </div>
-        <Table className="min-w-[760px] table-fixed [&_td:first-child]:ps-(--card-spacing) [&_td:last-child]:pe-(--card-spacing) [&_th:first-child]:ps-(--card-spacing) [&_th:last-child]:pe-(--card-spacing)">
+        <Table className="[&_td:first-child]:ps-(--card-spacing) [&_td:last-child]:pe-(--card-spacing) [&_th:first-child]:ps-(--card-spacing) [&_th:last-child]:pe-(--card-spacing)">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{
-                      width: header.getSize() !== 150 ? header.getSize() : undefined,
-                    }}
-                  >
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -299,7 +299,7 @@ export function AdminDashboardRecentTransactions({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  {payments.length === 0 ? "No payments recorded yet" : "No results."}
+                  {invoices.length === 0 ? "No invoices recorded yet" : "No results."}
                 </TableCell>
               </TableRow>
             )}
