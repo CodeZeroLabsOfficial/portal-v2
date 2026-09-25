@@ -91,7 +91,7 @@ export function AdminDashboardAddTaskDialog({
       <DialogTrigger asChild>
         <Button variant="outline" type="button">
           <PlusCircle />
-          Set Reminder
+          Add Task
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
