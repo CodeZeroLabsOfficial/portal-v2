@@ -10,7 +10,10 @@ import { toast } from "sonner";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentMediumClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,18 +21,15 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from "@/components/ui/sheet";
-import {
-  DATE_FORMAT_OPTIONS,
-  LANGUAGE_OPTIONS,
-  TIME_FORMAT_OPTIONS,
-} from "@/lib/locality/data";
+import { DATE_FORMAT_OPTIONS, LANGUAGE_OPTIONS, TIME_FORMAT_OPTIONS } from "@/lib/locality/data";
 import { ISO3166_ALPHA2_CODES } from "@/lib/locality/iso3166-alpha2-codes";
 import {
   updateLocalityPreferencesSchema,
-  type UpdateLocalityPreferencesInput,
+  type UpdateLocalityPreferencesInput
 } from "@/lib/schemas/locality-preferences";
 import { updateLocalityPreferencesAction } from "@/server/actions/locality-preferences";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ import type { PortalUser } from "@/types/user";
 const selectClassName = cn(
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-  "disabled:cursor-not-allowed disabled:opacity-50",
+  "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 const DATE_PRESET_ALLOW = new Set(["locale", "iso", "dmy", "mdy", "long", ""]);
@@ -50,10 +50,14 @@ function portalUserToLocalityDefaults(user: PortalUser): UpdateLocalityPreferenc
   return {
     timeZone: user.timeZone ?? "",
     languageTag: user.languageTag ?? "",
-    dateFormatPreset: (DATE_PRESET_ALLOW.has(rawDate) ? rawDate : "") as UpdateLocalityPreferencesInput["dateFormatPreset"],
-    timeFormatPreset: (TIME_PRESET_ALLOW.has(rawTime) ? rawTime : "") as UpdateLocalityPreferencesInput["timeFormatPreset"],
+    dateFormatPreset: (DATE_PRESET_ALLOW.has(rawDate)
+      ? rawDate
+      : "") as UpdateLocalityPreferencesInput["dateFormatPreset"],
+    timeFormatPreset: (TIME_PRESET_ALLOW.has(rawTime)
+      ? rawTime
+      : "") as UpdateLocalityPreferencesInput["timeFormatPreset"],
     localeRegionCode: user.localeRegionCode ?? "",
-    currencyCode: user.currencyCode ?? "",
+    currencyCode: user.currencyCode ?? ""
   };
 }
 
@@ -65,7 +69,7 @@ function mergeUserFromInput(current: PortalUser, v: UpdateLocalityPreferencesInp
     dateFormatPreset: v.dateFormatPreset,
     timeFormatPreset: v.timeFormatPreset,
     localeRegionCode: v.localeRegionCode.trim().toUpperCase(),
-    currencyCode: v.currencyCode.trim().toUpperCase(),
+    currencyCode: v.currencyCode.trim().toUpperCase()
   };
 }
 
@@ -84,7 +88,7 @@ export function LocalityEditSheet({
   currencyCodes,
   open,
   onOpenChange,
-  onSaved,
+  onSaved
 }: LocalityEditSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -102,7 +106,7 @@ export function LocalityEditSheet({
     if (code && !valid.includes(code)) {
       const dn = new Intl.DisplayNames(["en"], { type: "region" });
       return [...countryOptions, { value: code, label: dn.of(code) ?? code }].sort((a, b) =>
-        a.label.localeCompare(b.label),
+        a.label.localeCompare(b.label)
       );
     }
     return countryOptions;
@@ -135,7 +139,7 @@ export function LocalityEditSheet({
 
   const form = useForm<UpdateLocalityPreferencesInput>({
     resolver: zodResolver(updateLocalityPreferencesSchema),
-    defaultValues: portalUserToLocalityDefaults(user),
+    defaultValues: portalUserToLocalityDefaults(user)
   });
 
   React.useEffect(() => {
@@ -170,96 +174,128 @@ export function LocalityEditSheet({
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-          <FormServerError message={serverError} />
+          <div className={sheetFormBodyClass}>
+            <FormServerError message={serverError} />
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="locality-tz">Time zone</Label>
-              <select id="locality-tz" className={selectClassName} {...form.register("timeZone")}>
-                <option value="">App default</option>
-                {timeZoneOptions.map((z) => (
-                  <option key={z} value={z}>
-                    {z.replace(/_/g, " ")}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">Used for timestamps, deadlines, and calendar views.</p>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="locality-tz">Time zone</Label>
+                <select id="locality-tz" className={selectClassName} {...form.register("timeZone")}>
+                  <option value="">App default</option>
+                  {timeZoneOptions.map((z) => (
+                    <option key={z} value={z}>
+                      {z.replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-xs">
+                  Used for timestamps, deadlines, and calendar views.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="locality-currency">Currency</Label>
+                <select
+                  id="locality-currency"
+                  className={selectClassName}
+                  {...form.register("currencyCode")}
+                >
+                  <option value="">App default</option>
+                  {currencyOptionsList.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-xs">
+                  ISO 4217 code (e.g. AUD for Australian dollar).
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="locality-lang">Language</Label>
+                <select
+                  id="locality-lang"
+                  className={selectClassName}
+                  {...form.register("languageTag")}
+                >
+                  <option value="">App default</option>
+                  {languageOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="locality-region">Country / region</Label>
+                <select
+                  id="locality-region"
+                  className={selectClassName}
+                  {...form.register("localeRegionCode")}
+                >
+                  <option value="">App default</option>
+                  {regionSelectOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-xs">
+                  ISO locale region (e.g. Australia → AU).
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="locality-date">Date format</Label>
+                <select
+                  id="locality-date"
+                  className={selectClassName}
+                  {...form.register("dateFormatPreset")}
+                >
+                  <option value="">App default</option>
+                  {DATE_FORMAT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="locality-time">Time format</Label>
+                <select
+                  id="locality-time"
+                  className={selectClassName}
+                  {...form.register("timeFormatPreset")}
+                >
+                  <option value="">App default</option>
+                  {TIME_FORMAT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locality-currency">Currency</Label>
-              <select id="locality-currency" className={selectClassName} {...form.register("currencyCode")}>
-                <option value="">App default</option>
-                {currencyOptionsList.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">ISO 4217 code (e.g. AUD for Australian dollar).</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locality-lang">Language</Label>
-              <select id="locality-lang" className={selectClassName} {...form.register("languageTag")}>
-                <option value="">App default</option>
-                {languageOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locality-region">Country / region</Label>
-              <select id="locality-region" className={selectClassName} {...form.register("localeRegionCode")}>
-                <option value="">App default</option>
-                {regionSelectOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">ISO locale region (e.g. Australia → AU).</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locality-date">Date format</Label>
-              <select id="locality-date" className={selectClassName} {...form.register("dateFormatPreset")}>
-                <option value="">App default</option>
-                {DATE_FORMAT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="locality-time">Time format</Label>
-              <select id="locality-time" className={selectClassName} {...form.register("timeFormatPreset")}>
-                <option value="">App default</option>
-                {TIME_FORMAT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
           </div>
 
-          <Button type="submit" disabled={busy}>
-            {busy ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                Saving…
-              </>
-            ) : (
-              "Save changes"
-            )}
-          </Button>
+          <div className={sheetFormFooterClass}>
+            <SheetFooter className={sheetFooterClass}>
+              <span />
+              <Button type="submit" disabled={busy}>
+                {busy ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
+                )}
+              </Button>
+            </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

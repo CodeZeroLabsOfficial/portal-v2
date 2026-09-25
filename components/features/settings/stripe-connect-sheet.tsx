@@ -9,9 +9,11 @@ import { toast } from "sonner";
 
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetActionsRowClass,
   sheetContentMediumClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import {
   AlertDialog,
@@ -21,7 +23,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,24 +33,27 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from "@/components/ui/sheet";
 import {
   updateIntegrationsSettingsSchema,
-  type UpdateIntegrationsSettingsInput,
+  type UpdateIntegrationsSettingsInput
 } from "@/lib/schemas/integrations-settings";
 import type { StripeIntegrationStatus } from "@/lib/stripe/integration-status";
 import {
   disconnectStripeIntegrationAction,
-  updatePortalIntegrationsSettingsAction,
+  updatePortalIntegrationsSettingsAction
 } from "@/server/actions/integrations-settings";
 import type { PortalIntegrationsSettings } from "@/types/integrations";
 
-function settingsToFormDefaults(settings: PortalIntegrationsSettings): UpdateIntegrationsSettingsInput {
+function settingsToFormDefaults(
+  settings: PortalIntegrationsSettings
+): UpdateIntegrationsSettingsInput {
   return {
     stripePublishableKey: settings.stripePublishableKey ?? "",
-    webhookUrl: settings.webhookUrl ?? "",
+    webhookUrl: settings.webhookUrl ?? ""
   };
 }
 
@@ -65,7 +70,7 @@ export function StripeConnectSheet({
   stripeStatus,
   open,
   onOpenChange,
-  onSaved,
+  onSaved
 }: StripeConnectSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -73,12 +78,12 @@ export function StripeConnectSheet({
   const [disconnecting, setDisconnecting] = React.useState(false);
 
   const hasPortalStripeConfig = Boolean(
-    settings.stripePublishableKey?.trim() || settings.webhookUrl?.trim(),
+    settings.stripePublishableKey?.trim() || settings.webhookUrl?.trim()
   );
 
   const form = useForm<UpdateIntegrationsSettingsInput>({
     resolver: zodResolver(updateIntegrationsSettingsSchema),
-    defaultValues: settingsToFormDefaults(settings),
+    defaultValues: settingsToFormDefaults(settings)
   });
 
   React.useEffect(() => {
@@ -126,7 +131,9 @@ export function StripeConnectSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className={sheetContentMediumClass}>
           <SheetHeader>
-            <SheetTitle>{hasPortalStripeConfig ? "Stripe integration" : "Connect Stripe"}</SheetTitle>
+            <SheetTitle>
+              {hasPortalStripeConfig ? "Stripe integration" : "Connect Stripe"}
+            </SheetTitle>
             <SheetDescription>
               {hasPortalStripeConfig
                 ? "Update your Stripe publishable key and webhook URL, or disconnect the integration."
@@ -135,95 +142,105 @@ export function StripeConnectSheet({
           </SheetHeader>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <span className="text-sm">Secret key</span>
-                <Badge variant={stripeStatus.hasSecretKey ? "success" : "secondary"}>
-                  {stripeStatus.hasSecretKey ? "Configured" : "Not configured"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <span className="text-sm">Webhook secret</span>
-                <Badge variant={stripeStatus.hasWebhookSecret ? "success" : "secondary"}>
-                  {stripeStatus.hasWebhookSecret ? "Configured" : "Not configured"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <span className="text-sm">Publishable key</span>
-                <Badge variant={stripeStatus.hasPublishableKey ? "success" : "secondary"}>
-                  {stripeStatus.hasPublishableKey ? "Configured" : "Not configured"}
-                </Badge>
-              </div>
-              {!stripeStatus.hasSecretKey || !stripeStatus.hasWebhookSecret ? (
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  Add <code className="rounded bg-muted px-1 py-0.5">STRIPE_SECRET_KEY</code> and{" "}
-                  <code className="rounded bg-muted px-1 py-0.5">STRIPE_WEBHOOK_SECRET</code> to your deployment
-                  environment. Secret keys are never stored in the portal database.
-                </p>
-              ) : null}
-              <a
-                href="https://dashboard.stripe.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-              >
-                Open Stripe Dashboard
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              </a>
-            </div>
-
-            <FormServerError message={serverError} />
-
-            <div className="space-y-2">
-              <Label htmlFor="stripe-publishable-key">Stripe publishable key</Label>
-              <Input
-                id="stripe-publishable-key"
-                placeholder="pk_live_…"
-                disabled={busy || disconnecting}
-                {...form.register("stripePublishableKey")}
-              />
-              <p className="text-muted-foreground text-xs">
-                Only the publishable key. Keep secret keys in server-side environment variables.
-              </p>
-              {form.formState.errors.stripePublishableKey ? (
-                <p className="text-destructive text-xs">{form.formState.errors.stripePublishableKey.message}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="stripe-webhook-url">Notification webhook URL</Label>
-              <Input
-                id="stripe-webhook-url"
-                placeholder="https://…"
-                disabled={busy || disconnecting}
-                {...form.register("webhookUrl")}
-              />
-              <p className="text-muted-foreground text-xs">
-                Paste your Firebase <code className="rounded bg-muted px-1 py-0.5">stripeWebhook</code> endpoint URL
-                for reference when configuring Stripe Dashboard.
-              </p>
-              {form.formState.errors.webhookUrl ? (
-                <p className="text-destructive text-xs">{form.formState.errors.webhookUrl.message}</p>
-              ) : null}
-            </div>
-
-            <div className={sheetActionsRowClass}>
-              {hasPortalStripeConfig ? (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={busy || disconnecting}
-                  onClick={() => setDisconnectOpen(true)}
+            <div className={sheetFormBodyClass}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <span className="text-sm">Secret key</span>
+                  <Badge variant={stripeStatus.hasSecretKey ? "success" : "secondary"}>
+                    {stripeStatus.hasSecretKey ? "Configured" : "Not configured"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <span className="text-sm">Webhook secret</span>
+                  <Badge variant={stripeStatus.hasWebhookSecret ? "success" : "secondary"}>
+                    {stripeStatus.hasWebhookSecret ? "Configured" : "Not configured"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <span className="text-sm">Publishable key</span>
+                  <Badge variant={stripeStatus.hasPublishableKey ? "success" : "secondary"}>
+                    {stripeStatus.hasPublishableKey ? "Configured" : "Not configured"}
+                  </Badge>
+                </div>
+                {!stripeStatus.hasSecretKey || !stripeStatus.hasWebhookSecret ? (
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Add <code className="bg-muted rounded px-1 py-0.5">STRIPE_SECRET_KEY</code> and{" "}
+                    <code className="bg-muted rounded px-1 py-0.5">STRIPE_WEBHOOK_SECRET</code> to
+                    your deployment environment. Secret keys are never stored in the portal
+                    database.
+                  </p>
+                ) : null}
+                <a
+                  href="https://dashboard.stripe.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
                 >
-                  Disconnect
+                  Open Stripe Dashboard
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </a>
+              </div>
+
+              <FormServerError message={serverError} />
+
+              <div className="space-y-2">
+                <Label htmlFor="stripe-publishable-key">Stripe publishable key</Label>
+                <Input
+                  id="stripe-publishable-key"
+                  placeholder="pk_live_…"
+                  disabled={busy || disconnecting}
+                  {...form.register("stripePublishableKey")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Only the publishable key. Keep secret keys in server-side environment variables.
+                </p>
+                {form.formState.errors.stripePublishableKey ? (
+                  <p className="text-destructive text-xs">
+                    {form.formState.errors.stripePublishableKey.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stripe-webhook-url">Notification webhook URL</Label>
+                <Input
+                  id="stripe-webhook-url"
+                  placeholder="https://…"
+                  disabled={busy || disconnecting}
+                  {...form.register("webhookUrl")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Paste your Firebase{" "}
+                  <code className="bg-muted rounded px-1 py-0.5">stripeWebhook</code> endpoint URL
+                  for reference when configuring Stripe Dashboard.
+                </p>
+                {form.formState.errors.webhookUrl ? (
+                  <p className="text-destructive text-xs">
+                    {form.formState.errors.webhookUrl.message}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={sheetFormFooterClass}>
+              <SheetFooter className={sheetFooterClass}>
+                {hasPortalStripeConfig ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={busy || disconnecting}
+                    onClick={() => setDisconnectOpen(true)}
+                  >
+                    Disconnect
+                  </Button>
+                ) : (
+                  <span />
+                )}
+                <Button type="submit" disabled={busy || disconnecting}>
+                  {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+                  Save
                 </Button>
-              ) : (
-                <span />
-              )}
-              <Button type="submit" disabled={busy || disconnecting}>
-                {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                Save
-              </Button>
+              </SheetFooter>
             </div>
           </form>
         </SheetContent>
@@ -234,8 +251,8 @@ export function StripeConnectSheet({
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Stripe?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes your Stripe publishable key and webhook URL from the portal. Card payments will not work
-              until you connect again.
+              This removes your Stripe publishable key and webhook URL from the portal. Card
+              payments will not work until you connect again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

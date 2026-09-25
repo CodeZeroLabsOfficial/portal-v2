@@ -11,13 +11,17 @@ import { CustomerProfileFormFields } from "@/components/features/crm/customer/cu
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentWideClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet";
@@ -104,27 +108,34 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
           <SheetDescription>{customer.email}</SheetDescription>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-          <FormServerError message={serverError} />
-          <CustomerProfileFormFields
-            form={form}
-            disabled={fieldsDisabled || busy}
-            firstName={firstName}
-            lastName={lastName}
-            onFirstNameChange={setFirstName}
-            onLastNameChange={setLastName}
-            tagInput={tagInput}
-            onTagInputChange={setTagInput}
-          />
-          <Button type="submit" disabled={fieldsDisabled || busy}>
-            {busy ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                Saving…
-              </>
-            ) : (
-              "Save changes"
-            )}
-          </Button>
+          <div className={sheetFormBodyClass}>
+            <FormServerError message={serverError} />
+            <CustomerProfileFormFields
+              form={form}
+              disabled={fieldsDisabled || busy}
+              firstName={firstName}
+              lastName={lastName}
+              onFirstNameChange={setFirstName}
+              onLastNameChange={setLastName}
+              tagInput={tagInput}
+              onTagInputChange={setTagInput}
+            />
+          </div>
+          <div className={sheetFormFooterClass}>
+            <SheetFooter className={sheetFooterClass}>
+              <span />
+              <Button type="submit" disabled={fieldsDisabled || busy}>
+                {busy ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
+                )}
+              </Button>
+            </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

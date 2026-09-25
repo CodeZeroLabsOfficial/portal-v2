@@ -5,17 +5,12 @@ import { format } from "date-fns";
 import { Edit, FileIcon, MessageSquare } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
-import { sheetContentClass, sheetFormClass } from "@/components/shared/sheet-layout";
+import { sheetContentClass, sheetFormBodyClass } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { taskColumnBadgeDisplay, taskPriorityBadgeDisplay } from "@/lib/crm/status-badges";
 import { clampProgressPercent } from "@/lib/tasks/task-progress-options";
 import type { TaskRecord } from "@/types/task";
@@ -49,11 +44,7 @@ export function TaskDetailSheet({
           <div className="flex items-start justify-between pe-6">
             <SheetTitle className="text-left">{task.title}</SheetTitle>
             {onEditClick ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onEditClick(task)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => onEditClick(task)}>
                 <Edit className="size-4" />
                 Edit
               </Button>
@@ -72,7 +63,7 @@ export function TaskDetailSheet({
           </div>
         </SheetHeader>
 
-        <div className={sheetFormClass}>
+        <div className={sheetFormBodyClass}>
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Description</h4>
             <p className="text-muted-foreground text-sm">
@@ -83,17 +74,13 @@ export function TaskDetailSheet({
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Assigned To</h4>
-              <p className="text-muted-foreground text-sm">
-                {assigneeName || "Unassigned"}
-              </p>
+              <p className="text-muted-foreground text-sm">{assigneeName || "Unassigned"}</p>
             </div>
 
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Due Date</h4>
               <p className="text-muted-foreground text-sm">
-                {typeof task.dueAt === "number"
-                  ? format(new Date(task.dueAt), "PPP")
-                  : "—"}
+                {typeof task.dueAt === "number" ? format(new Date(task.dueAt), "PPP") : "—"}
               </p>
             </div>
 
@@ -112,7 +99,8 @@ export function TaskDetailSheet({
                 {task.customerId ? (
                   <Link
                     href={`/admin/customers/${task.customerId}`}
-                    className="text-muted-foreground text-sm underline-offset-4 hover:underline">
+                    className="text-muted-foreground text-sm underline-offset-4 hover:underline"
+                  >
                     {task.customerDisplayName ?? "View customer"}
                   </Link>
                 ) : (
@@ -122,7 +110,7 @@ export function TaskDetailSheet({
             ) : null}
           </div>
 
-          {((task.commentCount ?? 0) > 0 || (task.attachmentCount ?? 0) > 0) ? (
+          {(task.commentCount ?? 0) > 0 || (task.attachmentCount ?? 0) > 0 ? (
             <>
               <Separator />
               <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">

@@ -4,8 +4,12 @@ import * as React from "react";
 import { Plus, X } from "lucide-react";
 
 import {
+  sheetActionsEndClass,
   sheetContentClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,21 +20,13 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { CatalogCategoryCombobox } from "@/components/shared/catalog-category-combobox";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
-import {
-  catalogSelectOptions,
-  type TemplateCatalogMeta,
-} from "@/lib/templates/catalog-meta";
+import { catalogSelectOptions, type TemplateCatalogMeta } from "@/lib/templates/catalog-meta";
 import { TEMPLATE_CLASSIFICATIONS } from "@/lib/templates/template-catalog-options";
 
 export interface TemplatePropertiesEditSheetProps {
@@ -46,7 +42,7 @@ export interface TemplatePropertiesEditSheetProps {
 function updateCatalogField(
   meta: TemplateCatalogMeta,
   field: keyof TemplateCatalogMeta,
-  value: string,
+  value: string
 ): TemplateCatalogMeta {
   return { ...meta, [field]: value };
 }
@@ -57,7 +53,7 @@ export function TemplatePropertiesEditSheet({
   description,
   catalogMeta,
   agreementTitle,
-  onSave,
+  onSave
 }: TemplatePropertiesEditSheetProps) {
   const isContractTemplate = agreementTitle !== undefined;
   const [draftDescription, setDraftDescription] = React.useState(description);
@@ -76,7 +72,7 @@ export function TemplatePropertiesEditSheet({
 
   const classificationOptions = catalogSelectOptions(
     TEMPLATE_CLASSIFICATIONS,
-    draftCatalogMeta.classification,
+    draftCatalogMeta.classification
   );
 
   function addFeature() {
@@ -89,7 +85,7 @@ export function TemplatePropertiesEditSheet({
     }
     setDraftCatalogMeta({
       ...draftCatalogMeta,
-      keyFeatures: [...existing, label].slice(0, 8),
+      keyFeatures: [...existing, label].slice(0, 8)
     });
     setFeatureDraft("");
   }
@@ -98,7 +94,7 @@ export function TemplatePropertiesEditSheet({
     const next = (draftCatalogMeta.keyFeatures ?? []).filter((item) => item !== label);
     setDraftCatalogMeta({
       ...draftCatalogMeta,
-      keyFeatures: next.length > 0 ? next : undefined,
+      keyFeatures: next.length > 0 ? next : undefined
     });
   }
 
@@ -107,7 +103,7 @@ export function TemplatePropertiesEditSheet({
     onSave(
       draftDescription,
       draftCatalogMeta,
-      isContractTemplate ? draftAgreementTitle.trim() || "Services Agreement" : undefined,
+      isContractTemplate ? draftAgreementTitle.trim() || "Services Agreement" : undefined
     );
     onOpenChange(false);
   }
@@ -120,136 +116,150 @@ export function TemplatePropertiesEditSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className={sheetFormClass} noValidate>
-          {isContractTemplate ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="template-agreement-title">Agreement title</Label>
-              <Input
-                id="template-agreement-title"
-                value={draftAgreementTitle}
-                placeholder="Services Agreement"
-                onChange={(e) => setDraftAgreementTitle(e.target.value)}
-              />
-            </div>
-          ) : null}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-subtitle">Subtitle</Label>
-            <Input
-              id="template-subtitle"
-              value={draftCatalogMeta.subtitle ?? ""}
-              placeholder="Mobile App Development Proposal"
-              onChange={(e) =>
-                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "subtitle", e.target.value))
-              }
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-description">Description</Label>
-            <Textarea
-              id="template-description"
-              value={draftDescription}
-              rows={4}
-              placeholder="Short summary shown on template cards in the hub."
-              onChange={(e) => setDraftDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-version">Version</Label>
-            <Input
-              id="template-version"
-              value={draftCatalogMeta.version ?? ""}
-              placeholder="2.3"
-              onChange={(e) =>
-                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "version", e.target.value))
-              }
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-classification">Classification</Label>
-            <Select
-              value={draftCatalogMeta.classification || undefined}
-              onValueChange={(value) =>
-                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "classification", value))
-              }>
-              <SelectTrigger id="template-classification" className="w-full">
-                <SelectValue placeholder="Select classification" />
-              </SelectTrigger>
-              <SelectContent>
-                {classificationOptions.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-category">Category</Label>
-            <CatalogCategoryCombobox
-              id="template-category"
-              value={draftCatalogMeta.category}
-              categories={categories}
-              onValueChange={(value) =>
-                setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "category", value))
-              }
-              onCreateCategory={createCategory}
-            />
-            <p className="text-muted-foreground text-xs">
-              Package plans and add-ons in the editor are limited to this category.
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="template-feature-draft">Key features</Label>
-            <div className="flex gap-2">
-              <Input
-                id="template-feature-draft"
-                value={featureDraft}
-                placeholder="Dynamic Pricing"
-                onChange={(e) => setFeatureDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addFeature();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Add feature"
-                onClick={addFeature}>
-                <Plus className="size-4" aria-hidden />
-              </Button>
-            </div>
-            {(draftCatalogMeta.keyFeatures?.length ?? 0) > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {draftCatalogMeta.keyFeatures!.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1 pr-1">
-                    {tag}
-                    <button
-                      type="button"
-                      className="hover:bg-muted rounded-sm p-0.5"
-                      aria-label={`Remove ${tag}`}
-                      onClick={() => removeFeature(tag)}>
-                      <X className="size-3" aria-hidden />
-                    </button>
-                  </Badge>
-                ))}
+          <div className={sheetFormBodyClass}>
+            {isContractTemplate ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="template-agreement-title">Agreement title</Label>
+                <Input
+                  id="template-agreement-title"
+                  value={draftAgreementTitle}
+                  placeholder="Services Agreement"
+                  onChange={(e) => setDraftAgreementTitle(e.target.value)}
+                />
               </div>
             ) : null}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-subtitle">Subtitle</Label>
+              <Input
+                id="template-subtitle"
+                value={draftCatalogMeta.subtitle ?? ""}
+                placeholder="Mobile App Development Proposal"
+                onChange={(e) =>
+                  setDraftCatalogMeta(
+                    updateCatalogField(draftCatalogMeta, "subtitle", e.target.value)
+                  )
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-description">Description</Label>
+              <Textarea
+                id="template-description"
+                value={draftDescription}
+                rows={4}
+                placeholder="Short summary shown on template cards in the hub."
+                onChange={(e) => setDraftDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-version">Version</Label>
+              <Input
+                id="template-version"
+                value={draftCatalogMeta.version ?? ""}
+                placeholder="2.3"
+                onChange={(e) =>
+                  setDraftCatalogMeta(
+                    updateCatalogField(draftCatalogMeta, "version", e.target.value)
+                  )
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-classification">Classification</Label>
+              <Select
+                value={draftCatalogMeta.classification || undefined}
+                onValueChange={(value) =>
+                  setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "classification", value))
+                }
+              >
+                <SelectTrigger id="template-classification" className="w-full">
+                  <SelectValue placeholder="Select classification" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classificationOptions.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-category">Category</Label>
+              <CatalogCategoryCombobox
+                id="template-category"
+                value={draftCatalogMeta.category}
+                categories={categories}
+                onValueChange={(value) =>
+                  setDraftCatalogMeta(updateCatalogField(draftCatalogMeta, "category", value))
+                }
+                onCreateCategory={createCategory}
+              />
+              <p className="text-muted-foreground text-xs">
+                Package plans and add-ons in the editor are limited to this category.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="template-feature-draft">Key features</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="template-feature-draft"
+                  value={featureDraft}
+                  placeholder="Dynamic Pricing"
+                  onChange={(e) => setFeatureDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addFeature();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Add feature"
+                  onClick={addFeature}
+                >
+                  <Plus className="size-4" aria-hidden />
+                </Button>
+              </div>
+              {(draftCatalogMeta.keyFeatures?.length ?? 0) > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {draftCatalogMeta.keyFeatures!.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                      {tag}
+                      <button
+                        type="button"
+                        className="hover:bg-muted rounded-sm p-0.5"
+                        aria-label={`Remove ${tag}`}
+                        onClick={() => removeFeature(tag)}
+                      >
+                        <X className="size-3" aria-hidden />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Save changes</Button>
+          <div className={sheetFormFooterClass}>
+            <SheetFooter className={sheetFooterClass}>
+              <span />
+              <div className={sheetActionsEndClass}>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save changes</Button>
+              </div>
+            </SheetFooter>
           </div>
         </form>
       </SheetContent>

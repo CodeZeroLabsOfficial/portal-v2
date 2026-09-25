@@ -10,7 +10,10 @@ import { toast } from "sonner";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentMediumClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +22,13 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from "@/components/ui/sheet";
 import {
   updateCompanySettingsSchema,
-  type UpdateCompanySettingsInput,
+  type UpdateCompanySettingsInput
 } from "@/lib/schemas/company-settings";
 import { updateWorkspaceCompanySettingsAction } from "@/server/actions/company-settings";
 import type { WorkspaceCompanySettings } from "@/types/organization";
@@ -42,13 +46,13 @@ function settingsToFormDefaults(s: WorkspaceCompanySettings): UpdateCompanySetti
     city: s.city,
     region: s.region,
     postalCode: s.postalCode,
-    country: s.country,
+    country: s.country
   };
 }
 
 function mergeSettingsFromInput(
   current: WorkspaceCompanySettings,
-  v: UpdateCompanySettingsInput,
+  v: UpdateCompanySettingsInput
 ): WorkspaceCompanySettings {
   return {
     ...current,
@@ -64,7 +68,7 @@ function mergeSettingsFromInput(
     region: v.region.trim(),
     postalCode: v.postalCode.trim(),
     country: v.country.trim(),
-    updatedAt: Date.now(),
+    updatedAt: Date.now()
   };
 }
 
@@ -81,7 +85,7 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
 
   const form = useForm<UpdateCompanySettingsInput>({
     resolver: zodResolver(updateCompanySettingsSchema),
-    defaultValues: settingsToFormDefaults(settings),
+    defaultValues: settingsToFormDefaults(settings)
   });
 
   React.useEffect(() => {
@@ -116,99 +120,142 @@ export function CompanyEditSheet({ settings, open, onOpenChange, onSaved }: Comp
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-          <FormServerError message={serverError} />
+          <div className={sheetFormBodyClass}>
+            <FormServerError message={serverError} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="company-name">Company name</Label>
-              <Input
-                id="company-name"
-                autoComplete="organization"
-                placeholder="Company Name Pty Ltd"
-                {...form.register("name")}
-              />
-              {form.formState.errors.name ? (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-phone">Phone</Label>
-              <Input
-                id="company-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+61 400 000 000"
-                {...form.register("phone")}
-              />
-              {form.formState.errors.phone ? (
-                <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-email">Email</Label>
-              <Input
-                id="company-email"
-                type="email"
-                autoComplete="email"
-                placeholder="info@company.com"
-                {...form.register("email")}
-              />
-              {form.formState.errors.email ? (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-abn">ABN</Label>
-              <Input id="company-abn" autoComplete="off" placeholder="12 345 678 901" {...form.register("abn")} />
-              {form.formState.errors.abn ? (
-                <p className="text-xs text-destructive">{form.formState.errors.abn.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-acn">ACN</Label>
-              <Input id="company-acn" autoComplete="off" placeholder="123 456 789" {...form.register("acn")} />
-              {form.formState.errors.acn ? (
-                <p className="text-xs text-destructive">{form.formState.errors.acn.message}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Address</Label>
-              <Input placeholder="Line 1" autoComplete="address-line1" {...form.register("addressLine1")} />
-              <Input placeholder="Line 2" autoComplete="address-line2" {...form.register("addressLine2")} />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Input placeholder="City" autoComplete="address-level2" {...form.register("city")} />
-                <Input placeholder="State / region" autoComplete="address-level1" {...form.register("region")} />
-                <Input placeholder="Postal code" autoComplete="postal-code" {...form.register("postalCode")} />
-                <Input placeholder="Country" autoComplete="country-name" {...form.register("country")} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="company-name">Company name</Label>
+                <Input
+                  id="company-name"
+                  autoComplete="organization"
+                  placeholder="Company Name Pty Ltd"
+                  {...form.register("name")}
+                />
+                {form.formState.errors.name ? (
+                  <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-phone">Phone</Label>
+                <Input
+                  id="company-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+61 400 000 000"
+                  {...form.register("phone")}
+                />
+                {form.formState.errors.phone ? (
+                  <p className="text-destructive text-xs">{form.formState.errors.phone.message}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-email">Email</Label>
+                <Input
+                  id="company-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="info@company.com"
+                  {...form.register("email")}
+                />
+                {form.formState.errors.email ? (
+                  <p className="text-destructive text-xs">{form.formState.errors.email.message}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-abn">ABN</Label>
+                <Input
+                  id="company-abn"
+                  autoComplete="off"
+                  placeholder="12 345 678 901"
+                  {...form.register("abn")}
+                />
+                {form.formState.errors.abn ? (
+                  <p className="text-destructive text-xs">{form.formState.errors.abn.message}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-acn">ACN</Label>
+                <Input
+                  id="company-acn"
+                  autoComplete="off"
+                  placeholder="123 456 789"
+                  {...form.register("acn")}
+                />
+                {form.formState.errors.acn ? (
+                  <p className="text-destructive text-xs">{form.formState.errors.acn.message}</p>
+                ) : null}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-website">Website</Label>
-              <Input
-                id="company-website"
-                autoComplete="url"
-                placeholder="https://www.company.com"
-                {...form.register("website")}
-              />
-              {form.formState.errors.website ? (
-                <p className="text-xs text-destructive">{form.formState.errors.website.message}</p>
-              ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Address</Label>
+                <Input
+                  placeholder="Line 1"
+                  autoComplete="address-line1"
+                  {...form.register("addressLine1")}
+                />
+                <Input
+                  placeholder="Line 2"
+                  autoComplete="address-line2"
+                  {...form.register("addressLine2")}
+                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="City"
+                    autoComplete="address-level2"
+                    {...form.register("city")}
+                  />
+                  <Input
+                    placeholder="State / region"
+                    autoComplete="address-level1"
+                    {...form.register("region")}
+                  />
+                  <Input
+                    placeholder="Postal code"
+                    autoComplete="postal-code"
+                    {...form.register("postalCode")}
+                  />
+                  <Input
+                    placeholder="Country"
+                    autoComplete="country-name"
+                    {...form.register("country")}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-website">Website</Label>
+                <Input
+                  id="company-website"
+                  autoComplete="url"
+                  placeholder="https://www.company.com"
+                  {...form.register("website")}
+                />
+                {form.formState.errors.website ? (
+                  <p className="text-destructive text-xs">
+                    {form.formState.errors.website.message}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
 
-          <Button type="submit" disabled={busy}>
-            {busy ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                Saving…
-              </>
-            ) : (
-              "Save changes"
-            )}
-          </Button>
+          <div className={sheetFormFooterClass}>
+            <SheetFooter className={sheetFooterClass}>
+              <span />
+              <Button type="submit" disabled={busy}>
+                {busy ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
+                )}
+              </Button>
+            </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

@@ -8,7 +8,10 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { TaskAssigneeField } from "@/components/shared/task-assignee-field";
 import {
@@ -20,17 +23,9 @@ import { TaskStatusPriorityFields } from "@/components/shared/task-status-priori
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  statusToBoardColumn,
-  type TaskBoardColumnId
-} from "@/lib/tasks/task-board-columns";
+import { statusToBoardColumn, type TaskBoardColumnId } from "@/lib/tasks/task-board-columns";
 import {
   DEFAULT_TASK_PRIORITY,
   coerceTaskPriority,
@@ -133,94 +128,99 @@ export function TaskEditSheet({
           </SheetHeader>
 
           <form onSubmit={onSubmit} className={sheetFormClass} noValidate>
-            <FormServerError message={serverError} />
+            <div className={sheetFormBodyClass}>
+              <FormServerError message={serverError} />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-task-title">
-                Title <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="edit-task-title"
-                name="title"
-                required
-                maxLength={500}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter title"
-                autoComplete="off"
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-task-title">
+                  Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="edit-task-title"
+                  name="title"
+                  required
+                  maxLength={500}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter title"
+                  autoComplete="off"
+                  disabled={busy || !task}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-task-description">Description</Label>
+                <Textarea
+                  id="edit-task-description"
+                  name="description"
+                  maxLength={8000}
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter description"
+                  disabled={busy || !task}
+                />
+              </div>
+
+              <TaskAssigneeField
+                id="edit-task-assignee"
+                value={assignedToUid}
+                onValueChange={setAssignedToUid}
+                disabled={busy || !task}
+                allowUnassigned
+                displayNameHint={task?.assignedToDisplayName}
+              />
+
+              <TaskDatePicker
+                id="edit-task-due"
+                label="Due Date"
+                date={dueDate}
+                onDateChange={setDueDate}
+                disabled={busy || !task}
+              />
+
+              <TaskDatePicker
+                id="edit-task-reminder"
+                label="Reminder Date"
+                date={reminderDate}
+                onDateChange={setReminderDate}
+                disabled={busy || !task}
+              />
+
+              <TaskStatusPriorityFields
+                status={column}
+                onStatusChange={setColumn}
+                priority={priority}
+                onPriorityChange={setPriority}
+                disabled={busy || !task}
+                statusId="edit-task-status"
+                priorityId="edit-task-priority"
+              />
+
+              <TaskCustomerSelect
+                id="edit-task-customer"
+                options={customerOptions}
+                value={customerId}
+                onValueChange={setCustomerId}
                 disabled={busy || !task}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-task-description">Description</Label>
-              <Textarea
-                id="edit-task-description"
-                name="description"
-                maxLength={8000}
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description"
-                disabled={busy || !task}
-              />
-            </div>
-
-            <TaskAssigneeField
-              id="edit-task-assignee"
-              value={assignedToUid}
-              onValueChange={setAssignedToUid}
-              disabled={busy || !task}
-              allowUnassigned
-              displayNameHint={task?.assignedToDisplayName}
-            />
-
-            <TaskDatePicker
-              id="edit-task-due"
-              label="Due Date"
-              date={dueDate}
-              onDateChange={setDueDate}
-              disabled={busy || !task}
-            />
-
-            <TaskDatePicker
-              id="edit-task-reminder"
-              label="Reminder Date"
-              date={reminderDate}
-              onDateChange={setReminderDate}
-              disabled={busy || !task}
-            />
-
-            <TaskStatusPriorityFields
-              status={column}
-              onStatusChange={setColumn}
-              priority={priority}
-              onPriorityChange={setPriority}
-              disabled={busy || !task}
-              statusId="edit-task-status"
-              priorityId="edit-task-priority"
-            />
-
-            <TaskCustomerSelect
-              id="edit-task-customer"
-              options={customerOptions}
-              value={customerId}
-              onValueChange={setCustomerId}
-              disabled={busy || !task}
-            />
-
-            <div className="flex items-center justify-between gap-2">
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={busy || !task}
-                onClick={() => setConfirmDeleteOpen(true)}>
-                Delete task
-              </Button>
-              <Button type="submit" disabled={busy || !task || !title.trim()}>
-                {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                Save Changes
-              </Button>
+            <div className={sheetFormFooterClass}>
+              <SheetFooter className={sheetFooterClass}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={busy || !task}
+                  onClick={() => setConfirmDeleteOpen(true)}
+                >
+                  Delete task
+                </Button>
+                <Button type="submit" disabled={busy || !task || !title.trim()}>
+                  {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+                  Save Changes
+                </Button>
+              </SheetFooter>
             </div>
           </form>
         </SheetContent>

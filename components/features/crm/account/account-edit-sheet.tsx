@@ -7,20 +7,21 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { AccountFormFields, type AccountFormFieldsProps } from "@/components/features/crm/account/account-form-fields";
+import {
+  AccountFormFields,
+  type AccountFormFieldsProps
+} from "@/components/features/crm/account/account-form-fields";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetActionsEndClass,
   sheetContentMediumClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
+  sheetFormFooterClass
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { accountToFormDefaults } from "@/lib/account/form-defaults";
 import { updateAccountFormSchema, type UpdateAccountFormInput } from "@/lib/schemas/account";
 import { updateAccountAction } from "@/server/actions/accounts-crm";
@@ -38,7 +39,7 @@ export function AccountEditSheet({ account, open, onOpenChange }: AccountEditShe
 
   const form = useForm<UpdateAccountFormInput>({
     resolver: zodResolver(updateAccountFormSchema),
-    defaultValues: accountToFormDefaults(account),
+    defaultValues: accountToFormDefaults(account)
   });
 
   React.useEffect(() => {
@@ -69,26 +70,38 @@ export function AccountEditSheet({ account, open, onOpenChange }: AccountEditShe
           <SheetTitle>Edit account</SheetTitle>
         </SheetHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-          <FormServerError message={serverError} />
-          <AccountFormFields
-            form={form as unknown as AccountFormFieldsProps["form"]}
-            idPrefix="edit-account"
-            disabled={busy}
-          />
-          <div className={sheetActionsEndClass}>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {busy ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                  Saving…
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
+          <div className={sheetFormBodyClass}>
+            <FormServerError message={serverError} />
+            <AccountFormFields
+              form={form as unknown as AccountFormFieldsProps["form"]}
+              idPrefix="edit-account"
+              disabled={busy}
+            />
+          </div>
+          <div className={sheetFormFooterClass}>
+            <SheetFooter className={sheetFooterClass}>
+              <span />
+              <div className={sheetActionsEndClass}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={busy}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  {busy ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                      Saving…
+                    </>
+                  ) : (
+                    "Save"
+                  )}
+                </Button>
+              </div>
+            </SheetFooter>
           </div>
         </form>
       </SheetContent>

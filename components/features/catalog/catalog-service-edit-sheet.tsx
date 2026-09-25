@@ -11,41 +11,44 @@ import {
   CatalogServiceFormFields,
   catalogServiceFormInvalidIsPricing,
   catalogServiceFormInvalidMessage,
-  useCatalogServicePricingFlags,
+  useCatalogServicePricingFlags
 } from "@/components/features/catalog/catalog-service-form-fields";
 import {
   CatalogServiceFeaturesEditor,
   CATALOG_MAX_FEATURE_LENGTH,
   CATALOG_MAX_FEATURES,
-  normalizeCatalogFeatures,
+  normalizeCatalogFeatures
 } from "@/components/features/catalog/catalog-service-features-editor";
 import { CatalogServiceStripePanel } from "@/components/features/catalog/catalog-service-stripe-panel";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
-  sheetActionsRowClass,
+  sheetActionsEndClass,
   sheetContentMediumClass,
+  sheetFooterClass,
+  sheetFormBodyClass,
   sheetFormClass,
-  sheetTabsClass,
+  sheetFormFooterClass,
+  sheetTabsClass
 } from "@/components/shared/sheet-layout";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   buildCatalogServicePayload,
   majorInputToMinor,
   servicePriceControlDefaults,
-  serviceToEditDefaults,
+  serviceToEditDefaults
 } from "@/lib/catalog/form-defaults";
 import { normalizeLookupKeyBase } from "@/lib/catalog/service-slug";
 import {
   createCatalogServiceSchema,
-  type CreateCatalogServiceInput,
+  type CreateCatalogServiceInput
 } from "@/lib/schemas/catalog-service";
 import {
   deleteCatalogServiceAction,
   updateCatalogServiceAction,
-  updateCatalogServiceFeaturesAction,
+  updateCatalogServiceFeaturesAction
 } from "@/server/actions/catalog-services";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 
@@ -71,7 +74,7 @@ function validateFeaturesDraft(features: string[]): string | null {
 export function CatalogServiceEditSheet({
   service,
   open,
-  onOpenChange,
+  onOpenChange
 }: CatalogServiceEditSheetProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState("overview");
@@ -91,8 +94,8 @@ export function CatalogServiceEditSheet({
     resolver: zodResolver(createCatalogServiceSchema) as Resolver<CreateCatalogServiceInput>,
     defaultValues: {
       ...serviceToEditDefaults(service),
-      serviceType,
-    },
+      serviceType
+    }
   });
 
   const billingType = form.watch("billingType");
@@ -100,7 +103,7 @@ export function CatalogServiceEditSheet({
   const { isPlan, isFlat, isByTerm, showUpfront } = useCatalogServicePricingFlags(
     serviceType,
     billingType,
-    pricingModel,
+    pricingModel
   );
 
   const resolvedLookupBase = normalizeLookupKeyBase(service.slug);
@@ -115,7 +118,7 @@ export function CatalogServiceEditSheet({
     const prices = servicePriceControlDefaults(service);
     form.reset({
       ...defaults,
-      serviceType: service.serviceType ?? "plan",
+      serviceType: service.serviceType ?? "plan"
     });
     setFlatPrice(prices.flatPrice);
     setUpfront12(prices.upfront12);
@@ -140,12 +143,12 @@ export function CatalogServiceEditSheet({
       form.setValue(
         "upfrontCost12Minor",
         showUpfront && upfront12Minor > 0 ? upfront12Minor : undefined,
-        { shouldValidate: false },
+        { shouldValidate: false }
       );
       form.setValue(
         "upfrontCost24Minor",
         showUpfront && upfront24Minor > 0 ? upfront24Minor : undefined,
-        { shouldValidate: false },
+        { shouldValidate: false }
       );
     }
   }
@@ -178,12 +181,12 @@ export function CatalogServiceEditSheet({
       upfront12,
       upfront24,
       monthly12,
-      monthly24,
+      monthly24
     });
 
     const result = await updateCatalogServiceAction({
       ...payload,
-      serviceId: service.id,
+      serviceId: service.id
     });
 
     if (!result.ok) {
@@ -195,7 +198,7 @@ export function CatalogServiceEditSheet({
     if (isPlan) {
       const featuresResult = await updateCatalogServiceFeaturesAction({
         serviceId: service.id,
-        features: normalizeCatalogFeatures(featuresDraft),
+        features: normalizeCatalogFeatures(featuresDraft)
       });
       if (!featuresResult.ok) {
         setServerError(featuresResult.message);
@@ -245,7 +248,7 @@ export function CatalogServiceEditSheet({
     setMonthly12,
     monthly24,
     setMonthly24,
-    idPrefix: "edit-catalog",
+    idPrefix: "edit-catalog"
   };
 
   return (
@@ -257,75 +260,83 @@ export function CatalogServiceEditSheet({
           </SheetHeader>
 
           <form onSubmit={handleFormSubmit} className={sheetFormClass} noValidate>
-            <FormServerError message={serverError} />
+            <div className={sheetFormBodyClass}>
+              <FormServerError message={serverError} />
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className={sheetTabsClass}>
-              <TabsList
-                variant="line"
-                className="h-auto w-full justify-start gap-6 rounded-none bg-transparent p-0"
-              >
-                <TabsTrigger value="overview" className="flex-none px-0 pb-3">
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="pricing" className="flex-none px-0 pb-3">
-                  Pricing
-                </TabsTrigger>
-                {isPlan ? (
-                  <TabsTrigger value="features" className="flex-none px-0 pb-3">
-                    Features
+              <Tabs value={activeTab} onValueChange={setActiveTab} className={sheetTabsClass}>
+                <TabsList
+                  variant="line"
+                  className="h-auto w-full justify-start gap-6 rounded-none bg-transparent p-0"
+                >
+                  <TabsTrigger value="overview" className="flex-none px-0 pb-3">
+                    Overview
                   </TabsTrigger>
-                ) : null}
-                <TabsTrigger value="integrations" className="flex-none px-0 pb-3">
-                  Integrations
-                </TabsTrigger>
-              </TabsList>
+                  <TabsTrigger value="pricing" className="flex-none px-0 pb-3">
+                    Pricing
+                  </TabsTrigger>
+                  {isPlan ? (
+                    <TabsTrigger value="features" className="flex-none px-0 pb-3">
+                      Features
+                    </TabsTrigger>
+                  ) : null}
+                  <TabsTrigger value="integrations" className="flex-none px-0 pb-3">
+                    Integrations
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="overview" className="mt-0">
-                <CatalogServiceFormFields {...formFieldProps} section="overview" />
-              </TabsContent>
-
-              <TabsContent value="pricing" className="mt-0">
-                <CatalogServiceFormFields {...formFieldProps} section="pricing" />
-              </TabsContent>
-
-              {isPlan ? (
-                <TabsContent value="features" className="mt-0">
-                  <CatalogServiceFeaturesEditor
-                    features={featuresDraft}
-                    onChange={setFeaturesDraft}
-                    disabled={busy || fieldsDisabled}
-                  />
+                <TabsContent value="overview" className="mt-0">
+                  <CatalogServiceFormFields {...formFieldProps} section="overview" />
                 </TabsContent>
-              ) : null}
 
-              <TabsContent value="integrations" className="mt-0">
-                <CatalogServiceStripePanel service={service} disabled={fieldsDisabled} />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="pricing" className="mt-0">
+                  <CatalogServiceFormFields {...formFieldProps} section="pricing" />
+                </TabsContent>
 
-            <div className={sheetActionsRowClass}>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={busy}
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
-                Delete
-              </Button>
-              <div className="flex items-center gap-2">
+                {isPlan ? (
+                  <TabsContent value="features" className="mt-0">
+                    <CatalogServiceFeaturesEditor
+                      features={featuresDraft}
+                      onChange={setFeaturesDraft}
+                      disabled={busy || fieldsDisabled}
+                    />
+                  </TabsContent>
+                ) : null}
+
+                <TabsContent value="integrations" className="mt-0">
+                  <CatalogServiceStripePanel service={service} disabled={fieldsDisabled} />
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            <div className={sheetFormFooterClass}>
+              <SheetFooter className={sheetFooterClass}>
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  variant="destructive"
                   disabled={busy}
+                  onClick={() => setConfirmDeleteOpen(true)}
                 >
-                  Cancel
+                  Delete
                 </Button>
-                <Button type="submit" disabled={busy || fieldsDisabled} className="min-w-[7rem] gap-2">
-                  {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                  Save
-                </Button>
-              </div>
+                <div className={sheetActionsEndClass}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={busy || fieldsDisabled}
+                    className="min-w-[7rem] gap-2"
+                  >
+                    {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+                    Save
+                  </Button>
+                </div>
+              </SheetFooter>
             </div>
           </form>
         </SheetContent>
