@@ -4,7 +4,7 @@ import {
   type TemplateHubRow,
   type TemplateHubTab,
 } from "@/lib/templates/hub-rows";
-import { templateStageBadgeDisplay } from "@/lib/templates/status-badges";
+import { templateStatusBadgeDisplay } from "@/lib/templates/status-badges";
 
 export interface FilterTemplateHubRowsOptions {
   tab: TemplateHubTab;
@@ -23,7 +23,7 @@ export function filterTemplateHubRows(
     .filter((row) => tab === "all" || row.kind === tab)
     .filter((row) => {
       if (!q) return true;
-      const stage = templateStageBadgeDisplay(row.stage);
+      const stage = templateStatusBadgeDisplay(row.stage);
       const hay = [
         row.name,
         row.description ?? "",

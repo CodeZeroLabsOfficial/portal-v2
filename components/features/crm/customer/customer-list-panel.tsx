@@ -34,9 +34,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   customerCrmTypeBadgeDisplay,
-  customerStatusBadgeDisplay,
-  subscriptionRollupBadgeDisplay
+  customerStatusBadgeDisplay
 } from "@/lib/crm/status-badges";
+import { subscriptionStatusBadgeDisplay } from "@/lib/subscription/status-badge";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import type { CustomerListRow } from "@/lib/customer/list";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
@@ -180,7 +180,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         cell: ({ row }) => {
           const d = customerStatusBadgeDisplay(row.original.status);
-          return <StatusBadge label={d.label} variant={d.variant} />;
+          return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
         },
         filterFn: multiSelectColumnFilter
       },
@@ -211,8 +211,8 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         meta: { viewLabel: "Subscriptions" },
         header: "Subscriptions",
         cell: ({ row }) => {
-          const d = subscriptionRollupBadgeDisplay(row.original.subscriptionRollup);
-          return <StatusBadge label={d.label} variant={d.variant} />;
+          const d = subscriptionStatusBadgeDisplay(row.original.subscriptionRollup);
+          return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
         },
         enableSorting: false
       },

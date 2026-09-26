@@ -33,8 +33,8 @@ import {
   subscriptionStripeDashboardUrl
 } from "@/lib/subscription/row-actions";
 import {
-  getSubscriptionPausedBadgeDisplay,
-  getSubscriptionStatusBadgeDisplay
+  subscriptionPausedBadgeDisplay,
+  subscriptionStatusBadgeDisplay
 } from "@/lib/subscription/status-badge";
 import {
   cancelSubscriptionAction,
@@ -150,14 +150,14 @@ export function CustomerSubscriptionsTab({
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
           const subscription = row.original;
-          const display = getSubscriptionStatusBadgeDisplay(subscription.status);
+          const display = subscriptionStatusBadgeDisplay(subscription.status);
           return (
             <div className="flex flex-wrap items-center gap-1.5">
-              <StatusBadge label={display.label} variant={display.variant} />
+              <StatusBadge label={display.label} variant={display.variant} dot={display.dot} />
               {subscription.paymentCollectionPaused ? (
                 <StatusBadge
-                  label={getSubscriptionPausedBadgeDisplay().label}
-                  variant={getSubscriptionPausedBadgeDisplay().variant}
+                  label={subscriptionPausedBadgeDisplay().label}
+                  variant={subscriptionPausedBadgeDisplay().variant}
                 />
               ) : null}
             </div>

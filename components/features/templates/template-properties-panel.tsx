@@ -15,8 +15,8 @@ import {
 import { catalogCategoryLabel } from "@/lib/catalog/categories";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
-  templateStageBadgeDisplay,
-  templateStageBadgeTitle,
+  templateStatusBadgeDisplay,
+  templateStatusBadgeTitle,
 } from "@/lib/templates/status-badges";
 import type { UserSummary } from "@/lib/users/user-summaries";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
@@ -44,7 +44,7 @@ export function TemplatePropertiesPanel({
   onAgreementTitleChange,
 }: TemplatePropertiesPanelProps) {
   const isContractTemplate = onAgreementTitleChange !== undefined;
-  const stageBadge = templateStageBadgeDisplay(stage);
+  const stageBadge = templateStatusBadgeDisplay(stage);
   const [editOpen, setEditOpen] = React.useState(false);
   const { categories } = useCatalogCategories();
   const versionLabel = templateCatalogVersionLabel(catalogMeta);
@@ -85,7 +85,8 @@ export function TemplatePropertiesPanel({
             <StatusBadge
               label={stageBadge.label}
               variant={stageBadge.variant}
-              title={templateStageBadgeTitle(stage)}
+              dot={stageBadge.dot}
+              title={templateStatusBadgeTitle(stage)}
             />
           </PropertyField>
 

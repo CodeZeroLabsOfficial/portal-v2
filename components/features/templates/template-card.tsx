@@ -11,8 +11,8 @@ import { Typography } from "@/components/ui/typography";
 import type { TemplateHubRow } from "@/lib/templates/hub-rows";
 import {
   templateKindLabel,
-  templateStageBadgeDisplay,
-  templateStageBadgeTitle,
+  templateStatusBadgeDisplay,
+  templateStatusBadgeTitle,
 } from "@/lib/templates/status-badges";
 import type { ProposalTemplateStage } from "@/types/proposal-template";
 
@@ -35,7 +35,7 @@ export function TemplateCard({
   onClone,
   onRequestDelete,
 }: TemplateCardProps) {
-  const stageBadge = templateStageBadgeDisplay(row.stage);
+  const stageBadge = templateStatusBadgeDisplay(row.stage);
   const { cardMeta } = row;
 
   return (
@@ -77,7 +77,8 @@ export function TemplateCard({
           <StatusBadge
             label={stageBadge.label}
             variant={stageBadge.variant}
-            title={templateStageBadgeTitle(row.stage)}
+            dot={stageBadge.dot}
+            title={templateStatusBadgeTitle(row.stage)}
             className="shrink-0"
           />
         </div>

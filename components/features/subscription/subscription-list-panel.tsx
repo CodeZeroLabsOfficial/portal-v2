@@ -31,8 +31,8 @@ import {
   subscriptionStripeDashboardUrl
 } from "@/lib/subscription/row-actions";
 import {
-  getSubscriptionPausedBadgeDisplay,
-  getSubscriptionStatusBadgeDisplay
+  subscriptionPausedBadgeDisplay,
+  subscriptionStatusBadgeDisplay
 } from "@/lib/subscription/status-badge";
 import {
   cancelSubscriptionAction,
@@ -126,9 +126,9 @@ function subscriptionFilterStatus(s: SubscriptionRecord): SubscriptionStatus | "
 
 function subscriptionStatusDisplay(s: SubscriptionRecord) {
   if (s.paymentCollectionPaused && s.status !== "canceled" && s.status !== "scheduled") {
-    return getSubscriptionPausedBadgeDisplay();
+    return subscriptionPausedBadgeDisplay();
   }
-  return getSubscriptionStatusBadgeDisplay(s.status);
+  return subscriptionStatusBadgeDisplay(s.status);
 }
 
 function mapToTableRows(rows: SubscriptionListRow[]): SubscriptionListTableRow[] {
@@ -369,7 +369,7 @@ export function SubscriptionListPanel({
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
           const display = subscriptionStatusDisplay(row.original.subscription);
-          return <StatusBadge label={display.label} variant={display.variant} />;
+          return <StatusBadge label={display.label} variant={display.variant} dot={display.dot} />;
         }
       },
       {

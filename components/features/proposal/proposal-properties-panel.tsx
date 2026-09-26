@@ -11,7 +11,7 @@ import {
   listPackagesBlocksInDocument,
 } from "@/lib/proposal/commerce/package-selection";
 import { computeProposalDealValue } from "@/lib/proposal/commerce/packages-totals";
-import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
+import { proposalStatusBadgeDisplay } from "@/lib/proposal/status-badge";
 import type { ProposalRecord } from "@/types/proposal";
 
 export interface ProposalPropertiesPanelProps {
@@ -32,7 +32,7 @@ export function ProposalPropertiesPanel({
   sourceTemplateId,
   variant = "page",
 }: ProposalPropertiesPanelProps) {
-  const stage = getProposalStageBadgeDisplay(proposal);
+  const stage = proposalStatusBadgeDisplay(proposal);
   const hasPackagesBlocks = listPackagesBlocksInDocument(proposal.document.blocks).length > 0;
   const packageSelectionComplete = isDocumentPackageSelectionComplete(
     proposal.document.blocks,

@@ -2,7 +2,7 @@ import type { DateRange } from "react-day-picker";
 import { endOfDay, startOfDay } from "date-fns";
 
 import type { FacetedFilterOption } from "@/components/shared/data-table/data-table-faceted-filter";
-import { getSubscriptionStatusBadgeDisplay } from "@/lib/subscription/status-badge";
+import { subscriptionStatusBadgeDisplay } from "@/lib/subscription/status-badge";
 import type { SubscriptionRecord, SubscriptionStatus } from "@/types/subscription";
 
 const SUBSCRIPTION_STATUSES: SubscriptionStatus[] = [
@@ -26,7 +26,7 @@ export interface SubscriptionTableRow extends SubscriptionRecord {
 export const SUBSCRIPTION_STATUS_FILTER_OPTIONS: FacetedFilterOption[] = SUBSCRIPTION_STATUSES.map(
   (status) => ({
     value: status,
-    label: getSubscriptionStatusBadgeDisplay(status).label
+    label: subscriptionStatusBadgeDisplay(status).label
   })
 );
 
@@ -50,7 +50,7 @@ export function mapSubscriptionsToTableRows(
   subscriptions: SubscriptionRecord[]
 ): SubscriptionTableRow[] {
   return subscriptions.map((subscription) => {
-    const statusLabel = getSubscriptionStatusBadgeDisplay(subscription.status).label;
+    const statusLabel = subscriptionStatusBadgeDisplay(subscription.status).label;
     const productLabel = subscription.productName?.trim() || "—";
     return {
       ...subscription,

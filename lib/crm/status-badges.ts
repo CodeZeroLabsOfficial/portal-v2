@@ -1,25 +1,24 @@
 import type { VariantProps } from "class-variance-authority";
 
-import { opportunityStageLabel } from "@/lib/crm/opportunity-stages";
-import { getSubscriptionStatusBadgeDisplay } from "@/lib/subscription/status-badge";
 import { coerceTaskPriority, taskPriorityLabel } from "@/lib/tasks/task-priority";
 import { taskBoardColumnLabel, statusToBoardColumn } from "@/lib/tasks/task-board-columns";
 import type { badgeVariants } from "@/components/ui/badge";
-import type { CustomerCrmType, CustomerSubscriptionRollup } from "@/types/customer";
-import type { OpportunityStage } from "@/types/opportunity";
+import type { CustomerCrmType } from "@/types/customer";
 
 type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
 export interface StatusBadgeDisplay {
   label: string;
   variant: BadgeVariant;
+  /** Leading dot. Customer, subscription, and template status only. */
+  dot?: boolean;
 }
 
 export function customerStatusBadgeDisplay(status: "active" | "archived"): StatusBadgeDisplay {
   if (status === "archived") {
-    return { label: "Archived", variant: "secondary" };
+    return { label: "Archived", variant: "destructive", dot: true };
   }
-  return { label: "Active", variant: "success" };
+  return { label: "Active", variant: "success", dot: true };
 }
 
 export function customerCrmTypeBadgeDisplay(crmType: CustomerCrmType): StatusBadgeDisplay {
@@ -27,30 +26,6 @@ export function customerCrmTypeBadgeDisplay(crmType: CustomerCrmType): StatusBad
     return { label: "Lead", variant: "amber" };
   }
   return { label: "Contact", variant: "sky" };
-}
-
-export function subscriptionRollupBadgeDisplay(
-  rollup: CustomerSubscriptionRollup,
-): StatusBadgeDisplay {
-  return getSubscriptionStatusBadgeDisplay(rollup);
-}
-
-export function opportunityStageBadgeDisplay(stage: OpportunityStage): StatusBadgeDisplay {
-  const label = opportunityStageLabel(stage);
-  switch (stage) {
-    case "lead":
-      return { label, variant: "neutral" };
-    case "discovery":
-      return { label, variant: "warning" };
-    case "proposal":
-      return { label, variant: "purple" };
-    case "negotiation":
-      return { label, variant: "info" };
-    case "won":
-      return { label, variant: "success" };
-    case "lost":
-      return { label, variant: "destructive" };
-  }
 }
 
 export function taskPriorityBadgeDisplay(priority: string | undefined): StatusBadgeDisplay {

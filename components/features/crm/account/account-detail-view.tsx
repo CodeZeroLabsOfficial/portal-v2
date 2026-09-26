@@ -42,7 +42,11 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
         <Card>
           <CardHeader>
             <CardTitle className="font-display text-2xl">{account.company}</CardTitle>
-            <StatusBadge label={activeBadge.label} variant={activeBadge.variant} />
+            <StatusBadge
+              label={activeBadge.label}
+              variant={activeBadge.variant}
+              dot={activeBadge.dot}
+            />
           </CardHeader>
           <CardContent>
             <AccountCompanyDetailsCard account={account} />
@@ -86,6 +90,7 @@ export function AccountDetailView({ account }: AccountDetailViewProps) {
                           <StatusBadge
                             label={statusDisplay.label}
                             variant={statusDisplay.variant}
+                            dot={statusDisplay.dot}
                             className="shrink-0 capitalize"
                           />
                         </div>

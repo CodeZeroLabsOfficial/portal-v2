@@ -40,7 +40,11 @@ export function CustomerDetailHero({ customer, onEditClick }: CustomerDetailHero
       title={displayName}
       meta={
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge label={statusBadge.label} variant={statusBadge.variant} />
+          <StatusBadge
+            label={statusBadge.label}
+            variant={statusBadge.variant}
+            dot={statusBadge.dot}
+          />
           <StatusBadge label={crmTypeBadge.label} variant={crmTypeBadge.variant} />
           {customer.tags.map((tag) => {
             const swatch = customerTagSwatch(tag);

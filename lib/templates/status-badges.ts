@@ -6,14 +6,14 @@ export function templateKindLabel(kind: TemplateHubKind): string {
   return kind === "contract" ? "Contract" : "Proposal";
 }
 
-export function templateStageBadgeDisplay(stage: ProposalTemplateStage): StatusBadgeDisplay {
+export function templateStatusBadgeDisplay(stage: ProposalTemplateStage): StatusBadgeDisplay {
   if (stage === "published") {
-    return { label: "Published", variant: "success" };
+    return { label: "Published", variant: "success", dot: true };
   }
-  return { label: "Draft", variant: "amber" };
+  return { label: "Draft", variant: "amber", dot: true };
 }
 
-export function templateStageBadgeTitle(stage: ProposalTemplateStage): string {
+export function templateStatusBadgeTitle(stage: ProposalTemplateStage): string {
   if (stage === "published") {
     return "Marked ready for CRM and customer proposals.";
   }

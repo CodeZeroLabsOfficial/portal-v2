@@ -8,7 +8,7 @@ export function catalogServiceStatusBadgeDisplay(status: CatalogServiceStatus): 
     case "draft":
       return { label: "Draft", variant: "amber" };
     default:
-      return { label: "Archived", variant: "secondary" };
+      return { label: "Archived", variant: "destructive" };
   }
 }
 

@@ -36,7 +36,7 @@ export function proposalLifecyclePhase(p: ProposalRecord): ProposalLifecyclePhas
   return "draft";
 }
 
-export function getProposalStageBadgeDisplay(p: ProposalRecord): {
+export function proposalStatusBadgeDisplay(p: ProposalRecord): {
   label: string;
   title: string;
   badgeKey: ProposalStageBadgeKey;

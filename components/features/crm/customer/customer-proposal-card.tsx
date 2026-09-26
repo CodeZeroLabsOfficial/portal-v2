@@ -24,7 +24,7 @@ import {
   proposalEditHref,
   proposalPublicUrl
 } from "@/lib/proposal/row-actions";
-import { getProposalStageBadgeDisplay } from "@/lib/proposal/status-badge";
+import { proposalStatusBadgeDisplay } from "@/lib/proposal/status-badge";
 import { cloneProposalAction, sendProposalAction } from "@/server/actions/proposal-builder";
 import type { ProposalRecord } from "@/types/proposal";
 
@@ -37,7 +37,7 @@ export interface CustomerProposalCardProps {
 export function CustomerProposalCard({ proposal, customerId, onDelete }: CustomerProposalCardProps) {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
-  const stage = getProposalStageBadgeDisplay(proposal);
+  const stage = proposalStatusBadgeDisplay(proposal);
   const editHref = proposalEditHref(proposal, customerId);
   const publicUrl = proposalPublicUrl(proposal);
   const canOpenPublic = canOpenPublicProposal(proposal);

@@ -9,10 +9,12 @@ type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 export interface SubscriptionStatusBadgeDisplay {
   label: string;
   variant: BadgeVariant;
+  /** Leading dot for Active, Trialing, and Canceled. */
+  dot?: boolean;
 }
 
 /** Maps subscription status to shared badge variants (customer list, subscriptions hub). */
-export function getSubscriptionStatusBadgeDisplay(
+export function subscriptionStatusBadgeDisplay(
   status: SubscriptionStatus | CustomerSubscriptionRollup,
 ): SubscriptionStatusBadgeDisplay {
   if (status === "none") {
@@ -22,6 +24,7 @@ export function getSubscriptionStatusBadgeDisplay(
     return {
       label: status === "trialing" ? "Trialing" : "Active",
       variant: "success",
+      dot: true,
     };
   }
   if (status === "scheduled") {
@@ -34,7 +37,7 @@ export function getSubscriptionStatusBadgeDisplay(
     };
   }
   if (status === "canceled") {
-    return { label: "Canceled", variant: "secondary" };
+    return { label: "Canceled", variant: "destructive", dot: true };
   }
   if (status === "paused") {
     return { label: "Paused", variant: "purple" };
@@ -46,6 +49,6 @@ export function getSubscriptionStatusBadgeDisplay(
 }
 
 /** Payment-collection pause — subscriptions list only. */
-export function getSubscriptionPausedBadgeDisplay(): SubscriptionStatusBadgeDisplay {
+export function subscriptionPausedBadgeDisplay(): SubscriptionStatusBadgeDisplay {
   return { label: "Paused", variant: "purple" };
 }

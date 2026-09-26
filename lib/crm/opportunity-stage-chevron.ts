@@ -2,7 +2,6 @@ import type { OpportunityStage } from "@/types/opportunity";
 
 /**
  * Active chevron tint per stage — 15% hue wash + saturated label text (matches Won pattern).
- * Hues align with {@link opportunityStageBadgeDisplay} / Todo List badge palette.
  */
 export const OPPORTUNITY_STAGE_ACTIVE_CHEVRON: Record<OpportunityStage, string> = {
   lead: "bg-gray-500/15 text-gray-700 dark:text-gray-300",

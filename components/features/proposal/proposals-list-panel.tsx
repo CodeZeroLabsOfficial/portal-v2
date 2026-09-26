@@ -36,7 +36,7 @@ import {
   proposalPublicUrl
 } from "@/lib/proposal/row-actions";
 import {
-  getProposalStageBadgeDisplay,
+  proposalStatusBadgeDisplay,
   type ProposalStageBadgeKey
 } from "@/lib/proposal/status-badge";
 import { cloneProposalAction, deleteProposalAction } from "@/server/actions/proposal-builder";
@@ -63,7 +63,7 @@ const PROPOSAL_STAGE_FILTER_OPTIONS: { value: ProposalStageBadgeKey; label: stri
 function mapToTableRows(rows: ProposalHubListRow[]): ProposalListTableRow[] {
   return rows.map((row) => ({
     ...row,
-    stageKey: getProposalStageBadgeDisplay(row).badgeKey
+    stageKey: proposalStatusBadgeDisplay(row).badgeKey
   }));
 }
 
@@ -205,7 +205,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
           const q = String(value).toLowerCase();
           if (!q) return true;
           const r = row.original;
-          const stage = getProposalStageBadgeDisplay(r);
+          const stage = proposalStatusBadgeDisplay(r);
           const hay = [
             r.title,
             r.accountCompanyName,
@@ -242,7 +242,7 @@ export function ProposalsListPanel({ rows, localityTimeZone }: ProposalsListPane
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         filterFn: multiSelectColumnFilter,
         cell: ({ row }) => {
-          const display = getProposalStageBadgeDisplay(row.original);
+          const display = proposalStatusBadgeDisplay(row.original);
           return <StatusBadge label={display.label} variant={display.variant} title={display.title} />;
         }
       },
