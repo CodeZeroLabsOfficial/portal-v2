@@ -380,7 +380,7 @@ export async function createDraftProposalFromOpportunityAction(
     }
 
     try {
-      const stageRes = await updateOpportunityStage(user, opportunityId, "proposal_sent", {
+      const stageRes = await updateOpportunityStage(user, opportunityId, "proposal", {
         attribution: "system",
       });
       if (!stageRes.ok) {

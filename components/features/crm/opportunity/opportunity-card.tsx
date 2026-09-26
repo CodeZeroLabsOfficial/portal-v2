@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { CalendarDays, EllipsisVertical, MessageSquare, Paperclip } from "lucide-react";
+import { Activity, CalendarDays, EllipsisVertical, MessageSquare, Phone, User } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -34,15 +34,6 @@ function opportunityCardTitle(opp: OpportunityBoardCard): { title: string; hasCo
   return { title, hasCompany };
 }
 
-function opportunityCardSubtitle(opp: OpportunityBoardCard, hasCompany: boolean): string {
-  const leadName = opp.leadContactName.trim();
-  const contact = [opp.leadEmail?.trim(), opp.leadPhone?.trim()].filter(Boolean).join(" · ");
-  const parts: string[] = [];
-  if (hasCompany && leadName && leadName !== "—") parts.push(leadName);
-  if (contact) parts.push(contact);
-  return parts.join(" · ");
-}
-
 export interface OpportunityKanbanCardProps {
   opp: OpportunityBoardCard;
   disabled?: boolean;
@@ -61,7 +52,9 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
   const initialsSource = hasAssignee ? opp.assigneeDisplayName?.trim() || assigneeLabel : "";
   const stageBadge = opportunityStageBadgeDisplay(opp.stage);
   const { title, hasCompany } = opportunityCardTitle(opp);
-  const subtitle = opportunityCardSubtitle(opp, hasCompany);
+  const leadName = opp.leadContactName.trim();
+  const showLeadName = hasCompany && leadName.length > 0 && leadName !== "—";
+  const phone = opp.leadPhone?.trim() || "";
   const updatedLabel =
     typeof opp.updatedAt === "number" && opp.updatedAt
       ? format(new Date(opp.updatedAt), "MMM d")
@@ -117,8 +110,21 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
                   {title}
                 </Link>
               </div>
-              {subtitle ? (
-                <p className="text-muted-foreground line-clamp-2 text-sm">{subtitle}</p>
+              {showLeadName || phone ? (
+                <div className="text-muted-foreground space-y-0.5 text-sm">
+                  {showLeadName ? (
+                    <p className="flex items-center gap-1.5">
+                      <User className="size-3.5 shrink-0" aria-hidden />
+                      <span className="truncate">{leadName}</span>
+                    </p>
+                  ) : null}
+                  {phone ? (
+                    <p className="flex items-center gap-1.5">
+                      <Phone className="size-3.5 shrink-0" aria-hidden />
+                      <span className="truncate">{phone}</span>
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
             </div>
             <div className="text-muted-foreground flex items-center text-sm">
@@ -142,11 +148,11 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
               </div>
               <div className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-1" title="Notes on this deal">
-                  <Paperclip className="size-4" aria-hidden />
+                  <MessageSquare className="size-4" aria-hidden />
                   {notes}
                 </span>
                 <span className="inline-flex items-center gap-1" title="Activities on this deal">
-                  <MessageSquare className="size-4" aria-hidden />
+                  <Activity className="size-4" aria-hidden />
                   {activities}
                 </span>
               </div>

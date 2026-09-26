@@ -766,7 +766,7 @@ export async function createCustomerDocument(
       const opportunityPayload: Record<string, unknown> = {
         customerId: docRef.id,
         name: opportunityName,
-        stage: "lead_in",
+        stage: "lead",
         customFieldsSnapshot: customFields,
         currency: "aud",
         createdAt: now,

@@ -7,7 +7,7 @@ import {
   opportunityStageChangeDetail,
   type OpportunityStageChangeAttribution,
 } from "@/lib/crm/opportunity-stage-activity";
-import { normalizeOpportunityStage, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
+import { isOpportunityStage, opportunityStageLabel } from "@/lib/crm/opportunity-stages";
 import { notifyStaffAction } from "@/lib/notification/notify";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import { COLLECTIONS } from "@/server/firestore/collections";
@@ -34,13 +34,14 @@ type AdminDb = NonNullable<ReturnType<typeof getFirebaseAdminFirestore>>;
 
 function parseOpportunity(id: string, data: Record<string, unknown>): OpportunityRecord | null {
   const customerId = asString(data.customerId);
-  if (!customerId) return null;
+  const stage = asString(data.stage);
+  if (!customerId || !stage || !isOpportunityStage(stage)) return null;
   return {
     id,
     customerId,
     organizationId: asString(data.organizationId),
     name: asString(data.name) ?? "Opportunity",
-    stage: normalizeOpportunityStage(data.stage),
+    stage,
     amountMinor: asNumber(data.amountMinor),
     currency: (asString(data.currency) ?? "aud").toLowerCase(),
     customFieldsSnapshot: asStringStringMap(data.customFieldsSnapshot),
@@ -236,7 +237,7 @@ export type ConvertLeadResult = { ok: true; customerId: string } | { ok: false; 
 
 /**
  * Promotes `crmType` from lead → contact and deletes every pipeline opportunity linked to this customer
- * (including the auto-created `lead_in` card from lead intake).
+ * (including the auto-created `lead` card from lead intake).
  */
 export async function convertLeadToContact(user: PortalUser, customerId: string): Promise<ConvertLeadResult> {
   const db = getFirebaseAdminFirestore();
