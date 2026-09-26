@@ -37,7 +37,7 @@ export function ProfileHeroCard({
     <div className={cn("bg-card overflow-hidden rounded-2xl border shadow-sm", className)}>
       <div className="relative">
         <div
-          className="bg-muted relative aspect-[32/9] w-full bg-cover bg-center"
+          className="bg-muted relative h-[160px] max-h-[160px] w-full bg-cover bg-center"
           style={{ backgroundImage: `url('${PROFILE_HERO_BANNER_URL}')` }}
           aria-hidden
         />
