@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 
-export const AUTH_HERO_IMAGE = "/images/extra/image4.jpg";
+export const AUTH_HERO_IMAGE = "/images/auth/login-hero.jpg";
 
 interface AuthSplitScreenProps {
   portalName: string;
