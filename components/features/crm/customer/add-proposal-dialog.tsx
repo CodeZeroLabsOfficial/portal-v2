@@ -63,11 +63,17 @@ export function AddProposalDialog({
   const visible = React.useMemo(
     () =>
       sortProposalTemplatePickerRows(
-        filterProposalTemplatesForPicker(templates).map(proposalTemplateRecordToPickerRow),
+        filterProposalTemplatesForPicker(templates)
+          .filter((template) => template.catalogMeta?.category?.trim() === category)
+          .map(proposalTemplateRecordToPickerRow),
       ),
-    [templates],
+    [templates, category],
   );
 
+  const hasPublishedTemplates = React.useMemo(
+    () => filterProposalTemplatesForPicker(templates).length > 0,
+    [templates],
+  );
   const total = visible.length;
   const from = total === 0 ? 0 : 1;
   const to = total;
@@ -89,25 +95,16 @@ export function AddProposalDialog({
   async function handleUseTemplate(templateId: string) {
     if (pendingTemplateId) return;
 
-    const template = templates.find((t) => t.id === templateId);
-    const fromTemplate = template?.catalogMeta?.category?.trim();
-    const categoryToUse =
-      fromTemplate && isCatalogCategoryId(fromTemplate) ? fromTemplate : category;
-
-    if (!categoryToUse || !isCatalogCategoryId(categoryToUse)) {
+    if (!category || !isCatalogCategoryId(category)) {
       toast.error("Select a product category for this proposal.");
       return;
-    }
-
-    if (categoryToUse !== category) {
-      setCategory(categoryToUse);
     }
 
     setPendingTemplateId(templateId);
     try {
       const res = opportunityId
-        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId, categoryToUse)
-        : await createDraftProposalFromCustomerAction(customerId, templateId, categoryToUse);
+        ? await createDraftProposalFromOpportunityAction(opportunityId, templateId, category)
+        : await createDraftProposalFromCustomerAction(customerId, templateId, category);
       if (!res.ok) {
         toast.error(res.message);
         setPendingTemplateId(null);
@@ -147,9 +144,6 @@ export function AddProposalDialog({
             onCreateCategory={createCategory}
             disabled={pendingTemplateId !== null}
           />
-          <p className="text-muted-foreground text-xs">
-            Package plans and add-ons in the editor are limited to this category.
-          </p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
@@ -159,14 +153,22 @@ export function AddProposalDialog({
                 <EmptyMedia variant="icon">
                   <LayoutTemplate />
                 </EmptyMedia>
-                <EmptyTitle>No published proposal templates</EmptyTitle>
+                <EmptyTitle>
+                  {hasPublishedTemplates
+                    ? "No templates in this category"
+                    : "No published proposal templates"}
+                </EmptyTitle>
                 <EmptyDescription>
-                  Publish a proposal template from Templates, then return here to create a proposal.
+                  {hasPublishedTemplates
+                    ? "Choose another product category, or set this category on a published template."
+                    : "Publish a proposal template from Templates, then return here to create a proposal."}
                 </EmptyDescription>
               </EmptyHeader>
-              <Button variant="outline" size="sm" className="mt-4" asChild>
-                <Link href="/admin/templates">Open Templates</Link>
-              </Button>
+              {hasPublishedTemplates ? null : (
+                <Button variant="outline" size="sm" className="mt-4" asChild>
+                  <Link href="/admin/templates">Open Templates</Link>
+                </Button>
+              )}
             </Empty>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

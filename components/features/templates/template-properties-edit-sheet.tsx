@@ -200,9 +200,6 @@ export function TemplatePropertiesEditSheet({
                 }
                 onCreateCategory={createCategory}
               />
-              <p className="text-muted-foreground text-xs">
-                Package plans and add-ons in the editor are limited to this category.
-              </p>
             </div>
 
             <div className="space-y-1.5">
