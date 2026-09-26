@@ -5,8 +5,8 @@ export interface CustomerListRow {
   name: string;
   email: string;
   phone: string;
-  /** City, region, country — formatted for table display. */
-  location: string;
+  /** Customer address, one line. Empty when no address fields are set. */
+  address: string;
   avatarUrl?: string;
   /** Linked account company name when `accountId` is set. */
   company?: string;

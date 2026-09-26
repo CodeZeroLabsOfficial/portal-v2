@@ -23,6 +23,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -37,6 +38,8 @@ import {
   customerStatusBadgeDisplay
 } from "@/lib/crm/status-badges";
 import { subscriptionStatusBadgeDisplay } from "@/lib/subscription/status-badge";
+import { initialsFromName } from "@/lib/common/format";
+import { customerAvatarUrl } from "@/lib/crm/customer-avatar";
 import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import type { CustomerListRow } from "@/lib/customer/list";
 import { useSheetEntityState } from "@/hooks/use-sheet-entity-state";
@@ -157,30 +160,43 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         accessorKey: "name",
         meta: { viewLabel: "Name" },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-        cell: ({ row }) => (
-          <Link
-            href={`/admin/customers/${row.original.id}`}
-            className="font-medium hover:underline">
-            {row.original.name.trim() || row.original.email}
-          </Link>
-        ),
+        cell: ({ row }) => {
+          const displayName = row.original.name.trim() || row.original.email;
+          const avatarUrl = customerAvatarUrl(row.original.avatarUrl);
+          return (
+            <div className="flex items-center gap-3">
+              <Avatar className="size-9">
+                {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+                <AvatarFallback>{initialsFromName(displayName)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <Link
+                  href={`/admin/customers/${row.original.id}`}
+                  className="font-medium hover:underline">
+                  {displayName}
+                </Link>
+                <div className="text-muted-foreground truncate text-xs">{row.original.email}</div>
+              </div>
+            </div>
+          );
+        },
         filterFn: (row, _id, value) => {
           const q = String(value).toLowerCase();
           if (!q) return true;
           const r = row.original;
-          const hay = [r.name, r.email, r.phone, r.location, r.company, r.tags.join(" ")]
+          const hay = [r.name, r.email, r.phone, r.address, r.company, r.tags.join(" ")]
             .join(" ")
             .toLowerCase();
           return hay.includes(q);
         }
       },
       {
-        accessorKey: "status",
-        meta: { viewLabel: "Status" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        accessorKey: "crmType",
+        meta: { viewLabel: "Type" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
         cell: ({ row }) => {
-          const d = customerStatusBadgeDisplay(row.original.status);
-          return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
+          const d = customerCrmTypeBadgeDisplay(row.original.crmType);
+          return <StatusBadge label={d.label} variant={d.variant} />;
         },
         filterFn: multiSelectColumnFilter
       },
@@ -202,9 +218,24 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         }
       },
       {
-        accessorKey: "email",
-        meta: { viewLabel: "Email" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />
+        accessorKey: "address",
+        meta: { viewLabel: "Address" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
+        cell: ({ row }) => {
+          const address = row.original.address.trim();
+          if (!address) return <span className="text-muted-foreground">—</span>;
+          return <span className="block max-w-xs truncate">{address}</span>;
+        }
+      },
+      {
+        accessorKey: "status",
+        meta: { viewLabel: "Status" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ row }) => {
+          const d = customerStatusBadgeDisplay(row.original.status);
+          return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
+        },
+        filterFn: multiSelectColumnFilter
       },
       {
         accessorKey: "subscriptionRollup",
@@ -215,16 +246,6 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
         },
         enableSorting: false
-      },
-      {
-        accessorKey: "crmType",
-        meta: { viewLabel: "Type" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-        cell: ({ row }) => {
-          const d = customerCrmTypeBadgeDisplay(row.original.crmType);
-          return <StatusBadge label={d.label} variant={d.variant} />;
-        },
-        filterFn: multiSelectColumnFilter
       },
       {
         id: "actions",
@@ -313,7 +334,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No customers yet. Add your first customer to get started."
-        search={{ columnId: "name", placeholder: "Search name, email, company, tags…" }}
+        search={{ columnId: "name", placeholder: "Search name, email, company, address, tags…" }}
         filters={[
           { columnId: "status", title: "Status", options: CUSTOMER_STATUS_FILTER_OPTIONS },
           { columnId: "crmType", title: "Type", options: CUSTOMER_TYPE_FILTER_OPTIONS }

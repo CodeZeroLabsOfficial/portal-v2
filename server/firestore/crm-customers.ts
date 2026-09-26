@@ -12,7 +12,7 @@ import { deleteStorageFileAdmin } from "@/lib/firebase/admin-storage";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
 import { getStripe } from "@/lib/stripe/server";
-import { normalizeAddressFields } from "@/lib/common/format";
+import { formatAddressLines, normalizeAddressFields } from "@/lib/common/format";
 import { dedupeCustomerTags } from "@/lib/customer/tags";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import type { CustomerListRow } from "@/lib/customer/list";
@@ -41,11 +41,6 @@ import type { PortalUser } from "@/types/user";
 import type { SignedAgreementRecord } from "@/types/signed-agreement";
 
 type AdminDb = NonNullable<ReturnType<typeof getFirebaseAdminFirestore>>;
-
-function formatLocation(data: Pick<CustomerRecord, "city" | "region" | "country">): string {
-  const parts = [data.city, data.region, data.country].filter(Boolean) as string[];
-  return parts.length ? parts.join(", ") : "";
-}
 
 function parseCustomerRecord(id: string, data: Record<string, unknown>): CustomerRecord | null {
   if (typeof data !== "object" || data === null) return null;
@@ -134,7 +129,7 @@ function customerToListRow(
   subscriptions: SubscriptionRecord[],
   companyName?: string,
 ): CustomerListRow {
-  const location = formatLocation(customer);
+  const address = formatAddressLines(customer).join(", ");
   const company = companyName?.trim() || undefined;
   const accountId = customer.accountId?.trim() || undefined;
   return {
@@ -142,7 +137,7 @@ function customerToListRow(
     name: customer.name.trim() || customer.email.trim() || customer.id,
     email: customer.email.trim() || "—",
     phone: customer.phone?.trim() || "—",
-    location: location.trim() || "—",
+    address,
     avatarUrl: customer.avatarUrl,
     company,
     accountId,
