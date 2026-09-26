@@ -35,7 +35,7 @@ function StatusBadge({
   className,
   ...props
 }: StatusBadgeProps) {
-  const dotClass = dot ? STATUS_DOT_CLASS[variant] : undefined;
+  const dotClass = dot && variant ? STATUS_DOT_CLASS[variant] : undefined;
   return (
     <Badge variant={variant} className={cn(className)} {...props}>
       {dotClass ? (
