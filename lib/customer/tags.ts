@@ -24,6 +24,12 @@ export function customerTagKey(tag: string): string {
   return tag.trim().toLowerCase();
 }
 
+/** Catalog swatch for a stored tag, when it matches a predefined label. */
+export function customerTagSwatch(tag: string): string | undefined {
+  return CUSTOMER_TAG_OPTIONS.find((option) => customerTagKey(option.label) === customerTagKey(tag))
+    ?.color;
+}
+
 /** Trim, collapse spaces, and use the catalog label when it matches. */
 export function normalizeCustomerTag(raw: string): string | null {
   const trimmed = raw.trim().replace(/\s+/g, " ");

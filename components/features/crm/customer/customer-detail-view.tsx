@@ -82,11 +82,7 @@ export function CustomerDetailView({
       <CustomerDetailShell
         customerId={customer.id}
         hero={
-          <CustomerDetailHero
-            customer={customer}
-            companyName={account?.company}
-            onEditClick={() => setEditOpen(true)}
-          />
+          <CustomerDetailHero customer={customer} onEditClick={() => setEditOpen(true)} />
         }
         panels={{
           overview: (

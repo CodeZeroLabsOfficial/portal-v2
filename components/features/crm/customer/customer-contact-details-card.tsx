@@ -56,7 +56,7 @@ export function CustomerContactDetailsCard({
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm">
             <Tag className="text-muted-foreground size-4 shrink-0" aria-hidden />
@@ -91,17 +91,6 @@ export function CustomerContactDetailsCard({
             )}
           </div>
         </div>
-        {customer.tags.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {customer.tags.map((tag) => (
-              <span
-                key={tag}
-                className="border-border/60 bg-background/60 rounded-full border px-2.5 py-0.5 text-xs font-medium text-foreground/90">
-                {tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </CardContent>
     </Card>
   );
