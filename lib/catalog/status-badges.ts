@@ -1,14 +1,14 @@
 import type { CatalogServiceKind, CatalogServiceStatus } from "@/types/catalog-service";
 import type { StatusBadgeDisplay } from "@/lib/crm/status-badges";
 
-export function catalogServiceStatusBadgeDisplay(status: CatalogServiceStatus): StatusBadgeDisplay {
+export function serviceStatusBadgeDisplay(status: CatalogServiceStatus): StatusBadgeDisplay {
   switch (status) {
     case "active":
-      return { label: "Active", variant: "success" };
+      return { label: "Active", variant: "success", dot: true };
     case "draft":
-      return { label: "Draft", variant: "amber" };
+      return { label: "Draft", variant: "amber", dot: true };
     default:
-      return { label: "Archived", variant: "destructive" };
+      return { label: "Archived", variant: "destructive", dot: true };
   }
 }
 

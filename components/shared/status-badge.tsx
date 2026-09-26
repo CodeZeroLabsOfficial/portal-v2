@@ -18,13 +18,13 @@ const STATUS_DOT_CLASS: Partial<Record<NonNullable<BadgeVariant>, string>> = {
  * `{ label, variant, dot? }` (using `ui/badge` variants) and pass it here — never inline
  * one-off Tailwind status colors.
  *
- * The leading dot is opt-in. Customer, account, and subscription status, plus template
- * status, set `dot`. Other pills that share those colors do not.
+ * The leading dot is opt-in. Customer, account, subscription, service, and template
+ * status set `dot`. Other pills that share those colors do not.
  */
 export interface StatusBadgeProps extends React.ComponentProps<typeof Badge> {
   label: string;
   variant?: BadgeVariant;
-  /** Leading dot. Customer, subscription, and template status only. */
+  /** Leading dot. Customer, subscription, service, and template status only. */
   dot?: boolean;
 }
 

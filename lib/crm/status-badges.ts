@@ -10,7 +10,7 @@ type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 export interface StatusBadgeDisplay {
   label: string;
   variant: BadgeVariant;
-  /** Leading dot. Customer, subscription, and template status only. */
+  /** Leading dot. Customer, subscription, service, and template status only. */
   dot?: boolean;
 }
 

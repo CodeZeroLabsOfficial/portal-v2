@@ -27,7 +27,7 @@ import { multiSelectColumnFilter } from "@/lib/crm/table-filters";
 import { catalogPricingLabel, formatCatalogTableDate } from "@/lib/catalog/display";
 import {
   catalogServiceKindBadgeDisplay,
-  catalogServiceStatusBadgeDisplay,
+  serviceStatusBadgeDisplay,
   catalogStripeSyncBadgeDisplay
 } from "@/lib/catalog/status-badges";
 import {
@@ -218,8 +218,8 @@ export function CatalogServicesListPanel({ services }: CatalogServicesListPanelP
         accessorKey: "status",
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         cell: ({ row }) => {
-          const d = catalogServiceStatusBadgeDisplay(row.original.status);
-          return <StatusBadge label={d.label} variant={d.variant} />;
+          const d = serviceStatusBadgeDisplay(row.original.status);
+          return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
         },
         filterFn: multiSelectColumnFilter
       },

@@ -11,7 +11,7 @@ import { CatalogServiceFeaturesCard } from "@/components/features/catalog/catalo
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { catalogServiceStatusBadgeDisplay } from "@/lib/catalog/status-badges";
+import { serviceStatusBadgeDisplay } from "@/lib/catalog/status-badges";
 import type { CatalogServiceRecord } from "@/types/catalog-service";
 
 export interface CatalogServiceDetailViewProps {
@@ -23,7 +23,7 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
 
   const isPlan = service.serviceType !== "addon";
   const isArchived = service.status === "archived";
-  const statusDisplay = catalogServiceStatusBadgeDisplay(service.status);
+  const statusDisplay = serviceStatusBadgeDisplay(service.status);
 
   return (
     <div className="space-y-4">
@@ -45,7 +45,11 @@ export function CatalogServiceDetailView({ service }: CatalogServiceDetailViewPr
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               <div className="min-w-0 space-y-2">
                 <CardTitle className="font-display text-2xl">{service.name}</CardTitle>
-                <StatusBadge label={statusDisplay.label} variant={statusDisplay.variant} />
+                <StatusBadge
+                  label={statusDisplay.label}
+                  variant={statusDisplay.variant}
+                  dot={statusDisplay.dot}
+                />
               </div>
               {isPlan ? <CatalogServiceEntitlementStats service={service} /> : null}
             </div>
