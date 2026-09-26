@@ -19,7 +19,15 @@ function filterOpportunitiesBySearch(
     const name = o.name.toLowerCase();
     const contact = o.leadContactName.toLowerCase();
     const account = o.accountCompanyName.toLowerCase();
-    return name.includes(q) || contact.includes(q) || account.includes(q);
+    const email = o.leadEmail?.toLowerCase() ?? "";
+    const phone = o.leadPhone?.toLowerCase() ?? "";
+    return (
+      name.includes(q) ||
+      contact.includes(q) ||
+      account.includes(q) ||
+      email.includes(q) ||
+      phone.includes(q)
+    );
   });
 }
 

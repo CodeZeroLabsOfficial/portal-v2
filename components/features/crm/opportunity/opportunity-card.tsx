@@ -3,12 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, EllipsisVertical, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarDays, EllipsisVertical, MessageSquare, Paperclip } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,18 +20,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import * as Kanban from "@/components/ui/kanban";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrencyAmount, initialsFromName } from "@/lib/common/format";
+import { initialsFromName } from "@/lib/common/format";
 import { opportunityStageBadgeDisplay } from "@/lib/crm/status-badges";
 import { deleteOpportunityAction } from "@/server/actions/opportunities-crm";
 import type { OpportunityBoardCard } from "@/types/opportunity";
 
-function formatOpportunityCardDate(ms: number | undefined): string {
-  if (typeof ms !== "number" || !ms) return "—";
-  return new Date(ms).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
+function opportunityCardTitle(opp: OpportunityBoardCard): { title: string; hasCompany: boolean } {
+  const companyName = opp.accountCompanyName.trim();
+  const leadName = opp.leadContactName.trim();
+  // Company label falls back to the person when no account is linked.
+  const hasCompany = companyName.length > 0 && companyName !== "—" && companyName !== leadName;
+  const title = hasCompany ? companyName : leadName || "—";
+  return { title, hasCompany };
+}
+
+function opportunityCardSubtitle(opp: OpportunityBoardCard, hasCompany: boolean): string {
+  const leadName = opp.leadContactName.trim();
+  const contact = [opp.leadEmail?.trim(), opp.leadPhone?.trim()].filter(Boolean).join(" · ");
+  const parts: string[] = [];
+  if (hasCompany && leadName && leadName !== "—") parts.push(leadName);
+  if (contact) parts.push(contact);
+  return parts.join(" · ");
 }
 
 export interface OpportunityKanbanCardProps {
@@ -49,9 +60,12 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
   const photo = opp.assigneePhotoUrl?.trim();
   const initialsSource = hasAssignee ? opp.assigneeDisplayName?.trim() || assigneeLabel : "";
   const stageBadge = opportunityStageBadgeDisplay(opp.stage);
-
-  const descriptionParts = [opp.leadContactName, opp.accountCompanyName].filter(Boolean);
-  const description = descriptionParts.join(" · ");
+  const { title, hasCompany } = opportunityCardTitle(opp);
+  const subtitle = opportunityCardSubtitle(opp, hasCompany);
+  const updatedLabel =
+    typeof opp.updatedAt === "number" && opp.updatedAt
+      ? format(new Date(opp.updatedAt), "MMM d")
+      : null;
 
   async function handleDelete() {
     setIsDeleting(true);
@@ -64,76 +78,75 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
   return (
     <>
       <Kanban.Item value={opp.id} asHandle asChild disabled={disabled || isDeleting}>
-        <Card className="border-0">
-          <CardHeader className="relative space-y-1 pb-2">
-            <div className="absolute top-3 right-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    aria-label="Pipeline deal options">
-                    <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link href={`/admin/opportunities/${opp.id}`}>Open</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link href={`/admin/customers/${opp.customerId}`}>View Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                    onSelect={() => setConfirmOpen(true)}>
-                    Delete deal
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <Card className="relative border-0">
+          <div className="absolute top-2 right-2 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  aria-label="Pipeline deal options">
+                  <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href={`/admin/opportunities/${opp.id}`}>Open</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href={`/admin/customers/${opp.customerId}`}>View Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onSelect={() => setConfirmOpen(true)}>
+                  Delete deal
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <div className="pe-8 text-base font-semibold">
+                <Link
+                  href={`/admin/opportunities/${opp.id}`}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  className="underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  {title}
+                </Link>
+              </div>
+              {subtitle ? (
+                <p className="text-muted-foreground line-clamp-2 text-sm">{subtitle}</p>
+              ) : null}
             </div>
-            <CardTitle className="pr-8 text-base font-semibold">
-              <Link
-                href={`/admin/opportunities/${opp.id}`}
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                className="underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                {opp.name}
-              </Link>
-            </CardTitle>
-            {description ? (
-              <CardDescription className="line-clamp-2">{description}</CardDescription>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-muted-foreground space-y-0.5 text-xs leading-snug">
-              <p>Created: {formatOpportunityCardDate(opp.createdAt)}</p>
-              <p>Last update: {formatOpportunityCardDate(opp.updatedAt)}</p>
+            <div className="text-muted-foreground flex items-center text-sm">
+              <Avatar className="border-background size-7 border-2" title={assigneeLabel}>
+                {photo ? <AvatarImage src={photo} alt="" /> : null}
+                <AvatarFallback>
+                  {hasAssignee ? initialsFromName(initialsSource) : "?"}
+                </AvatarFallback>
+              </Avatar>
             </div>
-            {typeof opp.amountMinor === "number" ? (
-              <p className="text-sm tabular-nums">
-                {formatCurrencyAmount(opp.amountMinor, opp.currency)}
-              </p>
-            ) : null}
             <Separator />
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <Avatar size="sm" className="ring-2 ring-background" title={assigneeLabel}>
-                  {photo ? <AvatarImage src={photo} alt="" /> : null}
-                  <AvatarFallback className="bg-primary/15 text-[10px] font-semibold text-primary">
-                    {hasAssignee ? initialsFromName(initialsSource) : "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs">{stageBadge.label}</span>
+                <StatusBadge label={stageBadge.label} variant={stageBadge.variant} />
+                {updatedLabel ? (
+                  <span className="flex items-center gap-1 text-xs whitespace-nowrap">
+                    <CalendarDays className="size-3.5" />
+                    {updatedLabel}
+                  </span>
+                ) : null}
               </div>
               <div className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-1" title="Notes on this deal">
-                  <FileText className="h-4 w-4" aria-hidden />
+                  <Paperclip className="size-4" aria-hidden />
                   {notes}
                 </span>
                 <span className="inline-flex items-center gap-1" title="Activities on this deal">
-                  <Activity className="h-4 w-4" aria-hidden />
+                  <MessageSquare className="size-4" aria-hidden />
                   {activities}
                 </span>
               </div>
@@ -154,5 +167,3 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
     </>
   );
 }
-
-export { formatOpportunityCardDate };

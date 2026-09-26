@@ -12,6 +12,10 @@ export type OpportunityBoardCard = OpportunityRecord & {
   accountCompanyName: string;
   /** Primary contact name on the customer profile. */
   leadContactName: string;
+  /** Email on the linked customer, when set. */
+  leadEmail?: string;
+  /** Phone on the linked customer, when set. */
+  leadPhone?: string;
   opportunityNoteCount: number;
   opportunityActivityCount: number;
   /** Avatar subject: opportunity creator, else customer creator. */

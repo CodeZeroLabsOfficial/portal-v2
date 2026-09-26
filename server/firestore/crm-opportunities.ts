@@ -157,6 +157,8 @@ export async function listOpportunityBoardCardsForStaff(user: PortalUser): Promi
     const accountCompanyName = accountCompanyNameFromMaps(customer, accounts);
     const person = customer?.name?.trim() ?? "";
     const leadContactName = person || customer?.email?.trim() || "—";
+    const leadEmail = customer?.email?.trim();
+    const leadPhone = customer?.phone?.trim();
 
     const assigneeUid = o.createdByUid?.trim() || customer?.createdByUid?.trim();
     const su = assigneeUid ? userSummaries.get(assigneeUid) : undefined;
@@ -165,6 +167,8 @@ export async function listOpportunityBoardCardsForStaff(user: PortalUser): Promi
       ...o,
       accountCompanyName,
       leadContactName,
+      ...(leadEmail ? { leadEmail } : {}),
+      ...(leadPhone ? { leadPhone } : {}),
       opportunityNoteCount: noteCounts.get(o.id) ?? 0,
       opportunityActivityCount: activityCounts.get(o.id) ?? 0,
       ...(assigneeUid ? { assigneeUid } : {}),
