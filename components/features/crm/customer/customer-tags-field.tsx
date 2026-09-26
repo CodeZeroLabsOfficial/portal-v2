@@ -62,6 +62,7 @@ export function CustomerTagsField({
   onTagsChange,
   disabled
 }: CustomerTagsFieldProps) {
+  const anchorRef = React.useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [suggestionsOpen, setSuggestionsOpen] = React.useState(false);
   const [highlightIndex, setHighlightIndex] = React.useState(0);
@@ -118,13 +119,17 @@ export function CustomerTagsField({
   const inputDisabled = disabled || atLimit;
   const showSuggestions = suggestionsOpen && suggestions.length > 0 && !inputDisabled;
 
+  function isInsideAnchor(event: { target: EventTarget | null }) {
+    return event.target instanceof Node && Boolean(anchorRef.current?.contains(event.target));
+  }
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>Tags</Label>
 
-      <Popover open={showSuggestions} onOpenChange={setSuggestionsOpen}>
+      <Popover modal={false} open={showSuggestions} onOpenChange={setSuggestionsOpen}>
         <PopoverAnchor asChild>
-          <div className="flex items-center gap-2">
+          <div ref={anchorRef} className="flex items-center gap-2">
             <Input
               id={id}
               value={searchQuery}
@@ -177,6 +182,12 @@ export function CustomerTagsField({
           className="w-[var(--radix-popover-anchor-width)] p-1"
           align="start"
           onOpenAutoFocus={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => {
+            if (isInsideAnchor(event)) event.preventDefault();
+          }}
+          onFocusOutside={(event) => {
+            if (isInsideAnchor(event)) event.preventDefault();
+          }}
         >
           <ul className="max-h-48 overflow-y-auto">
             {suggestions.map((suggestion, index) => (
