@@ -7,7 +7,6 @@ import { format } from "date-fns";
 import { Activity, CalendarDays, EllipsisVertical, MessageSquare, Phone, User } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,6 @@ import {
 import * as Kanban from "@/components/ui/kanban";
 import { Separator } from "@/components/ui/separator";
 import { initialsFromName } from "@/lib/common/format";
-import { opportunityStageBadgeDisplay } from "@/lib/crm/status-badges";
 import { deleteOpportunityAction } from "@/server/actions/opportunities-crm";
 import type { OpportunityBoardCard } from "@/types/opportunity";
 
@@ -50,7 +48,6 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
   const assigneeLabel = hasAssignee ? opp.assigneeDisplayName?.trim() || "Team member" : "Unassigned";
   const photo = opp.assigneePhotoUrl?.trim();
   const initialsSource = hasAssignee ? opp.assigneeDisplayName?.trim() || assigneeLabel : "";
-  const stageBadge = opportunityStageBadgeDisplay(opp.stage);
   const { title, hasCompany } = opportunityCardTitle(opp);
   const leadName = opp.leadContactName.trim();
   const showLeadName = hasCompany && leadName.length > 0 && leadName !== "—";
@@ -137,15 +134,14 @@ export function OpportunityKanbanCard({ opp, disabled }: OpportunityKanbanCardPr
             </div>
             <Separator />
             <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <StatusBadge label={stageBadge.label} variant={stageBadge.variant} />
-                {updatedLabel ? (
-                  <span className="flex items-center gap-1 text-xs whitespace-nowrap">
-                    <CalendarDays className="size-3.5" />
-                    {updatedLabel}
-                  </span>
-                ) : null}
-              </div>
+              {updatedLabel ? (
+                <span className="flex items-center gap-1 text-xs whitespace-nowrap">
+                  <CalendarDays className="size-3.5" />
+                  {updatedLabel}
+                </span>
+              ) : (
+                <span />
+              )}
               <div className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-1" title="Notes on this deal">
                   <MessageSquare className="size-4" aria-hidden />
