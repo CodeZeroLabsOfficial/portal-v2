@@ -8,9 +8,9 @@ export function templateKindLabel(kind: TemplateHubKind): string {
 
 export function templateStageBadgeDisplay(stage: ProposalTemplateStage): StatusBadgeDisplay {
   if (stage === "published") {
-    return { label: "Published", variant: "info" };
+    return { label: "Published", variant: "success" };
   }
-  return { label: "Draft", variant: "warning" };
+  return { label: "Draft", variant: "amber" };
 }
 
 export function templateStageBadgeTitle(stage: ProposalTemplateStage): string {

@@ -75,8 +75,8 @@ export function taskColumnBadgeDisplay(status: string | undefined): StatusBadgeD
     case "in_progress":
       return { label, variant: "purple" };
     case "review":
-      return { label, variant: "warning" };
+      return { label, variant: "amber" };
     default:
-      return { label, variant: "info" };
+      return { label, variant: "sky" };
   }
 }

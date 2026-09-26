@@ -6,7 +6,7 @@ export function catalogServiceStatusBadgeDisplay(status: CatalogServiceStatus): 
     case "active":
       return { label: "Active", variant: "success" };
     case "draft":
-      return { label: "Draft", variant: "warning" };
+      return { label: "Draft", variant: "amber" };
     default:
       return { label: "Archived", variant: "secondary" };
   }
@@ -14,10 +14,10 @@ export function catalogServiceStatusBadgeDisplay(status: CatalogServiceStatus): 
 
 export function catalogServiceKindBadgeDisplay(kind: CatalogServiceKind | undefined): StatusBadgeDisplay {
   if (kind === "addon") {
-    return { label: "Add-on", variant: "info" };
+    return { label: "Add-on", variant: "sky" };
   }
   if (kind === "plan") {
-    return { label: "Plan", variant: "secondary" };
+    return { label: "Plan", variant: "purple" };
   }
   return { label: "—", variant: "secondary" };
 }
