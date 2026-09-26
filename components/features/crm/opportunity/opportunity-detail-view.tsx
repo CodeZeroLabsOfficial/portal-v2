@@ -5,7 +5,6 @@ import { MessageSquare } from "lucide-react";
 import { OpportunityActivitiesPanel } from "@/components/features/crm/opportunity/opportunity-activities-panel";
 import { OpportunityNotesPanel } from "@/components/features/crm/opportunity/opportunity-notes-panel";
 import { OpportunityStageProgress } from "@/components/features/crm/opportunity/opportunity-stage-progress";
-import { PageBackButton } from "@/components/shared/page-back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CustomerRecord } from "@/types/customer";
 import type {
@@ -32,8 +31,6 @@ export function OpportunityDetailView({
 }: OpportunityDetailViewProps) {
   return (
     <div className="space-y-6">
-      <PageBackButton href="/admin/opportunities" label="Pipeline" />
-
       <OpportunityStageProgress
         opportunity={opportunity}
         customer={customer}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { AddProposalDialog } from "@/components/features/crm/customer/add-proposal-dialog";
+import { PageBackButton } from "@/components/shared/page-back-button";
 import { PropertyField } from "@/components/shared/property-field";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
@@ -63,7 +64,14 @@ export function OpportunityStageProgress({
     <>
       <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/60 shadow-sm backdrop-blur-sm">
         <div className="border-b border-border/60 bg-gradient-to-br from-card via-card to-muted/20 px-4 py-5 sm:px-6 md:px-8 md:py-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <PageBackButton href="/admin/opportunities" label="Pipeline" />
+              <Button type="button" className="shrink-0" onClick={() => setAddProposalOpen(true)}>
+                <Plus className="size-4" aria-hidden />
+                Add proposal
+              </Button>
+            </div>
             <div className="min-w-0 space-y-3">
               <Typography variant="h1">{opportunity.name}</Typography>
               <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -99,14 +107,6 @@ export function OpportunityStageProgress({
                 </Typography>
               ) : null}
             </div>
-            <Button
-              type="button"
-              size="sm"
-              className="shrink-0 gap-1.5 shadow-sm"
-              onClick={() => setAddProposalOpen(true)}>
-              <Plus className="size-3.5" aria-hidden />
-              Add proposal
-            </Button>
           </div>
         </div>
 
