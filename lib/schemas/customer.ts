@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isNoteBodyEmpty } from "@/lib/crm/customer-note-body";
+import { MAX_CUSTOMER_TAG_LENGTH, MAX_CUSTOMER_TAGS } from "@/lib/customer/tags";
 
 const trimmed = z.string().trim();
 
@@ -48,7 +49,7 @@ const customerProfileFieldsSchema = z.object({
   region: optionalTrimmed,
   postalCode: optionalTrimmed,
   country: optionalTrimmed,
-  tags: z.array(trimmed.max(48)).max(20).default([]),
+  tags: z.array(trimmed.max(MAX_CUSTOMER_TAG_LENGTH)).max(MAX_CUSTOMER_TAGS).default([]),
 });
 
 export const createCustomerSchema = customerProfileFieldsSchema.extend({

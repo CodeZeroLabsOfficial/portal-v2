@@ -1,3 +1,4 @@
+import { dedupeCustomerTags } from "@/lib/customer/tags";
 import type { UpdateCustomerFormInput } from "@/lib/schemas/customer";
 import type { CustomerRecord } from "@/types/customer";
 
@@ -14,7 +15,7 @@ export function customerToFormDefaults(customer: CustomerRecord): UpdateCustomer
     region: customer.region ?? "",
     postalCode: customer.postalCode ?? "",
     country: customer.country ?? "",
-    tags: customer.tags,
+    tags: dedupeCustomerTags(customer.tags),
   };
 }
 

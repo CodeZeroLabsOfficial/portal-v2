@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import { CustomerTagsField } from "@/components/features/crm/customer/customer-tags-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,9 +21,6 @@ export interface CustomerProfileFormFieldsProps {
   lastName: string;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
-  tagInput?: string;
-  onTagInputChange?: (value: string) => void;
-  showTags?: boolean;
 }
 
 /** Profile fields for the customer edit sheet (create uses {@link AddCustomerDialog}). */
@@ -32,14 +30,12 @@ export function CustomerProfileFormFields({
   firstName,
   lastName,
   onFirstNameChange,
-  onLastNameChange,
-  tagInput = "",
-  onTagInputChange,
-  showTags = true,
+  onLastNameChange
 }: CustomerProfileFormFieldsProps) {
   const { register, formState, watch, setValue } = form;
   const errors = formState.errors;
   const accountId = watch("accountId");
+  const tags = watch("tags") ?? [];
   const [accounts, setAccounts] = React.useState<AccountRecord[]>([]);
 
   React.useEffect(() => {
@@ -55,7 +51,7 @@ export function CustomerProfileFormFields({
 
   const selectedAccount = React.useMemo(
     () => accounts.find((a) => a.id === accountId?.trim()) ?? null,
-    [accounts, accountId],
+    [accounts, accountId]
   );
 
   function copyAccountAddressToContact() {
@@ -130,7 +126,8 @@ export function CustomerProfileFormFields({
             value={accountId ?? ""}
             onChange={(e) =>
               setValue("accountId", e.target.value, { shouldDirty: true, shouldTouch: true })
-            }>
+            }
+          >
             <option value="">No account</option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
@@ -148,7 +145,8 @@ export function CustomerProfileFormFields({
               variant="ghost"
               size="sm"
               onClick={copyAccountAddressToContact}
-              disabled={disabled || !selectedAccount}>
+              disabled={disabled || !selectedAccount}
+            >
               Copy from account
             </Button>
           </div>
@@ -192,18 +190,11 @@ export function CustomerProfileFormFields({
           </div>
         </div>
 
-        {showTags && onTagInputChange ? (
-          <div className="space-y-2">
-            <Label htmlFor="crm-tags">Tags</Label>
-            <Input
-              id="crm-tags"
-              value={tagInput}
-              disabled={disabled}
-              onChange={(e) => onTagInputChange(e.target.value)}
-              placeholder="vip, priority — comma separated"
-            />
-          </div>
-        ) : null}
+        <CustomerTagsField
+          tags={tags}
+          onTagsChange={(next) => setValue("tags", next, { shouldDirty: true })}
+          disabled={disabled}
+        />
       </div>
     </div>
   );

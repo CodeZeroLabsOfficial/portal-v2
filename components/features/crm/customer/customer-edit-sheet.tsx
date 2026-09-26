@@ -8,6 +8,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 import { CustomerProfileFormFields } from "@/components/features/crm/customer/customer-profile-form-fields";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { FormServerError } from "@/components/shared/form-server-error";
 import {
   sheetContentMediumClass,
@@ -27,11 +28,10 @@ import {
 } from "@/components/ui/sheet";
 import { customerToFormDefaults } from "@/lib/customer/form-defaults";
 import { combineCustomerName, splitCustomerName } from "@/lib/customer/name-split";
-import { formatCustomerTagsInput, parseCustomerTagsInput } from "@/lib/customer/tags";
 import type { CustomerProfileFormValues } from "@/lib/customer/profile-form-values";
 import { normalizeAddressFields } from "@/lib/common/format";
 import { updateCustomerFormSchema } from "@/lib/schemas/customer";
-import { updateCustomerAction } from "@/server/actions/customers-crm";
+import { deleteCustomerAction, updateCustomerAction } from "@/server/actions/customers-crm";
 import type { CustomerRecord } from "@/types/customer";
 
 export interface CustomerEditSheetProps {
@@ -43,9 +43,9 @@ export interface CustomerEditSheetProps {
 export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEditSheetProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
-  const [tagInput, setTagInput] = React.useState("");
 
   const fieldsDisabled = customer.status === "archived";
 
@@ -55,12 +55,14 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
   });
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setConfirmDeleteOpen(false);
+      return;
+    }
     form.reset(customerToFormDefaults(customer));
     const { firstName: first, lastName: last } = splitCustomerName(customer.name);
     setFirstName(first);
     setLastName(last);
-    setTagInput(formatCustomerTagsInput(customer.tags));
     setServerError(null);
   }, [open, customer, form]);
 
@@ -71,7 +73,6 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
 
   async function onSubmit(values: CustomerProfileFormValues) {
     setServerError(null);
-    const tags = parseCustomerTagsInput(tagInput);
     const contactAddress = normalizeAddressFields({
       addressLine1: values.addressLine1,
       addressLine2: values.addressLine2,
@@ -84,7 +85,6 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
     const result = await updateCustomerAction({
       ...values,
       ...contactAddress,
-      tags,
       id: customer.id
     });
 
@@ -98,46 +98,75 @@ export function CustomerEditSheet({ customer, open, onOpenChange }: CustomerEdit
     router.refresh();
   }
 
+  async function handleDelete() {
+    const result = await deleteCustomerAction(customer.id);
+    if (!result.ok) {
+      toast.error(result.message);
+      throw new Error(result.message);
+    }
+    toast.success("Customer deleted");
+    onOpenChange(false);
+    router.push("/admin/customers");
+    router.refresh();
+  }
+
   const busy = form.formState.isSubmitting;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={sheetContentMediumClass}>
-        <SheetHeader>
-          <SheetTitle>Edit customer</SheetTitle>
-          <SheetDescription>{customer.email}</SheetDescription>
-        </SheetHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
-          <div className={sheetFormBodyClass}>
-            <FormServerError message={serverError} />
-            <CustomerProfileFormFields
-              form={form}
-              disabled={fieldsDisabled || busy}
-              firstName={firstName}
-              lastName={lastName}
-              onFirstNameChange={setFirstName}
-              onLastNameChange={setLastName}
-              tagInput={tagInput}
-              onTagInputChange={setTagInput}
-            />
-          </div>
-          <div className={sheetFormFooterClass}>
-            <SheetFooter className={sheetFooterClass}>
-              <span />
-              <Button type="submit" disabled={fieldsDisabled || busy}>
-                {busy ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                    Saving…
-                  </>
-                ) : (
-                  "Save changes"
-                )}
-              </Button>
-            </SheetFooter>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className={sheetContentMediumClass}>
+          <SheetHeader>
+            <SheetTitle>Edit customer</SheetTitle>
+            <SheetDescription>{customer.email}</SheetDescription>
+          </SheetHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className={sheetFormClass} noValidate>
+            <div className={sheetFormBodyClass}>
+              <FormServerError message={serverError} />
+              <CustomerProfileFormFields
+                form={form}
+                disabled={fieldsDisabled || busy}
+                firstName={firstName}
+                lastName={lastName}
+                onFirstNameChange={setFirstName}
+                onLastNameChange={setLastName}
+              />
+            </div>
+            <div className={sheetFormFooterClass}>
+              <SheetFooter className={sheetFooterClass}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={busy}
+                  onClick={() => setConfirmDeleteOpen(true)}
+                >
+                  Delete
+                </Button>
+                <Button type="submit" disabled={fieldsDisabled || busy}>
+                  {busy ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                      Saving…
+                    </>
+                  ) : (
+                    "Save changes"
+                  )}
+                </Button>
+              </SheetFooter>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete customer"
+        description="Permanently delete this customer and all related records (proposals, opportunities, notes, etc.)? This cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

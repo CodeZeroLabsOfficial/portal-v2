@@ -13,6 +13,7 @@ import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
 import { getStripe } from "@/lib/stripe/server";
 import { normalizeAddressFields } from "@/lib/common/format";
+import { dedupeCustomerTags } from "@/lib/customer/tags";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import type { CustomerListRow } from "@/lib/customer/list";
 import { taskCustomerContactLabel } from "@/lib/customer/task-customer-label";
@@ -53,9 +54,9 @@ function parseCustomerRecord(id: string, data: Record<string, unknown>): Custome
   const name = asString(data.name) ?? "";
   const email = asString(data.email) ?? "";
   const tagsRaw = data.tags;
-  const tags = Array.isArray(tagsRaw)
-    ? tagsRaw.filter((t): t is string => typeof t === "string" && t.length > 0).slice(0, 30)
-    : [];
+  const tags = dedupeCustomerTags(
+    Array.isArray(tagsRaw) ? tagsRaw.filter((tag): tag is string => typeof tag === "string") : [],
+  );
   const customFields = asStringStringMap(data.customFields);
   const status = data.status === "archived" ? "archived" : "active";
   const crmType: CustomerCrmType = data.crmType === "lead" ? "lead" : "contact";
