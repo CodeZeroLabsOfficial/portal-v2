@@ -21,18 +21,18 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         success:
           "bg-green-500/15 text-green-600 dark:bg-green-500/15 dark:text-green-400",
-        info: "border border-blue-400 bg-blue-50 text-blue-800 [a&]:hover:bg-blue-500/90 focus-visible:ring-blue-500/20 dark:focus-visible:ring-blue-500/40 dark:bg-blue-900/70 dark:text-white/80",
+        info: "bg-blue-500/15 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400",
         warning:
-          "border border-orange-400 bg-orange-50 text-orange-800 [a&]:hover:bg-orange-500/90 focus-visible:ring-orange-500/20 dark:focus-visible:ring-orange-500/40 dark:bg-orange-900/70 dark:text-white/80",
+          "bg-orange-500/15 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400",
         purple:
-          "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 [a&]:hover:bg-purple-200/90 dark:[a&]:hover:bg-purple-900/90",
+          "bg-purple-500/15 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400",
         neutral:
-          "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 [a&]:hover:bg-gray-300/90 dark:[a&]:hover:bg-gray-700/90",
+          "bg-gray-500/15 text-gray-600 dark:bg-gray-500/15 dark:text-gray-400",
         amber:
-          "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 [a&]:hover:bg-amber-200/90 dark:[a&]:hover:bg-amber-900/90",
-        sky: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200 [a&]:hover:bg-sky-200/90 dark:[a&]:hover:bg-sky-900/90",
+          "bg-amber-500/15 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+        sky: "bg-sky-500/15 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400",
         orange:
-          "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 [a&]:hover:bg-orange-200/90 dark:[a&]:hover:bg-orange-900/90",
+          "bg-orange-500/15 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400",
       },
     },
     defaultVariants: {

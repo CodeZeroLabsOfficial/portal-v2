@@ -18,7 +18,7 @@ export function subscriptionStatusBadgeDisplay(
   status: SubscriptionStatus | CustomerSubscriptionRollup,
 ): SubscriptionStatusBadgeDisplay {
   if (status === "none") {
-    return { label: "No subscription", variant: "info" };
+    return { label: "No subscription", variant: "secondary" };
   }
   if (status === "active" || status === "trialing") {
     return {
