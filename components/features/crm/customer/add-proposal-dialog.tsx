@@ -153,12 +153,12 @@ export function AddProposalDialog({
                 <EmptyMedia variant="icon">
                   <LayoutTemplate />
                 </EmptyMedia>
-                <EmptyTitle>
+                <EmptyTitle className="text-base">
                   {hasPublishedTemplates
                     ? "No templates in this category"
                     : "No published proposal templates"}
                 </EmptyTitle>
-                <EmptyDescription>
+                <EmptyDescription className="text-xs">
                   {hasPublishedTemplates
                     ? "Choose another product category, or set this category on a published template."
                     : "Publish a proposal template from Templates, then return here to create a proposal."}
@@ -186,7 +186,7 @@ export function AddProposalDialog({
         </div>
 
         {total > 0 ? (
-          <div className="shrink-0 border-t px-6 py-3">
+          <div className="shrink-0 border-t px-6 py-3 text-right">
             <p className="text-muted-foreground text-sm">
               Showing {from} to {to} of {total} {total === 1 ? "template" : "templates"}
             </p>

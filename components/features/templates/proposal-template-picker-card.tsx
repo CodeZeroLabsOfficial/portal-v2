@@ -43,7 +43,7 @@ export function ProposalTemplatePickerCard({
       <CardContent className="flex flex-1 flex-col gap-2 p-3">
         <h4 className="line-clamp-2 text-base leading-snug font-semibold">{row.name}</h4>
 
-        <Typography variant="muted" className="line-clamp-2 text-sm">
+        <Typography variant="muted" className="line-clamp-2 text-xs">
           {excerpt}
         </Typography>
 

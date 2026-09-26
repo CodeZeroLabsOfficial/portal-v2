@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
-import { CRM_ADD_NEW_BUTTON_CLASS } from "@/components/shared/crm-add-new-button";
 import { CrmNoteEditor } from "@/components/shared/crm-note-editor";
 import { FilterPillGroup } from "@/components/shared/filter-pill-group";
 import { FormServerError } from "@/components/shared/form-server-error";
@@ -85,9 +84,9 @@ export function AddOpportunityNoteDialog({ opportunityId }: AddOpportunityNoteDi
         if (!next) resetForm();
       }}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className={CRM_ADD_NEW_BUTTON_CLASS}>
+        <Button type="button" className="shrink-0">
+          <Plus className="size-4" aria-hidden />
           Add new
-          <ChevronDown className="h-4 w-4 opacity-80" aria-hidden />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-screen overflow-y-auto sm:max-w-lg">
