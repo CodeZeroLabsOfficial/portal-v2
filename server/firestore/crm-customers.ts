@@ -12,7 +12,7 @@ import { deleteStorageFileAdmin } from "@/lib/firebase/admin-storage";
 import { getFirebaseAdminFirestore } from "@/lib/firebase/admin-app";
 import { resolveOrCreateFirebaseUserByEmail } from "@/server/auth/resolve-or-create-firebase-user";
 import { getStripe } from "@/lib/stripe/server";
-import { formatAddressLines, normalizeAddressFields } from "@/lib/common/format";
+import { normalizeAddressFields } from "@/lib/common/format";
 import { dedupeCustomerTags } from "@/lib/customer/tags";
 import { sanitizeProposalHtmlServer } from "@/lib/proposal/sanitize-server";
 import type { CustomerListRow } from "@/lib/customer/list";
@@ -129,7 +129,6 @@ function customerToListRow(
   subscriptions: SubscriptionRecord[],
   companyName?: string,
 ): CustomerListRow {
-  const address = formatAddressLines(customer).join(", ");
   const company = companyName?.trim() || undefined;
   const accountId = customer.accountId?.trim() || undefined;
   return {
@@ -137,7 +136,6 @@ function customerToListRow(
     name: customer.name.trim() || customer.email.trim() || customer.id,
     email: customer.email.trim() || "—",
     phone: customer.phone?.trim() || "—",
-    address,
     avatarUrl: customer.avatarUrl,
     company,
     accountId,

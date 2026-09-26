@@ -163,6 +163,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         cell: ({ row }) => {
           const displayName = row.original.name.trim() || row.original.email;
           const avatarUrl = customerAvatarUrl(row.original.avatarUrl);
+          const company = row.original.company?.trim();
           return (
             <div className="flex items-center gap-3">
               <Avatar className="size-9">
@@ -175,7 +176,17 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
                   className="font-medium hover:underline">
                   {displayName}
                 </Link>
-                <div className="text-muted-foreground truncate text-xs">{row.original.email}</div>
+                {company ? (
+                  row.original.accountId ? (
+                    <Link
+                      href={`/admin/accounts/${row.original.accountId}`}
+                      className="text-muted-foreground block truncate text-xs hover:underline">
+                      {company}
+                    </Link>
+                  ) : (
+                    <div className="text-muted-foreground truncate text-xs">{company}</div>
+                  )
+                ) : null}
               </div>
             </div>
           );
@@ -184,7 +195,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
           const q = String(value).toLowerCase();
           if (!q) return true;
           const r = row.original;
-          const hay = [r.name, r.email, r.phone, r.address, r.company, r.tags.join(" ")]
+          const hay = [r.name, r.email, r.phone, r.company, r.tags.join(" ")]
             .join(" ")
             .toLowerCase();
           return hay.includes(q);
@@ -201,31 +212,14 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         filterFn: multiSelectColumnFilter
       },
       {
-        accessorKey: "company",
-        meta: { viewLabel: "Company" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
-        cell: ({ row }) => {
-          const company = row.original.company?.trim();
-          if (!company) return <span className="text-muted-foreground">—</span>;
-          if (row.original.accountId) {
-            return (
-              <Link href={`/admin/accounts/${row.original.accountId}`} className="hover:underline">
-                {company}
-              </Link>
-            );
-          }
-          return company;
-        }
+        accessorKey: "phone",
+        meta: { viewLabel: "Phone" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />
       },
       {
-        accessorKey: "address",
-        meta: { viewLabel: "Address" },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
-        cell: ({ row }) => {
-          const address = row.original.address.trim();
-          if (!address) return <span className="text-muted-foreground">—</span>;
-          return <span className="block max-w-xs truncate">{address}</span>;
-        }
+        accessorKey: "email",
+        meta: { viewLabel: "Email" },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />
       },
       {
         accessorKey: "status",
@@ -239,8 +233,8 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
       },
       {
         accessorKey: "subscriptionRollup",
-        meta: { viewLabel: "Subscriptions" },
-        header: "Subscriptions",
+        meta: { viewLabel: "Subscription" },
+        header: "Subscription",
         cell: ({ row }) => {
           const d = subscriptionStatusBadgeDisplay(row.original.subscriptionRollup);
           return <StatusBadge label={d.label} variant={d.variant} dot={d.dot} />;
@@ -334,7 +328,7 @@ export function CustomerListPanel({ rows }: CustomerListPanelProps) {
         columns={columns}
         data={rows}
         emptyMessage="No customers yet. Add your first customer to get started."
-        search={{ columnId: "name", placeholder: "Search name, email, company, address, tags…" }}
+        search={{ columnId: "name", placeholder: "Search name, email, company, tags…" }}
         filters={[
           { columnId: "status", title: "Status", options: CUSTOMER_STATUS_FILTER_OPTIONS },
           { columnId: "crmType", title: "Type", options: CUSTOMER_TYPE_FILTER_OPTIONS }
